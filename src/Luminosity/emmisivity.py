@@ -20,7 +20,7 @@ lnplanck = np.loadtxt(loadpath + 'planck.txt')
 
 lnk_inter = RegularGridInterpolator( (lnT, lnrho), lnplanck) #we use T and rho to interpolate??
 
-def emissivity(T,rho,k_planck, cell_vol):
+def emissivity(T,rho, cell_vol):
     """this function accepts arguments in CGS"""
     ln_T = np.log(T)
     ln_rho = np.log(rho)
@@ -28,3 +28,7 @@ def emissivity(T,rho,k_planck, cell_vol):
     k_planck = np.exp(ln_planck) 
     emiss = alpha * c * T**4 * k_planck * cell_vol
     return emiss
+
+if __name__ == "__main__":
+    test = emissivity(10**(7),10**(-10),2)
+    print(test)
