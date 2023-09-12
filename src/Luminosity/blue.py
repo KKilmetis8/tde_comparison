@@ -1,5 +1,5 @@
 """
-Calculate the Elad's blue curve (BB).
+Calculate the bolometric luminosity in the blued (BB) curve.
 """
 import numpy as np
 from emissivity import emissivity
@@ -32,7 +32,6 @@ def luminosity():
     lnT_array = np.loadtxt(loadpath + 'T.txt') #it's in ln(CGS)
     lnrho_array = np.loadtxt(loadpath + 'rho.txt') #it's in ln(CGS)
     cell_vol_array =  #we need an array of cell_vol 
-#DOUBT: lnT and lnrho (and lnplanck) have the same lenght?
     for i in range(0, len(lnT_array)):
         T = np.exp(lnT_array[i])
         rho = np.exp(lnrho_array[i])
