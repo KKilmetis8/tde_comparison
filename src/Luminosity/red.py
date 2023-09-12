@@ -57,7 +57,7 @@ def doer_of_thing(fix, m):
     if m == 4:
         folder = '4/'
     else:
-        folder = ''
+        folder = '6/'
         
     X = np.load( folder +fix + '/CMx_' + fix + '.npy')
     Y = np.load( folder +fix + '/CMy_' + fix + '.npy')
@@ -87,7 +87,7 @@ def doer_of_thing(fix, m):
     THETA = THETA.value
     PHI = PHI.value
     
-    # NOTE: Non-uniform observers, use healpix or sample in cosθ
+    # Ensure that the regular grid cells are smaller than simulation cells
     start = Rt
     stop = 500 * Rt
     if m ==6:
@@ -214,7 +214,7 @@ def doer_of_thing(fix, m):
             if Temperature < 8.666:
                 continue 
                 
-            k_ross = opacity(Density, Temperature)
+            k_ross = opacity(Density, Temperature, 'rosseland', ln = True)
             
             # Calc R, eq. 28
             R = np.abs(grad_E[i]) /  (k_ross * Energy)
