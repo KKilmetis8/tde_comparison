@@ -21,12 +21,10 @@ lnplanck = np.loadtxt(loadpath + 'planck.txt')
 lnk_inter = RegularGridInterpolator( (lnT, lnrho), lnplanck) #we use T and rho to interpolate??
 
 def emissivity(T,rho,k_planck, cell_vol):
-    alpha *= solar_mass / (t_conv**2*solar_radius)
-    c *= solar_radius/t_conv
-    cell_vol *= solar_radius**3
+    """this function accepts arguments in CGS"""
     ln_T = np.log(T)
     ln_rho = np.log(rho)
     ln_planck = lnk_inter((ln_T, ln_rho))
-    k_planck = np.exp(ln_planck) #do we have to convert it???
+    k_planck = np.exp(ln_planck) 
     emiss = alpha * c * T**4 * k_planck * cell_vol
     return emiss
