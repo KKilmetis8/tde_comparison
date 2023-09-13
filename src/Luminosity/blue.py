@@ -20,7 +20,7 @@ h = 6.6261e-27 #[gcm^2/s]
 Kb = 1.3806e-16 #[gcm^2/s^2K]
 n_min = 4.8e14 #[Hz]
 n_max = 1e15 #[Hz]
-n_array = np.linspace(n_min,n_max, 100)
+n_array = np.linspace(n_min,n_max, 1000)
 loadpath = 'src/Optical_Depth/'
 
 def planck_fun_n_cell(n,T):
@@ -34,17 +34,17 @@ def planck_fun_cell(T):
     return fun
 
 #QUESTION: we have T, rho from only one snapshoot? Does it not change?
-def luminosity():
+def luminosity(n):
     lum = 0
     lnT_array = np.loadtxt(loadpath + 'T.txt') #it's in ln(CGS)
     lnrho_array = np.loadtxt(loadpath + 'rho.txt') #it's in ln(CGS)
-    cell_vol_array =  #we need an array of cell_vol 
+    cell_vol_array = np.ones(len(lnT_array)) #we need an array of cell_vol 
     for i in range(0, len(lnT_array)):
         T = np.exp(lnT_array[i])
         rho = np.exp(lnrho_array[i])
         cell_vol = cell_vol_array[i]
         epsilon = emissivity(T, rho, cell_vol)
-        lum_cell = epsilon * planck_fun_cell(T) / np.exp(1)
+        lum_cell = epsilon * planck_fun_n_cell(n,T) / (planck_fun_cell(T) * np.exp(1))
         lum += lum_cell
     return 4*pi*lum
 
