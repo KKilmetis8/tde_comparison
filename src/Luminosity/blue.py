@@ -11,8 +11,8 @@ Calculate the bolometric luminosity in the blued (BB) curve.
 import numpy as np
 from emissivity import emissivity
 
-#CHECK: t_eff = 1?
-#question: which range of frequencies we integrate?
+# CHECK: t_eff = 1?
+# question: which range of frequencies we integrate?
 
 pi = 3.1416
 c = 2.9979e10 #[cm/s]
@@ -33,7 +33,7 @@ def planck_fun_cell(T):
     fun = np.trapz(planck_fun_n_array, n_array)
     return fun
 
-#QUESTION: we have T, rho from only one snapshoot? Does it not change?
+# QUESTION: we have T, rho from only one snapshoot? Does it not change?
 def luminosity(n):
     lum = 0
     lnT_array = np.loadtxt(loadpath + 'T.txt') #it's in ln(CGS)

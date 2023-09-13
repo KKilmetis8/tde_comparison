@@ -17,6 +17,7 @@ lnk_ross = np.loadtxt(loadpath + 'ross.txt')
 lnk_plank = np.loadtxt(loadpath + 'plank.txt')
 lnk_scatter = np.loadtxt(loadpath + 'scattering.txt')
 
+lnk_scatter_inter = RegularGridInterpolator( (lnT, lnrho), lnk_scatter)
 lnk_ross_inter = RegularGridInterpolator( (lnT, lnrho), lnk_ross)
 lnk_plank_inter = RegularGridInterpolator( (lnT, lnrho), lnk_plank)
 
@@ -50,7 +51,7 @@ def opacity(rho, T, kind, ln = False):
             
         elif kind == 'effective':
             plank = lnk_plank_inter((T, rho))
-            scattering = lnk_scatter((T, rho))
+            scattering = lnk_scatter_inter((T, rho))
             
             # Rybicky & Lightman eq. 1.98
             ln_opacity = np.sqrt(plank * (plank + scattering)) 
@@ -72,7 +73,7 @@ def opacity(rho, T, kind, ln = False):
             
         elif kind == 'effective':
             plank = lnk_plank_inter((T, rho))
-            ross = lnk_ross_inter((T, rho))
+            scattering = lnk_scatter_inter((T, rho))
             
             # Rybicky & Lightman eq. 1.98
             ln_opacity = np.sqrt(plank * (plank + scattering)) 
