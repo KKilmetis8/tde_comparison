@@ -5,7 +5,6 @@ Authors: Paola, Konstantinos
 """
 
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator
 from src.Optical_Depth.opacity_table import opacity
 
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
