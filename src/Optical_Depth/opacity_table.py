@@ -14,12 +14,12 @@ loadpath = 'src/Optical_Depth/'
 lnT = np.loadtxt(loadpath + 'T.txt')
 lnrho = np.loadtxt(loadpath + 'rho.txt')
 lnk_ross = np.loadtxt(loadpath + 'ross.txt')
-lnk_plank = np.loadtxt(loadpath + 'plank.txt')
-lnk_scatter = np.loadtxt(loadpath + 'scattering.txt')
+lnk_planck = np.loadtxt(loadpath + 'planck.txt')
+lnk_scatter = np.loadtxt(loadpath + 'scatter.txt')
 
 lnk_scatter_inter = RegularGridInterpolator( (lnT, lnrho), lnk_scatter)
 lnk_ross_inter = RegularGridInterpolator( (lnT, lnrho), lnk_ross)
-lnk_plank_inter = RegularGridInterpolator( (lnT, lnrho), lnk_plank)
+lnk_planck_inter = RegularGridInterpolator( (lnT, lnrho), lnk_planck)
 
 def opacity(rho, T, kind, ln = False):
     '''
@@ -46,17 +46,17 @@ def opacity(rho, T, kind, ln = False):
         if kind == 'rosseland':
             ln_opacity = lnk_ross_inter((T, rho))
             
-        elif kind == 'plank':
-            ln_opacity = lnk_plank_inter((T, rho))
+        elif kind == 'planck':
+            ln_opacity = lnk_planck_inter((T, rho))
             
         elif kind == 'effective':
-            plank = lnk_plank_inter((T, rho))
+            planck = lnk_planck_inter((T, rho))
             scattering = lnk_scatter_inter((T, rho))
             
             # Rybicky & Lightman eq. 1.98
-            ln_opacity = np.sqrt(plank * (plank + scattering)) 
+            ln_opacity = np.sqrt(planck * (planck + scattering)) 
         else:
-            print('Invalid opacity type. Try rosseland, plank or effective.')
+            print('Invalid opacity type. Try rosseland, planck or effective.')
             return 1
         
     else:
@@ -68,15 +68,15 @@ def opacity(rho, T, kind, ln = False):
         if kind == 'rosseland':
             ln_opacity = lnk_ross_inter((T, rho))
             
-        elif kind == 'plank':
-            ln_opacity = lnk_plank_inter((T, rho))
+        elif kind == 'planck':
+            ln_opacity = lnk_planck_inter((T, rho))
             
         elif kind == 'effective':
-            plank = lnk_plank_inter((T, rho))
+            planck = lnk_planck_inter((T, rho))
             scattering = lnk_scatter_inter((T, rho))
             
             # Rybicky & Lightman eq. 1.98
-            ln_opacity = np.sqrt(plank * (plank + scattering)) 
+            ln_opacity = np.sqrt(planck * (planck + scattering)) 
             
     # Remove the ln
     opacity = np.exp(ln_opacity)
