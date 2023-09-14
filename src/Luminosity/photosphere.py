@@ -3,7 +3,7 @@
 """
 Created on Tue Sep 12 16:02:41 2023
 
-@author: konstantinos, paola
+@author: konstantinos, Paola
 
 NOTES FOR OTHERS:
 - things from snapshots are in solar and code units (mass in M_sol, lenght in R_sol, time s.t. G=1), we have to convert them in CGS 
@@ -47,12 +47,19 @@ den_converter = Msol_to_g / Rsol_to_cm**3
 # FUNCTIONS
 ##
 ###
+def optical_depth(rho:float, T:float, dr: int):
+    """Find optical depth in a cell, which as a density rho and a temperature T"""
+    tau = opacity(rho, T, 'effective', ln = False) * dr 
+    return tau
 
-def opt_depth(z, r, T):
-    """Optical depth"""
-    Tz = T((z,r))
-    dr = np.abs(r[0]-r[1])
-    tau = opacity(rz, Tz, 'effective', ln = False) * dr #CHANGE IT
+def find_photosphere(r_array: np.array, rho_array:np.array, T_array:np.array, wanted_value: float):
+    """In the analysed ray find where tau = wanted value"""
+    tau = 0
+    dr = np.abs(r_array[0]-r_array[1]) 
+    i = -1
+    while tau < wanted_value:
+        tau = tau + optical_depth(rho_array[i], T_array[i], dr) #find optical depth till this point
+        i = i - 1
     return tau
 
 ###
@@ -117,15 +124,6 @@ for fix in fixes:
             t_ray = np.nan_to_num(t_ray, neginf = 0)
             rays_T.append(t_ray)
             
-    # Interpolate
-    
-    # Get Optical Depth
-    # Keep integrating until it is one
-    # Maybe use an equation solver for that?
-    
-    # 
-# Stuff I copied from previous work that is bad and no one should witness 
-
-
-opt4[i] = romberg(0.2 * Rt4 ,max_z4, opt_depth, r,
-                      d4_inter, t4_inter) # Rsol / cm 
+    """
+    How do I apply find_photosphere at every ray? I think that I haven't really understand what d_ray and t_ray contain
+    """

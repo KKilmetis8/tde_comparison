@@ -44,9 +44,10 @@ def luminosity(n):
         rho = np.exp(lnrho_array[i])
         cell_vol = cell_vol_array[i]
         epsilon = emissivity(T, rho, cell_vol)
-        lum_cell = epsilon * planck_fun_n_cell(n,T) / (planck_fun_cell(T) * np.exp(1))
+        lum_cell = epsilon * planck_fun_n_cell(n,T) * np.exp(-tau)
         lum += lum_cell
-    return 4*pi*lum
+    lum = lum / planck_fun_cell(T)
+    return lum
 
 if __name__ == "__main__":
     test = luminosity()
