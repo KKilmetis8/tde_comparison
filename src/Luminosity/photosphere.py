@@ -3,41 +3,32 @@
 """
 Created on Tue Sep 12 16:02:41 2023
 
-@author: konstantinos
+@author: konstantinos, paola
+
+NOTES FOR OTHERS:
+- things from snapshots are in solar and code units (mass in M_sol, lenght in R_sol, time s.t. G=1), we have to convert them in CGS 
+- change m, fixes, loadpath
 """
-# Vanilla Imports
+
+"""Vanilla Imports"""
 import numpy as np
 import numba
 import healpy as hp
 
-# Custom Imports
+"""Custom Imports"""
 from src.Calculators.romberg import romberg
 from src.Optical_Depth.opacity_table import opacity
 from astropy.coordinates import cartesian_to_spherical
 from src.Calculators.casters import THE_TRIPLE_CASTER
 
-# Choose BH
-m = 4 # 4 or 6
+###
+##
+# VARIABLES
+##
+###
 
-#%% Import data
-
-# Optical Depth function
-def opt_depth(z, r, rho, T):
-    rz = rho((z,r))
-    Tz = T((z,r))
-    tau = rz * opacity(rz, Tz, 'effective', ln = False)
-    return tau
-
-# Constants
-Mbh = 10**m # * Msol
-Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
-
-# Density Converter
-Msol_to_g = 1.989e33
-Rsol_to_cm = 6.957e10
-den_converter = Msol_to_g / Rsol_to_cm**3
-
-# Make Paths
+m = 4 #power index of the mass_BH: choose 4 or 6
+"""Make Paths"""
 if m == 4:
     fixes = np.arange(232,263 + 1)
     loadpath = '4/'
@@ -45,8 +36,32 @@ if m == 6:
     fixes = [844, 881, 925, 950]
     loadpath = '6/'
 
+Mbh = 10**m # * Msol
+Rt =  Mbh**(1/3) # Tidal radius (Msol = 1, Rsol = 1)
+Msol_to_g = 1.989e33
+Rsol_to_cm = 6.957e10
+den_converter = Msol_to_g / Rsol_to_cm**3
+
+###
+##
+# FUNCTIONS
+##
+###
+
+def opt_depth(z, r, T):
+    """Optical depth"""
+    Tz = T((z,r))
+    dr = np.abs(r[0]-r[1])
+    tau = opacity(rz, Tz, 'effective', ln = False) * dr #CHANGE IT
+    return tau
+
+###
+##
+# MAIN
+##
+###
+
 for fix in fixes:
-    # Data Load
     X = np.load( loadpath + fix + '/CMx_' + fix + '.npy')
     Y = np.load( loadpath + fix + '/CMy_' + fix + '.npy')
     Z = np.load( loadpath + fix + '/CMz_' + fix + '.npy')
@@ -54,25 +69,22 @@ for fix in fixes:
     Den = np.load( loadpath + fix + '/Den_' + fix + '.npy')
     T = np.load( loadpath + '/T_' + fix + '.npy')
     
-    # Convert to cgs
-    Den *= den_converter
-    
-    # Convert to Spherical
-    R, THETA, PHI = cartesian_to_spherical(X,Y,Z)
+    Den *= den_converter # Convert to cgs
+    R, THETA, PHI = cartesian_to_spherical(X,Y,Z) # Convert to Spherical
     R = R.value 
     THETA = THETA.value
     PHI = PHI.value
     
-    # Ensure that the regular grid cells are smaller than simulation cells
+    """Ensure that the regular grid cells are smaller than simulation cell"""
     start = Rt
     stop = 500 * Rt
-    if m ==6:
+    if m == 6:
         num = 500 # about the average of cell radius
     if m == 4:
         num = 350
     radii = np.linspace(start, stop, num = 500)
     
-    # Generate uniform observers
+    """Generate uniform observers"""
     NSIDE = 4 # 192 observers
     thetas = np.zeros(192)
     phis = np.zeros(192)
@@ -81,7 +93,7 @@ for fix in fixes:
        thetas[i] -= np.pi/2
        phis[i] -= np.pi
        
-    # Evoke!
+    """Evoke!"""
     Den_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
                       Den,
                       weights = Mass, avg = True) 
@@ -89,7 +101,7 @@ for fix in fixes:
                       T, 
                       weights = Mass, avg = True)
     
-    # Make into rays
+    """Make into rays"""
     rays_den = []
     rays_T = []
     for i, theta in enumerate(thetas):
