@@ -10,14 +10,10 @@ from src.Optical_Depth.opacity_table import opacity
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 c = 2.9979e10 # [cm/s] 
 
-def emissivity(T,rho, cell_vol):
+def emissivity(T, rho, cell_vol):
     """ Arguments in CGS """
-    ln_T = np.log(T)
-    ln_T = np.nan_to_num(ln_T, nan = 0, posinf = 0, neginf= 0)
-    ln_rho = np.log(rho)
-    ln_rho = np.nan_to_num(ln_rho, nan = 0, posinf = 0, neginf= 0)
-
-    k_planck = opacity(ln_T, ln_rho, 'planck', ln = True)
+    print('T:', T)
+    k_planck = opacity(T, rho, 'planck', ln = False)
     emiss = alpha * c * T**4 * k_planck * cell_vol
     return emiss
 

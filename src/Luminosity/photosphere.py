@@ -27,8 +27,6 @@ from src.Calculators.casters import THE_TRIPLE_CASTER
 # CONSTANTS
 ################
 
-
-
 Msol_to_g = 1.989e33
 Rsol_to_cm = 6.957e10
 den_converter = Msol_to_g / Rsol_to_cm**3
@@ -105,7 +103,7 @@ def calc_photosphere(rs, rho, T, threshold = 1):
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
     while tau < threshold and i > -350:
-        new_tau = optical_depth(rho[i], T[i], dr)
+        new_tau = optical_depth(T[i], rho[i], dr)
         tau += new_tau
         taus.append(new_tau) 
         i -= 1

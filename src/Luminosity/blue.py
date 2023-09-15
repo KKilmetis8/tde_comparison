@@ -37,7 +37,7 @@ def planck_fun_cell(T):
     fun = np.trapz(planck_fun_n_array, n_array)
     return fun
 
-def luminosity(Temperature, Density, tau, volume):
+def luminosity(Temperature, Density,  tau, volume):
     lum = 0
     for i in range(len(tau)):              
         T = Temperature[-i] # Out to in
@@ -46,12 +46,11 @@ def luminosity(Temperature, Density, tau, volume):
         
         opt_depth = tau[i]
         # Ensure we can interpolate
-        logT = np.log(T)
-        logT = np.nan_to_num(logT, nan = 0, posinf = 0, neginf= 0)
-        logrho = np.log(rho)
-        logrho = np.nan_to_num(logrho, nan = 0, posinf = 0, neginf= 0)
+        rho_low = np.exp(-22)
+        T_low = np.exp(8.77)
+        T_high = np.exp(17.8)
 
-        if logrho < -22 or  logT < 1 or logT > 17.8:
+        if rho < rho_low or T < T_low or T > T_high:
             continue
         
         epsilon = emissivity(T, rho, cell_vol)
@@ -68,8 +67,11 @@ if __name__ == "__main__":
         
         global_lum = 0 
         for i, ray in  enumerate(rays_den):
-            global_lum += luminosity(rays_T[i], rays_den[i], rays_tau[i], volume)
+            global_lum += luminosity(rays_T[i], rays_den[i],  rays_tau[i], 
+                                     volume)
         lums.append( np.log10(global_lum))
-    
-    days = [40, 45, 52, 55]
-    plt.plot(days, lums, 'o-', c = 'cornflowerblue')
+
+days = [40, 45, 52, 55]
+plt.plot(days, lums, 'o-', c = 'cornflowerblue')
+from src.Utilities.finished import finished
+finished()
