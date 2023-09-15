@@ -12,7 +12,6 @@ c = 2.9979e10 # [cm/s]
 
 def emissivity(T, rho, cell_vol):
     """ Arguments in CGS """
-    print('T:', T)
     k_planck = opacity(T, rho, 'planck', ln = False)
     emiss = alpha * c * T**4 * k_planck * cell_vol
     return emiss

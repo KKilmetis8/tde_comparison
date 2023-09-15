@@ -8,10 +8,13 @@ Created on Tue Sep 12 16:02:14 2023
 Calculate the bolometric luminosity in the blued (BB) curve.
 """
 
+# Vanilla imports
 import numpy as np
 import matplotlib.pyplot as plt
-from src.Luminosity.emissivity import emissivity
+
+# Chocolate imports
 from src.Luminosity.photosphere import get_photosphere
+from src.Optical_Depth.opacity_table import opacity
 
 # Choose BH
 m = 6
@@ -21,8 +24,14 @@ fixes = [844, 881, 925, 950]
 c = 2.9979e10 #[cm/s]
 h = 6.6261e-27 #[gcm^2/s]
 Kb = 1.3806e-16 #[gcm^2/s^2K]
-
+alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 Rsol_to_cm = 6.957e10
+
+def emissivity(T, rho, cell_vol):
+    """ Arguments in CGS """
+    k_planck = opacity(T, rho, 'planck', ln = False)
+    emiss = alpha * c * T**4 * k_planck * cell_vol
+    return emiss
 
 def planck_fun_n_cell(n,T):
     const = 2*h/c**2
@@ -70,8 +79,17 @@ if __name__ == "__main__":
             global_lum += luminosity(rays_T[i], rays_den[i],  rays_tau[i], 
                                      volume)
         lums.append( np.log10(global_lum))
+    from src.Utilities.finished import finished
+    finished()
+#%% Plotting
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['figure.dpi'] = 300
+    plt.rcParams['figure.figsize'] = [5 , 3]
+    
+    days = [40, 45, 52, 55]
+    plt.plot(days, lums, 'o-', c = 'royalblue')
+    plt.title(r'$10^' + str(m) + ' M_\odot$ BB Fit')
+    plt.xlabel('Days')
+    plt.ylabel('Bolometric Luminosity')
+    plt.grid()
 
-days = [40, 45, 52, 55]
-plt.plot(days, lums, 'o-', c = 'cornflowerblue')
-from src.Utilities.finished import finished
-finished()

@@ -47,16 +47,12 @@ def opacity(T, rho, kind, ln = True) -> float:
     opacity : float,
         The rosseland mean opacity in [cgs].
     '''    
-    print('T:', T)
-    print('--')
     if not ln: 
-        print('hi')
         T = np.log(T)
         rho = np.log(rho)
         # Remove fuckery
         T = np.nan_to_num(T, nan = 0, posinf = 0, neginf= 0)
         rho = np.nan_to_num(rho, nan = 0, posinf = 0, neginf= 0)
-    print('T:', T)
 
     # Pick Opacity & Use Interpolation Function
     if kind == 'rosseland':
