@@ -22,11 +22,12 @@ import healpy as hp
 
 # Snapshots of the simulation which we will use
 fixes = np.arange(232,263 + 1)
-fixes = [844, 881, 925, 950]
+fix = 232
+# fixes = [844, 881, 925, 950]
 # For isotropic observers, set Healpy = True, otherwise false.
 healpy = True
 NSIDE = 4 # 192 observers
-m = 6 # Select black hole, 4 or 6
+m = 4 # Select black hole, 4 or 6
 #%% Constants & Converter
 G = 6.6743e-11 # SI
 Msol = 1.98847e30 # kg
@@ -50,7 +51,6 @@ energy_converter =  Msol_to_g * Rsol_to_cm**2 / (t**2)
 
 # Energy Denstiy converter
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 )
-
 #%% Data Load
 def doer_of_thing(fix, m):
     fix = str(fix)
@@ -75,7 +75,7 @@ def doer_of_thing(fix, m):
     # cell_radii = (3 * Vol/4)**(1/3)
     # print(np.mean(cell_radii))
     T = np.load( folder +fix + '/T_' + fix + '.npy')
-
+    
     # Convert Energy / Mass to Energy Density 
     Rad *= Den 
     Rad *= en_den_converter # to cgs
@@ -93,8 +93,8 @@ def doer_of_thing(fix, m):
     if m ==6:
         num = 500 # about the average of cell radius
     if m == 4:
-        num = 350
-    radii = np.linspace(start, stop, num = 500)
+        num = 500 #350
+    radii = np.linspace(start, stop, num)
     
     if healpy:
         thetas = np.zeros(192)
@@ -103,6 +103,10 @@ def doer_of_thing(fix, m):
            thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
            thetas[i] -= np.pi/2
            phis[i] -= np.pi
+        # There is reduduncy!
+        thetas = np.unique(thetas)
+        phis = np.unique(phis)
+        
     else:     
         t_num = 7
         p_num = 16
@@ -120,7 +124,6 @@ def doer_of_thing(fix, m):
                       T, 
                       weights = Mass, avg = True)
     Rad_casted = np.nan_to_num(Rad_casted)
-    
     #%% Make Rays
     rays = []
     rays_den = []
@@ -143,6 +146,7 @@ def doer_of_thing(fix, m):
             rays_T.append(t_ray)
     
     #%% Let's see how it looks 
+    print(np.shape(rays))
     img = plt.pcolormesh(radii, np.arange(len(rays)), rays, cmap = 'cet_gouldian')
     cbar = plt.colorbar(img)
     plt.title('Rays')
@@ -266,7 +270,7 @@ for fix in fixes:
     lums.append(lum)
 from src.Utilities.finished import finished
 finished()
-#%%
+ #%%
 plt.figure()
 if m == 4:
     days = [4.02,4.06,4.1,4.13,4.17,4.21,4.24,4.28,4.32,4.35,4.39,4.43,4.46,4.5,4.54,4.57,4.61,4.65,4.68,4.72,4.76,4.79,4.83,4.87,4.91,4.94,4.98,5.02,5.05,5.09,5.13,5.16]

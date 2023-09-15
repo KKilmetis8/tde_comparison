@@ -47,10 +47,11 @@ def opacity(rho, T, kind, ln = True) -> float:
     opacity : float,
         The rosseland mean opacity in [cgs].
     '''    
-    if ln == False: 
-        T = np.log(T)
-        rho = np.log(rho)
-
+    # if not ln: 
+    #     print('hi')
+    #     T = np.log(T)
+    #     rho = np.log(rho)
+    print(T)
     # Pick Opacity & Use Interpolation Function
     if kind == 'rosseland':
         ln_opacity = lnk_ross_inter((T, rho))

@@ -13,9 +13,11 @@ c = 2.9979e10 # [cm/s]
 def emissivity(T,rho, cell_vol):
     """ Arguments in CGS """
     ln_T = np.log(T)
+    ln_T = np.nan_to_num(ln_T, nan = 0, posinf = 0, neginf= 0)
     ln_rho = np.log(rho)
-    ln_planck = opacity(ln_T, ln_rho, 'plank', ln = True)
-    k_planck = np.exp(ln_planck) 
+    ln_rho = np.nan_to_num(ln_rho, nan = 0, posinf = 0, neginf= 0)
+
+    k_planck = opacity(ln_T, ln_rho, 'planck', ln = True)
     emiss = alpha * c * T**4 * k_planck * cell_vol
     return emiss
 
