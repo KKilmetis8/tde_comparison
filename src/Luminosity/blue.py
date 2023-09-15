@@ -85,11 +85,13 @@ if __name__ == "__main__":
     plt.rcParams['text.usetex'] = True
     plt.rcParams['figure.dpi'] = 300
     plt.rcParams['figure.figsize'] = [5 , 3]
+    plt.rcParams['axes.facecolor'] = 'whitesmoke'
     
     days = [40, 45, 52, 55]
+    
     plt.plot(days, lums, 'o-', c = 'royalblue')
     plt.title(r'$10^' + str(m) + ' M_\odot$ BB Fit')
     plt.xlabel('Days')
-    plt.ylabel('Bolometric Luminosity')
+    plt.ylabel('Bolometric Luminosity $log_{10}(L)$ $[L_\odot]$')
     plt.grid()
 
