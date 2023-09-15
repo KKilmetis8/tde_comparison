@@ -24,8 +24,29 @@ lnk_scatter_inter = RegularGridInterpolator( (lnT, lnrho), lnk_scatter)
 lnk_ross_inter = RegularGridInterpolator( (lnT, lnrho), lnk_ross)
 lnk_planck_inter = RegularGridInterpolator( (lnT, lnrho), lnk_planck)
 
-def opacity(rho: float, T: float, kind: str, ln = False) -> float:
-    """ Return the rosseland mean opacity in [cgs], given a value of density, temperature and and a kind of opacity. If ln = True, then T and rho are lnT and lnrho. Otherwise we convert them.""" 
+def opacity(rho, T, kind, ln = True) -> float:
+    '''
+    Return the rosseland mean opacity in [cgs], given a value of density,
+    temperature and and a kind of opacity. If ln = True, then T and rho are
+    lnT and lnrho. Otherwise we convert them.
+    
+     Parameters
+     ----------
+     rho : float,
+         Density in [cgs].
+     T : float,
+         Temperature in [cgs].
+     kind : str,
+         The kind of opacities. Valid choices are:
+         rosseland, plank or effective.
+     log : bool,
+         If True, then T and rho are lnT and lnrho, Default is True
+     
+    Returns
+    -------
+    opacity : float,
+        The rosseland mean opacity in [cgs].
+    '''    
     if ln == False: 
         T = np.log(T)
         rho = np.log(rho)
