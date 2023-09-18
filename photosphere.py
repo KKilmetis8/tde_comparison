@@ -152,8 +152,8 @@ def get_photosphere(fix, m):
        thetas[i] -= np.pi/2
        phis[i] -= np.pi
     # There is reduduncy!
-    thetas = np.unique(thetas)
-    phis = np.unique(phis)
+    # thetas = np.unique(thetas)
+    # phis = np.unique(phis)
        
     # Evoke!
     Den_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
@@ -165,20 +165,37 @@ def get_photosphere(fix, m):
     Den_casted = np.nan_to_num(Den_casted, neginf = 0)
     T_casted = np.nan_to_num(T_casted, neginf = 0)
     
-    # Make into rays
+    # Make into rays OLD
+    # rays_den = []
+    # rays_T = []
+    # for i, theta in enumerate(thetas):
+    #     for j, phi in enumerate(phis):
+            
+    #         # The Density in each ray
+    #         d_ray = Den_casted[:, i , j]
+    #         rays_den.append(d_ray)
+            
+    #         # The Temperature in each ray
+    #         t_ray = T_casted[:, i , j]
+    #         rays_T.append(t_ray)
+    print(np.array(rays_T).shape)
+
+
+    # Make into rays NEW
     rays_den = []
     rays_T = []
     for i, theta in enumerate(thetas):
-        for j, phi in enumerate(phis):
             
-            # The Density in each ray
-            d_ray = Den_casted[:, i , j]
-            rays_den.append(d_ray)
-            
-            # The Temperature in each ray
-            t_ray = T_casted[:, i , j]
-            rays_T.append(t_ray)
-            
+        # The Density in each ray
+        d_ray = Den_casted[:, i , i]
+        rays_den.append(d_ray)
+        
+        # The Temperature in each ray
+        t_ray = T_casted[:, i , i]
+        rays_T.append(t_ray)
+    print(np.array(rays_T).shape)
+    #IN THAT WAY WE HAVE 192 OBSERVER. WE CAN CHOOSE NOW IF WE PREFER TO CUT SOMEONE    
+    
     # Get the photosphere
     rays_tau = []
     photosphere = np.zeros(len(rays_T))
@@ -202,9 +219,11 @@ if __name__ == "__main__":
     
     # Make Paths
     if m == 4:
-        fixes = np.arange(232,263 + 1)
+        fixes = 232 #np.arange(232,263 + 1)
         fix = 232
         loadpath = '4/'
     if m == 6:
         fixes = [844, 881, 925, 950]
         loadpath = '6/'
+
+    get_photosphere(fixes,m)
