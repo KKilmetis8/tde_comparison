@@ -16,12 +16,18 @@ NOTES FOR OTHERS:
 import numpy as np
 import numba
 import healpy as hp
+import matplotlib.pyplot as plt
+import colorcet
+plt.rcParams['text.usetex'] = True
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['figure.figsize'] = [5 , 3]
+plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
 # Custom Imports
 from src.Calculators.romberg import romberg
 from src.Optical_Depth.opacity_table import opacity
 from astropy.coordinates import cartesian_to_spherical
-from src.Calculators.casters import THE_TRIPLE_CASTER
+from src.Calculators.sphercal_caster import THE_SPHERICAL_CASTER
 
 ################
 # CONSTANTS
@@ -147,58 +153,75 @@ def get_photosphere(fix, m):
     NSIDE = 4 # 192 observers
     thetas = np.zeros(192)
     phis = np.zeros(192)
+    observers = []
     for i in range(0,192):
        thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
        thetas[i] -= np.pi/2
        phis[i] -= np.pi
-    # There is reduduncy!
-    # thetas = np.unique(thetas)
-    # phis = np.unique(phis)
+       
+       # Idea time
+       observers.append( (thetas[i], phis[i]) )
        
     # Evoke!
-    Den_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
+    Den_casted = THE_SPHERICAL_CASTER(radii, R, observers, THETA, PHI,
                       Den,
-                      weights = Mass, avg = True) 
-    T_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
+                      weights = Mass, avg = True, loud = False) 
+    T_casted = THE_SPHERICAL_CASTER(radii, R, observers, THETA, PHI,
                       T, 
                       weights = Mass, avg = True)
     Den_casted = np.nan_to_num(Den_casted, neginf = 0)
     T_casted = np.nan_to_num(T_casted, neginf = 0)
     
-    # Make into rays OLD
-    # rays_den = []
-    # rays_T = []
-    # for i, theta in enumerate(thetas):
-    #     for j, phi in enumerate(phis):
-            
-    #         # The Density in each ray
-    #         d_ray = Den_casted[:, i , j]
-    #         rays_den.append(d_ray)
-            
-    #         # The Temperature in each ray
-    #         t_ray = T_casted[:, i , j]
-    #         rays_T.append(t_ray)
-
-    # Make into rays NEW
+    plt.figure()
+    plt.title('Den Casted')
+    img = plt.imshow(Den_casted.T, cmap = 'cet_fire')
+    cbar = plt.colorbar(img)
+    #%% Make into rays OLD
     rays_den = []
     rays_T = []
-    for i, theta in enumerate(thetas):
+    # for observer in observers:
+    #     theta_obs = observer[0]
+    #     phi_obs = observer[1]
+        
+    #     i = np.where(thetas == theta_obs)
+    #     j = np.where(phis == phi_obs)
+    #     print(i)
+    #     # The Density in each ray
+    #     d_ray = Den_casted[:, i , j]
+    #     rays_den.append(d_ray)
+        
+    #     # The Temperature in each ray
+    #     t_ray = T_casted[:, i , j]
+    #     rays_T.append(t_ray)
+        
+    # Make into rays NEW
+    for i, observer in enumerate(observers):
             
         # The Density in each ray
-        d_ray = Den_casted[:, i , i]
+        d_ray = Den_casted[:, i]
         rays_den.append(d_ray)
         
         # The Temperature in each ray
-        t_ray = T_casted[:, i , i]
+        t_ray = T_casted[:, i]
         rays_T.append(t_ray)
-    #print(np.array(rays_T).shape) #Check number of rays/observers
-    #IN THAT WAY WE HAVE 192 OBSERVER. WE CAN CHOOSE NOW IF WE PREFER TO CUT SOMEONE    
+        
+    print('Shape Ray:',np.shape(rays_T))
+    
+    # img = plt.pcolormesh(radii, np.arange(len(rays_den)), rays_den, 
+    #                      cmap = 'cet_fire')
+    # cbar = plt.colorbar(img)
+    # plt.title('Rays')
+    # cbar.set_label('Radiation Energy Density')
+    # plt.xlabel('r')
+    # plt.ylabel('Various observers')
+    # img.axes.get_yaxis().set_ticks([])
     
     # Get the photosphere
     rays_tau = []
     photosphere = np.zeros(len(rays_T))
     
     for i in range(len(rays_T)):
+        
         
         # Isolate each ray
         T_of_single_ray = rays_T[i]

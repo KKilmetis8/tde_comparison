@@ -17,16 +17,16 @@ plt.rcParams['figure.figsize'] = [10 , 3]
 NSIDE = 4
 
 # Healpix plot
-# NPIX = hp.nside2npix(NSIDE)
-# print(
-#     "Approximate resolution at NSIDE {} is {:.2} deg".format(
-#         NSIDE, hp.nside2resol(NSIDE, arcmin=True) / 60
-#     )
-# ) 
-# m = np.arange(NPIX)
-# hp.mollview(m, title="Mollview image RING")
-# hp.graticule()
-# plt.show()
+NPIX = hp.nside2npix(NSIDE)
+print(
+    "Approximate resolution at NSIDE {} is {:.2} deg".format(
+        NSIDE, hp.nside2resol(NSIDE, arcmin=True) / 60
+    )
+) 
+m = np.arange(NPIX)
+hp.mollview(m, title="Mollview image RING")
+hp.graticule()
+plt.show()
 
 # Healpix and my plots
 thetas_hp = np.zeros(192)
