@@ -18,7 +18,7 @@ from src.Optical_Depth.opacity_table import opacity
 
 # Choose BH
 m = 6
-fixes = [844, 881, 925, 950]
+fixes = [844] #[844, 881, 925, 950]
 
 # Constants
 c = 2.9979e10 #[cm/s]
@@ -79,19 +79,21 @@ if __name__ == "__main__":
             global_lum += luminosity(rays_T[i], rays_den[i],  rays_tau[i], 
                                      volume)
         lums.append( np.log10(global_lum))
-    from src.Utilities.finished import finished
-    finished()
+    print(lums)
 #%% Plotting
     plt.rcParams['text.usetex'] = True
     plt.rcParams['figure.dpi'] = 300
     plt.rcParams['figure.figsize'] = [5 , 3]
     plt.rcParams['axes.facecolor'] = 'whitesmoke'
     
-    days = [40, 45, 52, 55]
-    
+    days = [40] #[40, 45, 52, 55]
+    plt.ylim(41.5,45.5)
+    plt.xlim(39,56)
     plt.plot(days, lums, 'o-', c = 'royalblue')
     plt.title(r'$10^' + str(m) + ' M_\odot$ BB Fit')
     plt.xlabel('Days')
     plt.ylabel('Bolometric Luminosity $log_{10}(L)$ $[L_\odot]$')
     plt.grid()
+    plt.show()
+    plt.savefig('plot.png')
 

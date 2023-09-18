@@ -178,8 +178,6 @@ def get_photosphere(fix, m):
     #         # The Temperature in each ray
     #         t_ray = T_casted[:, i , j]
     #         rays_T.append(t_ray)
-    print(np.array(rays_T).shape)
-
 
     # Make into rays NEW
     rays_den = []
@@ -193,7 +191,7 @@ def get_photosphere(fix, m):
         # The Temperature in each ray
         t_ray = T_casted[:, i , i]
         rays_T.append(t_ray)
-    print(np.array(rays_T).shape)
+    #print(np.array(rays_T).shape) #Check number of rays/observers
     #IN THAT WAY WE HAVE 192 OBSERVER. WE CAN CHOOSE NOW IF WE PREFER TO CUT SOMEONE    
     
     # Get the photosphere
@@ -215,7 +213,7 @@ def get_photosphere(fix, m):
     return rays_den, rays_T, rays_tau, photosphere, radii
 
 if __name__ == "__main__":
-    m = 4 # M_bh = 10^m M_sol | Choose 4 or 6
+    m = 6 # M_bh = 10^m M_sol | Choose 4 or 6
     
     # Make Paths
     if m == 4:
@@ -223,7 +221,8 @@ if __name__ == "__main__":
         fix = 232
         loadpath = '4/'
     if m == 6:
-        fixes = [844, 881, 925, 950]
+        fixes = [844] #[844, 881, 925, 950]
         loadpath = '6/'
 
-    get_photosphere(fixes,m)
+    for fix in fixes:
+        get_photosphere(fix,m)
