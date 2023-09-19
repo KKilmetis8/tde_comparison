@@ -16,13 +16,13 @@ plt.rcParams['figure.figsize'] = [5 , 3]
 import colorcet
 import numba
 from astropy.coordinates import cartesian_to_spherical
-from src.Calculators.casters import THE_TRIPLE_CASTER
+#from src.Calculators.casters import THE_TRIPLE_CASTER
+from src.Calculators.spherical_caster import THE_SPHERICAL_CASTER
 from src.Optical_Depth.opacity_table import opacity
 import healpy as hp
 
 # Snapshots of the simulation which we will use
-fixes = np.arange(232,263 + 1)
-fix = 232
+fixes = [232] #np.arange(232,263 + 1)
 # fixes = [844, 881, 925, 950]
 # For isotropic observers, set Healpy = True, otherwise false.
 healpy = True
@@ -99,13 +99,16 @@ def doer_of_thing(fix, m):
     if healpy:
         thetas = np.zeros(192)
         phis = np.zeros(192)
+        observers = []
         for i in range(0,192):
            thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
            thetas[i] -= np.pi/2
            phis[i] -= np.pi
+           
+           observers.append( (thetas[i], phis[i]) )
         # There is reduduncy!
-        thetas = np.unique(thetas)
-        phis = np.unique(phis)
+        # thetas = np.unique(thetas)
+        # phis = np.unique(phis)
         
     else:     
         t_num = 7
@@ -113,38 +116,73 @@ def doer_of_thing(fix, m):
         thetas = np.linspace(-np.pi/2, np.pi/2, num = t_num) 
         phis = np.linspace(0, 2 * np.pi, num = p_num)
         
-    #%% Cast
-    Rad_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
-                      Rad, 
-                      weights = Mass, avg = True)
-    Den_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
+    #%% Cast OLD CODE
+    # Rad_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
+    #                   Rad, 
+    #                   weights = Mass, avg = True)
+    # Den_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
+    #                   Den,
+    #                   weights = Mass, avg = True) 
+    # T_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
+    #                   T, 
+    #                   weights = Mass, avg = True)
+    # Rad_casted = np.nan_to_num(Rad_casted)
+    
+    #%% Cast NEW CODE
+    Rad_casted = THE_SPHERICAL_CASTER(radii, R, observers, THETA, PHI,
+                      Rad,
+                      weights = Mass, avg = True, loud = False) 
+    Den_casted = THE_SPHERICAL_CASTER(radii, R, observers, THETA, PHI,
                       Den,
-                      weights = Mass, avg = True) 
-    T_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
+                      weights = Mass, avg = True, loud = False) 
+    T_casted = THE_SPHERICAL_CASTER(radii, R, observers, THETA, PHI,
                       T, 
                       weights = Mass, avg = True)
     Rad_casted = np.nan_to_num(Rad_casted)
-    #%% Make Rays
+    # Den_casted = np.nan_to_num(Den_casted, neginf = 0)
+    # T_casted = np.nan_to_num(T_casted, neginf = 0)
+
+    #%% Make Rays OLD
+    # rays = []
+    # rays_den = []
+    # rays_T = []
+    # for i, theta in enumerate(thetas):
+    #     for j, phi in enumerate(phis):
+    #         # Ray holds Erad
+    #         rays.append(Rad_casted[: , i , j])
+            
+    #         # The Density in each ray
+    #         d_ray = Den_casted[:, i , j]
+    #         d_ray = np.log10(d_ray)
+    #         d_ray = np.nan_to_num(d_ray, neginf = 0)
+    #         rays_den.append(d_ray)
+            
+    #         # The Temperature in each ray
+    #         t_ray = T_casted[:, i , j]
+    #         t_ray = np.log10(t_ray)
+    #         t_ray = np.nan_to_num(t_ray, neginf = 0)
+    #         rays_T.append(t_ray)
+    
+    #%% Make Rays NEW
     rays = []
     rays_den = []
     rays_T = []
-    for i, theta in enumerate(thetas):
-        for j, phi in enumerate(phis):
-            # Ray holds Erad
-            rays.append(Rad_casted[: , i , j])
-            
-            # The Density in each ray
-            d_ray = Den_casted[:, i , j]
-            d_ray = np.log10(d_ray)
-            d_ray = np.nan_to_num(d_ray, neginf = 0)
-            rays_den.append(d_ray)
-            
-            # The Temperature in each ray
-            t_ray = T_casted[:, i , j]
-            t_ray = np.log10(t_ray)
-            t_ray = np.nan_to_num(t_ray, neginf = 0)
-            rays_T.append(t_ray)
-    
+    for i, observer in enumerate(observers):
+        # Ray holds Erad
+        rays.append(Rad_casted[: , i])
+
+        # The Density in each ray
+        d_ray = Den_casted[:, i]
+        d_ray = np.log10(d_ray)
+        d_ray = np.nan_to_num(d_ray, neginf = 0)
+        rays_den.append(d_ray)    
+
+        # The Temperature in each ray
+        t_ray = T_casted[:, i]
+        t_ray = np.log10(t_ray)
+        t_ray = np.nan_to_num(t_ray, neginf = 0)
+        rays_T.append(t_ray)
+ 
     #%% Let's see how it looks 
     print(np.shape(rays))
     img = plt.pcolormesh(radii, np.arange(len(rays)), rays, cmap = 'cet_gouldian')
@@ -191,7 +229,7 @@ def doer_of_thing(fix, m):
     
     def flux_calculator(grad_E, idx, 
                      rays, rays_T, rays_den):
-        
+        print(rays_T)
         f = np.zeros(len(grad_E))
         max_count = 0
         zero_count = 0
@@ -268,12 +306,11 @@ lums = []
 for fix in fixes:
     lum = doer_of_thing(fix, m)
     lums.append(lum)
-from src.Utilities.finished import finished
-finished()
  #%%
 plt.figure()
 if m == 4:
-    days = [4.02,4.06,4.1,4.13,4.17,4.21,4.24,4.28,4.32,4.35,4.39,4.43,4.46,4.5,4.54,4.57,4.61,4.65,4.68,4.72,4.76,4.79,4.83,4.87,4.91,4.94,4.98,5.02,5.05,5.09,5.13,5.16]
+    days = [4.02]
+    #days = [4.02,4.06,4.1,4.13,4.17,4.21,4.24,4.28,4.32,4.35,4.39,4.43,4.46,4.5,4.54,4.57,4.61,4.65,4.68,4.72,4.76,4.79,4.83,4.87,4.91,4.94,4.98,5.02,5.05,5.09,5.13,5.16]
 else:
     days = [40, 45, 52, 55]
 plt.plot(days, lums, '-o', color = 'maroon')
@@ -283,3 +320,4 @@ plt.ylabel('Bolometric Luminosity [erg/s]')
 plt.xlabel('Days')
 plt.title('FLD for $10^4 \quad M_\odot$')
 plt.grid()
+plt.show()

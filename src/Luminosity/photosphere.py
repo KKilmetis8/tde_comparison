@@ -24,10 +24,10 @@ plt.rcParams['figure.figsize'] = [5 , 3]
 plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
 # Custom Imports
-from src.Calculators.romberg import romberg
+# from src.Calculators.romberg import romberg
 from src.Optical_Depth.opacity_table import opacity
 from astropy.coordinates import cartesian_to_spherical
-from src.Calculators.sphercal_caster import THE_SPHERICAL_CASTER
+from src.Calculators.spherical_caster import THE_SPHERICAL_CASTER
 
 ################
 # CONSTANTS

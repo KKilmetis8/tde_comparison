@@ -18,7 +18,7 @@ from src.Optical_Depth.opacity_table import opacity
 
 # Choose BH
 m = 6
-fixes = [844, 881, 925, 950]
+fixes = [844]# [844, 881, 925, 950]
 
 # Constants
 c = 2.9979e10 #[cm/s]
@@ -87,7 +87,7 @@ if __name__ == "__main__":
     plt.rcParams['figure.figsize'] = [5 , 3]
     plt.rcParams['axes.facecolor'] = 'whitesmoke'
     
-    days = [40, 45, 52, 55]
+    days = [40] #[40, 45, 52, 55]
     plt.ylim(41.5,45.5)
     plt.xlim(39,56)
     plt.plot(days, lums, 'o-', c = 'royalblue')
