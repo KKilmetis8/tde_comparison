@@ -106,8 +106,8 @@ def doer_of_thing(fix, m):
            
            observers.append( (thetas[i], phis[i]) )
         # There is reduduncy!
-        # thetas = np.unique(thetas)
-        # phis = np.unique(phis)
+        thetas = np.unique(thetas)
+        phis = np.unique(phis)
         
     else:     
         t_num = 7
@@ -196,7 +196,6 @@ def doer_of_thing(fix, m):
     
     def flux_calculator(grad_E, idx, 
                      rays, rays_T, rays_den):
-        print(rays_T)
         f = np.zeros(len(grad_E))
         max_count = 0
         zero_count = 0
@@ -221,9 +220,10 @@ def doer_of_thing(fix, m):
             # Low temperatures are assosciated with the stream, this is a zero
             # order way to discard the stream
             if Temperature < 8.666:
+
                 continue 
-                
-            k_ross = opacity(Density, Temperature, 'rosseland', ln = True)
+
+            k_ross = opacity(Temperature, Density, 'rosseland', ln = True)
             
             # Calc R, eq. 28
             R = np.abs(grad_E[i]) /  (k_ross * Energy)

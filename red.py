@@ -16,13 +16,12 @@ plt.rcParams['figure.figsize'] = [5 , 3]
 import colorcet
 import numba
 from astropy.coordinates import cartesian_to_spherical
-#from src.Calculators.casters import THE_TRIPLE_CASTER
 from src.Calculators.spherical_caster import THE_SPHERICAL_CASTER
 from src.Optical_Depth.opacity_table import opacity
 import healpy as hp
 
 # Snapshots of the simulation which we will use
-fixes = [232] #np.arange(232,263 + 1)
+fixes = np.arange(232,263 + 1)
 # fixes = [844, 881, 925, 950]
 # For isotropic observers, set Healpy = True, otherwise false.
 healpy = True
@@ -96,37 +95,15 @@ def doer_of_thing(fix, m):
         num = 500 #350
     radii = np.linspace(start, stop, num)
     
-    if healpy:
-        thetas = np.zeros(192)
-        phis = np.zeros(192)
-        observers = []
-        for i in range(0,192):
-           thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
-           thetas[i] -= np.pi/2
-           phis[i] -= np.pi
-           
-           observers.append( (thetas[i], phis[i]) )
-        # There is reduduncy!
-        # thetas = np.unique(thetas)
-        # phis = np.unique(phis)
+    thetas = np.zeros(192)
+    phis = np.zeros(192)
+    observers = []
+    for i in range(0,192):
+        thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
+        thetas[i] -= np.pi/2
+        phis[i] -= np.pi
         
-    else:     
-        t_num = 7
-        p_num = 16
-        thetas = np.linspace(-np.pi/2, np.pi/2, num = t_num) 
-        phis = np.linspace(0, 2 * np.pi, num = p_num)
-        
-    #%% Cast OLD CODE
-    # Rad_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
-    #                   Rad, 
-    #                   weights = Mass, avg = True)
-    # Den_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
-    #                   Den,
-    #                   weights = Mass, avg = True) 
-    # T_casted = THE_TRIPLE_CASTER(radii, R, thetas, THETA, phis, PHI,
-    #                   T, 
-    #                   weights = Mass, avg = True)
-    # Rad_casted = np.nan_to_num(Rad_casted)
+        observers.append( (thetas[i], phis[i]) )
     
     #%% Cast NEW CODE
     Rad_casted = THE_SPHERICAL_CASTER(radii, R, observers, THETA, PHI,
@@ -141,27 +118,6 @@ def doer_of_thing(fix, m):
     Rad_casted = np.nan_to_num(Rad_casted)
     # Den_casted = np.nan_to_num(Den_casted, neginf = 0)
     # T_casted = np.nan_to_num(T_casted, neginf = 0)
-
-    #%% Make Rays OLD
-    # rays = []
-    # rays_den = []
-    # rays_T = []
-    # for i, theta in enumerate(thetas):
-    #     for j, phi in enumerate(phis):
-    #         # Ray holds Erad
-    #         rays.append(Rad_casted[: , i , j])
-            
-    #         # The Density in each ray
-    #         d_ray = Den_casted[:, i , j]
-    #         d_ray = np.log10(d_ray)
-    #         d_ray = np.nan_to_num(d_ray, neginf = 0)
-    #         rays_den.append(d_ray)
-            
-    #         # The Temperature in each ray
-    #         t_ray = T_casted[:, i , j]
-    #         t_ray = np.log10(t_ray)
-    #         t_ray = np.nan_to_num(t_ray, neginf = 0)
-    #         rays_T.append(t_ray)
     
     #%% Make Rays NEW
     rays = []
@@ -256,7 +212,7 @@ def doer_of_thing(fix, m):
             if Temperature < 8.666:
                 continue 
                 
-            k_ross = opacity(Density, Temperature, 'rosseland', ln = True)
+            k_ross = opacity(Temperature, Density, 'rosseland', ln = True)
             
             # Calc R, eq. 28
             R = np.abs(grad_E[i]) /  (k_ross * Energy)
@@ -309,10 +265,11 @@ for fix in fixes:
  #%%
 plt.figure()
 if m == 4:
-    days = [4.02]
-    #days = [4.02,4.06,4.1,4.13,4.17,4.21,4.24,4.28,4.32,4.35,4.39,4.43,4.46,4.5,4.54,4.57,4.61,4.65,4.68,4.72,4.76,4.79,4.83,4.87,4.91,4.94,4.98,5.02,5.05,5.09,5.13,5.16]
-else:
+    days = [1.005, 1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1-1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29]
+    #days = [4.02,4.06,4.1,4.13,4.17,4.21,4.24,4.28,4.32,4.35,4.39,4.43,4.46,4.5,4.54,4.57,4.61,4.65,4.68,4.72,4.76,4.79,4.83,4.87,4.91,4.94,4.98,5.02,5.05,5.09,5.13,5.16] #days
+if m == 6:
     days = [40, 45, 52, 55]
+np.savetxt('red_'+m, (days, lums))
 plt.plot(days, lums, '-o', color = 'maroon')
 plt.yscale('log')
 plt.ylim(1e41,1e45)
@@ -320,4 +277,4 @@ plt.ylabel('Bolometric Luminosity [erg/s]')
 plt.xlabel('Days')
 plt.title('FLD for $10^4 \quad M_\odot$')
 plt.grid()
-plt.show()
+#plt.show()
