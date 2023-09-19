@@ -264,7 +264,7 @@ for fix in fixes:
     lums.append(lum)
  #%%
 plt.figure()
-np.savetxt('reddata_m'+str(m), (days, lums))
+np.savetxt('reddata_m'+ str(m) + '.txt', (days, lums))
 plt.plot(days, lums, '-o', color = 'maroon')
 plt.yscale('log')
 plt.ylim(1e41,1e45)
