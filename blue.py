@@ -35,7 +35,7 @@ Rsol_to_cm = 6.957e10
 m = 6 # Choose BH
 if m == 4:
     fixes = np.arange(233,263 + 1)
-    days = [1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1-1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29] #t/t_fb
+    days = [1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1.1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29] #t/t_fb
     #days = [4.06,4.1,4.13,4.17,4.21,4.24,4.28,4.32,4.35,4.39,4.43,4.46,4.5,4.54,4.57,4.61,4.65,4.68,4.72,4.76,4.79,4.83,4.87,4.91,4.94,4.98,5.02,5.05,5.09,5.13,5.16] #days
 if m == 6:
     fixes = [844, 881, 925, 950]
@@ -104,7 +104,7 @@ if __name__ == "__main__":
             lum = luminosity(rays_T[i], rays_den[i],  rays_tau[i], 
                                      volume)
             global_lum += lum
-        lums.append( np.log10(global_lum))
+        lums.append(global_lum) #AS IN THE RED ONE, WE DO THE LOG IN THE PLOT, NOT HERE
     print(lums)
 #%% Plotting
     plt.rcParams['text.usetex'] = True
@@ -112,14 +112,12 @@ if __name__ == "__main__":
     plt.rcParams['figure.figsize'] = [5 , 3]
     plt.rcParams['axes.facecolor'] = 'whitesmoke'
     
-    
-    #plt.ylim(41.5,45.5)
-    #plt.xlim(39,56)
-    plt.plot(days, lums, 'o-', c = 'royalblue')
+    plt.plot(days,np.log10(lums), 'o-', c = 'royalblue')
+    np.savetxt('bluedata_m' + str(m) + '.txt', (days, lums))
     plt.title(r'$10^' + str(m) + ' M_\odot$ BB Fit')
     plt.xlabel('Days')
     plt.ylabel('Bolometric Luminosity $log_{10}(L)$ $[L_\odot]$')
     plt.grid()
-    plt.show()
-    plt.savefig('plot.png')
+    #plt.show()
+    #plt.savefig('plot.png')
 
