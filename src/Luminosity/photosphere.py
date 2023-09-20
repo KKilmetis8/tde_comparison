@@ -172,10 +172,10 @@ def get_photosphere(fix, m):
     Den_casted = np.nan_to_num(Den_casted, neginf = 0)
     T_casted = np.nan_to_num(T_casted, neginf = 0)
     
-    plt.figure()
-    plt.title('Den Casted')
-    img = plt.imshow(Den_casted.T, cmap = 'cet_fire')
-    cbar = plt.colorbar(img)
+    # plt.figure()
+    # plt.title('Den Casted')
+    # img = plt.imshow(Den_casted.T, cmap = 'cet_fire')
+    # cbar = plt.colorbar(img)
     #%% Make into rays OLD
     rays_den = []
     rays_T = []

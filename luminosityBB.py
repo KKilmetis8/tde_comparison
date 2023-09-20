@@ -28,8 +28,8 @@ Kb = 1.3806e-16 #[gcm^2/s^2K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 Rsol_to_cm = 6.957e10
 
-n_min = 1e2 # [Hz] minimum frequency for integration
-n_max = 1e24 # [Hz] maximum frequency for integration
+n_min = 1e10 # [Hz] minimum frequency for integration
+n_max = 1e14 # [Hz] maximum frequency for integration
 n_array = np.linspace(n_min,n_max, 1000)
 
 ###
@@ -76,7 +76,6 @@ def luminosity_n(Temperature, Density, tau, volume, n):
     """
     Temperature, Density and volume: np.array from near to the BH to far away. Thus we will use negative index in the for loop.
     tau: np.array from outside to inside.
-    All these array have the same shape and are in CGS.
     n is the frequency.
 
     We obtain luminosity as function of frequency.
@@ -100,12 +99,15 @@ def luminosity_n(Temperature, Density, tau, volume, n):
         lum += lum_cell
     return (lum/planck_fun_cell(T))
 
-def luminosity(Temperature, Density,  tau, volume):
+def luminosity(Temperature, Density, tau, volume):
     """Gives NOT normalised bolometric luminosity."""
-    lum_n_array = luminosity_n(Temperature, Density, tau, volume, n_array)
-    print(lum_n_array.shape)
-    print(n_array.shape)
+    lum_n_array = []
+    for n in n_array:
+        value = luminosity_n(Temperature, Density, tau, volume, n)
+        lum_n_array.append(value)
+    lum_n_array = np.array(lum_n_array)
     lum = np.trapz(lum_n_array, n_array)
+    #print(lum)
     return lum 
     
 def normalised_luminosity_n(Temperature, Density,  tau, volume, n, luminosity_fld):
@@ -113,6 +115,10 @@ def normalised_luminosity_n(Temperature, Density,  tau, volume, n, luminosity_fl
     luminosity_fld: float. It's the luminosity with FLD method from the considered snapshot.
     Gives the luminosity normalised with FLD model. """
     value = luminosity_n(Temperature, Density, tau, volume, n) * luminosity_fld / luminosity(Temperature, Density,  tau, volume)
+    value = np.nan_to_num(value)
+    # print('fix fld:',luminosity_fld)
+    # print('lum:', luminosity(Temperature, Density,  tau, volume))
+    # print('value:',value)
     return value
 
 if __name__ == "__main__":
@@ -125,11 +131,10 @@ if __name__ == "__main__":
     
     global_lum = 0 
     for i, ray in  enumerate(rays_den):
-        lum = luminosity(rays_T[i], rays_den[i],  rays_tau[i], volume)        
-        #lum = normalised_luminosity_n(rays_T[i], rays_den[i],  rays_tau[i], 
-                                    # volume, n_array, luminosity_fld_fix[0])
+        lum = normalised_luminosity_n(rays_T[i], rays_den[i],  rays_tau[i], 
+                                      volume, n_array, luminosity_fld_fix[0])
         global_lum += lum
-    print(global_lum)
+    #print(global_lum)
 
     plt.plot(global_lum, n_array)
     plt.show()
