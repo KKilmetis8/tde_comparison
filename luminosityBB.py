@@ -28,9 +28,13 @@ Kb = 1.3806e-16 #[gcm^2/s^2K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 Rsol_to_cm = 6.957e10
 
-n_min = 1e10 # [Hz] minimum frequency for integration
-n_max = 1e14 # [Hz] maximum frequency for integration
-n_array = np.linspace(n_min,n_max, 1000)
+n_min = 1e12 # [Hz] minimum frequency for integration
+n_max = 1e18 # [Hz] maximum frequency for integration
+n_spacing = 1000
+n_array = np.linspace(n_min,n_max, n_spacing)
+
+#Wien law
+const_npeak = 5.879e10 #[Hz/K]
 
 ###
 ##
@@ -60,25 +64,40 @@ def emissivity(Temperature, Density, cell_vol):
     emiss = alpha * c * Temperature**4 * k_planck * cell_vol
     return emiss
 
-def planck_fun_n_cell(Temperature, n):
+def find_peak(Temperature):
+    """Find n peak with Wien law."""
+    npeak = const_npeak * Temperature
+    return 10*npeak
+
+def planck_fun_n_cell(Temperature: int, n: int) -> int:
     """ Planck function in a cell. """
     const = 2*h/c**2
-    fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
+    peak = find_peak(Temperature)
+    if n> 10*peak:
+        fun = 0
+    else:
+        fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
     return fun
 
-def planck_fun_cell(Temperature):
-    """Bolometric planck function in a cell."""
-    planck_fun_n_array = planck_fun_n_cell(Temperature, n_array)
+def planck_fun_cell(Temperature: int) -> int:
+    """
+    Bolometric planck function in a cell. 
+    We select the range for frequency in order to no overcome the peak or we have a mess.
+    """
+    for n in n_array:
+        planck_fun_n_array_single = planck_fun_n_cell(Temperature, n)
+        planck_fun_n_array.append(planck_fun_n_array_single)
+    planck_fun_n_array = np.array(planck_fun_n_array)
     fun = np.trapz(planck_fun_n_array, n_array)
     return fun
 
-def luminosity_n(Temperature, Density, tau, volume, n):
+def luminosity_n(Temperature: np.array, Density: np.array, tau: np.array, volume: np.array, n:int):
     """
     Temperature, Density and volume: np.array from near to the BH to far away. Thus we will use negative index in the for loop.
     tau: np.array from outside to inside.
     n is the frequency.
 
-    We obtain luminosity as function of frequency.
+    We obtain luminosity in a ray as function of frequency.
     """
     lum = 0
     for i in range(len(tau)):              
@@ -99,57 +118,60 @@ def luminosity_n(Temperature, Density, tau, volume, n):
         lum += lum_cell
     return (lum/planck_fun_cell(T))
 
-def luminosity(Temperature, Density, tau, volume):
-    """Gives NOT normalised bolometric luminosity."""
-    lum_n_array = []
+def luminosity(Temperature: np.array, Density: np.array, tau: np.array, volume: np.array) -> int:
+    """Gives NOT normalised bolometric luminosity in a ray."""
     for n in n_array:
         value = luminosity_n(Temperature, Density, tau, volume, n)
         lum_n_array.append(value)
     lum_n_array = np.array(lum_n_array)
     lum = np.trapz(lum_n_array, n_array)
-    #print(lum)
     return lum 
     
-def normalised_luminosity_n(Temperature, Density,  tau, volume, n, luminosity_fld):
+def normalised_luminosity_n(Temperature: np.array, Density: np.array, tau: np.array, volume: np.array, n: int, luminosity_fld: int):
     """
     luminosity_fld: float. It's the luminosity with FLD method from the considered snapshot.
     Gives the luminosity normalised with FLD model. """
-    value = luminosity_n(Temperature, Density, tau, volume, n) * luminosity_fld / luminosity(Temperature, Density,  tau, volume)
-    value = np.nan_to_num(value)
-    # print('fix fld:',luminosity_fld)
-    # print('lum:', luminosity(Temperature, Density,  tau, volume))
-    # print('value:',value)
-    return value
+    norm = luminosity_fld / luminosity(Temperature, Density,  tau, volume)
+    value = luminosity_n(Temperature, Density,  tau, volume, n)
+    # value = np.nan_to_num(value) #maybe we don't need this beacuse we've selected the range of freuency
+    return value * norm
 
 if __name__ == "__main__":
+    #CHECK PLANCK
+    # check_planck_n = []
+    # for n in n_array:
+    #     a = planck_fun_n_cell(1e6, n)
+    #     check_planck_n.append(np.log10(a))
+    # plt.plot(np.log10(n_array),np.array(check_planck_n))
+    # plt.xlim(8,18)
+
     fix = 233
     fld_data = np.loadtxt('reddata_m'+ str(m) +'.txt')
     luminosity_fld_fix = fld_data[1]
     rays_den, rays_T, rays_tau, photosphere, radii = get_photosphere(fix, m)
     dr = (radii[1] - radii[0]) * Rsol_to_cm
-    volume = 4 * np.pi * radii**2 * dr  / 192 # fix when we get 192
+    volume = 4 * np.pi * radii**2 * dr  / 192 
     
-    global_lum = 0 
-    for i, ray in  enumerate(rays_den):
-        lum = normalised_luminosity_n(rays_T[i], rays_den[i],  rays_tau[i], 
-                                      volume, n_array, luminosity_fld_fix[0])
-        global_lum += lum
-    #print(global_lum)
+    lum_tilde_n = []
+    for n in n_array:
+        lum_n = 0
+        for i, ray in enumerate(rays_den):
+            lum = normalised_luminosity_n(rays_T[i],  rays_den[i], rays_tau[i], 
+                                    volume, n, luminosity_fld_fix[0])
+            lum_n += lum
+    lum_tilde_n.append(lum_n)
 
-    plt.plot(global_lum, n_array)
+    # lum_tilde_n = []
+    # for n in n_array:
+    #     lum_ray = 0 
+    #     for i, ray in enumerate(rays_den):
+    #         lum_one_ray = 0
+    #         for j in range(0,len(rays_T[i])):
+    #             lum = normalised_luminosity_n(rays_T[i][j],  rays_den[i][j], rays_tau[i][j], 
+    #                                     volume, n, luminosity_fld_fix[0])
+    #             lum_one_ray += lum
+    #         lum_ray += lum_one_ray
+    #     lum_tilde_n.append(lum_ray)
+    plt.plot(n_array, np.array(lum_tilde_n))
     plt.show()
-#%% Plotting
-    # plt.rcParams['text.usetex'] = True
-    # plt.rcParams['figure.dpi'] = 300
-    # plt.rcParams['figure.figsize'] = [5 , 3]
-    # plt.rcParams['axes.facecolor'] = 'whitesmoke'
-    
-    # plt.plot(days,np.log10(lums), 'o-', c = 'royalblue')
-    # np.savetxt('bluedata_m' + str(m) + '.txt', (days, lums))
-    # plt.title(r'$10^' + str(m) + ' M_\odot$ BB Fit')
-    # plt.xlabel('Days')
-    # plt.ylabel('Bolometric Luminosity $log_{10}(L)$ $[L_\odot]$')
-    # plt.grid()
-    # plt.show()
-    # # plt.savefig('plot.png')
 
