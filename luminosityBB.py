@@ -8,9 +8,9 @@ Created on Tue Sep 12 16:02:14 2023
 Calculate the luminosity NOT normalized that we will use in the blue (BB) curve.
 
 NOTES FOR OTHERS:
-- arguments are in CGS
-- temperature and density have to be in log10(CGS) scale ONLY in the functions: luminosity_n, luminosity and normalised_luminosity_n
-- make changes in VARIABLES: fixes (number of snapshots) anf thus days
+- All the functions have to be applied to a CELL
+- arguments are in cgs, NOT in log.
+- make changes in VARIABLES: frequencies range, fixes (number of snapshots) anf thus days
 """
 
 # Vanilla imports
@@ -29,11 +29,6 @@ Kb = 1.3806e-16 #[gcm^2/s^2K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 Rsol_to_cm = 6.957e10
 
-n_min = 1e12 # [Hz] minimum frequency for integration
-n_max = 1e18 # [Hz] maximum frequency for integration
-n_spacing = 1000
-n_array = np.logspace(np.log10(n_min),np.log10(n_max), num = n_spacing)
-
 # Wien law
 const_npeak = 5.879e10 #[Hz/K]
 
@@ -43,10 +38,16 @@ const_npeak = 5.879e10 #[Hz/K]
 ##
 ###
 
+# Frequencies [Hz]
+n_min = 1e12 
+n_max = 1e18 
+n_spacing = 1000
+n_array = np.logspace(np.log10(n_min),np.log10(n_max), num = n_spacing)
+
+# Snapshots
 fixes4 = np.arange(233,263 + 1)
 days4 = [1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1.1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29] #t/t_fb
 # days4 = [4.06,4.1,4.13,4.17,4.21,4.24,4.28,4.32,4.35,4.39,4.43,4.46,4.5,4.54,4.57,4.61,4.65,4.68,4.72,4.76,4.79,4.83,4.87,4.91,4.94,4.98,5.02,5.05,5.09,5.13,5.16] #days
-
 fixes6 = [844, 881, 925, 950]
 days6 = [1.00325, 1.13975, 1.302, 1.39425] #t/t_fb
 # days6 = [40, 45, 52, 55] #days
@@ -131,14 +132,10 @@ def luminosity(Temperature: float, Density: float, tau: float, volume: float) ->
     lum = np.trapz(lum_n_array, n_arr)
     return lum 
     
-# def normalised_luminosity_n(Temperature: float, Density: float, tau: float, volume: float, n: float, luminosity_fld: float):
-#     """
-#     luminosity_fld: float. It's the luminosity with FLD method from the considered snapshot.
-#     Gives the luminosity normalised with FLD model. """
-#     norm = luminosity_fld / luminosity(Temperature, Density,  tau, volume)
-#     value = luminosity_n(Temperature, Density,  tau, volume, n)
-#     # value = np.nan_to_num(value) #maybe we don't need this beacuse we've selected the range of freuency
-#     return value * norm
+def normalisation(Temperature: float, Density: float, tau: float, volume: float, luminosity_fld: float) -> float:
+    """ Find the normalisation constant from FLD model. """      
+    norm = luminosity_fld / luminosity(Temperature, Density, tau, volume)
+    return  norm
 
 ######
 # MAIN
@@ -163,33 +160,38 @@ if __name__ == "__main__":
     print(np.array(volume).shape)
 
     lum_tilde_n = np.zeros(len(n_array))
-    for j in range(len(rays_den)):
-        for i in range(len(rays_tau[j])):              
-            T = rays_T[j][-i]
-            rho = rays_den[j][-i] 
-            opt_depth = rays_tau[j][i]
-            cell_vol = volume[-i]
+    # for j in range(len(rays_den)):
+    j=0
+    for i in range(len(rays_tau[j])):              
+        T = rays_T[j][-i]
+        rho = rays_den[j][-i] 
+        opt_depth = rays_tau[j][i]
+        cell_vol = volume[-i]
 
-            # Ensure we can interpolate
-            rho_low = np.exp(-22)
-            T_low = np.exp(8.77)
-            T_high = np.exp(17.8)
-            if rho < rho_low or T < T_low or T > T_high:
-                continue
+        # Ensure we can interpolate
+        rho_low = np.exp(-22)
+        T_low = np.exp(8.77)
+        T_high = np.exp(17.8)
+        if rho < rho_low or T < T_low or T > T_high:
+            continue
 
-            norm = luminosity_fld_fix[0] * luminosity(T, rho, opt_depth, cell_vol)
-            for i in range(len(n_array)):
-                lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[i])
-                lum_tilde_n[i] += lum_nu_cell
-        print(j)
+        # norm = normalisation(T, rho, opt_depth, cell_vol, luminosity_fld_fix[0])
+        norm = luminosity_fld_fix[0] / luminosity(T, rho, opt_depth, cell_vol)
+        for i in range(len(n_array)):
+            lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[i]) * norm
+            lum_tilde_n[i] += lum_nu_cell
+        print(T)
+        print('rho:',rho)
+    print(j)
 
-    
+    plt.figure()
     plt.plot(n_array, lum_tilde_n)
     plt.loglog()
+    plt.subplots_adjust(bottom=0.15)
     plt.xlabel(r'log$\nu$ [Hz]')
-    plt.xlabel(r'log$\tilde{L}_\nu$ [erg/s]')
+    plt.ylabel(r'log$\tilde{L}_\nu$ [erg/s]')
     #plt.title(f'$10^{str(m)}$ BH snap ' + fix )
     plt.grid()
-    plt.savefig('LOG_Ltilda_m' + str(m) + '_snap' + str(fix))
+    #plt.savefig('oneray_Ltilda_m' + str(m) + '_snap' + str(fix))
     plt.show()
 
