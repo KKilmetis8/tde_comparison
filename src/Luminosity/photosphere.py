@@ -117,9 +117,6 @@ def calc_photosphere(rs, rho, T, threshold = 1):
     photosphere =  rs[i]
     return taus, photosphere
 
-################
-# MAIN
-################
 def get_photosphere(fix, m):
     ''' Wrapper function'''
     Mbh = 10**m # * Msol
@@ -234,6 +231,10 @@ def get_photosphere(fix, m):
         rays_tau.append(tau)
         photosphere[i] = photo
     return rays_den, rays_T, rays_tau, photosphere, radii
+
+################
+# MAIN
+################
 
 if __name__ == "__main__":
     m = 6 # M_bh = 10^m M_sol | Choose 4 or 6

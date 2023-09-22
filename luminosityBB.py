@@ -10,12 +10,13 @@ Calculate the luminosity NOT normalized that we will use in the blue (BB) curve.
 NOTES FOR OTHERS:
 - arguments are in CGS
 - temperature and density have to be in log10(CGS) scale ONLY in the functions: luminosity_n, luminosity and normalised_luminosity_n
-- make changes in VARIABLES: m (power index of the BB mass), fixes (number of snapshots) anf thus days
+- make changes in VARIABLES: fixes (number of snapshots) anf thus days
 """
 
 # Vanilla imports
 import numpy as np
 import matplotlib.pyplot as plt
+import numba
 
 # Chocolate imports
 from src.Luminosity.photosphere import get_photosphere
@@ -31,9 +32,9 @@ Rsol_to_cm = 6.957e10
 n_min = 1e12 # [Hz] minimum frequency for integration
 n_max = 1e18 # [Hz] maximum frequency for integration
 n_spacing = 1000
-n_array = np.linspace(n_min,n_max, n_spacing)
+n_array = np.logspace(np.log10(n_min),np.log10(n_max), num = n_spacing)
 
-#Wien law
+# Wien law
 const_npeak = 5.879e10 #[Hz/K]
 
 ###
@@ -42,15 +43,13 @@ const_npeak = 5.879e10 #[Hz/K]
 ##
 ###
 
-m = 4 # Choose BH
-if m == 4:
-    fixes = np.arange(233,263 + 1)
-    days = [1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1.1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29] #t/t_fb
-    # days = [4.06,4.1,4.13,4.17,4.21,4.24,4.28,4.32,4.35,4.39,4.43,4.46,4.5,4.54,4.57,4.61,4.65,4.68,4.72,4.76,4.79,4.83,4.87,4.91,4.94,4.98,5.02,5.05,5.09,5.13,5.16] #days
-if m == 6:
-    fixes = [844, 881, 925, 950]
-    days = [1.00325, 1.13975, 1.302, 1.39425] #t/t_fb
-    # days = [40, 45, 52, 55] #days
+fixes4 = np.arange(233,263 + 1)
+days4 = [1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1.1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29] #t/t_fb
+# days4 = [4.06,4.1,4.13,4.17,4.21,4.24,4.28,4.32,4.35,4.39,4.43,4.46,4.5,4.54,4.57,4.61,4.65,4.68,4.72,4.76,4.79,4.83,4.87,4.91,4.94,4.98,5.02,5.05,5.09,5.13,5.16] #days
+
+fixes6 = [844, 881, 925, 950]
+days6 = [1.00325, 1.13975, 1.302, 1.39425] #t/t_fb
+# days6 = [40, 45, 52, 55] #days
 
 ###
 ##
@@ -141,17 +140,20 @@ def luminosity(Temperature: float, Density: float, tau: float, volume: float) ->
 #     # value = np.nan_to_num(value) #maybe we don't need this beacuse we've selected the range of freuency
 #     return value * norm
 
+######
+# MAIN
+#####
 if __name__ == "__main__":
-    
+    m = 6
     #CHECK PLANCK
     # check_planck_n = []
     # for n in n_array:
     #     a = planck_fun_n_cell(1e6, n)
-    #     check_planck_n.append(np.log10(a))
-    # plt.plot(np.log10(n_array),np.array(check_planck_n))
-    # plt.xlim(8,18)
+    #     check_planck_n.append(a)
+    # plt.plot(n_array,check_planck_n)
+    # plt.loglog()
 
-    fix = 233
+    fix = 844
     fld_data = np.loadtxt('reddata_m'+ str(m) +'.txt')
     luminosity_fld_fix = fld_data[1]
     rays_den, rays_T, rays_tau, photosphere, radii = get_photosphere(fix, m)
@@ -159,9 +161,6 @@ if __name__ == "__main__":
     volume = 4 * np.pi * radii**2 * dr  / 192
     print(np.array(rays_T).shape) 
     print(np.array(volume).shape)
-    # for n in n_array:
-    #     a = normalised_luminosity_n(1e4, 1e-10,1,1e-5,n,10)
-    #     print(a)
 
     lum_tilde_n = np.zeros(len(n_array))
     for j in range(len(rays_den)):
@@ -184,29 +183,13 @@ if __name__ == "__main__":
                 lum_tilde_n[i] += lum_nu_cell
         print(j)
 
-    # lum_tilde_n = []
-    # for n in n_array:
-    #     lum_rays = 0 
-    #     for j in range(len(rays_den)):
-    #         for i in range(len(rays_tau[j])):              
-    #             T = rays_T[j][-i]
-    #             rho = rays_den[j][-i] 
-    #             opt_depth = rays_tau[j][i]
-    #             cell_vol = volume[-i]
-
-    #             # Ensure we can interpolate
-    #             rho_low = np.exp(-22)
-    #             T_low = np.exp(8.77)
-    #             T_high = np.exp(17.8)
-    #             if rho < rho_low or T < T_low or T > T_high:
-    #                 continue
-
-    #             #luminosity in a cell
-    #             lum = normalised_luminosity_n(T,  rho, opt_depth, 
-    #                                     cell_vol, n, luminosity_fld_fix[0])
-    #             lum_rays += lum
-    #         print(j)
-    #     lum_tilde_n.append(lum_rays)
-    plt.plot(np.log10(n_array), np.log10(lum_tilde_n))
+    
+    plt.plot(n_array, lum_tilde_n)
+    plt.loglog()
+    plt.xlabel(r'log$\nu$ [Hz]')
+    plt.xlabel(r'log$\tilde{L}_\nu$ [erg/s]')
+    #plt.title(f'$10^{str(m)}$ BH snap ' + fix )
+    plt.grid()
+    plt.savefig('LOG_Ltilda_m' + str(m) + '_snap' + str(fix))
     plt.show()
 
