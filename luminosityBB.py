@@ -135,6 +135,8 @@ def luminosity(Temperature: float, Density: float, tau: float, volume: float) ->
 def normalisation(Temperature: float, Density: float, tau: float, volume: float, luminosity_fld: float) -> float:
     """ Find the normalisation constant from FLD model. """      
     norm = luminosity_fld / luminosity(Temperature, Density, tau, volume)
+    print('lum',luminosity(Temperature, Density, tau, volume))
+    print('norm',norm)
     return  norm
 
 ######
@@ -149,7 +151,7 @@ if __name__ == "__main__":
     #     check_planck_n.append(a)
     # plt.plot(n_array,check_planck_n)
     # plt.loglog()
-
+    
     fix = 844
     fld_data = np.loadtxt('reddata_m'+ str(m) +'.txt')
     luminosity_fld_fix = fld_data[1]
@@ -160,38 +162,41 @@ if __name__ == "__main__":
     print(np.array(volume).shape)
 
     lum_tilde_n = np.zeros(len(n_array))
-    # for j in range(len(rays_den)):
-    j=0
-    for i in range(len(rays_tau[j])):              
-        T = rays_T[j][-i]
-        rho = rays_den[j][-i] 
-        opt_depth = rays_tau[j][i]
-        cell_vol = volume[-i]
+    for j in range(len(rays_den)):
+        for i in range(len(rays_tau[j])):              
+            T = rays_T[j][-i]
+            rho = rays_den[j][-i] 
+            opt_depth = rays_tau[j][i]
+            cell_vol = volume[-i]
 
-        # Ensure we can interpolate
-        rho_low = np.exp(-22)
-        T_low = np.exp(8.77)
-        T_high = np.exp(17.8)
-        if rho < rho_low or T < T_low or T > T_high:
-            continue
+            # Ensure we can interpolate
+            rho_low = np.exp(-22)
+            T_low = np.exp(8.77)
+            T_high = np.exp(17.8)
+            if rho < rho_low or T < T_low or T > T_high:
+                continue
 
-        # norm = normalisation(T, rho, opt_depth, cell_vol, luminosity_fld_fix[0])
-        norm = luminosity_fld_fix[0] / luminosity(T, rho, opt_depth, cell_vol)
-        for i in range(len(n_array)):
-            lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[i]) * norm
-            lum_tilde_n[i] += lum_nu_cell
-        print(T)
-        print('rho:',rho)
-    print(j)
+            norm = normalisation(T, rho, opt_depth, cell_vol, luminosity_fld_fix[0])
+            for i in range(len(n_array)):
+                lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[i]) * norm
+                lum_tilde_n[i] += lum_nu_cell
+            print(lum_nu_cell)
+            print('rho:',rho)
+        print(j)
+    
+    test = 0
+    for n in range(len(lum_tilde_n)):
+        test += lum_tilde_n[i]
+    print('bolometric luminosity:', test)
 
     plt.figure()
     plt.plot(n_array, lum_tilde_n)
     plt.loglog()
-    plt.subplots_adjust(bottom=0.15)
+    
     plt.xlabel(r'log$\nu$ [Hz]')
     plt.ylabel(r'log$\tilde{L}_\nu$ [erg/s]')
     #plt.title(f'$10^{str(m)}$ BH snap ' + fix )
     plt.grid()
-    #plt.savefig('oneray_Ltilda_m' + str(m) + '_snap' + str(fix))
+    plt.savefig('Ltilda_m' + str(m) + '_snap' + str(fix))
     plt.show()
 
