@@ -86,7 +86,7 @@ def planck_fun_cell(Temperature: float) -> float:
     """
     planck_fun_n_array = []
     peak = find_peak(Temperature)
-    n_arr = np.linspace(n_min,peak,n_spacing)
+    n_arr = np.linspace(n_min,peak,n_spacing)    
     for n in n_arr:
         planck_fun_n_array_single = planck_fun_n_cell(Temperature, n)
         planck_fun_n_array.append(planck_fun_n_array_single)
@@ -100,28 +100,14 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, 
     tau: np.array from outside to inside.
     n is the frequency.
 
-    We obtain luminosity in a ray as function of frequency.
+    We obtain luminosity (at a chosen frequency n) in a cell.
     """
-    # lum = 0
-    # for i in range(len(tau)):              
-    #     T = Temperature[-i]
-    #     rho = Density[-i] 
-    #     opt_depth = tau[i]
-    #     cell_vol = volume[-i]
-
-    #     # Ensure we can interpolate
-    #     rho_low = np.exp(-22)
-    #     T_low = np.exp(8.77)
-    #     T_high = np.exp(17.8)
-    #     if rho < rho_low or T < T_low or T > T_high:
-    #         continue
-        
     epsilon = emissivity(Temperature, Density, volume)
     lum_cell = epsilon * planck_fun_n_cell(Temperature, n) * np.exp(-tau)
     return (lum_cell/planck_fun_cell(Temperature))
 
 def luminosity(Temperature: float, Density: float, tau: float, volume: float) -> int:
-    """Gives NOT normalised bolometric luminosity in a ray."""
+    """Gives NOT normalised bolometric luminosity in a cell."""
     lum_n_array = []
     peak = find_peak(Temperature)
     n_arr = np.linspace(n_min,peak,n_spacing)
@@ -130,27 +116,19 @@ def luminosity(Temperature: float, Density: float, tau: float, volume: float) ->
         lum_n_array.append(value)
     lum_n_array = np.array(lum_n_array)
     lum = np.trapz(lum_n_array, n_arr)
-    return lum 
+    return lum
     
 def normalisation(Temperature: float, Density: float, tau: float, volume: float, luminosity_fld: float) -> float:
     """ Find the normalisation constant from FLD model. """      
     norm = luminosity_fld / luminosity(Temperature, Density, tau, volume)
-    print('lum',luminosity(Temperature, Density, tau, volume))
-    print('norm',norm)
     return  norm
+
 
 ######
 # MAIN
 #####
 if __name__ == "__main__":
     m = 6
-    #CHECK PLANCK
-    # check_planck_n = []
-    # for n in n_array:
-    #     a = planck_fun_n_cell(1e6, n)
-    #     check_planck_n.append(a)
-    # plt.plot(n_array,check_planck_n)
-    # plt.loglog()
     
     fix = 844
     fld_data = np.loadtxt('reddata_m'+ str(m) +'.txt')
@@ -158,8 +136,6 @@ if __name__ == "__main__":
     rays_den, rays_T, rays_tau, photosphere, radii = get_photosphere(fix, m)
     dr = (radii[1] - radii[0]) * Rsol_to_cm
     volume = 4 * np.pi * radii**2 * dr  / 192
-    print(np.array(rays_T).shape) 
-    print(np.array(volume).shape)
 
     lum_tilde_n = np.zeros(len(n_array))
     for j in range(len(rays_den)):
@@ -177,17 +153,10 @@ if __name__ == "__main__":
                 continue
 
             norm = normalisation(T, rho, opt_depth, cell_vol, luminosity_fld_fix[0])
-            for i in range(len(n_array)):
-                lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[i]) * norm
-                lum_tilde_n[i] += lum_nu_cell
-            print(lum_nu_cell)
-            print('rho:',rho)
-        print(j)
-    
-    test = 0
-    for n in range(len(lum_tilde_n)):
-        test += lum_tilde_n[i]
-    print('bolometric luminosity:', test)
+            for n_index in range(len(n_array)):
+                lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index]) * norm
+                lum_tilde_n[n_index] += lum_nu_cell
+        print('ray:', j)
 
     plt.figure()
     plt.plot(n_array, lum_tilde_n)
@@ -197,6 +166,6 @@ if __name__ == "__main__":
     plt.ylabel(r'log$\tilde{L}_\nu$ [erg/s]')
     #plt.title(f'$10^{str(m)}$ BH snap ' + fix )
     plt.grid()
-    plt.savefig('Ltilda_m' + str(m) + '_snap' + str(fix))
+    #plt.savefig('Ltilda_m' + str(m) + '_snap' + str(fix))
     plt.show()
 
