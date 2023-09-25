@@ -96,8 +96,8 @@ def calc_photosphere(rs, T, rho, m, threshold = 1):
 
     Returns
     -------
-    tau : float,
-        The optical depth at photosphere.
+    taus : np.array,
+        The optical depth of every cell.
         
     photosphere : float,
         Where the photosphere is for that ray.
@@ -114,16 +114,13 @@ def calc_photosphere(rs, T, rho, m, threshold = 1):
         num = 350
     #####
     while tau < threshold and i > -num:
-        print(T[i])
-        print(rho[i])
         new_tau = optical_depth(T[i], rho[i], dr)
         tau += new_tau
         taus.append(new_tau) 
         i -= 1
         
     photosphere =  rs[i] #it's negative: from BH to outside
-    #return taus, photosphere
-    return tau, photosphere
+    return taus, photosphere
 
 def get_photosphere(fix, m):
     ''' Wrapper function'''
@@ -197,14 +194,6 @@ def get_photosphere(fix, m):
         
     print('Shape Ray:',np.shape(rays_T))
     
-    # img = plt.pcolormesh(radii, np.arange(len(rays_den)), rays_den, 
-    #                      cmap = 'cet_fire')
-    # cbar = plt.colorbar(img)
-    # plt.title('Rays')
-    # cbar.set_label('Radiation Energy Density')
-    # plt.xlabel('r')
-    # plt.ylabel('Various observers')
-    # img.axes.get_yaxis().set_ticks([])
     
     # Get the photosphere
     rays_tau = []
@@ -217,11 +206,21 @@ def get_photosphere(fix, m):
         Den_of_single_ray = rays_den[i]
         
         # Get Photosphere
-        tau, photo = calc_photosphere(radii, Den_of_single_ray, 
+        taus, photo = calc_photosphere(radii, Den_of_single_ray, 
                                       T_of_single_ray, m, threshold = 1)
         # Store
-        rays_tau.append(tau)
+        rays_tau.append(taus)
         photosphere[i] = photo
+
+    # img = plt.pcolormesh(radii, np.arange(len(rays_tau)), rays_tau, 
+    #                      cmap = 'cet_gouldian')
+    # cbar = plt.colorbar(img)
+    # plt.title('Rays')
+    # cbar.set_label('Optical depth')
+    # plt.xlabel('r')
+    # plt.ylabel('Observers')
+    # img.axes.get_yaxis().set_ticks([])
+
     return rays_den, rays_T, rays_tau, photosphere, radii
 
 ################

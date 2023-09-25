@@ -16,7 +16,6 @@ NOTES FOR OTHERS:
 # Vanilla imports
 import numpy as np
 import matplotlib.pyplot as plt
-import numba
 
 # Chocolate imports
 from src.Luminosity.photosphere import get_photosphere
@@ -118,11 +117,11 @@ def luminosity(Temperature: float, Density: float, tau: float, volume: float) ->
     lum = np.trapz(lum_n_array, n_arr)
     return lum
     
-# def normalisation(Temperature: float, Density: float, tau: float, volume: float, luminosity_fld: float) -> float:
-#     """ Find the normalisation constant from FLD model for a single cell. """  
-#     L = luminosity(Temperature, Density, tau, volume)
-#     norm = luminosity_fld / L
-#     return  norm
+def normalisation(Temperature: float, Density: float, tau: float, volume: float, luminosity_fld: float) -> float:
+    """ Find the normalisation constant from FLD model for a single cell. """  
+    L = luminosity(Temperature, Density, tau, volume)
+    norm = luminosity_fld / L
+    return  norm
 
 def final_normalisation(L_array: np.array, luminosity_fld: float) -> float:
     """ Find the normalisation constant from FLD model for L_tilde_nu (which is a function of lenght = len(n_array)). """  
@@ -160,17 +159,20 @@ if __name__ == "__main__":
             if rho < rho_low or T < T_low or T > T_high:
                 continue
 
-            #norm = normalisation(T, rho, opt_depth, cell_vol, luminosity_fld_fix[0])
+            norm = normalisation(T, rho, opt_depth, cell_vol, luminosity_fld_fix[0])
             for n_index in range(len(n_array)):
-                # lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index]) * norm
-                lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index])
+                lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index]) * norm
+                #lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index])
                 lum_tilde_n[n_index] += lum_nu_cell
         
         print('ray:', j)
 
     #ANOTHER TRY TO NORMALISE
-    const_norm = final_normalisation(lum_tilde_n, luminosity_fld_fix[0])
-    lum_tilde_n= lum_tilde_n* const_norm
+    # const_norm = final_normalisation(lum_tilde_n, luminosity_fld_fix[0])
+    # lum_tilde_n= lum_tilde_n* const_norm
+
+    check = np.trapz(lum_tilde_n, n_array)
+    print('bolometric L', check)
 
     plt.figure()
     plt.plot(n_array, lum_tilde_n)
