@@ -109,8 +109,6 @@ def calc_photosphere(rs, rho, T, threshold = 1):
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
     while tau < threshold and i > -350:
-        print(T[i])
-        print(rho[i])
         new_tau = optical_depth(rho[i], T[i], dr)
         tau += new_tau
         taus.append(new_tau) 
@@ -175,10 +173,25 @@ def get_photosphere(fix, m):
     # plt.title('Den Casted')
     # img = plt.imshow(Den_casted.T, cmap = 'cet_fire')
     # cbar = plt.colorbar(img)
-    #%% Make into rays 
+    #%% Make into rays OLD
     rays_den = []
     rays_T = []
+    # for observer in observers:
+    #     theta_obs = observer[0]
+    #     phi_obs = observer[1]
         
+    #     i = np.where(thetas == theta_obs)
+    #     j = np.where(phis == phi_obs)
+    #     print(i)
+    #     # The Density in each ray
+    #     d_ray = Den_casted[:, i , j]
+    #     rays_den.append(d_ray)
+        
+    #     # The Temperature in each ray
+    #     t_ray = T_casted[:, i , j]
+    #     rays_T.append(t_ray)
+        
+    # Make into rays NEW
     for i, observer in enumerate(observers):
             
         # The Density in each ray
