@@ -28,8 +28,7 @@ Kb = 1.3806e-16 #[gcm^2/s^2K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 Rsol_to_cm = 6.957e10
 
-# Wien law
-const_npeak = 5.879e10 #[Hz/K]
+
 
 ###
 ##
@@ -39,9 +38,10 @@ const_npeak = 5.879e10 #[Hz/K]
 
 # Frequencies [Hz]
 n_min = 1e12 
-n_max = 1e18 
-n_spacing = 1000
-n_array = np.logspace(np.log10(n_min),np.log10(n_max), num = n_spacing)
+n_max = 1e19
+n_spacing = 100
+n_array = np.linspace(n_min, n_max, num = n_spacing)
+n_logspace = np.linspace( np.log10(n_min), np.log10(n_max), num = n_spacing)
 
 # Snapshots
 fixes4 = np.arange(233,263 + 1)
@@ -65,70 +65,84 @@ def emissivity(Temperature, Density, cell_vol):
 
 def find_peak(Temperature):
     """Find n peak with Wien law."""
+    # Wien law
+    const_npeak = 5.879e10 # [Hz/K]
     npeak = const_npeak * Temperature
-    return 20*npeak
+    return npeak # used to be 20 &*
 
-def planck_fun_n_cell(Temperature: float, n: float) -> float:
-    """ Planck function in a cell. """
-    const = 2*h/c**2
-    peak = find_peak(Temperature)
-    if n> 20*peak:
-        fun = 0
-    else:
-        fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
-    return fun
+# def planck_fun_n_cell(Temperature: float, n: float) -> float:
+#     """ Planck function in a cell. """
+#     const = 2*h/c**2
+#     peak = find_peak(Temperature)
+#     # if n> 20*peak:
+#     #     fun = 0
+#     # else:
+#     fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
+#     return fun
 
 def planck_fun_cell(Temperature: float) -> float:
     """
     Bolometric planck function in a cell. 
-    We select the range for frequency in order to no overcome the peak or we have a mess.
+    Integrates, so set integrate = True, just saying.
     """
-    planck_fun_n_array = []
-    peak = find_peak(Temperature)
-    n_arr = np.linspace(n_min,peak,n_spacing)    
-    for n in n_arr:
-        planck_fun_n_array_single = planck_fun_n_cell(Temperature, n)
-        planck_fun_n_array.append(planck_fun_n_array_single)
-    planck_fun_n_array = np.array(planck_fun_n_array)
-    fun = np.trapz(planck_fun_n_array, n_arr)
+    planck_fun_a_array = []
+    # peak = find_peak(Temperature)
+    
+    for a in n_logspace:
+        planck_fun_a_array_single = plank_logspace(Temperature, a, 
+                                                   integrate = True)
+        planck_fun_a_array.append(planck_fun_a_array_single)
+        
+    # Integrate
+    planck_fun_a_array = np.array(planck_fun_a_array) # Make arr, to intergrate
+    fun = np.trapz(planck_fun_a_array, n_logspace)
     return fun
 
-def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, n:int):
+def luminosity_a(Temperature: float, Density: float, tau: float, volume: float,
+                 a:int):
     """
-    Temperature, Density and volume: np.array from near to the BH to far away. Thus we will use negative index in the for loop.
+    Temperature, Density and volume: np.array from near to the BH to far away. 
+    Thus we will use negative index in the for loop.
     tau: np.array from outside to inside.
     n is the frequency.
 
-    We obtain luminosity (at a chosen frequency n) in a cell.
+    We obtain luminosity (at a chosen frequency a (log(n)) ) in a cell.
     """
     epsilon = emissivity(Temperature, Density, volume)
-    lum_cell = epsilon * planck_fun_n_cell(Temperature, n) * np.exp(-tau)
+    lum_cell = epsilon * plank_logspace(Temperature, a, integrate = False) \
+                * np.exp(-tau)
     return (lum_cell/planck_fun_cell(Temperature))
 
-def luminosity(Temperature: float, Density: float, tau: float, volume: float) -> int:
-    """Gives NOT normalised bolometric luminosity in a cell."""
-    lum_n_array = []
-    peak = find_peak(Temperature)
-    n_arr = np.linspace(n_min,peak,n_spacing)
-    for n in n_arr:
-        value = luminosity_n(Temperature, Density, tau, volume, n)
-        lum_n_array.append(value)
-    lum_n_array = np.array(lum_n_array)
-    lum = np.trapz(lum_n_array, n_arr)
-    return lum
+# def luminosity(Temperature: float, Density: float, tau: float, volume: float) -> int:
+#     """Gives NOT normalised bolometric luminosity in a cell."""
+#     lum_n_array = []
+#     peak = find_peak(Temperature)
+#     n_arr = np.linspace(n_min,peak,n_spacing)
+#     for n in n_arr:
+#         value = luminosity_n(Temperature, Density, tau, volume, n)
+#         lum_n_array.append(value)
+#     lum_n_array = np.array(lum_n_array)
+#     lum = np.trapz(lum_n_array, n_arr)
+#     return lum
     
-def normalisation(Temperature: float, Density: float, tau: float, volume: float, luminosity_fld: float) -> float:
-    """ Find the normalisation constant from FLD model for a single cell. """  
-    L = luminosity(Temperature, Density, tau, volume)
-    norm = luminosity_fld / L
-    return  norm
 
 def final_normalisation(L_array: np.array, luminosity_fld: float) -> float:
     """ Find the normalisation constant from FLD model for L_tilde_nu (which is a function of lenght = len(n_array)). """  
-    L = np.trapz(L_array, n_array)
+    L = np.trapz(L_array, n_logspace)
     norm = luminosity_fld / L
     print('const normalisation: ', norm)
     return  norm
+
+def plank_logspace(T, a, integrate):
+    const = 2*h/c**2
+    P = 10**(3*a) / (np.exp(h * 10**a / (Kb * T)) -1)
+    P *= const
+    
+    # Change of variables for integration
+    if integrate:
+        P *= 10**a * np.log(10)
+
+    return P
 
 
 ######
@@ -144,7 +158,7 @@ if __name__ == "__main__":
     dr = (radii[1] - radii[0]) * Rsol_to_cm
     volume = 4 * np.pi * radii**2 * dr  / 192
 
-    lum_tilde_n = np.zeros(len(n_array))
+    lum_a = np.zeros(len(n_logspace))
     for j in range(len(rays_den)):
         for i in range(len(rays_tau[j])):              
             T = rays_T[j][-i]
@@ -159,28 +173,32 @@ if __name__ == "__main__":
             if rho < rho_low or T < T_low or T > T_high:
                 continue
 
-            #norm = normalisation(T, rho, opt_depth, cell_vol, luminosity_fld_fix[0])
             for n_index in range(len(n_array)):
-                #lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index]) * norm
-                lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index])
-                lum_tilde_n[n_index] += lum_nu_cell
+                lum_a_cell = luminosity_a(T, rho, opt_depth, cell_vol, n_logspace[n_index])
+                lum_a[n_index] += lum_a_cell
         
         print('ray:', j)
 
     # ANOTHER TRY TO NORMALISE
-    const_norm = final_normalisation(lum_tilde_n, luminosity_fld_fix[0])
-    lum_tilde_n= lum_tilde_n* const_norm
+    const_norm = final_normalisation(lum_a, luminosity_fld_fix[0])
+    lum_tilde_a = lum_a *  const_norm
 
-    check = np.trapz(lum_tilde_n, n_array)
+    check = np.trapz(lum_tilde_a, n_logspace)
     print('bolometric L', check)
-
-    plt.figure()
-    plt.plot(n_array, lum_tilde_n)
-    plt.loglog()
-    
-    plt.xlabel(r'log$\nu$ [Hz]')
-    plt.ylabel(r'log$\tilde{L}_\nu$ [erg/s]')
+    from src.Utilities.finished import finished
+    finished()
+    #%% Plotting
+    fig, ax = plt.subplots()
+    ax.plot(n_logspace, lum_tilde_a)
+    plt.ylim(1e38, 1e43)
+    plt.yscale('log')
+    plt.xlabel(r'$log\nu$ [Hz]')
+    plt.ylabel(r'$\tilde{L}_\nu$ [erg/s]')
     plt.grid()
     #plt.savefig('Ltilda_m' + str(m) + '_snap' + str(fix))
-    plt.show()
+    # plt.show()
+    ax.axvline(15, color = 'tab:orange')
+    ax.axvline(17, color = 'tab:orange')
+    ax.axvspan(15, 17, alpha=0.5, color = 'tab:orange')
+
 
