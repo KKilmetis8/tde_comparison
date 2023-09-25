@@ -3,7 +3,7 @@
 """
 Created on Tue Sep 12 16:02:14 2023
 
-@author: konstantinos, paola 
+@author: paola 
 
 Calculate the luminosity NOT normalized that we will use in the blue (BB) curve.
 
@@ -67,13 +67,13 @@ def emissivity(Temperature, Density, cell_vol):
 def find_peak(Temperature):
     """Find n peak with Wien law."""
     npeak = const_npeak * Temperature
-    return 10*npeak
+    return 20*npeak
 
 def planck_fun_n_cell(Temperature: float, n: float) -> float:
     """ Planck function in a cell. """
     const = 2*h/c**2
     peak = find_peak(Temperature)
-    if n> 10*peak:
+    if n> 20*peak:
         fun = 0
     else:
         fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
@@ -118,9 +118,17 @@ def luminosity(Temperature: float, Density: float, tau: float, volume: float) ->
     lum = np.trapz(lum_n_array, n_arr)
     return lum
     
-def normalisation(Temperature: float, Density: float, tau: float, volume: float, luminosity_fld: float) -> float:
-    """ Find the normalisation constant from FLD model. """      
-    norm = luminosity_fld / luminosity(Temperature, Density, tau, volume)
+# def normalisation(Temperature: float, Density: float, tau: float, volume: float, luminosity_fld: float) -> float:
+#     """ Find the normalisation constant from FLD model for a single cell. """  
+#     L = luminosity(Temperature, Density, tau, volume)
+#     norm = luminosity_fld / L
+#     return  norm
+
+def final_normalisation(L_array: np.array, luminosity_fld: float) -> float:
+    """ Find the normalisation constant from FLD model for L_tilde_nu (which is a function of lenght = len(n_array)). """  
+    L = np.trapz(L_array, n_array)
+    norm = luminosity_fld / L
+    print('const normalisation: ', norm)
     return  norm
 
 
@@ -152,11 +160,17 @@ if __name__ == "__main__":
             if rho < rho_low or T < T_low or T > T_high:
                 continue
 
-            norm = normalisation(T, rho, opt_depth, cell_vol, luminosity_fld_fix[0])
+            #norm = normalisation(T, rho, opt_depth, cell_vol, luminosity_fld_fix[0])
             for n_index in range(len(n_array)):
-                lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index]) * norm
+                # lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index]) * norm
+                lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index])
                 lum_tilde_n[n_index] += lum_nu_cell
+        
         print('ray:', j)
+
+    #ANOTHER TRY TO NORMALISE
+    const_norm = final_normalisation(lum_tilde_n, luminosity_fld_fix[0])
+    lum_tilde_n= lum_tilde_n* const_norm
 
     plt.figure()
     plt.plot(n_array, lum_tilde_n)
@@ -164,7 +178,6 @@ if __name__ == "__main__":
     
     plt.xlabel(r'log$\nu$ [Hz]')
     plt.ylabel(r'log$\tilde{L}_\nu$ [erg/s]')
-    #plt.title(f'$10^{str(m)}$ BH snap ' + fix )
     plt.grid()
     #plt.savefig('Ltilda_m' + str(m) + '_snap' + str(fix))
     plt.show()
