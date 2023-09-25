@@ -159,17 +159,17 @@ if __name__ == "__main__":
             if rho < rho_low or T < T_low or T > T_high:
                 continue
 
-            norm = normalisation(T, rho, opt_depth, cell_vol, luminosity_fld_fix[0])
+            #norm = normalisation(T, rho, opt_depth, cell_vol, luminosity_fld_fix[0])
             for n_index in range(len(n_array)):
-                lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index]) * norm
-                #lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index])
+                #lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index]) * norm
+                lum_nu_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index])
                 lum_tilde_n[n_index] += lum_nu_cell
         
         print('ray:', j)
 
-    #ANOTHER TRY TO NORMALISE
-    # const_norm = final_normalisation(lum_tilde_n, luminosity_fld_fix[0])
-    # lum_tilde_n= lum_tilde_n* const_norm
+    # ANOTHER TRY TO NORMALISE
+    const_norm = final_normalisation(lum_tilde_n, luminosity_fld_fix[0])
+    lum_tilde_n= lum_tilde_n* const_norm
 
     check = np.trapz(lum_tilde_n, n_array)
     print('bolometric L', check)
