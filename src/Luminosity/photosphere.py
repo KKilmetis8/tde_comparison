@@ -24,7 +24,6 @@ plt.rcParams['figure.figsize'] = [5 , 3]
 plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
 # Custom Imports
-# from src.Calculators.romberg import romberg
 from src.Optical_Depth.opacity_table import opacity
 from astropy.coordinates import cartesian_to_spherical
 from src.Calculators.spherical_caster import THE_SPHERICAL_CASTER
@@ -40,16 +39,16 @@ den_converter = Msol_to_g / Rsol_to_cm**3
 ################
 # FUNCTIONS
 ################
-def optical_depth(rho, T, dr):
+def optical_depth(T, rho, dr):
     '''
     Calculates the optical depth at a point.
 
     Parameters
     ----------
-    rho : float,
-        Density in [cgs].
+    rho : float. 
+        Density in [cgs]. We will convert it in ln in order to interpolate.
     T : float,
-        Temperature in [cgs].
+        Temperature in [cgs]. We will convert it in ln in order to interpolate.
     dr : float,
         Cell Size in R_sol.
 
@@ -59,11 +58,10 @@ def optical_depth(rho, T, dr):
         The optical depth in [cgs].
     '''
     
-    # If the ray crosses the stream, it is opaque! τ = 1
     logT = np.log(T)
-    logT = np.nan_to_num(logT, nan = 0, posinf = 0, neginf= 0)
+    logT = np.nan_to_num(logT, nan = 0, posinf = 0, neginf= 0) #posinf = big number?
     logrho = np.log(rho)
-    logrho = np.nan_to_num(logrho, nan = 0, posinf = 0, neginf= 0)
+    logrho = np.nan_to_num(logrho, nan = 0, posinf = 0, neginf= 0) #posinf = big number?
     
     # If there is nothing, the ray continues unimpeded
     if logrho < -22 or logT < 1:
@@ -75,15 +73,15 @@ def optical_depth(rho, T, dr):
     
     # Convert Cell size to cgs
     dr *= Rsol_to_cm
-    # Call opacity
-    tau = opacity(logrho, logT, 'effective', ln = True) * dr 
+
+    tau = opacity(logT, logrho,'effective', ln = True) * dr 
     
     return tau
 
-def calc_photosphere(rs, rho, T, threshold = 1):
+def calc_photosphere(rs, T, rho, m, threshold = 1):
     '''
-    Finds the photosphere and saves the effective optical depth at every
-    place the ray passess through.
+    Finds and saves the effective optical depth at every cell the ray passess through.
+    We use it to find the photosphere.
 
     Parameters
     ----------
@@ -99,7 +97,7 @@ def calc_photosphere(rs, rho, T, threshold = 1):
     Returns
     -------
     tau : float,
-        The optical depth.
+        The optical depth at photosphere.
         
     photosphere : float,
         Where the photosphere is for that ray.
@@ -108,16 +106,24 @@ def calc_photosphere(rs, rho, T, threshold = 1):
     taus = []
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
-    while tau < threshold and i > -350:
+
+    ####### NEW
+    if m == 6:
+        num = 500 # about the average of cell radius
+    if m == 4:
+        num = 350
+    #####
+    while tau < threshold and i > -num:
         print(T[i])
         print(rho[i])
-        new_tau = optical_depth(rho[i], T[i], dr)
+        new_tau = optical_depth(T[i], rho[i], dr)
         tau += new_tau
         taus.append(new_tau) 
         i -= 1
         
-    photosphere =  rs[i]
-    return taus, photosphere
+    photosphere =  rs[i] #it's negative: from BH to outside
+    #return taus, photosphere
+    return tau, photosphere
 
 def get_photosphere(fix, m):
     ''' Wrapper function'''
@@ -206,14 +212,13 @@ def get_photosphere(fix, m):
     
     for i in range(len(rays_T)):
         
-        
         # Isolate each ray
         T_of_single_ray = rays_T[i]
         Den_of_single_ray = rays_den[i]
         
         # Get Photosphere
         tau, photo = calc_photosphere(radii, Den_of_single_ray, 
-                                      T_of_single_ray, threshold = 1)
+                                      T_of_single_ray, m, threshold = 1)
         # Store
         rays_tau.append(tau)
         photosphere[i] = photo
@@ -228,7 +233,7 @@ if __name__ == "__main__":
     
     # Make Paths
     if m == 4:
-        fixes = 232 #np.arange(232,263 + 1)
+        fixes = np.arange(232,263 + 1)
         fix = 232
         loadpath = '4/'
     if m == 6:
