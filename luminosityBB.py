@@ -41,7 +41,7 @@ n_min = 1e12
 n_max = 1e19
 n_spacing = 100
 n_array = np.linspace(n_min, n_max, num = n_spacing)
-n_logspace = np.linspace( np.log10(n_min), np.log10(n_max), num = n_spacing)
+n_logspace = np.linspace(np.log10(n_min), np.log10(n_max), num = n_spacing)
 
 # Snapshots
 fixes4 = np.arange(233,263 + 1)
@@ -149,12 +149,12 @@ def plank_logspace(T, a, integrate):
 # MAIN
 #####
 if __name__ == "__main__":
-    m = 6
-    
-    fix = 844
+    m = 4
     fld_data = np.loadtxt('reddata_m'+ str(m) +'.txt')
     luminosity_fld_fix = fld_data[1]
-    rays_den, rays_T, rays_tau, photosphere, radii = get_photosphere(fix, m)
+
+    fix_index = len(days4)-1
+    rays_den, rays_T, rays_tau, photosphere, radii = get_photosphere(fixes4[fix_index], m)
     dr = (radii[1] - radii[0]) * Rsol_to_cm
     volume = 4 * np.pi * radii**2 * dr  / 192
 
@@ -180,25 +180,36 @@ if __name__ == "__main__":
         print('ray:', j)
 
     # ANOTHER TRY TO NORMALISE
-    const_norm = final_normalisation(lum_a, luminosity_fld_fix[0])
+    const_norm = final_normalisation(lum_a, luminosity_fld_fix[fix_index])
     lum_tilde_a = lum_a *  const_norm
 
     check = np.trapz(lum_tilde_a, n_logspace)
+    check="{:.2e}".format(check) #scientific notation
     print('bolometric L', check)
-    from src.Utilities.finished import finished
-    finished()
+
+    with open('Ltilda_m'+ str(m) + '.txt', 'a') as f:
+        # f.write(' '.join(map(str, n_logspace)) + '\n')
+        f.write('#snap '+ str(fixes4[fix_index])+'\n')
+        f.write(' '.join(map(str, lum_tilde_a)) + '\n')
+        f.close()
+
+    # from src.Utilities.finished import finished
+    # finished()
     #%% Plotting
     fig, ax = plt.subplots()
     ax.plot(n_logspace, lum_tilde_a)
+    plt.xlabel(r'$log\nu$ [Hz]')
     plt.ylim(1e38, 1e43)
     plt.yscale('log')
-    plt.xlabel(r'$log\nu$ [Hz]')
-    plt.ylabel(r'$\tilde{L}_\nu$ [erg/s]')
+    plt.ylabel(r'$log\tilde{L}_\nu$ [erg/s]')
     plt.grid()
-    #plt.savefig('Ltilda_m' + str(m) + '_snap' + str(fix))
-    # plt.show()
+    plt.text(14, 1e39, r'$t/t_{fb}:$ ' + f'{days4[fix_index]}\n B: {check}')
+    plt.savefig('Ltilda_m' + str(m) + '_snap' + str(fixes4[fix_index]))
+    plt.show()
     ax.axvline(15, color = 'tab:orange')
     ax.axvline(17, color = 'tab:orange')
     ax.axvspan(15, 17, alpha=0.5, color = 'tab:orange')
 
 
+
+# %%
