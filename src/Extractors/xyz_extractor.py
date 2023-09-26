@@ -97,7 +97,7 @@ def extractor(filename):
             vol_data = f[key]['Volume']
             
             ie_data = f[key]['InternalEnergy']
-            rad_data = f[key]['Erad'] # ['tracers']['ZRadEnergy'] # f[key]
+            rad_data = f[key]['tracers']['ZRadEnergy'] # f[key]
             T_data = f[key]['Temperature']
             P_data = f[key]['Pressure']
             for i in range(len(x_data)):
@@ -121,11 +121,11 @@ def extractor(filename):
     return X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P
 #%%
 # Change the current working directory
-fixes = np.arange(232,264 + 1)
+fixes = [1006]
 for fix in fixes:
     fix = str(fix)
-    snapshot = '4/' + fix + '/snap_' + fix + '.h5'
-    pre = '4/' + fix + '/'
+    snapshot = '6/' + fix + '/snap_' + fix + '.h5'
+    pre = '6/' + fix + '/'
     suf = '_' + fix
 
     X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P = extractor(snapshot)
@@ -146,7 +146,4 @@ for fix in fixes:
     np.save(pre + 'Rad' + suf, Rad)
     np.save(pre + 'T' + suf, T)
     np.save(pre + 'P' + suf, P) 
-from src.Utilities.finished import finished
-finished()
-
             
