@@ -36,7 +36,7 @@ Rsol_to_cm = 6.957e10
 
 # Frequencies [Hz]
 n_min = 1e12 
-n_max = 1e19
+n_max = 1e18
 n_spacing = 100
 n_array = np.linspace(n_min, n_max, num = n_spacing)
 n_logspace = np.linspace(np.log10(n_min), np.log10(n_max), num = n_spacing)
@@ -72,22 +72,21 @@ def find_peak(Temperature):
 def planck_fun_n_cell(Temperature: float, n: float) -> float:
     """ Planck function in a cell. """
     const = 2*h/c**2
-    # peak = find_peak(Temperature)
-    # if n> 20*peak:
-    #     fun = 0
-    # else:
     fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
     return fun
 
+# plt.plot(n_array, planck_fun_n_cell(1e6, n_array))
+# plt.loglog()
+# plt.show()
+
 def planck_fun_cell(Temperature: float) -> float:
     """
-    Bolometric planck function in a cell. 
-    Integrates, so set integrate = True, just saying.
+    Bolometric planck function in a cell: B(T)
     """
     n_Bn_array = []
     peak = find_peak(Temperature)
     
-    for n in np.linspace(n_min, peak, 100):
+    for n in np.linspace(n_min, peak, n_spacing):
     # for n in n_array:
         n_Bn = n * planck_fun_n_cell(Temperature, n)
         n_Bn_array.append(n_Bn)
@@ -198,13 +197,13 @@ if __name__ == "__main__":
     # finished()
     #%% Plotting
     fig, ax = plt.subplots()
-    ax.plot(n_logspace, lum_tilde_n)
+    ax.plot(n_array, lum_tilde_n)
     plt.xlabel(r'$log\nu$ [Hz]')
     #plt.ylim(1e38, 1e43)
-    plt.yscale('log')
+    plt.loglog()
     plt.ylabel(r'$log\tilde{L}_\nu$ [erg/s]')
     plt.grid()
-    plt.text(14, 1e39, r'$t/t_{fb}:$ ' + f'{days4[fix_index]}\n B: {check}')
+    plt.text(1e14, 1e39, r'$t/t_{fb}:$ ' + f'{days4[fix_index]}\n B: {check}')
     plt.savefig('Ltilda_m' + str(m) + '_snap' + str(fixes4[fix_index]))
     plt.show()
     ax.axvline(15, color = 'tab:orange')
@@ -212,12 +211,7 @@ if __name__ == "__main__":
     ax.axvspan(15, 17, alpha=0.5, color = 'tab:orange')
 
 
-
-
-
-# %%
-plt.figure()
-plt.plot(n_logspace, n_array * lum_tilde_n)
-plt.show()
-
-# %%
+    plt.figure()
+    plt.plot(n_array, n_array * lum_tilde_n)
+    np.loglog()
+    plt.show()
