@@ -1,9 +1,13 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-m = 4
+m = 6
 plot = 'bolometric'
 L_tilda_n = np.loadtxt('Ltilda_m'+ str(m) + '.txt')
+n_array = np.linspace(1e12, 1e19, num = 100)
+n3 = n_array**3
+print(n3)
+n4 = n_array**4
 
 n_logspace = L_tilda_n[0]
 
@@ -13,10 +17,10 @@ if m == 6:
     L_tilda_n925 = L_tilda_n[3]
     L_tilda_n950 = L_tilda_n[4]
 
-    L844 = np.trapz(L_tilda_n844, n_logspace)
-    L881 = np.trapz(L_tilda_n881, n_logspace)
-    L925 = np.trapz(L_tilda_n925, n_logspace)
-    L950 = np.trapz(L_tilda_n950, n_logspace)
+    L844 = np.trapz(L_tilda_n844, n_array)
+    L881 = np.trapz(L_tilda_n881, n_array)
+    L925 = np.trapz(L_tilda_n925, n_array)
+    L950 = np.trapz(L_tilda_n950, n_array)
 
     if plot == 'bolometric':
         #fixes6 = [844, 881, 925, 950]
@@ -36,7 +40,7 @@ if m == 6:
         plt.plot(days6,bolom, '-o')
         plt.ylabel(r'$log_{10}$ Luminosity [erg/s]')
         plt.xlabel(r'$t/t_{fb}$')
-        plt.ylim(1e42,2e45)
+        #plt.ylim(1e42,2e45)
         plt.yscale('log')
 
         
@@ -45,6 +49,9 @@ if m == 6:
         plt.plot(n_logspace, L_tilda_n881, c = 'orange', label = 't/$t_{fb}$ = 1.14')
         plt.plot(n_logspace, L_tilda_n925, c = 'yellowgreen', label = 't/$t_{fb}$ = 1.3')
         plt.plot(n_logspace, L_tilda_n950, c = 'teal', label = 't/$t_{fb}$ = 1.4')
+        plt.plot(n_logspace, n3)
+        plt.plot(n_logspace, n4)
+
 
         plt.xlim(12,19)
         plt.ylim(1e35, 1e45)

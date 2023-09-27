@@ -28,6 +28,8 @@ Kb = 1.3806e-16 #[gcm^2/s^2K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 Rsol_to_cm = 6.957e10
 
+
+
 ###
 ##
 # VARIABLES
@@ -67,39 +69,38 @@ def find_peak(Temperature):
     # Wien law
     const_npeak = 5.879e10 # [Hz/K]
     npeak = const_npeak * Temperature
-    return npeak # used to be 20 
+    return npeak # used to be 20 &*
 
-def planck_fun_n_cell(Temperature: float, n: float) -> float:
-    """ Planck function in a cell. """
-    const = 2*h/c**2
-    # peak = find_peak(Temperature)
-    # if n> 20*peak:
-    #     fun = 0
-    # else:
-    fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
-    return fun
+# def planck_fun_n_cell(Temperature: float, n: float) -> float:
+#     """ Planck function in a cell. """
+#     const = 2*h/c**2
+#     peak = find_peak(Temperature)
+#     # if n> 20*peak:
+#     #     fun = 0
+#     # else:
+#     fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
+#     return fun
 
 def planck_fun_cell(Temperature: float) -> float:
     """
     Bolometric planck function in a cell. 
     Integrates, so set integrate = True, just saying.
     """
-    n_Bn_array = []
-    peak = find_peak(Temperature)
+    planck_fun_a_array = []
+    # peak = find_peak(Temperature)
     
-    for n in np.linspace(n_min, peak, 100):
-    # for n in n_array:
-        n_Bn = n * planck_fun_n_cell(Temperature, n)
-        n_Bn_array.append(n_Bn)
+    for a in n_logspace:
+        planck_fun_a_array_single = plank_logspace(Temperature, a, 
+                                                   integrate = True)
+        planck_fun_a_array.append(planck_fun_a_array_single)
         
     # Integrate
-    n_Bn_array = np.array(n_Bn_array) # Make arr, to intergrate
-    fun = np.trapz(n_Bn_array, n_logspace)
-    print('B: ', fun)
+    planck_fun_a_array = np.array(planck_fun_a_array) # Make arr, to intergrate
+    fun = np.trapz(planck_fun_a_array, n_logspace)
     return fun
 
-def luminosity_n(Temperature: float, Density: float, tau: float, volume: float,
-                 n:int):
+def luminosity_a(Temperature: float, Density: float, tau: float, volume: float,
+                 a:int):
     """
     Temperature, Density and volume: np.array from near to the BH to far away. 
     Thus we will use negative index in the for loop.
@@ -109,7 +110,7 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float,
     We obtain luminosity (at a chosen frequency a (log(n)) ) in a cell.
     """
     epsilon = emissivity(Temperature, Density, volume)
-    lum_cell = epsilon * planck_fun_n_cell(Temperature, n) \
+    lum_cell = epsilon * plank_logspace(Temperature, a, integrate = False) \
                 * np.exp(-tau)
     return (lum_cell/planck_fun_cell(Temperature))
 
@@ -128,20 +129,19 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float,
 
 def final_normalisation(L_array: np.array, luminosity_fld: float) -> float:
     """ Find the normalisation constant from FLD model for L_tilde_nu (which is a function of lenght = len(n_array)). """  
-    n_L_array = n_array * L_array
-    L = np.trapz(n_L_array, n_logspace)
+    L = np.trapz(L_array, n_logspace)
     norm = luminosity_fld / L
     print('const normalisation: ', norm)
     return  norm
 
-# def plank_logspace(T, a, integrate):
-#     const = 2*h/c**2
-#     P = 10**(3*a) / (np.exp(h * 10**a / (Kb * T)) -1)
-#     P *= const
+def plank_logspace(T, a, integrate):
+    const = 2*h/c**2
+    P = 10**(3*a) / (np.exp(h * 10**a / (Kb * T)) -1)
+    P *= const
     
     # Change of variables for integration
-    # if integrate:
-    #     P *= 10**a * np.log(10)
+    if integrate:
+        P *= 10**a * np.log(10)
 
     return P
 
@@ -150,16 +150,16 @@ def final_normalisation(L_array: np.array, luminosity_fld: float) -> float:
 # MAIN
 #####
 if __name__ == "__main__":
-    m = 6
+    m = 4
     fld_data = np.loadtxt('reddata_m'+ str(m) +'.txt')
     luminosity_fld_fix = fld_data[1]
 
-    fix_index = 0
-    rays_den, rays_T, rays_tau, photosphere, radii = get_photosphere(fixes6[fix_index], m)
+    fix_index = len(days4)-1
+    rays_den, rays_T, rays_tau, photosphere, radii = get_photosphere(fixes4[fix_index], m)
     dr = (radii[1] - radii[0]) * Rsol_to_cm
     volume = 4 * np.pi * radii**2 * dr  / 192
 
-    lum_n = np.zeros(len(n_logspace))
+    lum_a = np.zeros(len(n_logspace))
     for j in range(len(rays_den)):
         for i in range(len(rays_tau[j])):              
             T = rays_T[j][-i]
@@ -175,32 +175,32 @@ if __name__ == "__main__":
                 continue
 
             for n_index in range(len(n_array)):
-                lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index])
-                lum_n[n_index] += lum_n_cell
+                lum_a_cell = luminosity_a(T, rho, opt_depth, cell_vol, n_logspace[n_index])
+                lum_a[n_index] += lum_a_cell
         
         print('ray:', j)
 
     # ANOTHER TRY TO NORMALISE
-    const_norm = final_normalisation(lum_n, luminosity_fld_fix[fix_index])
-    lum_tilde_n = lum_n *  const_norm
+    const_norm = final_normalisation(lum_a, luminosity_fld_fix[fix_index])
+    lum_tilde_a = lum_a *  const_norm
 
-    check = np.trapz(n_array * lum_tilde_n, n_logspace)
+    check = np.trapz(lum_tilde_a, n_logspace)
     check="{:.2e}".format(check) #scientific notation
     print('bolometric L', check)
 
-    # with open('Ltilda_m'+ str(m) + '.txt', 'a') as f:
-    #     # f.write(' '.join(map(str, n_logspace)) + '\n')
-    #     f.write('#snap '+ str(fixes4[fix_index])+'\n')
-    #     f.write(' '.join(map(str, lum_tilde_n)) + '\n')
-    #     f.close()
+    with open('Ltilda_m'+ str(m) + '.txt', 'a') as f:
+        # f.write(' '.join(map(str, n_logspace)) + '\n')
+        f.write('#snap '+ str(fixes4[fix_index])+'\n')
+        f.write(' '.join(map(str, lum_tilde_a)) + '\n')
+        f.close()
 
     # from src.Utilities.finished import finished
     # finished()
     #%% Plotting
     fig, ax = plt.subplots()
-    ax.plot(n_logspace, lum_tilde_n)
+    ax.plot(n_logspace, lum_tilde_a)
     plt.xlabel(r'$log\nu$ [Hz]')
-    #plt.ylim(1e38, 1e43)
+    plt.ylim(1e38, 1e43)
     plt.yscale('log')
     plt.ylabel(r'$log\tilde{L}_\nu$ [erg/s]')
     plt.grid()
@@ -214,10 +214,3 @@ if __name__ == "__main__":
 
 
 
-
-# %%
-plt.figure()
-plt.plot(n_logspace, n_array * lum_tilde_n)
-plt.show()
-
-# %%
