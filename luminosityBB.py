@@ -37,7 +37,7 @@ Rsol_to_cm = 6.957e10
 # Frequencies [Hz]
 n_min = 1e12 
 n_max = 1e18
-n_spacing = 100
+n_spacing = 10000
 n_array = np.linspace(n_min, n_max, num = n_spacing)
 n_logspace = np.linspace(np.log10(n_min), np.log10(n_max), num = n_spacing)
 
@@ -97,15 +97,14 @@ def planck_fun_cell(Temperature: float) -> float:
     print('B: ', fun)
     return fun
 
-def luminosity_n(Temperature: float, Density: float, tau: float, volume: float,
-                 n:int):
+def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, n:int):
     """
     Temperature, Density and volume: np.array from near to the BH to far away. 
     Thus we will use negative index in the for loop.
     tau: np.array from outside to inside.
     n is the frequency.
 
-    We obtain luminosity (at a chosen frequency a (log(n)) ) in a cell.
+    We obtain luminosity in a cell.
     """
     epsilon = emissivity(Temperature, Density, volume)
     lum_cell = epsilon * planck_fun_n_cell(Temperature, n) \
@@ -193,8 +192,7 @@ if __name__ == "__main__":
     #     f.write(' '.join(map(str, lum_tilde_n)) + '\n')
     #     f.close()
 
-    # from src.Utilities.finished import finished
-    # finished()
+
     #%% Plotting
     fig, ax = plt.subplots()
     ax.plot(n_array, lum_tilde_n)
