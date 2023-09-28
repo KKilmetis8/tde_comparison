@@ -1,0 +1,9 @@
+# Bolometric L_tilde for 10^6 BH in different snapshots.
+#snap 844
+5.34e+42
+#snap 881
+4.12e+43
+#snap 925
+1.01e+44
+#snap 950
+1.31e+44
