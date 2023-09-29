@@ -71,7 +71,7 @@ def final_normalisation(L_n: np.array, luminosity_fld: float) -> float:
 # MAIN
 if __name__ == "__main__":
     m = 4
-    fix_index = 29
+    fix_index = 0
 
     snapshots, days = select_fix(m)
     fld_data = np.loadtxt('reddata_m'+ str(m) +'.txt')
