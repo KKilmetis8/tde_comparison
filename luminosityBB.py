@@ -1,16 +1,13 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
 """
-Created on Tue Sep 12 16:02:14 2023
+Created on Wed Sep 27 
 
 @author: konstantinos, paola 
 
-Calculate the luminosity NOT normalized that we will use in the blue (BB) curve.
+Calculate the luminosity normalized that we will use in the blue (BB) curve.
 
 NOTES FOR OTHERS:
 - All the functions have to be applied to a CELL
 - arguments are in cgs, NOT in log.
-- make changes in VARIABLES: frequencies range, fixes (number of snapshots) anf thus days
 """
 
 # Vanilla imports
@@ -28,46 +25,30 @@ Kb = 1.3806e-16 #[gcm^2/s^2K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 Rsol_to_cm = 6.957e10
 
-###
-##
-# VARIABLES
-##
-###
-
-# Frequencies [Hz]
+# VARIABLES: frequencies [Hz]
 n_min = 1e12 
 n_max = 1e18
 n_spacing = 10000
-n_array = np.linspace(n_min, n_max, num = n_spacing)
-n_logspace = np.linspace(np.log10(n_min), np.log10(n_max), num = n_spacing)
+#n_array = np.linspace(n_min, n_max, num = n_spacing)
+#n_logspace = np.log10(n_array)
+n_linear_in_log = np.linspace(np.log10(n_min), np.log10(n_max), num = n_spacing)
 
-# Snapshots
-fixes4 = [177]
-fixes4.append(np.arange(233,264))
-days4 = [0.5, 1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1.1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29] #t/t_fb
-# days4 = [2, 4.06,4.1,4.13,4.17,4.21,4.24,4.28,4.32,4.35,4.39,4.43,4.46,4.5,4.54,4.57,4.61,4.65,4.68,4.72,4.76,4.79,4.83,4.87,4.91,4.94,4.98,5.02,5.05,5.09,5.13,5.16] #days
-fixes6 = [844, 881, 898, 925, 950, 1006]
-days6 = [1.00325, 1.13975, 1,2025, 1.302, 1.39425, 1.60075] #t/t_fb
-# days6 = [40, 45, 48, 52, 55, 64] #days
-
-###
-##
 # FUNCTIONS
-##
-###
+
+def select_fix(m):
+    if m == 4:
+        snapshots = np.arange(233,263+1)
+        days = [1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1.1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29] #t/t_fb
+    if m == 6:
+        snapshots = [844, 881, 925, 950, 1006]
+        days = [1.00325, 1.13975, 1.302, 1.39425, 1.60075] #t/t_fb
+    return snapshots, days
 
 def emissivity(Temperature, Density, cell_vol):
-    """Arguments in CGS. Gives emissivity in a cell. """
+    """ Gives emissivity in a cell. """
     k_planck = opacity(Temperature, Density, 'planck', ln = False)
     emiss = alpha * c * Temperature**4 * k_planck * cell_vol
     return emiss
-
-def find_peak(Temperature):
-    """Find n peak with Wien law."""
-    # Wien law
-    const_npeak = 5.879e10 # [Hz/K]
-    npeak = const_npeak * Temperature
-    return npeak # used to be 20 
 
 def planck_fun_n_cell(Temperature: float, n: float) -> float:
     """ Planck function in a cell. """
@@ -75,92 +56,38 @@ def planck_fun_n_cell(Temperature: float, n: float) -> float:
     fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
     return fun
 
-# plt.plot(n_array, planck_fun_n_cell(1e6, n_array))
-# plt.loglog()
-# plt.show()
+def Elena_luminosity_n(Temperature: float, Density: float, tau: float, volume: float, n:int):
+    k_planck = opacity(Temperature, Density, 'planck', ln = False)
+    L = 4 * np.pi * k_planck * volume * np.exp(-tau) * planck_fun_n_cell(Temperature, n)
+    return L
 
-def planck_fun_cell(Temperature: float) -> float:
-    """
-    Bolometric planck function in a cell: B(T)
-    """
-    n_Bn_array = []
-    peak = find_peak(Temperature)
-    
-    for n in np.linspace(n_min, peak, n_spacing):
-    # for n in n_array:
-        n_Bn = n * planck_fun_n_cell(Temperature, n)
-        n_Bn_array.append(n_Bn)
-        
-    # Integrate
-    n_Bn_array = np.array(n_Bn_array) # Make arr, to intergrate
-    fun = np.trapz(n_Bn_array, n_logspace)
-    print('B: ', fun)
-    return fun
-
-def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, n:int):
-    """
-    Temperature, Density and volume: np.array from near to the BH to far away. 
-    Thus we will use negative index in the for loop.
-    tau: np.array from outside to inside.
-    n is the frequency.
-
-    We obtain luminosity in a cell.
-    """
-    epsilon = emissivity(Temperature, Density, volume)
-    lum_cell = epsilon * planck_fun_n_cell(Temperature, n) \
-                * np.exp(-tau)
-    return (lum_cell/planck_fun_cell(Temperature))
-
-# def luminosity(Temperature: float, Density: float, tau: float, volume: float) -> int:
-#     """Gives NOT normalised bolometric luminosity in a cell."""
-#     lum_n_array = []
-#     peak = find_peak(Temperature)
-#     n_arr = np.linspace(n_min,peak,n_spacing)
-#     for n in n_arr:
-#         value = luminosity_n(Temperature, Density, tau, volume, n)
-#         lum_n_array.append(value)
-#     lum_n_array = np.array(lum_n_array)
-#     lum = np.trapz(lum_n_array, n_arr)
-#     return lum
-    
-
-def final_normalisation(L_array: np.array, luminosity_fld: float) -> float:
-    """ Find the normalisation constant from FLD model for L_tilde_nu (which is a function of lenght = len(n_array)). """  
-    n_L_array = n_array * L_array
-    L = np.trapz(n_L_array, n_logspace)
+def final_normalisation(L_n: np.array, luminosity_fld: float) -> float:
+    """ Given the array of luminosity L_n computed over 10^{n_lin_in_log} (!!!), find the normalisation constant from FLD model used for L_tilde_nu. """  
+    n_L_n = np.log(10) * 10**(n_linear_in_log) * L_n
+    L = np.trapz(n_L_n, n_linear_in_log) 
     norm = luminosity_fld / L
-    print('const normalisation: ', norm)
-    return  norm
+    return norm
 
-# def plank_logspace(T, a, integrate):
-#     const = 2*h/c**2
-#     P = 10**(3*a) / (np.exp(h * 10**a / (Kb * T)) -1)
-#     P *= const
-    
-    # Change of variables for integration
-    # if integrate:
-    #     P *= 10**a * np.log(10)
-
-    return P
-
-
-######
 # MAIN
-#####
 if __name__ == "__main__":
-    m = 6
-    fld_data = np.loadtxt('reddata_m'+ str(m) +'.txt')
-    luminosity_fld_fix = fld_data[1]
+    m = 4
+    fix_index = 29
 
-    fix_index = 0
-    rays_den, rays_T, rays_tau, photosphere, radii = get_photosphere(fixes6[fix_index], m)
+    snapshots, days = select_fix(m)
+    fld_data = np.loadtxt('reddata_m'+ str(m) +'.txt')
+    fix = snapshots[fix_index]
+    luminosity_fld_fix = fld_data[1]
+    rays_den, rays_T, rays_tau, photosphere, radii = get_photosphere(fix, m)
     dr = (radii[1] - radii[0]) * Rsol_to_cm
     volume = 4 * np.pi * radii**2 * dr  / 192
 
-    lum_n = np.zeros(len(n_logspace))
+    lum_n = np.zeros(len(n_linear_in_log))
     for j in range(len(rays_den)):
-        for i in range(len(rays_tau[j])):              
+        for i in range(len(rays_tau[j])):        
+            # Temperature, Density and volume: np.array from near to the BH to far away. Thus we will use negative index in the for loop.
+            # tau: np.array from outside to inside.      
             T = rays_T[j][-i]
+            print(T)
             rho = rays_den[j][-i] 
             opt_depth = rays_tau[j][i]
             cell_vol = volume[-i]
@@ -171,38 +98,66 @@ if __name__ == "__main__":
             T_high = np.exp(17.8)
             if rho < rho_low or T < T_low or T > T_high:
                 continue
-
-            for n_index in range(len(n_array)):
-                lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index])
+            
+            for n_index in range(len(n_linear_in_log)): #we need linearspace
+                # lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n_array[n_index])
+                freq = 10**n_linear_in_log[n_index]
+                lum_n_cell = Elena_luminosity_n(T, rho, opt_depth, cell_vol, freq)
                 lum_n[n_index] += lum_n_cell
         
         print('ray:', j)
 
-    # ANOTHER TRY TO NORMALISE
+    fig, ax = plt.subplots()
+    ax.plot(10**n_linear_in_log, lum_n)
+    plt.xlabel(r'$log\nu$ [Hz]')
+    plt.ylabel(r'$log_{10}\tilde{L}_\nu$ [erg/sHz]')
+    plt.loglog()
+    plt.grid()
+    #plt.text(1e12, 1e24, r'$t/t_{fb}:$ ' + f'{days[fix_index]}\n B: {check}')
+    # plt.legend()
+    plt.savefig('Ltildan_m' + str(m) + '_snap' + str(fix))
+    plt.show()
+    ax.axvline(15, color = 'tab:orange')
+    ax.axvline(17, color = 'tab:orange')
+    ax.axvspan(15, 17, alpha=0.5, color = 'tab:orange')
+
+    # with open('Lum_n_m'+ str(m) + '.txt', 'a') as f:
+    #     # f.write(' '.join(map(str, n_linear_in_log)) + '\n')
+    #     f.write('#snap '+ str(fix) + ' L_tilde_n \n')
+    #     f.write(' '.join(map(str, lum_n)) + '\n')
+    #     f.close()
+
+    # Normalisation
     const_norm = final_normalisation(lum_n, luminosity_fld_fix[fix_index])
+    #const_norm = TEST_final_norm(lum_n, luminosity_fld_fix[fix_index])
     lum_tilde_n = lum_n *  const_norm
 
-    check = np.trapz(n_array * lum_tilde_n, n_logspace)
-    check="{:.2e}".format(check) #scientific notation
-    print('bolometric L', check)
-
-    # with open('Ltilda_m'+ str(m) + '.txt', 'a') as f:
-    #     # f.write(' '.join(map(str, n_logspace)) + '\n')
-    #     f.write('#snap '+ str(fixes4[fix_index])+'\n')
+    # with open('L_tilde_n_m'+ str(m) + '.txt', 'a') as f:
+    #     # f.write(' '.join(map(str, n_linear_in_log)) + '\n')
+    #     f.write('#snap '+ str(fix) + ' L_tilde_n \n')
     #     f.write(' '.join(map(str, lum_tilde_n)) + '\n')
     #     f.close()
 
+    fin_int = np.log(10) * 10**(n_linear_in_log) * lum_tilde_n
+    check = np.trapz(fin_int, n_linear_in_log)
+    # check = hand_integration(fin_int, n_linear_in_log)
+    check="{:.2e}".format(check) #scientific notation
+    print('bolometric L', check)
 
-    #%% Plotting
+    # with open('L_m' + str(m) + '.txt', 'a') as fbolo:
+    #     fbolo.write('#snap '+ str(fix) + '\n')
+    #     fbolo.write(check + '\n')
+    #     fbolo.close()
+
     fig, ax = plt.subplots()
-    ax.plot(n_array, lum_tilde_n)
+    ax.plot(10**n_linear_in_log, lum_tilde_n)
     plt.xlabel(r'$log\nu$ [Hz]')
-    #plt.ylim(1e38, 1e43)
+    plt.ylabel(r'$log_{10}\tilde{L}_\nu$ [erg/sHz]')
     plt.loglog()
-    plt.ylabel(r'$log\tilde{L}_\nu$ [erg/s]')
     plt.grid()
-    plt.text(1e14, 1e39, r'$t/t_{fb}:$ ' + f'{days4[fix_index]}\n B: {check}')
-    plt.savefig('Ltilda_m' + str(m) + '_snap' + str(fixes4[fix_index]))
+    plt.text(1e12, 1e24, r'$t/t_{fb}:$ ' + f'{days[fix_index]}\n B: {check}')
+    # plt.legend()
+    #plt.savefig('Ltildan_m' + str(m) + '_snap' + str(fix))
     plt.show()
     ax.axvline(15, color = 'tab:orange')
     ax.axvline(17, color = 'tab:orange')
@@ -210,6 +165,10 @@ if __name__ == "__main__":
 
 
     plt.figure()
-    plt.plot(n_array, n_array * lum_tilde_n)
-    np.loglog()
+    plt.plot(10**n_linear_in_log, 10**n_linear_in_log * lum_tilde_n)
+    plt.xlabel(r'$log\nu$ [Hz]')
+    plt.ylabel(r'$log_{10}(\nu\tilde{L}_\nu)$ [erg/s]')
+    plt.loglog()
+    plt.grid()
+    #plt.savefig('n_Ltildan_m' + str(m) + '_snap' + str(fix))
     plt.show()
