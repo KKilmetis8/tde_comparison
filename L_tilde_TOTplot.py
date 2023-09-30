@@ -59,16 +59,25 @@ if plot == 'bolometric' or plot == 'spectra':
 
             start = 6500
             stop = 9999
-            #plt.plot(10**n_array, L_tilda_n233, c = 'tomato', label = 't/$t_{fb}$ = 1')
+            plt.plot(10**n_array, L_tilda_n233, c = 'tomato', label = 't/$t_{fb}$ = 1')
             # #plt.plot(10**n_array, L_tilda_n254, c = 'orange', label = 't/$t_{fb}$ = 1.2')
-            #plt.plot(10**n_array, L_tilda_n263, c = 'yellowgreen', label = 't/$t_{fb}$ = 1.3')
-            plt.plot(10**n_array[start:stop], L_tilda_n233[start:stop], c = 'tomato', label = 't/$t_{fb}$ = 1')
-            plt.plot(10**n_array[start:stop], L_tilda_n263[start:stop], c = 'yellowgreen', label = 't/$t_{fb}$ = 1.3')
+            plt.plot(10**n_array, L_tilda_n263, c = 'yellowgreen', label = 't/$t_{fb}$ = 1.3')
+            #plt.plot(10**n_array[start:stop], L_tilda_n233[start:stop], c = 'tomato', label = 't/$t_{fb}$ = 1')
+            #plt.plot(10**n_array[start:stop], L_tilda_n263[start:stop], c = 'yellowgreen', label = 't/$t_{fb}$ = 1.3')
+            
+            firstint233 = np.trapz(L_tilda_n233[0:start], n_array[0:start])
+            firstint263 = np.trapz(L_tilda_n263[0:start], n_array[0:start])
+            print('first 233: ', firstint233)
+            print('first 263: ', firstint263)
 
-            int233 = np.trapz(L_tilda_n233[start:stop], n_array[start:stop])
-            int263 = np.trapz(L_tilda_n263[start:stop], n_array[start:stop])
-            print('233: ', int233)
-            print('263: ', int263)
+            secondint233 = np.trapz(L_tilda_n233[start:stop], n_array[start:stop])
+            secondint263 = np.trapz(L_tilda_n263[start:stop], n_array[start:stop])
+            print('second 233: ', secondint233)
+            print('second 263: ', secondint263)
+            tot33 = firstint233 + secondint233
+            tot263 = firstint263 + secondint263
+            print('233: ', tot33)
+            print('263: ', tot263)
 
         
         plt.xlabel(r'$log\nu$ [Hz]')
