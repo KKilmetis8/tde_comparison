@@ -9,7 +9,7 @@ def select_days(m):
         days = [1, 1.14, 1.3, 1.4] #t/t_fb
     if m == 4:
         #fixes4 = [233, 243, 254, 263]
-        days = [1, 1.1, 1.2, 1.3] #t/t_fb
+        days = [1, 1.1, 1.2, 1.3, 1.57, 1.7, 1.83] #t/t_fb
     return days
 
 def final_plot(m, pl, telescope = False, check = False):
@@ -21,7 +21,7 @@ def final_plot(m, pl, telescope = False, check = False):
             plt.text(1, 1e44, '$M_{BH}=10^6M_{sun}$', fontsize = 18)
         if m == 4:
             plt.plot(days, bolom, '-o', c = 'slateblue')
-            plt.text(1, 3.4e41, '$M_{BH}=10^4M_{sun}$', fontsize = 18)
+            plt.text(1, 1e41, '$M_{BH}=10^4M_{sun}$', fontsize = 18)
         plt.yscale('log')
         plt.ylabel(r'$log_{10}$ Luminosity [erg/s]', fontsize = 18)
         plt.xlabel(r'$t/t_{fb}$', fontsize = 18)
@@ -42,19 +42,26 @@ def final_plot(m, pl, telescope = False, check = False):
             plt.plot(x_array, L_tilde_n881, c = 'orange', label = 't/$t_{fb}$ = 1.14')
             plt.plot(x_array, L_tilde_n925, c = 'yellowgreen', label = 't/$t_{fb}$ = 1.3')
             plt.plot(x_array, L_tilde_n950, c = 'teal', label = 't/$t_{fb}$ = 1.4')
-            plt.text(12, 1e27, '$M_{BH}=10^6M_{sun}$', fontsize = 18)
+            plt.text(12.5, 1e27, '$M_{BH}=10^6M_{sun}$', fontsize = 18)
 
         if m == 4:
             L_tilde_n233 = L_tilde_n[1]
             L_tilde_n243 = L_tilde_n[2]
             L_tilde_n254 = L_tilde_n[3]
             L_tilde_n263 = L_tilde_n[4]
+            L_tilde_n293 = L_tilde_n[5]
+            L_tilde_n308 = L_tilde_n[6]
+            L_tilde_n322 = L_tilde_n[7]
 
-            plt.plot(x_array, L_tilde_n233, c = 'tomato', label = 't/$t_{fb}$ = 1')
+            plt.plot(x_array, L_tilde_n233, c = 'r', label = 't/$t_{fb}$ = 1')
             plt.plot(x_array, L_tilde_n243, c = 'orange', label = 't/$t_{fb}$ = 1.1')
             plt.plot(x_array, L_tilde_n254, c = 'yellowgreen', label = 't/$t_{fb}$ = 1.2')
             plt.plot(x_array, L_tilde_n263, c = 'teal', label = 't/$t_{fb}$ = 1.3')
-            plt.text(12, 1e25, '$M_{BH}=10^4M_{sun}$', fontsize = 18)
+            plt.plot(x_array, L_tilde_n293, c = 'b', label = 't/$t_{fb}$ = 1.6')
+            plt.plot(x_array, L_tilde_n308, c = 'blueviolet', label = 't/$t_{fb}$ = 1.7')
+            plt.plot(x_array, L_tilde_n322, c = 'magenta', label = 't/$t_{fb}$ = 1.8')
+            plt.text(12.5, 1e25, '$M_{BH}=10^4M_{sun}$', fontsize = 18)
+            plt.xlim(12,18)
 
             if check:
                 start = 6500
@@ -120,7 +127,7 @@ def final_plot(m, pl, telescope = False, check = False):
             plt.savefig('telescope_spectra_m' + str(m) + '.png' )
 
 # MAIN
-m = 6
+m = 4
 
 plt.figure(figsize=(15,8))
 plotbolo = final_plot(m,'bolometric')

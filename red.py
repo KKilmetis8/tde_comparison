@@ -44,19 +44,25 @@ en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Denstiy converter
 ###
 
 NSIDE = 4 # 192 observers
-m = 6 # Choose BH
-Mbh = 10**m 
-Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
-rg = 2*Mbh/c**2 #tidal radius in simulater units
+m = 4 # Choose BH
 
-if m == 4:
-    fixes = np.concatenate([177], np.arange(233,263+1)) #from 233 to 263
-    days = [0.5, 1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1.1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29] #t/t_fb
-    #days = [4.06,4.1,4.13,4.17,4.21,4.24,4.28,4.32,4.35,4.39,4.43,4.46,4.5,4.54,4.57,4.61,4.65,4.68,4.72,4.76,4.79,4.83,4.87,4.91,4.94,4.98,5.02,5.05,5.09,5.13,5.16] #days
-if m == 6:
-    fixes = [844] #[844, 881, 925, 950] # 1006]
-    days = [1.00325, 1.13975, 1.302, 1.39425] # 1.6] #t/t_fb
-    #days = [40, 45, 52, 55, 64] #days
+def select_fix(m):
+    if m == 4:
+        snapshots = [233, 254, 263, 277, 293, 308,322]
+        days = [1, 1.2, 1.3, 1.4, 1.56 1.7, 1.8]
+    if m == 6:
+        snapshots = [844, 881, 925, 950, 1006]
+        days = [1, 1.1, 1.3, 1.4, 1.6] #t/t_fb
+    return snapshots, days
+
+### OLD
+# if m == 4:
+#     fixes =  np.arange(233,263+1) #from 233 to 263
+#     days = [1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1.1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29] #t/t_fb
+# if m == 6:
+#     fixes = [844] #[844, 881, 925, 950] # 1006]
+#     days = [1.00325, 1.13975, 1.302, 1.39425] # 1.6] #t/t_fb
+###
 
 #%% Data Load
 ###
@@ -67,6 +73,9 @@ if m == 6:
 
 def doer_of_thing(fix, m):
     fix = str(fix)
+    Mbh = 10**m 
+    Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
+    rg = 2*Mbh/c**2 #tidal radius in simulater units
     if m == 4:
         folder = '4/'
     else:
@@ -260,15 +269,16 @@ def doer_of_thing(fix, m):
     return lum
 
 lums = []
-fixesnew = [1006]
-for fix in fixes:
+fixesnew = [278] #[280, 293, 308, 322]
+newdays = [1.42] #[1.45, 1.57, 1.7, 1.83]
+for fix in fixesnew:
     lum = doer_of_thing(fix, m)
     lums.append(lum)
 
 #%%
 plt.figure()
-np.savetxt('reddatanew_m'+ str(m) + '.txt', (days, lums))
-plt.plot(days, lums, '-o', color = 'maroon')
+np.savetxt('reddatanew_m'+ str(m) + '.txt', (newdays, lums))
+plt.plot(newdays, lums, '-o', color = 'maroon')
 plt.yscale('log')
 plt.ylim(1e41,1e45)
 plt.ylabel('Bolometric Luminosity [erg/s]')
@@ -277,8 +287,3 @@ plt.title('FLD for $10^4 \quad M_\odot$')
 plt.grid()
 plt.show()
 
-#%%
-with open('reddatanew_m'+ str(m) + '.txt', 'a') as f:
-    f.write(days)
-    f.write(lums)
-    f.close()

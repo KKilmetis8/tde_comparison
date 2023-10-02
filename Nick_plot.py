@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 days6 = [1, 1.14, 1.3, 1.4]
 L6 = np.loadtxt('L_m6.txt')
 
-days4 = [1, 1.1, 1.2, 1.3]
+days4 = [1, 1.1, 1.2, 1.3, 1.57, 1.7, 1.83]
 L4 = np.loadtxt('L_m4.txt')
 
 plt.figure(figsize=(15,8))

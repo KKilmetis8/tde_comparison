@@ -17,10 +17,10 @@ from datetime import datetime
 import h5py
 
 #%% Extract Energy
-snapshot881 = "547/snap_547.h5"
-snapshot881 = "881/snap_881.h5"
-snapshot820 = "820/snap_820.h5"
-snapshot1008 = '1008/snap_1008.h5'
+snapshot233= "/Users/paolamartire/tde_comparison/4/233/snap_full_233.h5"
+snapshot254= "/Users/paolamartire/tde_comparison/4/254/snap_full_254.h5"
+snapshot263 = "/Users/paolamartire/tde_comparison/4/263/snap_full_263.h5"
+snapshot277 = "/Users/paolamartire/tde_comparison/4/277/snap_full_277.h5"
 #%% Get Energies
 
 ## File structure is
@@ -55,15 +55,14 @@ def days_since_distruption(filename):
     return days
 
 
-
 #%% 
 def linear_fit_days(x):
     '''
     Converts from snapshot number to the more 
     intuitive days since distruption metric. 
     
-    Uses a linear fit from snapshots 820, 881, and,
-    1008 and thus could prove to not be 100% accurate.
+    Uses a linear fit from snapshots 243, 881, and,
+    254 and thus could prove to not be 100% accurate.
     
     Parameters
     ----------
@@ -76,28 +75,31 @@ def linear_fit_days(x):
         Days since distruption.
 
     '''
-    days820 = days_since_distruption(snapshot820)
-    days881 = days_since_distruption(snapshot881)
-    days1008 = days_since_distruption(snapshot1008)
-    snaps = [820, 881, 1008]
-    days = [days820, days881, days1008]
+    days233= days_since_distruption(snapshot233)
+    days254 = days_since_distruption(snapshot254)
+    days263 = days_since_distruption(snapshot263)
+    days277 = days_since_distruption(snapshot277)
+    snaps = [233, 254, 263, 277]
+    days = [days233, days254, days263, days277]
     time_fit = np.polyfit(snaps, days, deg=1)
     y = time_fit[0]*x + time_fit[1]
-    return int(y)
+    return y
 #%%
 if __name__ == '__main__':
-    snaps = [820, 881, 1008]
-    days820 = days_since_distruption(snapshot820)
-    days881 = days_since_distruption(snapshot881)
-    days1008 = days_since_distruption(snapshot1008)
-    days = [days820, days881, days1008]
-    testspace = np.linspace(800,1010)
-    # Plot
-    plt.rcParams['figure.figsize'] = [4.0, 4.0]
-    plt.plot(snaps, days, 'o-', label='real', color='navy')
-    plt.plot(testspace, linear_fit_days(testspace), label='fit', color='maroon')
-    plt.grid()
-    plt.legend()
+    # snaps = [820, 881, 254]
+    # days820 = days_since_distruption(snapshot820)
+    # days233= days_since_distruption(snapshot881)
+    # days254 = days_since_distruption(snapshot254)
+    # days = [days820, days881, days254]
+    # testspace = np.linspace(800,1010)
+    # # Plot
+    # plt.rcParams['figure.figsize'] = [4.0, 4.0]
+    # plt.plot(snaps, days, 'o-', label='real', color='navy')
+    # plt.plot(testspace, linear_fit_days(testspace), label='fit', color='maroon')
+    # plt.grid()
+    # plt.legend()
+    days322 = linear_fit_days(322)
+    print(days322)
         
     
     
