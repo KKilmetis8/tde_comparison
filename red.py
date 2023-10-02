@@ -44,12 +44,11 @@ en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Denstiy converter
 ###
 
 NSIDE = 4 # 192 observers
-m = 4 # Choose BH
 
 def select_fix(m):
     if m == 4:
-        snapshots = [233, 254, 263, 277, 293, 308,322]
-        days = [1, 1.2, 1.3, 1.4, 1.56 1.7, 1.8]
+        snapshots = [233, 254, 263, 277, 293, 308, 322]
+        days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8]
     if m == 6:
         snapshots = [844, 881, 925, 950, 1006]
         days = [1, 1.1, 1.3, 1.4, 1.6] #t/t_fb
@@ -167,7 +166,7 @@ def doer_of_thing(fix, m):
     img = plt.pcolormesh(radii, np.arange(len(rays)), rays_den, cmap = 'cet_fire')
     cbar = plt.colorbar(img)
     plt.title('Rays')
-    cbar.set_label('Density')
+    cbar.set_label(r'$log_{10}$Density')
     plt.xlabel('r')
     plt.ylabel('Various observers')
     img.axes.get_yaxis().set_ticks([])
@@ -268,22 +267,26 @@ def doer_of_thing(fix, m):
     print('%.7e' % lum )
     return lum
 
-lums = []
-fixesnew = [278] #[280, 293, 308, 322]
-newdays = [1.42] #[1.45, 1.57, 1.7, 1.83]
-for fix in fixesnew:
-    lum = doer_of_thing(fix, m)
-    lums.append(lum)
-
-#%%
-plt.figure()
-np.savetxt('reddatanew_m'+ str(m) + '.txt', (newdays, lums))
-plt.plot(newdays, lums, '-o', color = 'maroon')
-plt.yscale('log')
-plt.ylim(1e41,1e45)
-plt.ylabel('Bolometric Luminosity [erg/s]')
-plt.xlabel('Days')
-plt.title('FLD for $10^4 \quad M_\odot$')
-plt.grid()
-plt.show()
+##
+# MAIN
+##
+if __name__ == "__main__":
+    lums = []
+    m = 4 # Choose BH
+    fixes, days = select_fix(m)
+    for fix in fixes:
+        lum = doer_of_thing(fix, m)
+        lums.append(lum)
+    
+    #%%
+    # plt.figure()
+    # np.savetxt('reddatanew_m'+ str(m) + '.txt', (days, lums))
+    # plt.plot(days, lums, '-o', color = 'maroon')
+    # plt.yscale('log')
+    # plt.ylim(1e41,1e45)
+    # plt.ylabel('Bolometric Luminosity [erg/s]')
+    # plt.xlabel('Days')
+    # plt.title('FLD for $10^4 \quad M_\odot$')
+    # plt.grid()
+    # plt.show()
 

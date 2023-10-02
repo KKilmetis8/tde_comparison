@@ -1,10 +1,17 @@
+"""
+Created on Wed Sep 27 
+
+@author: paola 
+
+Gives the bolometric for 10^6 and 10^4 together.
+"""
 import numpy as np
 import matplotlib.pyplot as plt
 
 days6 = [1, 1.14, 1.3, 1.4]
 L6 = np.loadtxt('L_m6.txt')
 
-days4 = [1, 1.1, 1.2, 1.3, 1.57, 1.7, 1.83]
+days4 = [1, 1.1, 1.2, 1.3, 1.57, 1.7, 1.83] #check these days
 L4 = np.loadtxt('L_m4.txt')
 
 plt.figure(figsize=(15,8))

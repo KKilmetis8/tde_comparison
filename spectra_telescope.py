@@ -47,10 +47,10 @@ def final_plot(m, telescope):
         plt.text(g_min+100,2.1e-17,'G-band ZTF', rotation = 90)
     
     if m == 6: 
-        L_tilde_n844 = L_tilde_n[1]/bolom[0]
-        L_tilde_n881 = L_tilde_n[2]/bolom[1]
-        L_tilde_n925 = L_tilde_n[3]/bolom[2]
-        L_tilde_n950 = L_tilde_n[4]/bolom[3]
+        L_tilde_n844 = n_array * L_tilde_n[1]/bolom[0]
+        L_tilde_n881 = n_array * L_tilde_n[2]/bolom[1]
+        L_tilde_n925 = n_array * L_tilde_n[3]/bolom[2]
+        L_tilde_n950 = n_array * L_tilde_n[4]/bolom[3]
         plt.plot(n_array, L_tilde_n844, c = 'r', label = 't/$t_{fb}$ = 1')
         plt.plot(n_array, L_tilde_n881, c = 'orange', label = 't/$t_{fb}$ = 1.14')
         plt.plot(n_array, L_tilde_n925, c = 'yellowgreen', label = 't/$t_{fb}$ = 1.3')
@@ -58,13 +58,13 @@ def final_plot(m, telescope):
         plt.text(12, 1e-20, '$M_{BH}=10^6M_{sun}$', fontsize = 18)
 
     if m == 4:
-        L_tilde_n233 = L_tilde_n[1]/bolom[0]
-        L_tilde_n243 = L_tilde_n[2]/bolom[1]
-        L_tilde_n254 = L_tilde_n[3]/bolom[2]
-        L_tilde_n263 = L_tilde_n[4]/bolom[3]
-        L_tilde_n293 = L_tilde_n[5]/bolom[4]
-        L_tilde_n308 = L_tilde_n[6]/bolom[5]
-        L_tilde_n322 = L_tilde_n[7]/bolom[6]
+        L_tilde_n233 = n_array * L_tilde_n[1]/bolom[0]
+        L_tilde_n243 = n_array * L_tilde_n[2]/bolom[1]
+        L_tilde_n254 = n_array * L_tilde_n[3]/bolom[2]
+        L_tilde_n263 = n_array * L_tilde_n[4]/bolom[3]
+        L_tilde_n293 = n_array * L_tilde_n[5]/bolom[4]
+        L_tilde_n308 = n_array * L_tilde_n[6]/bolom[5]
+        L_tilde_n322 = n_array * L_tilde_n[7]/bolom[6]
 
         plt.plot(n_array, L_tilde_n233, c = 'r', label = 't/$t_{fb}$ = 1')
         plt.plot(n_array, L_tilde_n243, c = 'orange', label = 't/$t_{fb}$ = 1.1')
@@ -78,7 +78,7 @@ def final_plot(m, telescope):
     plt.xlabel(r'$log_{10}\nu$ [Hz]', fontsize = 18)
     plt.xlim(n_min,n_max)
     plt.loglog()
-    plt.ylabel(r'$log_{10}(\frac{\tilde{L}_\nu}{L})$ [erg/s]', fontsize = 18)
+    plt.ylabel(r'$log_{10}(\frac{\nu\tilde{L}_\nu}{\tilde{L}})$', fontsize = 18)
     plt.grid()
     plt.legend()
 
@@ -87,19 +87,19 @@ def final_plot(m, telescope):
 m = 6
 
 plt.figure(figsize=(15,8))
-plt.ylim(2e-17,2e-16) #m=6
-# plt.ylim(4.2e-16,6.8e-16) #m = 4
+plt.ylim(4e-2,2.5e-1) #m=6
+# plt.ylim(5e-1,8e-1) #m = 4
 ultrasat = final_plot(m, 'ultrasat')
-plt.text(1.05e15, 3e-17, '$M_{BH}=10^6M_{sun}$ \n ULTRASAT', fontsize = 18) # m=6
-# plt.text(1.05e15, 2e-16, '$M_{BH}=10^4M_{sun}$ \n ULTRASAT', fontsize = 18) # m=4
+plt.text(1.05e15, 2e-1, '$M_{BH}=10^6M_{sun}$ \n ULTRASAT', fontsize = 18) # m=6
+#plt.text(1.2e15, 5.5e-1, '$M_{BH}=10^4M_{sun}$ \n ULTRASAT', fontsize = 18) # m=4
 plt.savefig('ultrasat_m'+ str(m) + '.png') 
 
 plt.figure(figsize=(15,8))
-Rztf = final_plot(m, 'ztf')
-plt.ylim(2e-17,2e-16) #m=6
-# plt.ylim(2e-16,5e-16) m=4
-plt.text(6.5e14, 2.2e-17, '$M_{BH}=10^6M_{sun}$ \n ZTF', fontsize = 18) #m=6
-# plt.text(6.5e14, 2.2e-16, '$M_{BH}=10^4M_{sun}$ \n ZTF', fontsize = 18) #m=4
+ztf = final_plot(m, 'ztf')
+plt.ylim(1e-2,1e-1) #m=6
+#plt.ylim(8e-2,5e-1) #m=4
+plt.text(6.5e14, 1.5e-2, '$M_{BH}=10^6M_{sun}$ \n ZTF', fontsize = 18) #m=6
+#plt.text(6.5e14, 1.5e-1, '$M_{BH}=10^4M_{sun}$ \n ZTF', fontsize = 18) #m=4
 
 plt.savefig('ztf_m'+ str(m) + '.png') 
 plt.show()

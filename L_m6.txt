@@ -1,3 +1,4 @@
+# Bolometric luminosity L_tilde_nu for 10^6 BH
 #snap 844
 5.3383e+42
 #snap 881
