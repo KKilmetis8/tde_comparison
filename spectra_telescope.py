@@ -18,7 +18,7 @@ def select_days(m):
         days = [1, 1.1, 1.2, 1.3, 1.57, 1.7, 1.83] #t/t_fb
     return days
 
-def final_plot(m, telescope):
+def final_plot(m, telescope, redshift = False):
     bolom = bolom = np.loadtxt('L_m'+ str(m) + '.txt')
     L_tilde_n = np.loadtxt('L_tilde_n_m'+ str(m) + '.txt')
     x_array = L_tilde_n[0]

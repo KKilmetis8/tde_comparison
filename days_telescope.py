@@ -7,6 +7,10 @@ Plots in the band of ULTRASAT and ZTF.
 import numpy as np
 import matplotlib.pyplot as plt
 
+# VARIABLES
+
+z = 0.3 #redshift
+
 # FUNCTIONS
 
 def select_days(m):
@@ -18,7 +22,7 @@ def select_days(m):
         days = [1, 1.1, 1.2, 1.3, 1.57, 1.7, 1.83] #t/t_fb
     return days
 
-def select_band(m, telescope):
+def select_band(m, telescope, redshift = False):
     L_tilde_n = np.loadtxt('L_tilde_n_m'+ str(m) + '.txt')
     x_array = L_tilde_n[0]
     n_array = 10**x_array
@@ -26,14 +30,18 @@ def select_band(m, telescope):
     if telescope == 'ultrasat':
         n_min = 1.03e15
         n_max = 1.3e15
-        
-    if telescope == 'Rztf':
-        n_min = 4.11e14
-        n_max = 5.07e14
     
     if telescope == 'Gztf':
         n_min = 5.66e14
         n_max = 7.48e14
+
+    if telescope == 'Rztf':
+        n_min = 4.11e14
+        n_max = 5.07e14
+
+    if redshift:
+        n_min = (1+z) * n_min
+        n_max = (1+z) * n_max
 
     position_start = 0
     position_end = 0
@@ -41,16 +49,16 @@ def select_band(m, telescope):
         if n_array[i]>n_min:
             position_start = i
             print('start poisition:', position_start)
-            print(n_array[i], n_array[i+1])
+            print(n_array[position_start])
             break
     for j in range(position_start,len(n_array)):
         if n_array[j]>n_max:
             position_end = j-1
             print('end poisition:', position_end)
-            print()
+            print(n_array[position_end])
             break
 
-    n_array_telescope = n_array[position_start:position_end]
+    n_array_telescope = n_array[position_start:position_end+1]
     delta_n = n_array_telescope[-1]-n_array_telescope[0]
 
     if m == 6: 
@@ -74,34 +82,41 @@ def select_band(m, telescope):
 
     return L_telescope
 
-def final_plot(m):
+def final_plot(m, redshift = False):
     bolom = np.loadtxt('L_m'+ str(m) + '.txt')
     days = select_days(m)
-    ultrasat = select_band(m, 'ultrasat')
-    Gztf = select_band(m, 'Gztf')
-    Rztf = select_band(m, 'Rztf')
+    ultrasat = select_band(m, 'ultrasat', redshift)
+    Gztf = select_band(m, 'Gztf', redshift)
+    Rztf = select_band(m, 'Rztf', redshift)
     
     plt.plot(days, bolom, 'o-', c = 'forestgreen', label = 'Bolometric')
     plt.plot(days, ultrasat, 'o-', c = 'royalblue', label = 'ULTRASAT')
     plt.plot(days, Gztf, 'o-', c = 'sandybrown', label = 'ZTF G-band')
     plt.plot(days, Rztf, 'o-', c = 'coral', label = 'ZTF R-band')
-
-    if m == 4:
-        plt.text(1, 1e39, '$M_{BH}=10^4M_{sun}$', fontsize = 18)
-    if m == 6:
-        plt.text(1.3, 1e41, '$M_{BH}=10^6M_{sun}$', fontsize = 18)
-
+    
     plt.xlabel(r'$t/t_{fb}$', fontsize = 18)
     plt.ylabel(r'$log_{10}(\nu\tilde{L}_\nu)$ [erg/s]', fontsize = 18)
     plt.yscale('log')
     plt.grid()
     plt.legend()
-    plt.savefig('n_Ln_band'+ str(m) + '.png') 
+
+    if redshift:
+        if m == 4:
+            plt.text(1, 1e39, '$M_{BH}=10^4M_{sun}$\n' + f'redshift = {z}', fontsize = 18)
+        if m == 6:
+            plt.text(1.3, 1e41, '$M_{BH}=10^6M_{sun}$\n' + f'redshift = {z}', fontsize = 18)
+        plt.savefig('n_Ln_band'+ str(m) + f'_z{z}.png') 
+    else:
+        if m == 4:
+            plt.text(1, 1e39, '$M_{BH}=10^4M_{sun}$\n' + f'redshift = {z} $', fontsize = 18)
+        if m == 6:
+            plt.text(1.3, 1e41, '$M_{BH}=10^6M_{sun}$', fontsize = 18)
+        plt.savefig('n_Ln_band'+ str(m) + '.png') 
     plt.show()
 
 
 # MAIN
-m = 4
+m = 6
 
 plt.figure(figsize=(15,8))
 final_plot(m)
