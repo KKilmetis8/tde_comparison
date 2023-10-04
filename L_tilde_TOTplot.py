@@ -12,7 +12,7 @@ def select_days(m):
         days = [1, 1.1, 1.2, 1.3, 1.57, 1.7, 1.83] #t/t_fb
     return days
 
-def final_plot(m, pl, telescope = False, check = False):
+def final_plot(m, pl, xaxis_T = False, telescope = False, check = False):
     if pl == 'bolometric':
         days = select_days(m)
         bolom = bolom = np.loadtxt('L_m'+ str(m) + '.txt')
@@ -33,6 +33,15 @@ def final_plot(m, pl, telescope = False, check = False):
         L_tilde_n = np.loadtxt('L_tilde_n_m'+ str(m) + '.txt')
         x_array = L_tilde_n[0]
 
+        if xaxis_T == True:
+            # from Wien law: n_peak = 5.879e10 Hz/K * T where n = 10^x
+            x_array = 10**x_array / (5.879e10)
+            plt.xlabel('$log_{10}T [K]$', fontsize = 18)
+            plt.loglog()
+        else: 
+            plt.xlabel(r'$log_{10}\nu$ [Hz]', fontsize = 18)
+            plt.yscale('log')
+        
         if m == 6:
             L_tilde_n844 = L_tilde_n[1]
             L_tilde_n881 = L_tilde_n[2]
@@ -53,6 +62,7 @@ def final_plot(m, pl, telescope = False, check = False):
             L_tilde_n308 = L_tilde_n[6]
             L_tilde_n322 = L_tilde_n[7]
 
+
             plt.plot(x_array, L_tilde_n233, c = 'r', label = 't/$t_{fb}$ = 1')
             plt.plot(x_array, L_tilde_n243, c = 'orange', label = 't/$t_{fb}$ = 1.1')
             plt.plot(x_array, L_tilde_n254, c = 'yellowgreen', label = 't/$t_{fb}$ = 1.2')
@@ -61,7 +71,7 @@ def final_plot(m, pl, telescope = False, check = False):
             plt.plot(x_array, L_tilde_n308, c = 'blueviolet', label = 't/$t_{fb}$ = 1.7')
             plt.plot(x_array, L_tilde_n322, c = 'magenta', label = 't/$t_{fb}$ = 1.8')
             plt.text(12.5, 1e25, '$M_{BH}=10^4M_{sun}$', fontsize = 18)
-            plt.xlim(12,18)
+            # plt.xlim(12,18)
 
             if check:
                 start = 6500
@@ -83,10 +93,7 @@ def final_plot(m, pl, telescope = False, check = False):
                 print('233: ', tot33)
                 print('263: ', tot263)
 
-        plt.xlabel(r'$log_{10}\nu$ [Hz]', fontsize = 18)
-        plt.yscale('log')
-        plt.ylabel(r'$log_{10}\tilde{L}_\nu$ [erg/s]', fontsize = 18)
-        plt.ylabel(r'$log_{10}(\tilde{L}_\nu/L)$ [erg/s]', fontsize = 18)
+        plt.ylabel(r'$log_{10}\tilde{L}_\nu$ [erg/sHz]', fontsize = 18)
         plt.grid()
 
         if telescope == False:
@@ -127,10 +134,10 @@ def final_plot(m, pl, telescope = False, check = False):
             plt.savefig('telescope_spectra_m' + str(m) + '.png' )
 
 # MAIN
-m = 4
+m = 6
 
+# plt.figure(figsize=(15,8))
+# plotbolo = final_plot(m,'bolometric')
 plt.figure(figsize=(15,8))
-plotbolo = final_plot(m,'bolometric')
-plt.figure(figsize=(15,8))
-plotspectra = final_plot(m,'spectra')
+plotspectra = final_plot(m,'spectra', True)
 plt.show()
