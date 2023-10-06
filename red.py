@@ -184,7 +184,7 @@ def doer_of_thing(fix, m):
     
     #%%
     
-    def grad_calculator(rays, radii, sphere_radius = 15_000):
+    def grad_calculator(rays, radii, sphere_radius = 15_000): 
         # Get the index of radius closest in sphere radius
         diffs = np.abs(radii - sphere_radius)
         idx = np.argmin(diffs)
@@ -253,7 +253,7 @@ def doer_of_thing(fix, m):
     if m == 6:
         sphere_radius = 35_000
     else:
-        sphere_radius = 7_000
+        sphere_radius = 2_000 #7_000 for 277 and on
     grad_E, radius_idx = grad_calculator(rays, radii, sphere_radius)
     flux = flux_calculator(grad_E, radius_idx, 
                            rays, rays_T, rays_den)
@@ -279,14 +279,14 @@ if __name__ == "__main__":
         lums.append(lum)
     
     #%%
-    # plt.figure()
-    # np.savetxt('reddatanew_m'+ str(m) + '.txt', (days, lums))
-    # plt.plot(days, lums, '-o', color = 'maroon')
-    # plt.yscale('log')
-    # plt.ylim(1e41,1e45)
-    # plt.ylabel('Bolometric Luminosity [erg/s]')
-    # plt.xlabel('Days')
-    # plt.title('FLD for $10^4 \quad M_\odot$')
-    # plt.grid()
-    # plt.show()
+    plt.figure()
+    np.savetxt('first_reddatanew_m'+ str(m) + '.txt', (days, lums))
+    plt.plot(days, lums, '-o', color = 'maroon')
+    plt.yscale('log')
+    plt.ylim(1e41,1e45)
+    plt.ylabel('Bolometric Luminosity [erg/s]')
+    plt.xlabel('Days')
+    plt.title('FLD for $10^4 \quad M_\odot$')
+    plt.grid()
+    plt.show()
 
