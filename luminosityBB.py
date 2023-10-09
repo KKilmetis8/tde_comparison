@@ -62,7 +62,6 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
     xLx =  10**(x_array) * L_x
     L = np.trapz(xLx, x_array) 
     L *= np.log(10)
-    print('form red: ', luminosity_fld)
     norm = luminosity_fld / L
     return norm
 

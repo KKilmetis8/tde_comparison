@@ -18,7 +18,8 @@ def select_days(m):
         days = [1, 1.1, 1.2, 1.3, 1.57, 1.7, 1.83] #t/t_fb
     return days
 
-def final_plot(m, telescope, redshift = False):
+def final_plot(m, telescope):
+    kev_to_Hz = 2.418e17
     bolom = bolom = np.loadtxt('L_m'+ str(m) + '.txt')
     L_tilde_n = np.loadtxt('L_tilde_n_m'+ str(m) + '.txt')
     x_array = L_tilde_n[0]
@@ -35,6 +36,14 @@ def final_plot(m, telescope, redshift = False):
         g_max = 7.48e14
         n_min = r_min
         n_max = g_max
+    
+    if telescope == 'softXray':
+        n_min = 0.3 * kev_to_Hz
+        n_max = 1 * kev_to_Hz
+    
+    if telescope == 'hardXray':
+        n_min = 1 * kev_to_Hz
+        n_max = 10 * kev_to_Hz
 
         plt.axvline(r_min, color = 'bisque')
         plt.axvline(r_max, color = 'bisque')
