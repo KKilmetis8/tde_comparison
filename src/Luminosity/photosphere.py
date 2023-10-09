@@ -121,7 +121,7 @@ def calc_photosphere(rs, T, rho, m, threshold = 1):
     photosphere =  rs[i] #i it's negative
     return taus, photosphere
 
-def get_photosphere(fix, m, red = False):
+def get_photosphere(fix, m, red = False, get_observer = False):
     ''' Wrapper function'''
     Mbh = 10**m # * Msol
     Rt =  Mbh**(1/3) # Tidal radius in simulator units (Msol = 1, Rsol = 1)
@@ -156,7 +156,7 @@ def get_photosphere(fix, m, red = False):
        thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
        thetas[i] -= np.pi/2
        phis[i] -= np.pi
-       
+        
        observers.append( (thetas[i], phis[i]) )
        
     # Evoke!

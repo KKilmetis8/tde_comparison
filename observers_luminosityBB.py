@@ -91,8 +91,10 @@ for j in range(0,len(rays_den), 48):
             lum_n_cell = luminosityBB.luminosity_n(T, rho, opt_depth, cell_vol, freq)
             lum_n_single_obs[x_index] += lum_n_cell
         
+    # Normalise with the bolometric luminosity from red curve (FLD)
     const_norm = luminosityBB.normalisation(lum_n_single_obs, x_arr, luminosity_fld_fix[snap_index])
     lum_tilde_n_single_obs = lum_n_single_obs * const_norm
+    
     lum_tilde_n.append(lum_tilde_n_single_obs)
     print('ray:', j)
 
@@ -101,7 +103,6 @@ tot = np.zeros(len(x_arr))
 for i in range(len(x_arr)):
     tot[i]= lum_tilde_n[0][i]+lum_tilde_n[1][i] +lum_tilde_n[2][i] +lum_tilde_n[3][i]
 
-# Normalise with the bolometric luminosity from red curve (FLD)
 
 print('rays shape: ', np.shape(lum_tilde_n))
 
