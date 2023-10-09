@@ -24,7 +24,6 @@ plt.rcParams['figure.figsize'] = [5 , 3]
 plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
 # Custom Imports
-# from src.Calculators.romberg import romberg
 from src.Optical_Depth.opacity_table import opacity
 from astropy.coordinates import cartesian_to_spherical
 from src.Calculators.spherical_caster import THE_SPHERICAL_CASTER
@@ -40,16 +39,16 @@ den_converter = Msol_to_g / Rsol_to_cm**3
 ################
 # FUNCTIONS
 ################
-def optical_depth(rho, T, dr):
+def optical_depth(T, rho, dr):
     '''
     Calculates the optical depth at a point.
 
     Parameters
     ----------
-    rho : float,
-        Density in [cgs].
+    rho : float. 
+        Density in [cgs]. We will convert it in ln in order to interpolate.
     T : float,
-        Temperature in [cgs].
+        Temperature in [cgs]. We will convert it in ln in order to interpolate.
     dr : float,
         Cell Size in R_sol.
 
@@ -59,11 +58,10 @@ def optical_depth(rho, T, dr):
         The optical depth in [cgs].
     '''
     
-    # If the ray crosses the stream, it is opaque! τ = 1
     logT = np.log(T)
-    logT = np.nan_to_num(logT, nan = 0, posinf = 0, neginf= 0)
+    logT = np.nan_to_num(logT, nan = 0, posinf = 0, neginf= 0) #posinf = big number?
     logrho = np.log(rho)
-    logrho = np.nan_to_num(logrho, nan = 0, posinf = 0, neginf= 0)
+    logrho = np.nan_to_num(logrho, nan = 0, posinf = 0, neginf= 0) #posinf = big number?
     
     # If there is nothing, the ray continues unimpeded
     if logrho < -22 or logT < 1:
@@ -75,15 +73,15 @@ def optical_depth(rho, T, dr):
     
     # Convert Cell size to cgs
     dr *= Rsol_to_cm
-    # Call opacity
-    tau = opacity(logrho, logT, 'effective', ln = True) * dr 
+
+    tau = opacity(logT, logrho,'effective', ln = True) * dr 
     
     return tau
 
-def calc_photosphere(rs, rho, T, threshold = 1):
+def calc_photosphere(rs, T, rho, m, threshold = 1):
     '''
-    Finds the photosphere and saves the effective optical depth at every
-    place the ray passess through.
+    Finds and saves the effective optical depth at every cell the ray passess through.
+    We use it to find the photosphere.
 
     Parameters
     ----------
@@ -98,8 +96,8 @@ def calc_photosphere(rs, rho, T, threshold = 1):
 
     Returns
     -------
-    tau : float,
-        The optical depth.
+    taus : np.array,
+        The optical depth of every cell.
         
     photosphere : float,
         Where the photosphere is for that ray.
@@ -108,13 +106,22 @@ def calc_photosphere(rs, rho, T, threshold = 1):
     taus = []
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
-    while tau < threshold and i > -350:
-        new_tau = optical_depth(rho[i], T[i], dr)
+
+    ####### NEW
+    if m == 6:
+        num = 500 # about the average of cell radius
+    if m == 4:
+        num = 350
+    #####
+    while tau < threshold and i > -num:
+        new_tau = optical_depth(T[i], rho[i], dr)
         tau += new_tau
         taus.append(new_tau) 
         i -= 1
         
-    photosphere =  rs[i]
+    photosphere =  rs[i] #it's negative: from BH to outside
+    print('thermalisation radius: ', len(taus))
+    print('photosphere', photosphere)
     return taus, photosphere
 
 def get_photosphere(fix, m):
@@ -173,25 +180,10 @@ def get_photosphere(fix, m):
     # plt.title('Den Casted')
     # img = plt.imshow(Den_casted.T, cmap = 'cet_fire')
     # cbar = plt.colorbar(img)
-    #%% Make into rays OLD
+    #%% Make into rays 
     rays_den = []
     rays_T = []
-    # for observer in observers:
-    #     theta_obs = observer[0]
-    #     phi_obs = observer[1]
         
-    #     i = np.where(thetas == theta_obs)
-    #     j = np.where(phis == phi_obs)
-    #     print(i)
-    #     # The Density in each ray
-    #     d_ray = Den_casted[:, i , j]
-    #     rays_den.append(d_ray)
-        
-    #     # The Temperature in each ray
-    #     t_ray = T_casted[:, i , j]
-    #     rays_T.append(t_ray)
-        
-    # Make into rays NEW
     for i, observer in enumerate(observers):
             
         # The Density in each ray
@@ -204,14 +196,6 @@ def get_photosphere(fix, m):
         
     print('Shape Ray:',np.shape(rays_T))
     
-    # img = plt.pcolormesh(radii, np.arange(len(rays_den)), rays_den, 
-    #                      cmap = 'cet_fire')
-    # cbar = plt.colorbar(img)
-    # plt.title('Rays')
-    # cbar.set_label('Radiation Energy Density')
-    # plt.xlabel('r')
-    # plt.ylabel('Various observers')
-    # img.axes.get_yaxis().set_ticks([])
     
     # Get the photosphere
     rays_tau = []
@@ -219,17 +203,26 @@ def get_photosphere(fix, m):
     
     for i in range(len(rays_T)):
         
-        
         # Isolate each ray
         T_of_single_ray = rays_T[i]
         Den_of_single_ray = rays_den[i]
         
         # Get Photosphere
-        tau, photo = calc_photosphere(radii, Den_of_single_ray, 
-                                      T_of_single_ray, threshold = 1)
+        taus, photo = calc_photosphere(radii, Den_of_single_ray, 
+                                      T_of_single_ray, m, threshold = 1)
         # Store
-        rays_tau.append(tau)
+        rays_tau.append(taus)
         photosphere[i] = photo
+
+    # img = plt.pcolormesh(radii, np.arange(len(rays_tau)), rays_tau, 
+    #                      cmap = 'cet_gouldian')
+    # cbar = plt.colorbar(img)
+    # plt.title('Rays')
+    # cbar.set_label('Optical depth')
+    # plt.xlabel('r')
+    # plt.ylabel('Observers')
+    # img.axes.get_yaxis().set_ticks([])
+    print('--------')
     return rays_den, rays_T, rays_tau, photosphere, radii
 
 ################
@@ -237,15 +230,14 @@ def get_photosphere(fix, m):
 ################
 
 if __name__ == "__main__":
-    m = 6 # M_bh = 10^m M_sol | Choose 4 or 6
+    m = 4 # M_bh = 10^m M_sol | Choose 4 or 6
     
     # Make Paths
     if m == 4:
-        fixes = 232 #np.arange(232,263 + 1)
-        fix = 232
+        fixes = [233, 254, 263, 277, 293, 308, 322]
         loadpath = '4/'
     if m == 6:
-        fixes = [844] #[844, 881, 925, 950]
+        fixes = [925] #[844, 881, 925, 950]
         loadpath = '6/'
 
     for fix in fixes:

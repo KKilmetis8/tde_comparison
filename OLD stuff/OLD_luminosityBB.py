@@ -18,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Chocolate imports
-from src.Luminosity.photosphere import get_photosphere
+from Luminosity.photosphere import get_photosphere
 from src.Optical_Depth.opacity_table import opacity
 
 # Constants

@@ -35,6 +35,11 @@ from src.Calculators.spherical_caster import THE_SPHERICAL_CASTER
 Msol_to_g = 1.989e33
 Rsol_to_cm = 6.957e10
 den_converter = Msol_to_g / Rsol_to_cm**3
+G = 6.6743e-11 # SI
+Msol = 1.98847e30 # kg
+Rsol = 6.957e8 # m
+t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
+num = 500
 
 ################
 # FUNCTIONS
@@ -107,25 +112,19 @@ def calc_photosphere(rs, T, rho, m, threshold = 1):
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
 
-    ####### NEW
-    if m == 6:
-        num = 500 # about the average of cell radius
-    if m == 4:
-        num = 350
-    #####
     while tau < threshold and i > -num:
         new_tau = optical_depth(T[i], rho[i], dr)
         tau += new_tau
         taus.append(new_tau) 
         i -= 1
-        
-    photosphere =  rs[i] #it's negative: from BH to outside
+
+    photosphere =  rs[i] #i it's negative
     return taus, photosphere
 
-def get_photosphere(fix, m):
+def get_photosphere(fix, m, red = False):
     ''' Wrapper function'''
     Mbh = 10**m # * Msol
-    Rt =  Mbh**(1/3) # Tidal radius (Msol = 1, Rsol = 1)
+    Rt =  Mbh**(1/3) # Tidal radius in simulator units (Msol = 1, Rsol = 1)
     
     fix = str(fix)
     loadpath = str(m) + '/'
@@ -135,9 +134,10 @@ def get_photosphere(fix, m):
     Mass = np.load( loadpath + fix + '/Mass_' + fix + '.npy')
     Den = np.load( loadpath + fix + '/Den_' + fix + '.npy')
     T = np.load( loadpath + fix + '/T_' + fix + '.npy')
-    
-    Den *= den_converter # Convert to cgs
-    R, THETA, PHI = cartesian_to_spherical(X,Y,Z) # Convert to Spherical
+
+    # Convert to CGS and spherical units
+    Den *= den_converter 
+    R, THETA, PHI = cartesian_to_spherical(X,Y,Z) 
     R = R.value 
     THETA = THETA.value
     PHI = PHI.value
@@ -145,13 +145,9 @@ def get_photosphere(fix, m):
     # Ensure that the regular grid cells are smaller than simulation cell
     start = Rt
     stop = 500 * Rt
-    if m == 6:
-        num = 500 # about the average of cell radius
-    if m == 4:
-        num = 350
     radii = np.linspace(start, stop, num)
     
-    # Generate uniform observers"""
+    # Generate uniform observers
     NSIDE = 4 # 192 observers
     thetas = np.zeros(192)
     phis = np.zeros(192)
@@ -161,7 +157,6 @@ def get_photosphere(fix, m):
        thetas[i] -= np.pi/2
        phis[i] -= np.pi
        
-       # Idea time
        observers.append( (thetas[i], phis[i]) )
        
     # Evoke!
@@ -170,9 +165,9 @@ def get_photosphere(fix, m):
                       weights = Mass, avg = True, loud = False) 
     T_casted = THE_SPHERICAL_CASTER(radii, R, observers, THETA, PHI,
                       T, 
-                      weights = Mass, avg = True)
+                      weights = Mass, avg = True, loud = False)
     Den_casted = np.nan_to_num(Den_casted, neginf = 0)
-    T_casted = np.nan_to_num(T_casted, neginf = 0)
+    T_casted = np.nan_to_num(T_casted, neginf = 0) 
     
     # plt.figure()
     # plt.title('Den Casted')
@@ -191,9 +186,22 @@ def get_photosphere(fix, m):
         # The Temperature in each ray
         t_ray = T_casted[:, i]
         rays_T.append(t_ray)
+
+    if red:
+        en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Denstiy converter
+        Rad = np.load( loadpath +fix + '/Rad_' + fix + '.npy')
+        Rad *= Den 
+        Rad *= en_den_converter 
+        Rad_casted = THE_SPHERICAL_CASTER(radii, R, observers, THETA, PHI,
+                        Rad,
+                        weights = Mass, avg = True, loud = False)
+        Rad_casted = np.nan_to_num(Rad_casted)
+        rays = []
+        for i, observer in enumerate(observers):
+            # Ray holds Erad
+            rays.append(Rad_casted[: , i])
         
     print('Shape Ray:',np.shape(rays_T))
-    
     
     # Get the photosphere
     rays_tau = []
@@ -220,8 +228,10 @@ def get_photosphere(fix, m):
     # plt.xlabel('r')
     # plt.ylabel('Observers')
     # img.axes.get_yaxis().set_ticks([])
-
-    return rays_den, rays_T, rays_tau, photosphere, radii
+    if red:
+        return rays_den, rays_T, rays, rays_tau, photosphere, radii
+    else: 
+        return rays_den, rays_T, rays_tau, photosphere, radii
 
 ################
 # MAIN
@@ -232,8 +242,7 @@ if __name__ == "__main__":
     
     # Make Paths
     if m == 4:
-        fixes = np.arange(232,263 + 1)
-        fix = 232
+        fixes = [322] #[233, 254, 263, 277, 293, 308, 322]
         loadpath = '4/'
     if m == 6:
         fixes = [844] #[844, 881, 925, 950]

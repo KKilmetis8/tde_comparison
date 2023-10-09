@@ -13,11 +13,12 @@ NOTES FOR OTHERS:
 
 import numpy as np
 import matplotlib.pyplot as plt
-import colorcet
-import numba
-from astropy.coordinates import cartesian_to_spherical
-from src.Calculators.spherical_caster import THE_SPHERICAL_CASTER
+# import colorcet
+# import numba
+# from astropy.coordinates import cartesian_to_spherical
+# from src.Calculators.spherical_caster import THE_SPHERICAL_CASTER
 from src.Optical_Depth.opacity_table import opacity
+from src.Luminosity.photosphere import get_photosphere
 import healpy as hp
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -35,7 +36,6 @@ Msol_to_g = 1.989e33 #[g]
 Rsol_to_cm = 6.957e10 #[cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 energy_converter =  Msol_to_g * Rsol_to_cm**2 / (t**2) # Energy / Mass to cgs converter
-en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Denstiy converter
 
 ###
 ##
@@ -48,10 +48,10 @@ NSIDE = 4 # 192 observers
 def select_fix(m):
     if m == 4:
         snapshots = [233, 254, 263, 277, 293, 308, 322]
-        days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8]
+        days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950, 1006]
-        days = [1, 1.1, 1.3, 1.4, 1.6] #t/t_fb
+        snapshots = [844, 881, 925, 950]
+        days = [1, 1.1, 1.3, 1.4] #t/t_fb
     return snapshots, days
 
 ### OLD
@@ -70,117 +70,47 @@ def select_fix(m):
 ##
 ###
 
-def doer_of_thing(fix, m):
+def doer_of_thing(fix, m, show_plot = True):
     fix = str(fix)
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
     rg = 2*Mbh/c**2 #tidal radius in simulater units
-    if m == 4:
-        folder = '4/'
-    else:
-        folder = '6/'
-        
-    X = np.load( folder +fix + '/CMx_' + fix + '.npy')
-    Y = np.load( folder +fix + '/CMy_' + fix + '.npy')
-    Z = np.load( folder +fix + '/CMz_' + fix + '.npy')
-    Mass = np.load( folder +fix + '/Mass_' + fix + '.npy')
-    Den = np.load( folder +fix + '/Den_' + fix + '.npy')
-    Rad = np.load( folder +fix + '/Rad_' + fix + '.npy')
-    T = np.load( folder +fix + '/T_' + fix + '.npy')
-    
-    # Convert Energy / Mass to Energy Density in CGS
-    Rad *= Den 
-    Rad *= en_den_converter 
-    Den *= den_converter 
-    
-    # Convert to spherical
-    R, THETA, PHI = cartesian_to_spherical(X,Y,Z)
-    R = R.value 
-    THETA = THETA.value
-    PHI = PHI.value
-    
-    # Ensure that the regular grid cells are smaller than simulation cells
-    start = Rt
-    stop = 500 * Rt
-    if m ==6:
-        num = 500 # about the average of cell radius
-    if m == 4:
-        num = 500 #350
-    radii = np.linspace(start, stop, num)
-    
-    # Find observers with Healpix
-    thetas = np.zeros(192)
-    phis = np.zeros(192)
-    observers = []
-    for i in range(0,192):
-        thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
-        thetas[i] -= np.pi/2
-        phis[i] -= np.pi
-        
-        observers.append( (thetas[i], phis[i]) )
-    
-    #%% Cast
-    Rad_casted = THE_SPHERICAL_CASTER(radii, R, observers, THETA, PHI,
-                      Rad,
-                      weights = Mass, avg = True, loud = False) 
-    Den_casted = THE_SPHERICAL_CASTER(radii, R, observers, THETA, PHI,
-                      Den,
-                      weights = Mass, avg = True, loud = False) 
-    T_casted = THE_SPHERICAL_CASTER(radii, R, observers, THETA, PHI,
-                      T, 
-                      weights = Mass, avg = True)
-    Rad_casted = np.nan_to_num(Rad_casted)
     
     #%% Make Rays
-    rays = []
-    rays_den = []
-    rays_T = []
-    for i, observer in enumerate(observers):
-        # Ray holds Erad
-        rays.append(Rad_casted[: , i])
-
-        # The Density in each ray
-        d_ray = Den_casted[:, i]
-        d_ray = np.log10(d_ray)
-        d_ray = np.nan_to_num(d_ray, neginf = 0)
-        rays_den.append(d_ray)    
-
-        # The Temperature in each ray
-        t_ray = T_casted[:, i]
-        t_ray = np.log10(t_ray)
-        t_ray = np.nan_to_num(t_ray, neginf = 0)
-        rays_T.append(t_ray)
+    rays_den, rays_T, rays, rays_tau, photosphere, radii = get_photosphere(fix, m, red = True)
+    rays_den = np.log10(rays_den)
+    rays_T = np.log10(rays_T)
  
-    #%% Let's see how it looks 
-    print(np.shape(rays))
-    img = plt.pcolormesh(radii, np.arange(len(rays)), rays, cmap = 'cet_gouldian')
-    cbar = plt.colorbar(img)
-    plt.title('Rays')
-    cbar.set_label('Radiation Energy Density')
-    plt.xlabel('r')
-    plt.ylabel('Various observers')
-    img.axes.get_yaxis().set_ticks([])
-    plt.xscale('log')
-    
-    plt.figure()
-    img = plt.pcolormesh(radii, np.arange(len(rays)), rays_den, cmap = 'cet_fire')
-    cbar = plt.colorbar(img)
-    plt.title('Rays')
-    cbar.set_label(r'$log_{10}$Density')
-    plt.xlabel('r')
-    plt.ylabel('Various observers')
-    img.axes.get_yaxis().set_ticks([])
-    plt.xscale('log')
-    
-    plt.figure()
-    img = plt.pcolormesh(radii, np.arange(len(rays)), rays_T, cmap = 'cet_bmy')
-    cbar = plt.colorbar(img)
-    plt.title('Rays')
-    cbar.set_label('Temperature')
-    plt.xlabel('r')
-    plt.ylabel('Various observers')
-    img.axes.get_yaxis().set_ticks([])
-    plt.xscale('log')
+    #%% Let's see how it looks
+    if show_plot: 
+        img = plt.pcolormesh(radii, np.arange(len(rays)), rays, cmap = 'cet_gouldian')
+        cbar = plt.colorbar(img)
+        plt.title('Rays')
+        cbar.set_label('Radiation Energy Density')
+        plt.xlabel('r')
+        plt.ylabel('Various observers')
+        img.axes.get_yaxis().set_ticks([])
+        plt.xscale('log')
+        
+        plt.figure()
+        img = plt.pcolormesh(radii, np.arange(len(rays)), rays_den, cmap = 'cet_fire')
+        cbar = plt.colorbar(img)
+        plt.title('Rays')
+        cbar.set_label(r'$log_{10}$Density')
+        plt.xlabel('r')
+        plt.ylabel('Various observers')
+        img.axes.get_yaxis().set_ticks([])
+        plt.xscale('log')
+        
+        plt.figure()
+        img = plt.pcolormesh(radii, np.arange(len(rays)), rays_T, cmap = 'cet_bmy')
+        cbar = plt.colorbar(img)
+        plt.title('Rays')
+        cbar.set_label('Temperature')
+        plt.xlabel('r')
+        plt.ylabel('Various observers')
+        img.axes.get_yaxis().set_ticks([])
+        plt.xscale('log')
     
     #%%
     
@@ -197,7 +127,6 @@ def doer_of_thing(fix, m):
     
     def flux_calculator(grad_E, idx, 
                      rays, rays_T, rays_den):
-        print(rays_T)
         f = np.zeros(len(grad_E))
         max_count = 0
         zero_count = 0
@@ -250,10 +179,16 @@ def doer_of_thing(fix, m):
         print('Flux: ', flux_count)
         return f
     
-    if m == 6:
-        sphere_radius = 35_000
-    else:
-        sphere_radius = 2_000 #7_000 for 277 and on
+    # OLD
+    # if m == 6:
+    #     sphere_radius = 35_000
+    # else:
+    #     sphere_radius = 2_000 #7_000 for 277 and on
+
+    # NEW: Find the correct spehere radius
+    sphere_radius = 80 * max(photosphere)
+
+
     grad_E, radius_idx = grad_calculator(rays, radii, sphere_radius)
     flux = flux_calculator(grad_E, radius_idx, 
                            rays, rays_T, rays_den)
@@ -273,6 +208,7 @@ def doer_of_thing(fix, m):
 if __name__ == "__main__":
     lums = []
     m = 4 # Choose BH
+    index = 0
     fixes, days = select_fix(m)
     for fix in fixes:
         lum = doer_of_thing(fix, m)
@@ -280,13 +216,17 @@ if __name__ == "__main__":
     
     #%%
     plt.figure()
-    np.savetxt('first_reddatanew_m'+ str(m) + '.txt', (days, lums))
+    np.savetxt('try_reddata_m'+ str(m) + '.txt', (days, lums))
     plt.plot(days, lums, '-o', color = 'maroon')
     plt.yscale('log')
     plt.ylim(1e41,1e45)
     plt.ylabel('Bolometric Luminosity [erg/s]')
     plt.xlabel('Days')
-    plt.title('FLD for $10^4 \quad M_\odot$')
+    if m == 6:
+        plt.title('FLD for $10^6 \quad M_\odot$')
+    if m == 4:
+        plt.title('FLD for $10^4 \quad M_\odot$')
     plt.grid()
+    plt.savefig('red' + str(m) + '.png')
     plt.show()
 
