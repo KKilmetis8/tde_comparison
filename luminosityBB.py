@@ -38,11 +38,11 @@ def log_array(n_min, n_max, lenght):
 
 def select_fix(m):
     if m == 4:
-        snapshots = np.concatenate((np.arange(233,263+1), np.array([293,308,322])))
-        days = [1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1.1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29, 1.57, 1.7, 1.83] #t/t_fb
+        snapshots = [233, 254, 263, 277 , 293, 308, 322]
+        days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950, 1006]
-        days = [1, 1.1, 1.3, 1.4, 1.6] #t/t_fb
+        snapshots = [844, 881, 925, 950]
+        days = [1, 1.1, 1.3, 1.4] #t/t_fb
     return snapshots, days
 
 def planck(Temperature: float, n: float) -> float:

@@ -72,13 +72,12 @@ def optical_depth(T, rho, dr):
     if logrho < -22 or logT < 1:
         return 0
     
-    # Stream material, is opaque 
-    if logT < 8.666:
+    # Stream material, is opaque (???) CHECK CONDITION
+    if logT < 8.666 or logT > 17.876:
         return 1
     
     # Convert Cell size to cgs
     dr *= Rsol_to_cm
-
     tau = opacity(logT, logrho,'effective', ln = True) * dr 
     
     return tau

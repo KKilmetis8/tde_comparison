@@ -43,15 +43,11 @@ NSIDE = 4 # 192 observers
 
 def select_fix(m):
     if m == 4:
-        snapshots = [233]
-        days = [1]
-        # snapshots = [233, 254, 263, 277 , 293, 308, 322]
-        # days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
+        snapshots = [233, 254, 263, 277 , 293, 308, 322]
+        days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844]
-        days = [1]
-        # snapshots = [844, 881, 925, 950]
-        # days = [1, 1.1, 1.3, 1.4] #t/t_fb
+        snapshots = [844, 881, 925, 950]
+        days = [1, 1.1, 1.3, 1.4] #t/t_fb
     return snapshots, days
 
 ### OLD
@@ -117,10 +113,13 @@ def doer_of_thing(fix, m, show_plot = True):
         # Get the index of radius closest in sphere radius
         diffs = np.abs(radii - sphere_radius)
         idx = np.argmin(diffs)
-        step = radii[idx + 1] - radii[idx]
+        step = radii[idx] - radii[idx-1]
+        #step = radii[idx + 1] - radii[idx]
         grad_E = np.zeros(len(rays))
+        # for i, ray in enumerate(rays):
+        #     grad_E[i] = (ray[idx+1] - ray[idx]) / step 
         for i, ray in enumerate(rays):
-            grad_E[i] = (ray[idx+1] - ray[idx]) / step 
+            grad_E[i] = (ray[idx] - ray[idx-1]) / step 
         return grad_E, idx
     
     
@@ -177,22 +176,17 @@ def doer_of_thing(fix, m, show_plot = True):
         print('Zero: ', zero_count)
         print('Flux: ', flux_count)
         return f
-    # OLD
-    # if m == 6:
-    #     sphere_radius = 35_000
-    # else:
-    #     sphere_radius = 2_000 #7_000 for 277 and on
 
     # NEW: Find the correct spehere radius
-    if m == 4:
-        if fix < 270:
-            sphere_radius = 3000 
-        elif np.logical_and(fix > 270, fix < 290):
-            sphere_radius = 3500
-        else:
-            sphere_radius = 7000
-    if m == 6:
-        sphere_radius = 35_000
+    # if m == 4:
+    #     if fix < 270:
+    #         sphere_radius = 3000 
+    #     elif np.logical_and(fix > 270, fix < 290):
+    #         sphere_radius = 3500
+    #     else:
+    #         sphere_radius = 7000
+    # if m == 6:
+    #     sphere_radius = 35_000
         
     sphere_radius = 10 * np.max(photosphere)
 
@@ -214,8 +208,8 @@ def doer_of_thing(fix, m, show_plot = True):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = False
-    plot = False
+    save = True
+    plot = True
     
     lums = []
     m = 6 # Choose BH
@@ -227,7 +221,7 @@ if __name__ == "__main__":
     
     #%%
     if save:
-        np.savetxt('try_reddata_m'+ str(m) + '.txt', (days, lums)) 
+        np.savetxt('reddata_m'+ str(m) + '.txt', (days, lums)) 
     #%%
     if plot:
         plt.figure()
