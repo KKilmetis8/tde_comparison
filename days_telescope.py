@@ -1,7 +1,7 @@
 """"
 autohor: Paola
 
-Plots in the band of ULTRASAT and ZTF.
+Plots of the bolometric in in the band ULTRASAT, ZTF and Xray at different time
 
 """
 import numpy as np
@@ -23,6 +23,7 @@ def select_days(m):
     return days
 
 def select_band(m, telescope, redshift = False):
+    kev_to_Hz = 2.418e17
     L_tilde_n = np.loadtxt('L_tilde_n_m'+ str(m) + '.txt')
     x_array = L_tilde_n[0]
     n_array = 10**x_array
@@ -38,7 +39,15 @@ def select_band(m, telescope, redshift = False):
     if telescope == 'Rztf':
         n_min = 4.11e14
         n_max = 5.07e14
-
+    
+    if telescope == 'softXray':
+        n_min = 0.3 * kev_to_Hz
+        n_max = 1 * kev_to_Hz
+    
+    if telescope == 'hardXray':
+        n_min = 1 * kev_to_Hz
+        n_max = 10 * kev_to_Hz
+    
     if redshift:
         n_min = (1+z) * n_min
         n_max = (1+z) * n_max
@@ -85,11 +94,15 @@ def select_band(m, telescope, redshift = False):
 def final_plot(m, redshift = False):
     bolom = np.loadtxt('L_m'+ str(m) + '.txt')
     days = select_days(m)
+    softXray = select_band(m, 'softXray', redshift)
+    #hardXray = select_band(m, 'hardXray', redshift)
     ultrasat = select_band(m, 'ultrasat', redshift)
     Gztf = select_band(m, 'Gztf', redshift)
     Rztf = select_band(m, 'Rztf', redshift)
     
-    plt.plot(days, bolom, 'o-', c = 'forestgreen', label = 'Bolometric')
+    plt.plot(days, bolom, 'o-', c = 'olive', label = 'Bolometric')
+    plt.plot(days, softXray, 'o-', c = 'forestgreen', label = 'soft Xray')
+    #plt.plot(days, hardXray, 'o-', c = 'mediumspringgreen', label = 'hard Xray')
     plt.plot(days, ultrasat, 'o-', c = 'royalblue', label = 'ULTRASAT')
     plt.plot(days, Gztf, 'o-', c = 'sandybrown', label = 'ZTF G-band')
     plt.plot(days, Rztf, 'o-', c = 'coral', label = 'ZTF R-band')
@@ -108,7 +121,7 @@ def final_plot(m, redshift = False):
         plt.savefig('n_Ln_band'+ str(m) + f'_z{z}.png') 
     else:
         if m == 4:
-            plt.text(1, 1e39, '$M_{BH}=10^4M_{sun}$\n' + f'redshift = {z} $', fontsize = 18)
+            plt.text(1.2, 0.8e39, '$M_{BH}=10^4M_{sun}$', fontsize = 18)
         if m == 6:
             plt.text(1.3, 1e41, '$M_{BH}=10^6M_{sun}$', fontsize = 18)
         plt.savefig('n_Ln_band'+ str(m) + '.png') 
@@ -116,7 +129,7 @@ def final_plot(m, redshift = False):
 
 
 # MAIN
-m = 6
+m = 4
 
 plt.figure(figsize=(15,8))
 final_plot(m)

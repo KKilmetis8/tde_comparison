@@ -13,10 +13,6 @@ NOTES FOR OTHERS:
 
 import numpy as np
 import matplotlib.pyplot as plt
-# import colorcet
-# import numba
-# from astropy.coordinates import cartesian_to_spherical
-# from src.Calculators.spherical_caster import THE_SPHERICAL_CASTER
 from src.Optical_Depth.opacity_table import opacity
 from src.Luminosity.photosphere import get_photosphere
 import healpy as hp
@@ -47,7 +43,7 @@ NSIDE = 4 # 192 observers
 
 def select_fix(m):
     if m == 4:
-        snapshots = [233, 254, 263, 277, 293, 308, 322]
+        snapshots = [233, 254, 263, 277 , 293, 308, 322]
         days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
         snapshots = [844, 881, 925, 950]
@@ -71,7 +67,6 @@ def select_fix(m):
 ###
 
 def doer_of_thing(fix, m, show_plot = True):
-    fix = str(fix)
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
     rg = 2*Mbh/c**2 #tidal radius in simulater units
@@ -178,7 +173,7 @@ def doer_of_thing(fix, m, show_plot = True):
         print('Zero: ', zero_count)
         print('Flux: ', flux_count)
         return f
-    
+    print(fix)
     # OLD
     # if m == 6:
     #     sphere_radius = 35_000
@@ -186,10 +181,19 @@ def doer_of_thing(fix, m, show_plot = True):
     #     sphere_radius = 2_000 #7_000 for 277 and on
 
     # NEW: Find the correct spehere radius
-    sphere_radius = 80 * max(photosphere)
+    if m == 4:
+        if fix < 270:
+            sphere_radius = 3000 
+        elif np.logical_and(fix > 270, fix < 290):
+            sphere_radius = 3500
+        else:
+            sphere_radius = 7000
+    if m == 6:
+        sphere_radius = 35_000
 
 
     grad_E, radius_idx = grad_calculator(rays, radii, sphere_radius)
+    print(sphere_radius)
     flux = flux_calculator(grad_E, radius_idx, 
                            rays, rays_T, rays_den)
     
@@ -215,17 +219,19 @@ if __name__ == "__main__":
         lums.append(lum)
     
     #%%
+    np.savetxt('try_reddata_m'+ str(m) + '.txt', (days, lums)) 
+    #%%       
     plt.figure()
-    np.savetxt('try_reddata_m'+ str(m) + '.txt', (days, lums))
     plt.plot(days, lums, '-o', color = 'maroon')
     plt.yscale('log')
-    plt.ylim(1e41,1e45)
     plt.ylabel('Bolometric Luminosity [erg/s]')
     plt.xlabel('Days')
     if m == 6:
         plt.title('FLD for $10^6 \quad M_\odot$')
+        plt.ylim(1e41,1e45)
     if m == 4:
         plt.title('FLD for $10^4 \quad M_\odot$')
+        plt.ylim(1e39,1e42)
     plt.grid()
     plt.savefig('red' + str(m) + '.png')
     plt.show()
