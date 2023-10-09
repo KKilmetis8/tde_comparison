@@ -50,10 +50,11 @@ def optical_depth(T, rho, dr):
 
     Parameters
     ----------
-    rho : float. 
-        Density in [cgs]. We will convert it in ln in order to interpolate.
     T : float,
         Temperature in [cgs]. We will convert it in ln in order to interpolate.
+    rho : float. 
+        Density in [cgs]. We will convert it in ln in order to interpolate.
+
     dr : float,
         Cell Size in R_sol.
 
@@ -62,7 +63,6 @@ def optical_depth(T, rho, dr):
     tau : float,
         The optical depth in [cgs].
     '''
-    
     logT = np.log(T)
     logT = np.nan_to_num(logT, nan = 0, posinf = 0, neginf= 0) #posinf = big number?
     logrho = np.log(rho)
@@ -111,7 +111,6 @@ def calc_photosphere(rs, T, rho, m, threshold = 1):
     taus = []
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
-
     while tau < threshold and i > -num:
         new_tau = optical_depth(T[i], rho[i], dr)
         tau += new_tau
@@ -134,7 +133,6 @@ def get_photosphere(fix, m, red = False, get_observer = False):
     Mass = np.load( loadpath + fix + '/Mass_' + fix + '.npy')
     Den = np.load( loadpath + fix + '/Den_' + fix + '.npy')
     T = np.load( loadpath + fix + '/T_' + fix + '.npy')
-
     # Convert to CGS and spherical units
     Den *= den_converter 
     R, THETA, PHI = cartesian_to_spherical(X,Y,Z) 
@@ -167,8 +165,9 @@ def get_photosphere(fix, m, red = False, get_observer = False):
                       T, 
                       weights = Mass, avg = True, loud = False)
     Den_casted = np.nan_to_num(Den_casted, neginf = 0)
+
+
     T_casted = np.nan_to_num(T_casted, neginf = 0) 
-    
     # plt.figure()
     # plt.title('Den Casted')
     # img = plt.imshow(Den_casted.T, cmap = 'cet_fire')
@@ -200,8 +199,6 @@ def get_photosphere(fix, m, red = False, get_observer = False):
         for i, observer in enumerate(observers):
             # Ray holds Erad
             rays.append(Rad_casted[: , i])
-        
-    print('Shape Ray:',np.shape(rays_T))
     
     # Get the photosphere
     rays_tau = []
@@ -214,8 +211,8 @@ def get_photosphere(fix, m, red = False, get_observer = False):
         Den_of_single_ray = rays_den[i]
         
         # Get Photosphere
-        taus, photo = calc_photosphere(radii, Den_of_single_ray, 
-                                      T_of_single_ray, m, threshold = 1)
+        taus, photo = calc_photosphere(radii, T_of_single_ray, Den_of_single_ray, 
+                                       m, threshold = 1)
         # Store
         rays_tau.append(taus)
         photosphere[i] = photo
@@ -238,15 +235,15 @@ def get_photosphere(fix, m, red = False, get_observer = False):
 ################
 
 if __name__ == "__main__":
-    m = 6 # M_bh = 10^m M_sol | Choose 4 or 6
+    m = 4 # M_bh = 10^m M_sol | Choose 4 or 6
     
     # Make Paths
     if m == 4:
-        fixes = [322] #[233, 254, 263, 277, 293, 308, 322]
+        fixes = [233] #[233, 254, 263, 277, 293, 308, 322]
         loadpath = '4/'
     if m == 6:
         fixes = [844] #[844, 881, 925, 950]
         loadpath = '6/'
 
     for fix in fixes:
-        get_photosphere(fix,m)
+        _, _ , tau, photoo, _ = get_photosphere(fix,m)

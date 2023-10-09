@@ -47,18 +47,23 @@ def select_fix(m):
 
 def planck(Temperature: float, n: float) -> float:
     """ Planck function in a cell. It needs temperature and frequency. """
+    
     const = 2*h/c**2
     fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
     return fun
 
 def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, n:int):
-    """ Luminosity in a cell: L_ni = \epsilon e^(-\tau) B_ni / B where  B = \sigma T^4/\pi"""
+    """ Luminosity in a cell: L_ni = \epsilon e^(-\tau) B_ni / B where  
+    B = \sigma T^4/\pi"""
+    
     k_planck = opacity(Temperature, Density, 'planck', ln = False)
     L = 4 * np.pi * k_planck * volume * np.exp(-tau) * planck(Temperature, n)
     return L
 
 def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
-    """ Given the array of luminosity L_x computed over 10^{x_array} (!!!), find the normalisation constant from FLD model used for L_tilde_nu. """  
+    """ Given the array of luminosity L_x computed over 10^{x_array} (!!!), 
+    find the normalisation constant from FLD model used for L_tilde_nu. """  
+    
     xLx =  10**(x_array) * L_x
     L = np.trapz(xLx, x_array) 
     L *= np.log(10)

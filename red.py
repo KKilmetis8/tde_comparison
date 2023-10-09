@@ -43,11 +43,15 @@ NSIDE = 4 # 192 observers
 
 def select_fix(m):
     if m == 4:
-        snapshots = [233, 254, 263, 277 , 293, 308, 322]
-        days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
+        snapshots = [233]
+        days = [1]
+        # snapshots = [233, 254, 263, 277 , 293, 308, 322]
+        # days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950]
-        days = [1, 1.1, 1.3, 1.4] #t/t_fb
+        snapshots = [844]
+        days = [1]
+        # snapshots = [844, 881, 925, 950]
+        # days = [1, 1.1, 1.3, 1.4] #t/t_fb
     return snapshots, days
 
 ### OLD
@@ -173,7 +177,6 @@ def doer_of_thing(fix, m, show_plot = True):
         print('Zero: ', zero_count)
         print('Flux: ', flux_count)
         return f
-    print(fix)
     # OLD
     # if m == 6:
     #     sphere_radius = 35_000
@@ -190,10 +193,11 @@ def doer_of_thing(fix, m, show_plot = True):
             sphere_radius = 7000
     if m == 6:
         sphere_radius = 35_000
+        
+    sphere_radius = 10 * np.max(photosphere)
 
 
     grad_E, radius_idx = grad_calculator(rays, radii, sphere_radius)
-    print(sphere_radius)
     flux = flux_calculator(grad_E, radius_idx, 
                            rays, rays_T, rays_den)
     
@@ -203,15 +207,18 @@ def doer_of_thing(fix, m, show_plot = True):
     # Turn to luminosity
     sphere_radius *= Rsol_to_cm
     lum = flux * 4 * np.pi * sphere_radius**2
-    print('%.7e' % lum )
+    print('%.3e' % lum )
     return lum
 
 ##
 # MAIN
 ##
 if __name__ == "__main__":
+    save = False
+    plot = False
+    
     lums = []
-    m = 4 # Choose BH
+    m = 6 # Choose BH
     index = 0
     fixes, days = select_fix(m)
     for fix in fixes:
@@ -219,20 +226,22 @@ if __name__ == "__main__":
         lums.append(lum)
     
     #%%
-    np.savetxt('try_reddata_m'+ str(m) + '.txt', (days, lums)) 
-    #%%       
-    plt.figure()
-    plt.plot(days, lums, '-o', color = 'maroon')
-    plt.yscale('log')
-    plt.ylabel('Bolometric Luminosity [erg/s]')
-    plt.xlabel('Days')
-    if m == 6:
-        plt.title('FLD for $10^6 \quad M_\odot$')
-        plt.ylim(1e41,1e45)
-    if m == 4:
-        plt.title('FLD for $10^4 \quad M_\odot$')
-        plt.ylim(1e39,1e42)
-    plt.grid()
-    plt.savefig('red' + str(m) + '.png')
-    plt.show()
+    if save:
+        np.savetxt('try_reddata_m'+ str(m) + '.txt', (days, lums)) 
+    #%%
+    if plot:
+        plt.figure()
+        plt.plot(days, lums, '-o', color = 'maroon')
+        plt.yscale('log')
+        plt.ylabel('Bolometric Luminosity [erg/s]')
+        plt.xlabel('Days')
+        if m == 6:
+            plt.title('FLD for $10^6 \quad M_\odot$')
+            plt.ylim(1e41,1e45)
+        if m == 4:
+            plt.title('FLD for $10^4 \quad M_\odot$')
+            plt.ylim(1e39,1e42)
+        plt.grid()
+        plt.savefig('red' + str(m) + '.png')
+        plt.show()
 
