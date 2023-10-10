@@ -72,79 +72,100 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 
 # MAIN
 if __name__ == "__main__":
-    m = 4
+    plot = False
+    save = True
+    
+    # Choose BH and freq range
+    m = 6
     n_min = 1e12 
     n_max = 1e20
     n_spacing = 10000
     x_arr = log_array(n_min, n_max, n_spacing)
-    snap_index = 0
-
-    snapshots, days = select_fix(m)
-    fld_data = np.loadtxt('reddata_m'+ str(m) +'.txt')
-    fix = snapshots[snap_index]
-    luminosity_fld_fix = fld_data[1]
-    n_arr = 10**x_arr
-
-    rays_den, rays_T, rays_tau, photosphere, radii = get_photosphere(fix, m)
-    dr = (radii[1] - radii[0]) * Rsol_to_cm
-    volume = 4 * np.pi * radii**2 * dr  / 192
-
-    lum_n = np.zeros(len(x_arr))
-    for j in range(len(rays_den)):
-        for i in range(len(rays_tau[j])):        
-            # Temperature, Density and volume: np.array from near to the BH to far away. 
-            # Thus we will use negative index in the for loop.
-            # tau: np.array from outside to inside.      
-            T = rays_T[j][-i]
-            rho = rays_den[j][-i] 
-            opt_depth = rays_tau[j][i]
-            cell_vol = volume[-i]
-
-            # Ensure we can interpolate
-            rho_low = np.exp(-22)
-            T_low = np.exp(8.77)
-            T_high = np.exp(17.8)
-            if rho < rho_low or T < T_low or T > T_high:
-                continue
-            
-            for x_index in range(len(x_arr)): #we need linearspace
-                freq = 10**x_arr[x_index]
-                lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, freq)
-                lum_n[x_index] += lum_n_cell
-        
-        print('ray:', j)
     
-    # Normalise with the bolometric luminosity from red curve (FLD)
-    const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[snap_index])
-    lum_tilde_n = lum_n * const_norm
-
-    # Find the bolometic energy (should be = to the one from FLD)
-    bolom_integrand =  n_arr * lum_tilde_n
-    bolom = np.log(10) * np.trapz(bolom_integrand, x_arr)
-    bolom = "{:.4e}".format(bolom) #scientific notation
-    print('bolometric L:', bolom)
-
-    # Save data and plot
-    with open('L_m' + str(m) + '.txt', 'a') as fbolo:
-        fbolo.write('#snap '+ str(fix) + '\n')
-        fbolo.write(bolom + '\n')
-        fbolo.close()
-
-    fig, ax = plt.subplots()
-    ax.plot(n_arr, lum_tilde_n)
-    plt.xlabel(r'$log_{10}\nu$ [Hz]')
-    plt.ylabel(r'$log_{10}\tilde{L}_\nu$ [erg/sHz]')
-    plt.loglog()
-    plt.grid()
-    plt.text(0.7e12, 2e23, r'$t/t_{fb}:$ ' + f'{days[snap_index]}\n B: {bolom}')
-    plt.savefig('Ltildan_m' + str(m) + '_snap' + str(fix))
-    plt.show()
-
-    plt.figure()
-    plt.plot(n_arr, n_arr * lum_tilde_n)
-    plt.xlabel(r'$log_{10}\nu$ [Hz]')
-    plt.ylabel(r'$log_{10}(\nu\tilde{L}_\nu)$ [erg/s]')
-    plt.loglog()
-    plt.grid()
-    plt.savefig('n_Ltildan_m' + str(m) + '_snap' + str(fix))
-    plt.show()
+    # Save frequency range
+    if save:
+        with open('data/L_spectrum_m'+ str(m) + '.txt', 'a') as f:
+            f.write('# exponents x of frequencues: n = 10^x  \n')
+            f.write(' '.join(map(str, x_arr)) + '\n') 
+    
+    fixes, days = select_fix(m)
+    for idx, fix in enumerate(fixes):
+        # Load data for normalization
+        fld_data = np.loadtxt('data/reddata_m'+ str(m) +'.txt')
+        luminosity_fld_fix = fld_data[1]
+        n_arr = 10**x_arr
+        
+        # Get Photosphere
+        rays_T, rays_den, rays_tau, photosphere, radii = get_photosphere(fix, m)
+        dr = (radii[1] - radii[0]) * Rsol_to_cm
+        volume = 4 * np.pi * radii**2 * dr  / 192
+                    
+        lum_n = np.zeros(len(x_arr))
+        for j in range(len(rays_den)):
+            for i in range(len(rays_tau[j])):        
+                # Temperature, Density and volume: np.array from near to the BH to far away. 
+                # Thus we will use negative index in the for loop.
+                # tau: np.array from outside to inside.      
+                T = rays_T[j][-i]
+                rho = rays_den[j][-i] 
+                opt_depth = rays_tau[j][i]
+                cell_vol = volume[-i]
+    
+                # Ensure we can interpolate
+                rho_low = np.exp(-22)
+                T_low = np.exp(8.77)
+                T_high = np.exp(17.8)
+                if rho < rho_low or T < T_low or T > T_high:
+                    continue
+                
+                for x_index in range(len(x_arr)): #we need linearspace
+                    freq = 10**x_arr[x_index]
+                    lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, freq)
+                    lum_n[x_index] += lum_n_cell
+            
+            # print('ray:', j)
+        
+        # Normalise with the bolometric luminosity from red curve (FLD)
+        const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
+        lum_tilde_n = lum_n * const_norm
+    
+        # Find the bolometic energy (should be = to the one from FLD)
+        bolom_integrand =  n_arr * lum_tilde_n
+        bolom = np.log(10) * np.trapz(bolom_integrand, x_arr)
+        bolom = "{:.4e}".format(bolom) #scientific notation
+        print('bolometric L:', bolom)
+    
+        # Save data and plot
+        if save:
+            # Bolometric
+            with open('data/L_bol_m' + str(m) + '.txt', 'a') as fbolo:
+                fbolo.write('#snap '+ str(fix) + '\n')
+                fbolo.write(bolom + '\n')
+                fbolo.close()
+                
+            # Spectrum
+            with open('data/L_spectrum_m'+ str(m) + '.txt', 'a') as f:
+                f.write('#snap '+ str(fix) + ' L_tilde_n \n')
+                f.write(' '.join(map(str, lum_tilde_n)) + '\n')
+                f.close()     
+                
+            
+    if plot:
+        fig, ax = plt.subplots()
+        ax.plot(n_arr, lum_tilde_n)
+        plt.xlabel(r'$log_{10}\nu$ [Hz]')
+        plt.ylabel(r'$log_{10}\tilde{L}_\nu$ [erg/sHz]')
+        plt.loglog()
+        plt.grid()
+        plt.text(0.7e12, 2e23, r'$t/t_{fb}:$ ' + f'{days[idx]}\n B: {bolom}')
+        plt.savefig('Figs/Ltildan_m' + str(m) + '_snap' + str(fix))
+        plt.show()
+    
+        plt.figure()
+        plt.plot(n_arr, n_arr * lum_tilde_n)
+        plt.xlabel(r'$log_{10}\nu$ [Hz]')
+        plt.ylabel(r'$log_{10}(\nu\tilde{L}_\nu)$ [erg/s]')
+        plt.loglog()
+        plt.grid()
+        plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
+        plt.show()
