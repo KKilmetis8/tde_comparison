@@ -8,7 +8,8 @@ Created on Mon Sep  4 16:42:47 2023
 Equations refer to Krumholtz '07
 
 NOTES FOR OTHERS:
-- make changes in variables: m (power index of the BB mass), fixes (number of snapshots) anf thus days
+- make changes in variables: m (power index of the BB mass), 
+fixes (number of snapshots) anf thus days
 """
 # Vanilla Imports
 import numpy as np
@@ -47,8 +48,8 @@ def select_fix(m):
         snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844] #[844, 881, 925, 950]
-        days = [1] #[1, 1.1, 1.3, 1.4] #t/t_fb
+        snapshots = [844, 881, 925, 950]
+        days = [1, 1.1, 1.3, 1.4] #t/t_fb
     return snapshots, days
 
 ### OLD
@@ -192,7 +193,7 @@ def doer_of_thing(fix, m, show_plot = False):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = False
+    save = True
     plot = False
     
     lums = []
@@ -204,7 +205,7 @@ if __name__ == "__main__":
         lums.append(lum)
     
     if save:
-        np.savetxt('reddata_m'+ str(m) + '.txt', (days, lums)) 
+        np.savetxt('data/reddata_m'+ str(m) + '.txt', (days, lums)) 
     #%%
     if plot:
         plt.figure()
