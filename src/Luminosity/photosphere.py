@@ -63,21 +63,30 @@ def optical_depth(T, rho, dr):
     tau : float,
         The optical depth in [cgs].
     '''
+    X = 0.734  # Hydrogen fraction
     logT = np.log(T)
     logT = np.nan_to_num(logT, nan = 0, posinf = 0, neginf= 0) #posinf = big number?
     logrho = np.log(rho)
     logrho = np.nan_to_num(logrho, nan = 0, posinf = 0, neginf= 0) #posinf = big number?
+    
+    # Convert Cell size to cgs
+    dr *= Rsol_to_cm
     
     # If there is nothing, the ray continues unimpeded
     if logrho < -22 or logT < 1:
         return 0
     
     # Stream material, is opaque (???) CHECK CONDITION
-    if logT < 8.666 or logT > 17.876:
+    if logT < 8.666:
         return 1
     
-    # Convert Cell size to cgs
-    dr *= Rsol_to_cm
+    # Too hot, thompson Opacity, make it fall inside the table
+    # Messy? Yes.
+    # Trust that in high T Elad's table converges to Thompson opacity
+    if logT > 17.876:
+        logT = 17.7
+    
+    # Lookup table
     tau = opacity(logT, logrho,'effective', ln = True) * dr 
     
     return tau
