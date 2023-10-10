@@ -46,8 +46,8 @@ def select_fix(m):
         snapshots = [233, 254, 263, 277 , 293, 308, 322]
         days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950]
-        days = [1, 1.1, 1.3, 1.4] #t/t_fb
+        snapshots = [844] #[844, 881, 925, 950]
+        days = [1] #[1, 1.1, 1.3, 1.4] #t/t_fb
     return snapshots, days
 
 ### OLD
@@ -188,7 +188,7 @@ def doer_of_thing(fix, m, show_plot = True):
     # if m == 6:
     #     sphere_radius = 35_000
         
-    sphere_radius = 10 * np.max(photosphere)
+    sphere_radius = 100 * np.max(photosphere)
 
 
     grad_E, radius_idx = grad_calculator(rays, radii, sphere_radius)
@@ -208,8 +208,8 @@ def doer_of_thing(fix, m, show_plot = True):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = True
-    plot = True
+    save = False
+    plot = False
     
     lums = []
     m = 6 # Choose BH

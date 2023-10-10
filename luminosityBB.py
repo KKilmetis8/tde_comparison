@@ -74,7 +74,7 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 if __name__ == "__main__":
     m = 4
     n_min = 1e12 
-    n_max = 1e18
+    n_max = 1e20
     n_spacing = 10000
     x_arr = log_array(n_min, n_max, n_spacing)
     snap_index = 0
