@@ -27,16 +27,8 @@ plt.rcParams['figure.figsize'] = [5 , 4]
 
 
 #%% Constants & Converter
-G = 6.6743e-11 # SI
-Msol = 1.98847e30 # kg
-Rsol = 6.957e8 # m
-t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
-c = 3e8 * t/Rsol # simulator units. Need these for the PW potential
 c_cgs = 3e10 # [cm/s]
-Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
-den_converter = Msol_to_g / Rsol_to_cm**3
-energy_converter =  Msol_to_g * Rsol_to_cm**2 / (t**2) # Energy / Mass to cgs converter
 
 
 #%%
@@ -54,23 +46,14 @@ def select_fix(m):
         days = [1, 1.1, 1.3, 1.4] # t/t_fb
     return snapshots, days
 
-### OLD
-# if m == 4:
-#     fixes =  np.arange(233,263+1) #from 233 to 263
-#     days = [1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1.1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29] #t/t_fb
-# if m == 6:
-#     fixes = [844] #[844, 881, 925, 950] # 1006]
-#     days = [1.00325, 1.13975, 1.302, 1.39425] # 1.6] #t/t_fb
-###
-
-
 @numba.njit
 def grad_calculator(rays, radii, sphere_radius = 15_000): 
     # Get the index of radius closest in sphere radius
     # diffs = np.abs(radii - sphere_radius)
     # idx = np.argmin(diffs)
+    sphere_radius_cgs = sphere_radius * Rsol_to_cm
     for i, radius in enumerate(radii):
-        if radius > sphere_radius:
+        if radius > sphere_radius_cgs:
             idx = i - 1 
             break
         
@@ -128,9 +111,10 @@ def flux_calculator(grad_E, idx,
             f[i] = max_travel
             continue
         
+        # Stream
         if Temperature < T_low:
-            zero_count += 1
-            f[i] = max_travel
+            # zero_count += 1
+            # f[i] = max_travel
             continue
         
         # T too high => Thompson opacity
@@ -176,7 +160,7 @@ def doer_of_thing(fix, m):
         else:
             sphere_radius = 7000
     if m == 6:
-        sphere_radius = 9000
+        sphere_radius = 30000
 
     # Calculate Flux
     grad_E, idx = grad_calculator(rays, radii, sphere_radius)

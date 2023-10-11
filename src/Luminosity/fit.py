@@ -31,7 +31,7 @@ UV_max = 1e20
 if __name__ == '__main__':
     plot = True
     save = True
-    do = True
+    do = False
     # Load & Unpack
     path = 'data/'
     data = np.loadtxt(path + 'L_spectrum_m' + str(m) + '.txt')
@@ -48,8 +48,9 @@ if __name__ == '__main__':
     
     if do:
         Blue = []
-        for i in range(1, 3):
+        for i in range(1 , len(data)):
             Lums = data[i] 
+            print(Lums)
             Lums = Lums[UV_min_idx:UV_max_idx]
             fit = curve_fit(tofit, freqs, Lums,
             p0 = (init_R, init_T))

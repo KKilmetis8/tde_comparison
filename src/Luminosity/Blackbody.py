@@ -41,8 +41,8 @@ def select_fix(m):
         snapshots = [233, 254, 263, 277 , 293, 308, 322]
         days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950]
-        days = [1, 1.1, 1.3, 1.4] #t/t_fb
+        snapshots = [881] #[844, 881, 925, 950]
+        days =[1.1] # [1, 1.1, 1.3, 1.4] #t/t_fb
     return snapshots, days
 
 def planck(Temperature: float, n: float) -> float:
@@ -50,20 +50,20 @@ def planck(Temperature: float, n: float) -> float:
     
     const = 2*h/c**2
     fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
+    print('B_n: ', fun)
     return fun
 
 def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, n:int):
     """ Luminosity in a cell: L_ni = \epsilon e^(-\tau) B_ni / B where  
     B = \sigma T^4/\pi"""
-    
     k_planck = opacity(Temperature, Density, 'planck', ln = False)
+    print('Opacity: ', k_planck)
     L = 4  * np.pi * k_planck * volume * np.exp(-tau) * planck(Temperature, n)
     return L
 
 def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
     """ Given the array of luminosity L_x computed over 10^{x_array} (!!!), 
     find the normalisation constant from FLD model used for L_tilde_nu. """  
-    
     xLx =  10**(x_array) * L_x
     L = np.trapz(xLx, x_array) 
     L *= np.log(10)
@@ -97,37 +97,42 @@ if __name__ == "__main__":
         
         # Get Photosphere
         rays_T, rays_den, rays_tau, photosphere, radii = get_photosphere(fix, m)
-        dr = (radii[1] - radii[0]) * Rsol_to_cm
+        dr = radii[1] - radii[0]
         volume = 4 * np.pi * radii**2 * dr  / 192
                     
         lum_n = np.zeros(len(x_arr))
-        for j in range(len(rays_den)):
+        for j in range(192):
             for i in range(len(rays_tau[j])):        
-                # Temperature, Density and volume: np.array from near to the BH to far away. 
+                # Temperature, Density and volume: np.array from near to the BH
+                # to far away. 
                 # Thus we will use negative index in the for loop.
-                # tau: np.array from outside to inside.      
-                T = rays_T[j][-i]
-                rho = rays_den[j][-i] 
+                # tau: np.array from outside to inside.
+                reverse_idx = -i -1
+                T = rays_T[j][reverse_idx]
+                rho = rays_den[j][reverse_idx] 
                 opt_depth = rays_tau[j][i]
-                cell_vol = volume[-i]
-    
+                cell_vol = volume[reverse_idx]
+                # print('T:', T)
+                # print('rho: ', rho)
                 # Ensure we can interpolate
                 rho_low = np.exp(-22)
                 T_low = np.exp(8.77)
                 T_high = np.exp(17.8)
-                if rho < rho_low or T < T_low or T > T_high:
+                if rho < rho_low or T < T_low:
                     continue
+                if T > T_high:
+                    print('high')
+                    T = np.exp(17.7)         
                 
                 for x_index in range(len(x_arr)): #we need linearspace
                     freq = 10**x_arr[x_index]
                     lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, freq)
                     lum_n[x_index] += lum_n_cell
-            
-            # print('ray:', j)
-        
+                    
         # Normalise with the bolometric luminosity from red curve (FLD)
+        print(lum_n)
         const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
-        lum_tilde_n = lum_n * const_norm
+        lum_tilde_n = lum_n * const_norm / 192
     
         # Find the bolometic energy (should be = to the one from FLD)
         bolom_integrand =  n_arr * lum_tilde_n

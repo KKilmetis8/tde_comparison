@@ -27,18 +27,6 @@ plt.rcParams['axes.facecolor'] = 'whitesmoke'
 from src.Optical_Depth.opacity_table import opacity
 from src.Calculators.ray_maker import ray_maker
 
-################
-# CONSTANTS
-################
-
-Msol_to_g = 1.989e33
-Rsol_to_cm = 6.957e10
-den_converter = Msol_to_g / Rsol_to_cm**3
-G = 6.6743e-11 # SI
-Msol = 1.98847e30 # kg
-Rsol = 6.957e8 # m
-t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
-num = 500
 
 ################
 # FUNCTIONS
@@ -61,11 +49,7 @@ def optical_depth(T, rho, dr):
     -------
     tau : float,
         The optical depth in [cgs].
-    '''
-    
-    # Convert Cell size to cgs
-    dr *= Rsol_to_cm
-    
+    '''    
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-22):
         return 0
@@ -114,21 +98,20 @@ def calc_photosphere(rs, T, rho, m, threshold = 1):
     taus = []
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
-    while tau < threshold and i > -num:
+    while tau < threshold and i > -len(T):
         new_tau = optical_depth(T[i], rho[i], dr)
         tau += new_tau
         taus.append(new_tau) 
         i -= 1
-        if tau > 0:
-            print(tau)
-    print('--- new ray ---')
+        #if tau > 0:
+            #print(tau)
+    #print('--- new ray ---')
     photosphere =  rs[i] #i it's negative
     return taus, photosphere
 
 def get_photosphere(fix, m, get_observer = False):
     ''' Wrapper function'''
-    rays_T, rays_den, radii = ray_maker(fix, m, care_about_rad = False)
-
+    rays_T, rays_den, _, radii = ray_maker(fix, m)
     # Get the photosphere
     rays_tau = []
     photosphere = np.zeros(len(rays_T))
