@@ -14,7 +14,9 @@ fixes (number of snapshots) anf thus days
 # Vanilla Imports
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import numba
+import colorcet
 # Custom Imports
 from src.Calculators.ray_maker import ray_maker
 from src.Optical_Depth.opacity_table import opacity
@@ -31,8 +33,8 @@ Rsol = 6.957e8 # m
 t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
 c = 3e8 * t/Rsol # simulator units. Need these for the PW potential
 c_cgs = 3e10 # [cm/s]
-Msol_to_g = 1.989e33 #[g]
-Rsol_to_cm = 6.957e10 #[cm]
+Msol_to_g = 1.989e33 # [g]
+Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 energy_converter =  Msol_to_g * Rsol_to_cm**2 / (t**2) # Energy / Mass to cgs converter
 
@@ -48,8 +50,8 @@ def select_fix(m):
         snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881,] # 925, 950]
-        days = [1, 1.1,]# 1.3, 1.4] #t/t_fb
+        snapshots = [844, 881,  925, 950]
+        days = [1, 1.1, 1.3, 1.4] # t/t_fb
     return snapshots, days
 
 ### OLD
@@ -61,11 +63,17 @@ def select_fix(m):
 #     days = [1.00325, 1.13975, 1.302, 1.39425] # 1.6] #t/t_fb
 ###
 
+
 @numba.njit
 def grad_calculator(rays, radii, sphere_radius = 15_000): 
     # Get the index of radius closest in sphere radius
-    diffs = np.abs(radii - sphere_radius)
-    idx = np.argmin(diffs)
+    # diffs = np.abs(radii - sphere_radius)
+    # idx = np.argmin(diffs)
+    for i, radius in enumerate(radii):
+        if radius > sphere_radius:
+            idx = i - 1 
+            break
+        
     step = radii[1] - radii[0]
     grad_E = np.zeros(len(rays))
     
@@ -74,34 +82,62 @@ def grad_calculator(rays, radii, sphere_radius = 15_000):
 
     return grad_E, idx
 
+# @numba.njit
+def converger(rays, radii):
+    
+    grad_Es = []
+    idxs = []
+    for sphere_radius in radii:
+        grad_E, idx = grad_calculator(rays, radii, sphere_radius)
+        grad_Es.append(grad_E)
+        idxs.append(idx)
+        
+    rel_error = [ 100 * (1 - (grad_Es[i]/grad_Es[i-1])) 
+                 for i in range(1, len(grad_Es))]
+    
+    plt.figure( figsize = (16,4))
+    plt.plot(radii[1::10], rel_error[::10], '-o', c='k')
+    plt.xlabel('Sphere Radii')
+    plt.ylabel('Relative Error')
+    plt.ylim(-25, 25)
+    return grad_Es, idxs
+    
 def flux_calculator(grad_E, idx, 
                     rays, rays_T, rays_den):
     f = np.zeros(len(grad_E))
     max_count = 0
     zero_count = 0
     flux_count = 0
+    idx += 1
     for i, ray in enumerate(rays):
         # Get opacity
         Energy = ray[idx]
-        max_travel = c_cgs * ray[idx]
+        max_travel = c_cgs * Energy
         
         Temperature = rays_T[i][idx]
         Density = rays_den[i][idx]
-        
-        # If it is zero
-        if Density == 0 or Temperature == 0:
-            zero_count += 1
-            f[i] = max_travel
-            continue
         
         # Ensure we can interpolate
         rho_low = np.exp(-22)
         T_low = np.exp(8.77)
         T_high = np.exp(17.8)
-        if Density < rho_low or Temperature < T_low: 
+        
+        # If here is nothing, light continues
+        if Density < rho_low:
+            zero_count += 1
+            f[i] = max_travel
             continue
+        
+        if Temperature < T_low:
+            zero_count += 1
+            f[i] = max_travel
+            continue
+        
+        # T too high => Thompson opacity
         if Temperature > T_high:
+            print('hiiiiiiiiiii')
             Temperature = np.exp(17.7)
+            
         # Get Opacity, NOTE: Breaks Numba
         k_ross = opacity(Temperature, Density, 'rosseland', ln = False)
         
@@ -112,9 +148,8 @@ def flux_calculator(grad_E, idx,
         # Calc lambda, eq. 27
         coth = 1 / np.tanh(R)
         lamda = invR * (coth - invR)
-
         # Calc Flux, eq. 26
-        Flux =  max_travel * lamda / k_ross
+        Flux = - c_cgs * grad_E[i]  * lamda / k_ross
         
         # Choose
         if Flux > max_travel:
@@ -129,43 +164,9 @@ def flux_calculator(grad_E, idx,
     print('Flux: ', flux_count)
     return f
 
-def doer_of_thing(fix, m, show_plot = False):
-    # Make Rays
-    rays_T, rays_den, rays, radii = ray_maker(fix, m) # log output
-    rays_T = np.power(10, rays_T)
-    rays_den = np.power(10, rays_T)
-    #%% Let's see how it looks
-    if show_plot: 
-        img = plt.pcolormesh(radii, np.arange(len(rays)), rays, cmap = 'cet_gouldian')
-        cbar = plt.colorbar(img)
-        plt.title('Rays')
-        cbar.set_label('Radiation Energy Density')
-        plt.xlabel('r')
-        plt.ylabel('Various observers')
-        img.axes.get_yaxis().set_ticks([])
-        plt.xscale('log')
-        
-        plt.figure()
-        img = plt.pcolormesh(radii, np.arange(len(rays)), rays_den, cmap = 'cet_fire')
-        cbar = plt.colorbar(img)
-        plt.title('Rays')
-        cbar.set_label(r'$log_{10}$Density')
-        plt.xlabel('r')
-        plt.ylabel('Various observers')
-        img.axes.get_yaxis().set_ticks([])
-        plt.xscale('log')
-        
-        plt.figure()
-        img = plt.pcolormesh(radii, np.arange(len(rays)), rays_T, cmap = 'cet_bmy')
-        cbar = plt.colorbar(img)
-        plt.title('Rays')
-        cbar.set_label('Temperature')
-        plt.xlabel('r')
-        plt.ylabel('Various observers')
-        img.axes.get_yaxis().set_ticks([])
-        plt.xscale('log')
-    
-#%%
+def doer_of_thing(fix, m):
+    rays_T, rays_den, rays, radii = ray_maker(fix, m)
+
     # NEW: Find the correct spehere radius
     if m == 4:
         if fix < 270:
@@ -175,40 +176,38 @@ def doer_of_thing(fix, m, show_plot = False):
         else:
             sphere_radius = 7000
     if m == 6:
-        sphere_radius = 30_000
-    
+        sphere_radius = 9000
+
     # Calculate Flux
-    grad_E, radius_idx = grad_calculator(rays, radii, sphere_radius)
-    flux = flux_calculator(grad_E, radius_idx, 
-                           rays, rays_T, rays_den)
-    
+    grad_E, idx = grad_calculator(rays, radii, sphere_radius)
+    flux = flux_calculator(grad_E, idx, 
+                            rays, rays_T, rays_den)
+
     # Divide by number of observers
     flux = np.sum(flux) / 192
-    
     # Turn to luminosity
     sphere_radius *= Rsol_to_cm
     lum = flux * 4 * np.pi * sphere_radius**2
-    print('%.3e' % lum )
+    print('Lum %.3e' % lum )
     return lum
-
+#%%
 ##
 # MAIN
 ##
 if __name__ == "__main__":
     save = True
     plot = False
-    
-    lums = []
     m = 6 # Choose BH
-    index = 0
     fixes, days = select_fix(m)
+    lums = []
+            
     for fix in fixes:
         lum = doer_of_thing(fix, m)
         lums.append(lum)
     
     if save:
         np.savetxt('data/reddata_m'+ str(m) + '.txt', (days, lums)) 
-    #%%
+    #%% Plotting
     if plot:
         plt.figure()
         plt.plot(days, lums, '-o', color = 'maroon')

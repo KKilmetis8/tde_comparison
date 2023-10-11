@@ -13,7 +13,6 @@ AEK = '#F1C410'
 
 from scipy.optimize import curve_fit
 
-
 m = 6
 c = 2.99792458e10 # [cm/s]
 h = 6.62607015e-27 # [gcm^2/s]

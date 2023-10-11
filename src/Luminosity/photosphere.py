@@ -45,7 +45,7 @@ num = 500
 ################
 def optical_depth(T, rho, dr):
     '''
-    Calculates the optical depth at a point. Quantities are in log10.
+    Calculates the optical depth at a point
 
     Parameters
     ----------
@@ -128,9 +128,6 @@ def calc_photosphere(rs, T, rho, m, threshold = 1):
 def get_photosphere(fix, m, get_observer = False):
     ''' Wrapper function'''
     rays_T, rays_den, radii = ray_maker(fix, m, care_about_rad = False)
-    # These are log10, make them normal
-    rays_T = np.power(10, rays_T)
-    rays_den = np.power(10, rays_den)
 
     # Get the photosphere
     rays_tau = []

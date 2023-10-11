@@ -23,7 +23,6 @@ c_cgs = 3e10 # [cm/s]
 Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
-energy_converter =  Msol_to_g * Rsol_to_cm**2 / (t**2) # Energy / Mass to cgs 
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 
 def ray_maker(fix, m, care_about_rad = True):
@@ -44,9 +43,8 @@ def ray_maker(fix, m, care_about_rad = True):
     # Convert Energy / Mass to Energy Density in CGS
     if care_about_rad:
         Rad *= Den 
-        Rad *= en_den_converter 
+        Rad *= en_den_converter
     Den *= den_converter 
-    
     # Convert to spherical
     R, THETA, PHI = cartesian_to_spherical(X,Y,Z)
     R = R.value 
@@ -54,10 +52,10 @@ def ray_maker(fix, m, care_about_rad = True):
     PHI = PHI.value
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = Rt
-    stop = 500 * Rt
+    start = 10
+    stop = 35_000
     if m == 6:
-        num = 500 # about the average of cell radius
+        num = 1000 # about the average of cell radius
     if m == 4:
         num = 500 #350
     radii = np.linspace(start, stop, num)
@@ -86,14 +84,12 @@ def ray_maker(fix, m, care_about_rad = True):
                                                 T, Den,
                                                 weights = Mass, 
                                                 avg = True)
-    # Log10 and Clean
-    T_casted = np.log10(T_casted)
+    # Clean
     T_casted = np.nan_to_num(T_casted, neginf = 0)
-    Den_casted = np.log10(Den_casted)
     Den_casted = np.nan_to_num(Den_casted, neginf = 0)
+
     if care_about_rad:
         Rad_casted = np.nan_to_num(Rad_casted, neginf = 0)
-
     #%% Make Rays
     rays = []
     rays_den = []
@@ -115,3 +111,7 @@ def ray_maker(fix, m, care_about_rad = True):
         return rays_T, rays_den, rays, radii
     else:
         return rays_T, rays_den, radii
+
+if __name__ == '__main__':
+    ray_maker('844', 6, True)
+    
