@@ -63,7 +63,7 @@ def extractor(filename):
                 print('Duration: {}'.format(end_time - start_time))
                 
             # For some reason, having the collumns into variables is way faster.
-            T_data = f[key]['Vol']
+            T_data = f[key]['Volume']
             # Z_data = f[key]['tracers']['ZRadEnergy']
             for i in range(len(T_data)):
                 T.append(T_data[i])
@@ -75,10 +75,10 @@ def extractor(filename):
 #%% Doing the thing
 fixes = ['950']
 for fix in fixes:
-    snapshot = fix+'/snap_'+fix+'.h5'
+    snapshot = '6/' + fix+'/snap_'+fix+'.h5'
     T, _ = extractor(snapshot)   
     # Save to another file.
-    np.save(fix + '/Den_'+fix, T)
+    np.save('6/' + fix + '/Volume_'+fix, T)
 
 
     

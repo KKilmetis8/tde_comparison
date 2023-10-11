@@ -67,7 +67,7 @@ def optical_depth(T, rho, dr):
     dr *= Rsol_to_cm
     
     # If there is nothing, the ray continues unimpeded
-    if rho < np.exp(-22) or T < np.exp(1):
+    if rho < np.exp(-22):
         return 0
     
     # Stream material, is opaque (???) CHECK CONDITION
@@ -78,6 +78,7 @@ def optical_depth(T, rho, dr):
     # Messy? Yes.
     # Trust that in high T Elad's table converges to Thompson opacity
     if T > np.exp(17.876):
+        print('hiii 17')
         T = np.exp(17.7)
     
     # Lookup table
@@ -118,7 +119,9 @@ def calc_photosphere(rs, T, rho, m, threshold = 1):
         tau += new_tau
         taus.append(new_tau) 
         i -= 1
-
+        if tau > 0:
+            print(tau)
+    print('--- new ray ---')
     photosphere =  rs[i] #i it's negative
     return taus, photosphere
 
@@ -162,7 +165,7 @@ def get_photosphere(fix, m, get_observer = False):
 ################
 
 if __name__ == "__main__":
-    m = 4 # M_bh = 10^m M_sol | Choose 4 or 6
+    m = 6 # M_bh = 10^m M_sol | Choose 4 or 6
     
     # Make Paths
     if m == 4:

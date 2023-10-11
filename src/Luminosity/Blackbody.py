@@ -41,8 +41,8 @@ def select_fix(m):
         snapshots = [233, 254, 263, 277 , 293, 308, 322]
         days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950]
-        days = [1, 1.1, 1.3, 1.4] #t/t_fb
+        snapshots = [844, 881] #, 925, 950]
+        days = [1, 1.1,]#  1.3, 1.4] #t/t_fb
     return snapshots, days
 
 def planck(Temperature: float, n: float) -> float:
@@ -57,7 +57,7 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, 
     B = \sigma T^4/\pi"""
     
     k_planck = opacity(Temperature, Density, 'planck', ln = False)
-    L = 4 * np.pi * k_planck * volume * np.exp(-tau) * planck(Temperature, n)
+    L = 4  * np.pi * k_planck * volume * np.exp(-tau) * planck(Temperature, n)
     return L
 
 def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
@@ -84,7 +84,7 @@ if __name__ == "__main__":
     
     # Save frequency range
     if save:
-        with open('data/L_spectrum_m'+ str(m) + '.txt', 'a') as f:
+        with open('data/L_spectrum_m'+ str(m) + '.txt', 'w') as f:
             f.write('# exponents x of frequencues: n = 10^x  \n')
             f.write(' '.join(map(str, x_arr)) + '\n') 
     

@@ -21,7 +21,7 @@ from src.Optical_Depth.opacity_table import opacity
 # from src.Luminosity.photosphere import get_photosphere
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
-plt.rcParams['figure.figsize'] = [5 , 3]
+plt.rcParams['figure.figsize'] = [5 , 4]
 
 
 #%% Constants & Converter
@@ -48,8 +48,8 @@ def select_fix(m):
         snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950]
-        days = [1, 1.1, 1.3, 1.4] #t/t_fb
+        snapshots = [844, 881,] # 925, 950]
+        days = [1, 1.1,]# 1.3, 1.4] #t/t_fb
     return snapshots, days
 
 ### OLD
@@ -94,15 +94,16 @@ def flux_calculator(grad_E, idx,
             f[i] = max_travel
             continue
         
-        # Ensure that Density & Temperature are logs
-        # NOTE: This is fucky and bad
-        # To ensure I stay within interpolation range lnT>8.666
-        # Low temperatures are assosciated with the stream, this is a zero
-        # order way to discard the stream
-        if Temperature < 8.666:
-            continue 
+        # Ensure we can interpolate
+        rho_low = np.exp(-22)
+        T_low = np.exp(8.77)
+        T_high = np.exp(17.8)
+        if Density < rho_low or Temperature < T_low: 
+            continue
+        if Temperature > T_high:
+            Temperature = np.exp(17.7)
         # Get Opacity, NOTE: Breaks Numba
-        k_ross = opacity(Temperature, Density, 'rosseland', ln = True)
+        k_ross = opacity(Temperature, Density, 'rosseland', ln = False)
         
         # Calc R, eq. 28
         R = np.abs(grad_E[i]) /  (k_ross * Energy)
@@ -130,8 +131,9 @@ def flux_calculator(grad_E, idx,
 
 def doer_of_thing(fix, m, show_plot = False):
     # Make Rays
-    rays_T, rays_den, rays, radii = ray_maker(fix, m)
- 
+    rays_T, rays_den, rays, radii = ray_maker(fix, m) # log output
+    rays_T = np.power(10, rays_T)
+    rays_den = np.power(10, rays_T)
     #%% Let's see how it looks
     if show_plot: 
         img = plt.pcolormesh(radii, np.arange(len(rays)), rays, cmap = 'cet_gouldian')
@@ -173,7 +175,7 @@ def doer_of_thing(fix, m, show_plot = False):
         else:
             sphere_radius = 7000
     if m == 6:
-        sphere_radius = 35_000
+        sphere_radius = 30_000
     
     # Calculate Flux
     grad_E, radius_idx = grad_calculator(rays, radii, sphere_radius)
