@@ -178,8 +178,8 @@ def doer_of_thing(fix, m):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = False
-    plot = False
+    save = True
+    plot = True
     m = 6 # Choose BH
     fixes, days = select_fix(m)
     lums = []

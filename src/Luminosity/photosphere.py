@@ -54,9 +54,9 @@ def optical_depth(T, rho, dr):
     if rho < np.exp(-22):
         return 0
     
-    # Stream material, is opaque (???) CHECK CONDITION
+    # Stream material, is opaque
     if T < np.exp(8.666):
-        return 1
+        return 1e4
     
     # Too hot, thompson Opacity, make it fall inside the table
     # Messy? Yes.

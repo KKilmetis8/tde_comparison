@@ -55,8 +55,8 @@ def opacity(T, rho, kind, ln = True) -> float:
         # Remove fuckery
         T = np.nan_to_num(T, nan = 0, posinf = 0, neginf= 0)
         rho = np.nan_to_num(rho, nan = 0, posinf = 0, neginf= 0)
-    print(rho)
     if rho > -23:
+        print('rho okay: ', rho)
         # Pick Opacity & Use Interpolation Function
         if kind == 'rosseland':
             ln_opacity = lnk_ross_inter((T, rho))
@@ -70,6 +70,7 @@ def opacity(T, rho, kind, ln = True) -> float:
             
             # Rybicky & Lightman eq. 1.98 NO USE STEINGERG & STONE (9)
             ln_opacity = np.sqrt(3 * planck * (planck + scattering)) 
+            
         elif kind == 'red':
             planck = lnk_planck_inter((T, rho))
             scattering = lnk_scatter_inter((T, rho))

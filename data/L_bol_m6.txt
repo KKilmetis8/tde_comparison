@@ -1,5 +1,9 @@
 #snap 844
-3.4913e+42
+nan
+#snap 881
+nan
+#snap 844
+nan
 #snap 881
 nan
 #snap 925
@@ -7,26 +11,18 @@ nan
 #snap 950
 nan
 #snap 844
-1.2602e+43
-#snap 881
 nan
 #snap 844
-1.2602e+43
-#snap 881
+nan
+#snap 844
+nan
+#snap 844
+nan
+#snap 844
 nan
 #snap 881
 nan
-#snap 881
+#snap 925
 nan
-#snap 881
-nan
-#snap 881
-nan
-#snap 881
-nan
-#snap 881
-nan
-#snap 881
-nan
-#snap 881
+#snap 844
 nan
