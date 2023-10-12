@@ -10,6 +10,8 @@ NOTES FOR OTHERS:
 - arguments are in cgs, NOT in log.
 - make changes in VARIABLES: frequencies range, fixes (number of snapshots) anf thus days
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
 
 # Vanilla imports
 import numpy as np

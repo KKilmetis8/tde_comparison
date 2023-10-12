@@ -11,6 +11,9 @@ NOTES FOR OTHERS:
 - make changes in variables: m (power index of the BB mass), 
 fixes (number of snapshots) anf thus days
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
+
 # Vanilla Imports
 import numpy as np
 import matplotlib.pyplot as plt
@@ -65,7 +68,6 @@ def grad_calculator(rays, radii, sphere_radius = 15_000):
 
     return grad_E, idx
 
-# @numba.njit
 def converger(rays, radii):
     
     grad_Es = []
@@ -113,13 +115,10 @@ def flux_calculator(grad_E, idx,
         
         # Stream
         if Temperature < T_low:
-            # zero_count += 1
-            # f[i] = max_travel
             continue
         
-        # T too high => Thompson opacity
+        # T too high => Thompson opacity, we follow the table
         if Temperature > T_high:
-            print('hiiiiiiiiiii')
             Temperature = np.exp(17.7)
             
         # Get Opacity, NOTE: Breaks Numba
@@ -160,7 +159,7 @@ def doer_of_thing(fix, m):
         else:
             sphere_radius = 7000
     if m == 6:
-        sphere_radius = 30000
+        sphere_radius = 900
 
     # Calculate Flux
     grad_E, idx = grad_calculator(rays, radii, sphere_radius)
@@ -179,7 +178,7 @@ def doer_of_thing(fix, m):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = True
+    save = False
     plot = False
     m = 6 # Choose BH
     fixes, days = select_fix(m)

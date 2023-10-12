@@ -5,20 +5,25 @@ Created on Tue Oct 10 10:19:34 2023
 
 @author: konstantinos
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
+
 import numpy as np
 import numba
 import healpy as hp
-NSIDE = 4
+import colorcet
 from astropy.coordinates import cartesian_to_spherical
-from src.Calculators.legion_of_casters import THROUPLE_S_CASTERS, COUPLE_S_CASTERS
+from src.Calculators.legion_of_casters import THROUPLE_S_CASTERS
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 
 #%% Constants & Converter
+NSIDE = 4
 G = 6.6743e-11 # SI
 Msol = 1.98847e30 # kg
 Rsol = 6.957e8 # m
 t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
 c = 3e8 * t/Rsol # simulator units. Need these for the PW potential
-
 c_cgs = 3e10 # [cm/s]
 Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
@@ -49,14 +54,16 @@ def ray_maker(fix, m):
     THETA = THETA.value
     PHI = PHI.value
     
+    #print('Den (weight) from simulation:', np.divide(np.sum(Den*Mass), np.sum(Mass)))
+
     # Ensure that the regular grid cells are smaller than simulation cells
     start = 100
-    stop = 40_000
+    stop = 40 * Rt
     if m == 6:
         num = 1000 # about the average of cell radius
     if m == 4:
         num = 500 #350
-    radii = np.linspace(start, stop, num)
+    radii = np.linspace(start, stop, num) #simulator units
     
     # Find observers with Healpix
     thetas = np.zeros(192)
@@ -80,6 +87,8 @@ def ray_maker(fix, m):
     T_casted = np.nan_to_num(T_casted, neginf = 0)
     Den_casted = np.nan_to_num(Den_casted, neginf = 0)
     Rad_casted = np.nan_to_num(Rad_casted, neginf = 0)
+
+    #print('Den casted', np.sum(Den_casted))
     #%% Make Rays
     rays = []
     rays_den = []
@@ -102,5 +111,4 @@ def ray_maker(fix, m):
 
 
 if __name__ == '__main__':
-    ray_maker(881, 6, True)
-    
+    ray_maker(844, 6)
