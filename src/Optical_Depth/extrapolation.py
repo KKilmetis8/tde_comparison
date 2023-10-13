@@ -1,67 +1,54 @@
-""" Interpolate and extrapolate opacity for low density"""
-import numpy as np
-from scipy.interpolate import CubicSpline
-import matplotlib.pyplot as plt
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+@author: paola
 
+Produce a new table already expanded, in order to interpolate here.
+MISSING PART: create the new txt file for rho and opacities.
+"""
+
+import numpy as np
+from scipy.interpolate import RegularGridInterpolator
+from scipy.interpolate import CubicSpline
+
+# All units are ln[cgs]
 loadpath = 'src/Optical_Depth/'
+lnT = np.loadtxt(loadpath + 'T.txt')
 lnrho = np.loadtxt(loadpath + 'rho.txt')
-lnk_ross = np.loadtxt(loadpath + 'ross.txt')[0]
+lnk_ross = np.loadtxt(loadpath + 'ross.txt')
 lnk_planck = np.loadtxt(loadpath + 'planck.txt')
 lnk_scatter = np.loadtxt(loadpath + 'scatter.txt')
 
-natural_ross = CubicSpline(lnrho,lnk_ross, bc_type='natural')
-natural_planck = CubicSpline(lnrho,lnk_planck, bc_type='natural')
-natural_scatter = CubicSpline(lnrho,lnk_scatter, bc_type='natural')
+lnk_scatter_inter = RegularGridInterpolator( (lnT, lnrho), lnk_scatter)
+lnk_ross_inter = RegularGridInterpolator( (lnT, lnrho), lnk_ross)
+lnk_planck_inter = RegularGridInterpolator( (lnT, lnrho), lnk_planck)
 
-def opacity(rho, kind, ln = True) -> float:
-    '''
-    Return the rosseland mean opacity in [cgs], given a value of density,
-    temperature and and a kind of opacity. If ln = True, then T and rho are
-    lnT and lnrho. Otherwise we convert them.
-    
-     Parameters
-     ----------
-     T : float,
-         Temperature in [cgs].
-     rho : float,
-         Density in [cgs].
-     kind : str,
-         The kind of opacities. Valid choices are:
-         rosseland, plank or effective.
-     log : bool,
-         If True, then T and rho are lnT and lnrho, Default is True
-     
-    Returns
-    -------
-    opacity : float,
-        The rosseland mean opacity in [cgs].
-    '''    
-    if not ln: 
-        rho = np.log(rho)
-        # Remove fuckery
-        rho = np.nan_to_num(rho, nan = 0, posinf = 0, neginf= 0)
-    
-    # Pick Opacity & Use Interpolation Function
-    if kind == 'rosseland':
-        ln_opacity = natural_ross(rho)
+def extrapolation_table(rho, kind):
+    extra = np.zeros(len(lnT))
+    for i in range(len(lnT)):
+        if kind == 'rosseland':
+            opacity_row = lnk_ross[i]
+        elif kind == 'planck':
+            opacity_row = lnk_planck[i]     
+        elif kind == 'effective':
+            opacity_row = np.add(lnk_planck[i], lnk_scatter[i])
+            opacity_row = np.multiply(3 * opacity_row, lnk_planck[i])
+            opacity_row = np.sqrt(opacity_row)   
+        elif kind == 'red':
+            opacity_row = np.add(lnk_planck[i], lnk_scatter[i])
+        cubicspl = CubicSpline(lnrho, opacity_row, bc_type='natural')
+        extra[i] = cubicspl(rho)
+    print(np.shape(extra))
+    return extra
 
-    elif kind == 'planck':
-        ln_opacity = natural_planck((rho))
-        
-    elif kind == 'effective':
-        planck = natural_planck(rho)
-        scattering = natural_scatter((rho))
-        
-        # Rybicky & Lightman eq. 1.98
-        ln_opacity = np.sqrt(planck * (planck + scattering)) 
-    else:
-        print('Invalid opacity type. Try: rosseland / planck / effective.')
-        return 1
-            
-    # Remove the ln
-    opacity = np.exp(ln_opacity)
+# def opacity_extr(rho_array, kind):
+#     for i in range(len(lnT)):
 
-    return opacity
+#     extra = extrapolation_table(kind)
+#     print(new_opacity)
+#     return new_opacity
 
-print(natural_ross(90))
-    
+if __name__ == '__main__':
+    expanding_rho = np.arange(-30,-22, 0.2)
+    for i,rho in enumerate(expanding_rho):
+        a = extrapolation_table(rho, 'rosseland')

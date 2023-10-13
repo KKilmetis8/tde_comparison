@@ -56,17 +56,17 @@ def optical_depth(T, rho, dr):
     
     # Stream material, is opaque
     if T < np.exp(8.666):
+        print('set big opacity')
         return 1e4
     
-    # Too hot, thompson Opacity, make it fall inside the table
-    # Messy? Yes.
-    # Trust that in high T Elad's table converges to Thompson opacity
+    # Too hot: Thompson Opacity. 
+    # Make it fall inside the table: from here the extrapolation is constant
     if T > np.exp(17.876):
-        print('hiii 17')
         T = np.exp(17.7)
     
     # Lookup table
-    tau = opacity(T, rho,'effective', ln = False) * dr 
+    oppi = opacity(T, rho,'effective', ln = False)
+    tau =  oppi * dr
     
     return tau
 

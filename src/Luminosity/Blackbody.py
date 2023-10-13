@@ -43,13 +43,12 @@ def select_fix(m):
         snapshots = [233, 254, 263, 277 , 293, 308, 322]
         days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950]
-        days = [1, 1.1, 1.3, 1.4] #t/t_fb
+        snapshots = [844]# 881, 925, 950]
+        days = [1]#, 1.1, 1.3, 1.4] #t/t_fb
     return snapshots, days
 
 def planck(Temperature: float, n: float) -> float:
     """ Planck function in a cell. It needs temperature and frequency. """
-    
     const = 2*h / c**2
     fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
     return fun
@@ -72,15 +71,16 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 
 # MAIN
 if __name__ == "__main__":
-    plot = True
-    save = True
+    plot = False
+    save = False
     
     # Choose BH and freq range
     m = 6
     n_min = 1e12 
-    n_max = 1e18
+    n_max = 1e20
     n_spacing = 10000
     x_arr = log_array(n_min, n_max, n_spacing)
+    n_arr = 10**x_arr
     
     # Save frequency range
     if save:
@@ -93,7 +93,6 @@ if __name__ == "__main__":
         # Load data for normalization
         fld_data = np.loadtxt('data/reddata_m'+ str(m) +'.txt')
         luminosity_fld_fix = fld_data[1]
-        n_arr = 10**x_arr
         
         # Get Photosphere
         rays_T, rays_den, rays_tau, photosphere, radii = get_photosphere(fix, m)
@@ -102,6 +101,10 @@ if __name__ == "__main__":
                     
         lum_n = np.zeros(len(x_arr))
         for j in range(192):
+            counter_inf = 0
+            counter_up = 0
+            counter = 0
+            temps = []
             for i in range(len(rays_tau[j])):        
                 # Temperature, Density and volume: np.array from near to the BH
                 # to far away. 
@@ -112,29 +115,47 @@ if __name__ == "__main__":
                 rho = rays_den[j][reverse_idx] 
                 opt_depth = rays_tau[j][i]
                 cell_vol = volume[reverse_idx]
-                # print('T:', T)
-                # print('rho: ', rho)
+                freq = 10**x_arr
+
                 # Ensure we can interpolate
                 rho_low = np.exp(-22)
                 T_low = np.exp(8.77)
                 T_high = np.exp(17.8)
+                # if rho < rho_low or Temp < T_low:
+                #     if rho_low:
+                #         print('Rho too low in BB')
+                #     elif Temp < T_low:
+                #         print('Temp too low in BB')
+                #     continue
                 if rho < rho_low or Temp < T_low:
+                    counter_inf += 1
+                    # if rho == 0:
+                    #     print('Rho precisely 0')
+                    # elif Temp < T_low:
+                    #     print('Temp too low in BB')
                     continue
                 if Temp > T_high:
-                    print('high')
+                    counter_up += 1
                     Temp = np.exp(17.7)         
                 
-                for x_index in range(len(x_arr)): #we need linearspace
-                    print('enter. T:', Temp)
-                    freq = 10**x_arr[x_index]
-                    lum_n_cell = luminosity_n(Temp, rho, opt_depth, cell_vol, freq)
-                    lum_n[x_index] += lum_n_cell
-                    
+                counter += 1
+                temps.append(Temp)
+                for n_index in range(len(n_arr)): #we need linearspace
+                    print(n_arr[n_index])
+                    lum_n_cell = luminosity_n(Temp, rho, opt_depth, cell_vol, n_arr[n_index])
+                    lum_n[n_index] += lum_n_cell
+                plt.plot(x_arr,planck(Temp, n_arr))
+                plt.yscale('log')
+            print('Ray ', j, 'counted', counter, 'temp', temps)
+            #print('too low: ', counter_inf)
+            #print('too high: ', counter_up) 
+        
+                       
         # Normalise with the bolometric luminosity from red curve (FLD)
         print(lum_n)
         const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
-        lum_tilde_n = lum_n * const_norm 
-    
+        lum_tilde_n = lum_n * const_norm #NO DIVIDE FOR 192
+
         # Find the bolometic energy (should be = to the one from FLD)
         bolom_integrand =  n_arr * lum_tilde_n
         bolom = np.log(10) * np.trapz(bolom_integrand, x_arr)

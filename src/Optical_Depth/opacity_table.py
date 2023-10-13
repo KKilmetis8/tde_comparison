@@ -56,7 +56,6 @@ def opacity(T, rho, kind, ln = True) -> float:
         T = np.nan_to_num(T, nan = 0, posinf = 0, neginf= 0)
         rho = np.nan_to_num(rho, nan = 0, posinf = 0, neginf= 0)
     if rho > -23:
-        print('rho okay: ', rho)
         # Pick Opacity & Use Interpolation Function
         if kind == 'rosseland':
             ln_opacity = lnk_ross_inter((T, rho))
@@ -128,6 +127,6 @@ def opacity(T, rho, kind, ln = True) -> float:
     return opacity
 
 if __name__ == '__main__':
-    opa = opacity(1e9, 1e-11, 'planck', ln = False)
+    opa = opacity(1e9, 1e-10, 'planck', ln = False)
     print(opa)
     

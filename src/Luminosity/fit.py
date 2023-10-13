@@ -21,8 +21,8 @@ Kb = 1.380649e-16 #[gcm^2/s^2K]
 def tofit(n, R, T):
     const = 2*h/c**2
     planck = const * n**3 / (np.exp(h*n/(Kb*T))-1)
-    L = 4*np.pi**2 * R**2 * planck 
-    return L
+    Lum = 4 * np.pi**2 * R**2 * planck 
+    return Lum
 
 #
 UV_min = 1e12
