@@ -51,12 +51,11 @@ def optical_depth(T, rho, dr):
         The optical depth in [cgs].
     '''    
     # If there is nothing, the ray continues unimpeded
-    if rho < np.exp(-22):
-        return 0
+    # if rho < np.exp(-22):
+    #     return 0
     
     # Stream material, is opaque
     if T < np.exp(8.666):
-        print('set big opacity')
         return 1e4
     
     # Too hot: Thompson Opacity. 
