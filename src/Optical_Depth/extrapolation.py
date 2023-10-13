@@ -8,7 +8,6 @@ MISSING PART: create the new txt file for rho and opacities.
 """
 
 import numpy as np
-from scipy.interpolate import RegularGridInterpolator
 from scipy.interpolate import CubicSpline
 
 # All units are ln[cgs]
@@ -19,9 +18,6 @@ lnk_ross = np.loadtxt(loadpath + 'ross.txt')
 lnk_planck = np.loadtxt(loadpath + 'planck.txt')
 lnk_scatter = np.loadtxt(loadpath + 'scatter.txt')
 
-lnk_scatter_inter = RegularGridInterpolator( (lnT, lnrho), lnk_scatter)
-lnk_ross_inter = RegularGridInterpolator( (lnT, lnrho), lnk_ross)
-lnk_planck_inter = RegularGridInterpolator( (lnT, lnrho), lnk_planck)
 
 def extrapolation_table(rho, kind):
     extra = np.zeros(len(lnT))
@@ -53,14 +49,21 @@ if __name__ == '__main__':
     rho_min = np.log(3.99e-22)
     rho_max = np.log(8e-11)
     expanding_rho = np.arange(rho_min,rho_max, 0.2)
-    table_expansion = np.zeros( (len(lnT), len(expanding_rho) ))
+    colum_expanded_rho = len(expanding_rho) + len(lnrho)
+    table_expansion = np.zeros( (len(lnT), colum_expanded_rho ))
     for i, T in enumerate(lnT):
-        opacity_col = lnk_planck[i] # line to change
+        opacity_col = lnk_ross[i] # line to change
         extra = CubicSpline(lnrho, opacity_col, bc_type='natural')
         for j, rho in enumerate(expanding_rho):           
-             opi = extra(rho)
-             if opi > 0 :
-                 table_expansion[i,j] = opi
+            opi = extra(rho)
+            if opi > 0 :
+                table_expansion[i,j] = opi
+        for j in range(len(expanding_rho),colum_expanded_rho):
+            table_expansion[i,j] = opacity_col[j-len(expanding_rho)]
                 
-    np.savetxt('planck_expansion.txt', table_expansion)
+    # print(np.shape(table_expansion))
+    np.savetxt(loadpath + 'ross_expansion.txt', table_expansion)
 
+    all_rhos = np.concatenate((expanding_rho, lnrho))
+    #np.savetxt(loadpath + 'rho_expansion.txt', all_rhos)
+   

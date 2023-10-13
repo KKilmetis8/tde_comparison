@@ -118,7 +118,7 @@ if __name__ == "__main__":
                 T_low = np.exp(8.77)
                 T_high = np.exp(17.8)
 
-                if Temp < T_low:
+                if Temp < T_low or rho == 0:
                     continue
 
                 if Temp > T_high:
@@ -129,7 +129,9 @@ if __name__ == "__main__":
                     lum_n[n_index] += lum_n_cell
                 plt.plot(x_arr,planck(Temp, n_arr))
                 plt.yscale('log')
-
+            
+            if j/10 == 0:
+                print('Ray', j)
                        
         # Normalise with the bolometric luminosity from red curve (FLD)
         print(lum_n)

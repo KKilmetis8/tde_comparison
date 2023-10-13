@@ -16,7 +16,7 @@ from scipy.interpolate import RegularGridInterpolator
 # All units are ln[cgs]
 loadpath = 'src/Optical_Depth/'
 lnT = np.loadtxt(loadpath + 'T.txt')
-lnrho = np.loadtxt(loadpath + 'rho.txt')
+lnrho = np.loadtxt(loadpath + 'rho_expansion.txt')
 # lnk_ross = np.loadtxt(loadpath + 'ross.txt')
 # lnk_planck = np.loadtxt(loadpath + 'planck.txt')
 # lnk_scatter = np.loadtxt(loadpath + 'scatter.txt')
@@ -88,6 +88,7 @@ def opacity(T, rho, kind, ln = True) -> float:
     return opacity
 
 if __name__ == '__main__':
-    opa = opacity(1e9, 1e-10, 'planck', ln = False)
-    print(opa)
+    #opa = opacity(1e9, 1e-10, 'planck', ln = False)
+    print(lnrho)
+    #print(lnk_planck)
     
