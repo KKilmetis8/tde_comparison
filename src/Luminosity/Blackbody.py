@@ -101,10 +101,6 @@ if __name__ == "__main__":
                     
         lum_n = np.zeros(len(x_arr))
         for j in range(192):
-            counter_inf = 0
-            counter_up = 0
-            counter = 0
-            temps = []
             for i in range(len(rays_tau[j])):        
                 # Temperature, Density and volume: np.array from near to the BH
                 # to far away. 
@@ -121,35 +117,19 @@ if __name__ == "__main__":
                 rho_low = np.exp(-22)
                 T_low = np.exp(8.77)
                 T_high = np.exp(17.8)
-                # if rho < rho_low or Temp < T_low:
-                #     if rho_low:
-                #         print('Rho too low in BB')
-                #     elif Temp < T_low:
-                #         print('Temp too low in BB')
-                #     continue
-                if rho < rho_low or Temp < T_low:
-                    counter_inf += 1
-                    # if rho == 0:
-                    #     print('Rho precisely 0')
-                    # elif Temp < T_low:
-                    #     print('Temp too low in BB')
+
+                if Temp < T_low:
                     continue
+
                 if Temp > T_high:
-                    counter_up += 1
                     Temp = np.exp(17.7)         
                 
-                counter += 1
-                temps.append(Temp)
                 for n_index in range(len(n_arr)): #we need linearspace
-                    print(n_arr[n_index])
                     lum_n_cell = luminosity_n(Temp, rho, opt_depth, cell_vol, n_arr[n_index])
                     lum_n[n_index] += lum_n_cell
                 plt.plot(x_arr,planck(Temp, n_arr))
                 plt.yscale('log')
-            print('Ray ', j, 'counted', counter, 'temp', temps)
-            #print('too low: ', counter_inf)
-            #print('too high: ', counter_up) 
-        
+
                        
         # Normalise with the bolometric luminosity from red curve (FLD)
         print(lum_n)
