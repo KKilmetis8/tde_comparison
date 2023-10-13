@@ -51,13 +51,16 @@ def extrapolation_table(rho, kind):
 if __name__ == '__main__':
     # Minimum we need is 3.99e-22, Elad's lnrho stops at 1e-10
     rho_min = np.log(3.99e-22)
-    rho_max = np.log(1e-10)
+    rho_max = np.log(8e-11)
     expanding_rho = np.arange(rho_min,rho_max, 0.2)
     table_expansion = np.zeros( (len(lnT), len(expanding_rho) ))
     for i, T in enumerate(lnT):
-        opacity_col = lnk_scatter[i]
+        opacity_col = lnk_planck[i] # line to change
         extra = CubicSpline(lnrho, opacity_col, bc_type='natural')
-        for j, rho in enumerate(expanding_rho):
-            table_expansion[i,j] = extra(rho)
-    np.savetxt('scatter_expansion.txt', table_expansion)
+        for j, rho in enumerate(expanding_rho):           
+             opi = extra(rho)
+             if opi > 0 :
+                 table_expansion[i,j] = opi
+                
+    np.savetxt('planck_expansion.txt', table_expansion)
 
