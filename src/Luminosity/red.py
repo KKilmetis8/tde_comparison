@@ -22,7 +22,7 @@ import numba
 import colorcet
 # Custom Imports
 from src.Calculators.ray_maker import ray_maker
-from src.Optical_Depth.opacity_table import opacity
+from src.Opacity.opacity_table import opacity
 # from src.Luminosity.photosphere import get_photosphere
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300

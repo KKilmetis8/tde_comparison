@@ -5,7 +5,7 @@ Authors: Paola, Konstantinos
 """
 
 import numpy as np
-from src.Optical_Depth.opacity_table import opacity
+from src.Opacity.opacity_table import opacity
 
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 c = 2.9979e10 # [cm/s] 

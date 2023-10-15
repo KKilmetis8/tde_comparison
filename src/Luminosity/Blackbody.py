@@ -19,7 +19,7 @@ import matplotlib.pyplot as plt
 
 # Chocolate imports
 from src.Luminosity.photosphere import get_photosphere
-from src.Optical_Depth.opacity_table import opacity
+from src.Opacity.opacity_table import opacity
 
 # Constants
 c = 2.99792458e10 #[cm/s]

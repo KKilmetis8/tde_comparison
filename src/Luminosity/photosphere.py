@@ -24,7 +24,7 @@ plt.rcParams['figure.figsize'] = [5 , 3]
 plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
 # Custom Imports
-from src.Optical_Depth.opacity_table import opacity
+from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_maker import ray_maker
 
 
@@ -56,11 +56,13 @@ def optical_depth(T, rho, dr):
     
     # Stream material, is opaque
     if T < np.exp(8.666):
+        print('low T')
         return 1e4
     
     # Too hot: Thompson Opacity. 
     # Make it fall inside the table: from here the extrapolation is constant
     if T > np.exp(17.876):
+        print('high T')
         T = np.exp(17.7)
     
     # Lookup table
@@ -123,7 +125,7 @@ def get_photosphere(fix, m, get_observer = False):
         
         # Get Photosphere
         taus, photo = calc_photosphere(radii, T_of_single_ray, Den_of_single_ray, 
-                                       m, threshold = 1)
+                                       m, threshold = 5)
         # Store
         rays_tau.append(taus)
         photosphere[i] = photo

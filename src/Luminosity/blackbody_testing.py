@@ -26,7 +26,7 @@ AEK = '#F1C410'
 
 # Chocolate imports
 from src.Luminosity.photosphere import get_photosphere
-from src.Optical_Depth.opacity_table import opacity
+from src.Opacity.opacity_table import opacity
 
 # Constants
 c = 2.99792458e10 #[cm/s]
@@ -51,7 +51,7 @@ def select_fix(m):
         days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
         snapshots = [881] #[844, 881, 925, 950]
-        days =[1.1] # [1, 1.1, 1.3, 1.4] #t/t_fb
+        days = [1.1] # [1, 1.1, 1.3, 1.4] #t/t_fb
     return snapshots, days
 
 def planck(Temperature: float, n: float) -> float:
@@ -68,9 +68,9 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, 
     k_planck = opacity(Temperature, Density, 'planck', ln = False)
 
     L = 4  * np.pi * k_planck * volume * np.exp(-tau) * planck(Temperature, n)
-    print('Bn: ', planck(Temperature, n))
-    print('tau: ', tau)
-    print('Opacity:', k_planck)
+    # print('Bn: ', planck(Temperature, n))
+    print('tau: ', np.exp(-tau))
+    # print('Opacity:', k_planck)
     return L
 
 def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
@@ -112,20 +112,7 @@ if __name__ == "__main__":
     volume = 4 * np.pi * radii**2 * dr  / 192
     #%%            
     lum_n = np.zeros(len(x_arr))
-    plt.figure(figsize = (5,4))
-    plt.plot(rays_T, 'o', c=AEK, markersize = 1)
-    plt.axhline(np.exp(8.77), c='maroon')
-    plt.axhline(np.exp(17.878), c='k')
-    plt.ylabel('Temperature [K]')
-    plt.xlabel('Observers')
-    plt.yscale('log')
-    
-    plt.figure(figsize = (5,4))
-    plt.plot(rays_den, 'o', c=AEK, markersize = 1)
-    plt.axhline(np.exp(-22), c='maroon')
-    plt.ylabel('Density [g/cm$^3$]')
-    plt.xlabel('Observers')
-    plt.yscale('log')
+
     for j in range(192):
         for i in range(len(rays_tau[j])):        
             # Temperature, Density and volume: np.array from near to the BH
@@ -143,7 +130,7 @@ if __name__ == "__main__":
             rho_low = np.exp(-22)
             T_low = np.exp(8.77)
             T_high = np.exp(17.878)
-            if rho < rho_low or T < T_low:
+            if T < T_low:
                 continue
             if T > T_high:
                 print('high')
@@ -155,9 +142,8 @@ if __name__ == "__main__":
                 
     # Normalise with the bolometric luminosity from red curve (FLD)
     const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[1])
-    lum_tilde_n = lum_n * const_norm / 192
+    lum_tilde_n = lum_n * const_norm
             
-        
     if plot:
         fig, ax = plt.subplots()
         ax.plot(n_arr, lum_tilde_n)
