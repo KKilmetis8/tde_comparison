@@ -51,8 +51,10 @@ def optical_depth(T, rho, dr):
         The optical depth in [cgs].
     '''    
     # If there is nothing, the ray continues unimpeded
-    # if rho < np.exp(-22):
-    #     return 0
+    print('rho: ', rho)
+    if rho < np.exp(-49.3):
+        print('rho small')
+        return 0
     
     # Stream material, is opaque
     if T < np.exp(8.666):
@@ -104,9 +106,7 @@ def calc_photosphere(rs, T, rho, m, threshold = 1):
         tau += new_tau
         taus.append(new_tau) 
         i -= 1
-        #if tau > 0:
-            #print(tau)
-    #print('--- new ray ---')
+
     photosphere =  rs[i] #i it's negative
     return taus, photosphere
 
@@ -130,14 +130,6 @@ def get_photosphere(fix, m, get_observer = False):
         rays_tau.append(taus)
         photosphere[i] = photo
 
-    # img = plt.pcolormesh(radii, np.arange(len(rays_tau)), rays_tau, 
-    #                      cmap = 'cet_gouldian')
-    # cbar = plt.colorbar(img)
-    # plt.title('Rays')
-    # cbar.set_label('Optical depth')
-    # plt.xlabel('r')
-    # plt.ylabel('Observers')
-    # img.axes.get_yaxis().set_ticks([])
 
     return rays_T, rays_den, rays_tau, photosphere, radii
 
@@ -157,4 +149,25 @@ if __name__ == "__main__":
         loadpath = '6/'
 
     for fix in fixes:
-        _, _ , tau, photoo, _ = get_photosphere(fix,m)
+        rays_T , rays_den , tau, photoo, radii = get_photosphere(fix,m)
+        photoo /=  6.957e10
+    #%% Plot tau
+    
+    plot_tau = np.zeros( (len(radii), len(tau)))
+    for i in range(192):
+        for j in range(1000):
+            temp = tau[i][j]
+            plot_tau[-j,i] =  temp
+            if temp>0:
+                plot_tau[:-j, i ] = temp
+                break
+
+            
+    img = plt.pcolormesh(radii/6.957e10, np.arange(len(tau)), plot_tau.T, 
+                          cmap = 'Greys', vmin = 0, vmax =  5)
+    cbar = plt.colorbar(img)
+    plt.title('Rays')
+    cbar.set_label('Optical depth')
+    plt.xlabel('Distance from BH [$R_\odot$]')
+    plt.ylabel('Observers')
+    img.axes.get_yaxis().set_ticks([])

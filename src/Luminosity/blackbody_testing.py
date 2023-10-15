@@ -70,7 +70,7 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, 
     L = 4  * np.pi * k_planck * volume * np.exp(-tau) * planck(Temperature, n)
     # print('Bn: ', planck(Temperature, n))
     print('tau: ', np.exp(-tau))
-    # print('Opacity:', k_planck)
+    print('L:', L)
     return L
 
 def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:

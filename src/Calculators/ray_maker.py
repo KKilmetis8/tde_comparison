@@ -60,7 +60,7 @@ def ray_maker(fix, m):
     start = 100
     stop = 40 * Rt
     if m == 6:
-        num = 1000 # about the average of cell radius
+        num = 1000 + 1 # about the average of cell radius
     if m == 4:
         num = 500 #350
     radii = np.linspace(start, stop, num) #simulator units
@@ -87,9 +87,13 @@ def ray_maker(fix, m):
     T_casted = np.nan_to_num(T_casted, neginf = 0)
     Den_casted = np.nan_to_num(Den_casted, neginf = 0)
     Rad_casted = np.nan_to_num(Rad_casted, neginf = 0)
+    
+    # DROP THE LAST ONE
+    T_casted = np.delete(T_casted, -1, axis = 0)
+    Den_casted = np.delete(Den_casted, -1, axis = 0)
+    Rad_casted = np.delete(Rad_casted, -1, axis = 0)
 
-    #print('Den casted', np.sum(Den_casted))
-    #%% Make Rays
+    # Make Rays
     rays = []
     rays_den = []
     rays_T = []
@@ -111,4 +115,4 @@ def ray_maker(fix, m):
 
 
 if __name__ == '__main__':
-    ray_maker(844, 6)
+   _, _, _, _ =  ray_maker(844, 6)
