@@ -28,4 +28,4 @@ cbar = fig.colorbar(img, cax=cax)
 cbar.set_label('$\ln(\kappa)$ $[cm^{-1}]$', rotation=270, labelpad = 15)
 
 ax.plot(np.log(np.array(rays_den).ravel()), np.log(np.array(rays_T).ravel()), 
-        'x', c='g', markersize = 1)
+        'x', c='b', markersize = 1)

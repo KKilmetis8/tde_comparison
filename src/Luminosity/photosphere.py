@@ -53,18 +53,18 @@ def optical_depth(T, rho, dr):
     # If there is nothing, the ray continues unimpeded
     print('rho: ', rho)
     if rho < np.exp(-49.3):
-        print('rho small')
+        # print('rho small')
         return 0
     
     # Stream material, is opaque
     if T < np.exp(8.666):
-        print('low T')
+        # T = np.exp(8.87)
         return 1e4
     
     # Too hot: Thompson Opacity. 
     # Make it fall inside the table: from here the extrapolation is constant
     if T > np.exp(17.876):
-        print('high T')
+        # print('high T')
         T = np.exp(17.7)
     
     # Lookup table
@@ -130,7 +130,6 @@ def get_photosphere(fix, m, get_observer = False):
         rays_tau.append(taus)
         photosphere[i] = photo
 
-
     return rays_T, rays_den, rays_tau, photosphere, radii
 
 ################
@@ -152,7 +151,6 @@ if __name__ == "__main__":
         rays_T , rays_den , tau, photoo, radii = get_photosphere(fix,m)
         photoo /=  6.957e10
     #%% Plot tau
-    
     plot_tau = np.zeros( (len(radii), len(tau)))
     for i in range(192):
         for j in range(1000):
@@ -162,7 +160,6 @@ if __name__ == "__main__":
                 plot_tau[:-j, i ] = temp
                 break
 
-            
     img = plt.pcolormesh(radii/6.957e10, np.arange(len(tau)), plot_tau.T, 
                           cmap = 'Greys', vmin = 0, vmax =  5)
     cbar = plt.colorbar(img)

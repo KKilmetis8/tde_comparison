@@ -27,8 +27,6 @@ lnk_ross_inter = RegularGridInterpolator( (lnT, lnrho), lnk_ross)
 lnk_planck_inter = RegularGridInterpolator( (lnT, lnrho), lnk_planck)
 lnk_scatter_inter = RegularGridInterpolator( (lnT, lnrho), lnk_scatter)
 
-
-
 def opacity(T, rho, kind, ln = True) -> float:
     '''
     Return the rosseland mean opacity in [cgs], given a value of density,

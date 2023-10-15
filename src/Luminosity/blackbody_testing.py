@@ -69,8 +69,8 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, 
 
     L = 4  * np.pi * k_planck * volume * np.exp(-tau) * planck(Temperature, n)
     # print('Bn: ', planck(Temperature, n))
-    print('tau: ', np.exp(-tau))
-    print('L:', L)
+    # print('tau: ', np.exp(-tau))
+    # print('L:', L)
     return L
 
 def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     m = 6
     n_min = 1e12 
     n_max = 1e20
-    n_spacing = 10000
+    n_spacing = 100
     x_arr = log_array(n_min, n_max, n_spacing)
     fix = 844
     
@@ -114,6 +114,7 @@ if __name__ == "__main__":
     lum_n = np.zeros(len(x_arr))
 
     for j in range(192):
+        print('ray ;', j)
         for i in range(len(rays_tau[j])):        
             # Temperature, Density and volume: np.array from near to the BH
             # to far away. 
@@ -123,17 +124,19 @@ if __name__ == "__main__":
             T = rays_T[j][reverse_idx]
             rho = rays_den[j][reverse_idx] 
             opt_depth = rays_tau[j][i]
+            # print('pure tau: ', opt_depth)
             cell_vol = volume[reverse_idx]
             # print('T:', T)
             # print('rho: ', rho)
             # Ensure we can interpolate
-            rho_low = np.exp(-22)
             T_low = np.exp(8.77)
             T_high = np.exp(17.878)
             if T < T_low:
+                # print('low')
+                T = np.exp(8.87)
                 continue
             if T > T_high:
-                print('high')
+                # print('high')
                 T = np.exp(17.87)         
             
             for i, n in enumerate(n_arr): #we need linearspace
