@@ -49,6 +49,7 @@ if __name__ == '__main__':
     rho_min = np.log(3.99e-22)
     rho_max = np.log(8e-11)
     expanding_rho = np.arange(rho_min,rho_max, 0.2)
+    expanding_rho = np.arange(1,5)
     colum_expanded_rho = len(expanding_rho) + len(lnrho)
     table_expansion = np.zeros( (len(lnT), colum_expanded_rho ))
     for i, T in enumerate(lnT):
@@ -60,10 +61,11 @@ if __name__ == '__main__':
                 table_expansion[i,j] = opi
         for j in range(len(expanding_rho),colum_expanded_rho):
             table_expansion[i,j] = opacity_col[j-len(expanding_rho)]
-                
+    
+      
     # print(np.shape(table_expansion))
-    np.savetxt(loadpath + 'ross_expansion.txt', table_expansion)
+    # np.savetxt(loadpath + 'ross_expansion.txt', table_expansion)
 
-    all_rhos = np.concatenate((expanding_rho, lnrho))
+    #all_rhos = np.concatenate((expanding_rho, lnrho))
     #np.savetxt(loadpath + 'rho_expansion.txt', all_rhos)
    
