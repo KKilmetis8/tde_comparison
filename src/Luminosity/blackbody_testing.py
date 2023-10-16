@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 AEK = '#F1C410'
 
 # Chocolate imports
-from src.Luminosity.photosphere import get_photosphere
+from Luminosity.thermR import get_photosphere
 from src.Opacity.opacity_table import opacity
 
 # Constants

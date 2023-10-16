@@ -104,4 +104,3 @@ if plot:
     cbar.set_label('$\ln(\kappa)$ $[cm^{-1}]$', rotation=270, labelpad = 15)
 
 
-   

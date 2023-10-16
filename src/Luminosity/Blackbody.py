@@ -18,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Chocolate imports
-from Luminosity.thermR import get_thermr
+from src.Luminosity.thermR import get_thermr
 from src.Opacity.opacity_table import opacity
 
 # Constants
