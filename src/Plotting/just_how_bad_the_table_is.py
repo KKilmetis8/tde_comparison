@@ -12,20 +12,33 @@ plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 import colorcet
-from sklearn.neighbors import KernelDensity as  kde
 
 fig, ax = plt.subplots( figsize = (8,4) )
-img = plt.pcolormesh(new_rho, lnT, new_table, 
+img = plt.pcolormesh(np.log10(np.exp(new_rho)), np.log10(np.exp(lnT)), new_table, 
                       cmap = 'cet_fire', vmin = cmin, vmax = cmax)
-ax.set_xlabel(r'$\ln( \rho )$ $[g/cm^3]$')
-ax.set_ylabel('$\ln(T)$ $[K]$')
+ax.set_xlabel(r'$\log( \rho )$ $[g/cm^3]$')
+ax.set_ylabel('$\log(T)$ $[K]$')
 ax.set_title('Rosseland Mean Opacity | Extrapolated Table')
-ax.axvline( (expanding_rho[-1] + lnrho[0]) /2 , 
+ax.axvline( np.log10(np.exp(lnrho[0])) , 
             color = 'b', linestyle = 'dashed')
 
 cax = fig.add_axes([0.92, 0.125, 0.03, 0.76])
 cbar = fig.colorbar(img, cax=cax)
 cbar.set_label('$\ln(\kappa)$ $[cm^{-1}]$', rotation=270, labelpad = 15)
 
-ax.plot(np.log(np.array(rays_den).ravel()), np.log(np.array(rays_T).ravel()), 
+ax.plot(np.log10(np.array(rays_den).ravel()), np.log10(np.array(rays_T).ravel()), 
         'x', c='b', markersize = 1)
+
+#%%
+fig, ax = plt.subplots( figsize = (8,4) )
+ax.axvline( np.log10(np.exp(-23)) , 
+            color = 'b', linestyle = 'dashed')
+ax.axvline( np.log10(np.exp(4)) , 
+            color = 'b', linestyle = 'dashed')
+ax.axhline( np.log10(np.exp(8.6)) , 
+            color = 'r', linestyle = 'dashed')
+ax.axhline( np.log10(np.exp(17.7)) , 
+            color = 'r', linestyle = 'dashed')
+
+ax.plot(np.log10(Den_triple_casted.ravel() ), np.log10(T_triple_casted.ravel()), 
+        'x', c='k', markersize = 1)

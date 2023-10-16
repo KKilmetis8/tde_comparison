@@ -113,4 +113,4 @@ def ray_maker(fix, m):
 
 
 if __name__ == '__main__':
-   _, _, _, _ =  ray_maker(844, 6)
+   rays_T, rays_den, _, _ =  ray_maker(844, 6)

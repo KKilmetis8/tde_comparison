@@ -48,7 +48,6 @@ def THROUPLE_S_CASTERS(radii, R,
                 
         # For averaging
         counter[idx_r, idx_obs] += 1
-        
         # Add to grid | weighted mean
         gridded_density[idx_r, idx_obs] += Den[i] * weights[i]
         gridded_temperature[idx_r, idx_obs] += T[i] * weights[i]       
@@ -67,10 +66,10 @@ def THROUPLE_S_CASTERS(radii, R,
     final_temperature = gridded_temperature
     final_rad = gridded_rad
     
-    if avg:
-        final_density = np.divide(gridded_density, counter)
-        final_temperature = np.divide(gridded_temperature, counter)
-        final_rad = np.divide(gridded_rad, counter)
+    # if avg:
+    #     final_density = np.divide(gridded_density, counter)
+    #     final_temperature = np.divide(gridded_temperature, counter)
+    #     final_rad = np.divide(gridded_rad, counter)
 
     # Divide by weights
     final_density = np.divide(final_density, gridded_weights)
