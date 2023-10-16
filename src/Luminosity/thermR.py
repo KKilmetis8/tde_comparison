@@ -74,10 +74,10 @@ def optical_depth(T, rho, dr):
     
     return tau
 
-def calc_photosphere(rs, T, rho, m, threshold = 1):
+def calc_thermr(rs, T, rho, m, threshold = 1):
     '''
     Finds and saves the effective optical depth at every cell the ray passess through.
-    We use it to find the photosphere.
+    We use it to find the thermr.
 
     Parameters
     ----------
@@ -95,30 +95,30 @@ def calc_photosphere(rs, T, rho, m, threshold = 1):
     taus : np.array,
         The optical depth of every cell.
         
-    photosphere : float,
-        Where the photosphere is for that ray.
+    thermr : float,
+        Where the thermr is for that ray.
     '''
     tau = 0
     taus = []
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
-    print('--new ray--')
+    #print('--new ray--')
     while tau < threshold and i > -len(T):
         new_tau = optical_depth(T[i], rho[i], dr)
         tau += new_tau
         taus.append(new_tau)
-        print('tau: ', tau)
+        #print('tau: ', tau)
         i -= 1
 
-    photosphere =  rs[i] #i it's negative
-    return taus, photosphere
+    thermr =  rs[i] #i it's negative
+    return taus, thermr
 
-def get_photosphere(fix, m, get_observer = False):
+def get_thermr(fix, m, get_observer = False):
     ''' Wrapper function'''
     rays_T, rays_den, _, radii = ray_maker(fix, m)
-    # Get the photosphere
+    # Get the thermr
     rays_tau = []
-    photosphere = np.zeros(len(rays_T))
+    thermr = np.zeros(len(rays_T))
     
     for i in range(len(rays_T)):
         
@@ -126,14 +126,14 @@ def get_photosphere(fix, m, get_observer = False):
         T_of_single_ray = rays_T[i]
         Den_of_single_ray = rays_den[i]
         
-        # Get Photosphere
-        taus, photo = calc_photosphere(radii, T_of_single_ray, Den_of_single_ray, 
+        # Get thermr
+        taus, photo = calc_thermr(radii, T_of_single_ray, Den_of_single_ray, 
                                        m, threshold = 5)
         # Store
         rays_tau.append(taus)
-        photosphere[i] = photo
+        thermr[i] = photo
 
-    return rays_T, rays_den, rays_tau, photosphere, radii
+    return rays_T, rays_den, rays_tau, thermr, radii
 
 ################
 # MAIN
@@ -151,7 +151,7 @@ if __name__ == "__main__":
         loadpath = '6/'
 
     for fix in fixes:
-        rays_T , rays_den , tau, photoo, radii = get_photosphere(fix,m)
+        rays_T , rays_den , tau, photoo, radii = get_thermr(fix,m)
         photoo /=  6.957e10
     #%% Plot tau
     plot_tau = np.zeros( (len(radii), len(tau)))

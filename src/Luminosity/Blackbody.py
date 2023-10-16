@@ -18,7 +18,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Chocolate imports
-from src.Luminosity.photosphere import get_photosphere
+from Luminosity.thermR import get_thermr
 from src.Opacity.opacity_table import opacity
 
 # Constants
@@ -43,7 +43,7 @@ def select_fix(m):
         snapshots = [233, 254, 263, 277 , 293, 308, 322]
         days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844]# 881, 925, 950]
+        snapshots = [844]#, 881, 925, 950]
         days = [1]#, 1.1, 1.3, 1.4] #t/t_fb
     return snapshots, days
 
@@ -71,8 +71,8 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 
 # MAIN
 if __name__ == "__main__":
-    plot = False
-    save = False
+    plot = True
+    save = True
     
     # Choose BH and freq range
     m = 6
@@ -95,7 +95,7 @@ if __name__ == "__main__":
         luminosity_fld_fix = fld_data[1]
         
         # Get Photosphere
-        rays_T, rays_den, rays_tau, photosphere, radii = get_photosphere(fix, m)
+        rays_T, rays_den, rays_tau, photosphere, radii = get_thermr(fix, m)
         dr = (radii[1] - radii[0])
         volume = 4 * np.pi * radii**2 * dr  / 192
                     
@@ -130,8 +130,7 @@ if __name__ == "__main__":
                 plt.plot(x_arr,planck(Temp, n_arr))
                 plt.yscale('log')
             
-            if j/10 == 0:
-                print('Ray', j)
+            print('Ray', j)
                        
         # Normalise with the bolometric luminosity from red curve (FLD)
         print(lum_n)

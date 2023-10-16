@@ -91,6 +91,7 @@ def ray_maker(fix, m):
     T_casted = np.delete(T_casted, -1, axis = 0)
     Den_casted = np.delete(Den_casted, -1, axis = 0)
     Rad_casted = np.delete(Rad_casted, -1, axis = 0)
+    radii = np.delete(radii, -1, axis = 0)
 
     # Make Rays
     rays = []

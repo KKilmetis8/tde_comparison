@@ -1,8 +1,10 @@
 """"
 @author: paola , konstantinos
 """
-
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
+from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -11,27 +13,39 @@ plt.rcParams['figure.figsize'] = [10 , 8]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 AEK = '#F1C410'
 
-from scipy.optimize import curve_fit
+##
+# VARIABLES
+##
 
 m = 6
 c = 2.99792458e10 # [cm/s]
 h = 6.62607015e-27 # [gcm^2/s]
 Kb = 1.380649e-16 #[gcm^2/s^2K]
+Rztf_min = 4.11e14
+Rztf_max = 5.07e14
+Gztf_min = 5.66e14
+Gztf_max = 7.48e14
+ultrasat_min = 1.03e15
+ultrasat_max = 1.3e25
 
+##
+# FUNCTION
+##
 def tofit(n, R, T):
     const = 2*h/c**2
     planck = const * n**3 / (np.exp(h*n/(Kb*T))-1)
     Lum = 4 * np.pi**2 * R**2 * planck 
     return Lum
 
-#
-UV_min = 1e12
-UV_max = 1e20
+##
+# MAIN
+##
 
 if __name__ == '__main__':
     plot = False
     save = True
     do = True
+
     # Load & Unpack
     path = 'data/'
     data = np.loadtxt(path + 'L_spectrum_m' + str(m) + '.txt')
@@ -41,26 +55,45 @@ if __name__ == '__main__':
     init_R = 1e12
     init_T = 3e6
     
-    UV_min_idx = np.argmin( np.abs(freqs - UV_min))
-    UV_max_idx = np.argmin( np.abs(freqs - UV_max))
-    freqs = freqs[UV_min_idx:UV_max_idx]
-    x = x[UV_min_idx:UV_max_idx]
-    
+    Rztf_min_idx = np.argmin( np.abs(freqs - Rztf_min))
+    Rztf_max_idx = np.argmin( np.abs(freqs - Rztf_max))
+    Gztf_min_idx = np.argmin( np.abs(freqs - Gztf_min))
+    Gztf_max_idx = np.argmin( np.abs(freqs - Gztf_max))
+    ultrasat_min_idx = np.argmin( np.abs(freqs - ultrasat_min))
+    ultrasat_max_idx = np.argmin( np.abs(freqs - ultrasat_max))
+
+    Rztf_freqs = freqs[Rztf_min_idx:Rztf_max_idx]
+    Gztf_freqs = freqs[Gztf_min_idx:Gztf_max_idx]
+    ultrasat_freqs = freqs[ultrasat_min_idx:ultrasat_max_idx]
+    fit_freqs = np.concatenate((Rztf_freqs, Gztf_freqs, ultrasat_freqs))
+    # Rztf_x = x[Rztf_min_idx:Rztf_max_idx]
+    # Gztf_x = x[Gztf_min_idx:Gztf_max_idx]
+    # ultrasat_x = x[ultrasat_min_idx:ultrasat_max_idx]
+    #fit_x = np.concatenate((Rztf_x, Gztf_x, ultrasat_x))
+
     if do:
         Blue = []
         for i in range(1 , len(data)):
             Lums = data[i] 
-            print(Lums)
-            Lums = Lums[UV_min_idx:UV_max_idx]
-            fit = curve_fit(tofit, freqs, Lums,
-            p0 = (init_R, init_T))
-            fitted = [ tofit(n, fit[0][0], fit[0][1]) for n in freqs]
-            
-            # Integrate in log10
-            x_fitted =  freqs * fitted
+            # print(Lums)
+            Rztf_Lums = Lums[Rztf_min_idx:Rztf_max_idx]
+            Gztf_Lums = Lums[Gztf_min_idx:Gztf_max_idx]
+            ultrasat_Lums = Lums[ultrasat_min_idx:ultrasat_max_idx]
+            Lums = np.concatenate((Rztf_Lums, Gztf_Lums, ultrasat_Lums))
+            fit = curve_fit(tofit, fit_freqs, Lums, p0 = (init_R, init_T))
 
+            # # Integrate in log10: better to divide in the 3 bands to integrate
+            # shouldn't we consider all the frequencies?
+            # fitted = [tofit(n, fit[0][0], fit[0][1]) for n in freqs]
+            # x_fitted =  freqs * fitted
+            # b = np.trapz(x_fitted, x) 
+            # b *= np.log(10)
+
+            fitted = [tofit(n, fit[0][0], fit[0][1]) for n in freqs]
+            x_fitted =  freqs * fitted
             b = np.trapz(x_fitted, x) 
             b *= np.log(10)
+
             Blue.append(b)
             
         if save:
@@ -76,10 +109,11 @@ if __name__ == '__main__':
         for i, ax in enumerate(axs2):
             i += 1
             Lums = data[i] # First snapshot
-            Lums = Lums[UV_min_idx:UV_max_idx]
-            # Fit
-            fit = curve_fit(tofit, freqs, Lums,
-                            p0 = (init_R, init_T))
+            Rztf_Lums = Lums[Rztf_min_idx:Rztf_max_idx]
+            Gztf_Lums = Lums[Gztf_min_idx:Gztf_max_idx]
+            ultrasat_Lums = Lums[ultrasat_min_idx:ultrasat_max_idx]
+            Lums = np.concatenate((Rztf_Lums, Gztf_Lums, ultrasat_Lums))
+            fit = curve_fit(tofit, fit_freqs, Lums, p0 = (init_R, init_T))
             
             # Plot
             fitted = [ tofit(n, fit[0][0], fit[0][1]) for n in freqs]
