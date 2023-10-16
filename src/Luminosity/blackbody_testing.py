@@ -132,9 +132,10 @@ if __name__ == "__main__":
             T_low = np.exp(8.77)
             T_high = np.exp(17.878)
             if T < T_low:
-                # print('low')
+                print('low')
                 T = np.exp(8.87)
                 continue
+            
             if T > T_high:
                 # print('high')
                 T = np.exp(17.87)         

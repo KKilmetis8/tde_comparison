@@ -25,7 +25,7 @@ lnk_planck = np.loadtxt(loadpath + 'planck.txt')
 lnk_scatter = np.loadtxt(loadpath + 'scatter.txt')
 
 # Minimum we need is 3.99e-22, Elad's lnrho stops at 1e-10
-kind = 'scatter'
+kind = 'rosseland'
 save = False
 
 rho_min = np.log(3.99e-22)

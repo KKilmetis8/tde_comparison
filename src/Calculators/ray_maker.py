@@ -60,7 +60,7 @@ def ray_maker(fix, m):
     start = 100
     stop = 40 * Rt
     if m == 6:
-        num = 1000 + 1 # about the average of cell radius
+        num = 600 + 1 # about the average of cell radius
     if m == 4:
         num = 500 #350
     radii = np.linspace(start, stop, num) #simulator units
@@ -71,17 +71,16 @@ def ray_maker(fix, m):
     observers = []
     for i in range(0,192):
         thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
-        thetas[i] -= np.pi/2
-        phis[i] -= np.pi
+        thetas[i] -= np.pi/2 # Enforce theta in -pi to pi
         
         observers.append( (thetas[i], phis[i]) )
     
     #%% Cast
-    T_casted, Den_casted, Rad_casted = THROUPLE_S_CASTERS(radii, R, 
+    T_casted, Den_casted, Rad_casted, counter = THROUPLE_S_CASTERS(radii, R, 
                                                        observers, THETA, PHI,
                                                        T, Den, Rad,
                                                        weights = Mass, 
-                                                       avg = True)
+                                                       avg = False)
 
     # Clean
     T_casted = np.nan_to_num(T_casted, neginf = 0)

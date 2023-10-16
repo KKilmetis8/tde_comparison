@@ -69,9 +69,9 @@ def THE_CASTER(radii, R,
     # Normalize
     final_density = gridded_density
     if avg:
-        final_density = np.divide(gridded_density,counter)
+        final_density = np.divide(gridded_density, counter)
     if weights != None:
-        final_density = np.divide(gridded_density, gridded_weights)
+        final_density = np.divide(final_density, gridded_weights)
     return final_density
 
 @numba.njit
@@ -126,7 +126,7 @@ def THE_SMALL_CASTER(radii, R,
     if avg:
         final_density = np.divide(gridded_density, counter)
     if weights != None:
-        final_density = np.divide(gridded_density, gridded_weights)
+        final_density = np.divide(final_density, gridded_weights)
     return final_density
 
 @numba.njit

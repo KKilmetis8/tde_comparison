@@ -34,8 +34,8 @@ phis_hp = np.zeros(192)
 
 for i in range(0,192):
    thetas_hp[i], phis_hp[i] = hp.pix2ang(NSIDE, i)
-   thetas_hp[i] -= np.pi/2
-   phis_hp[i] -= np.pi
+   # thetas_hp[i] -= np.pi/2
+   # phis_hp[i] -= np.pi
    #print('theta:', thetas_hp[i], ',')
    #print('phi:', phis_hp[i] , '\n')
 print('theta number: ', thetas_hp.shape, '\n')
@@ -50,10 +50,10 @@ phis = np.linspace(- np.pi , np.pi, num = phi_num)
 
 #%% Plot
 fig, ax = plt.subplots(1,1, subplot_kw=dict(projection="mollweide"))
-ax.scatter(phis_hp, thetas_hp, c = 'red', s = 15, label  = 'Healpy')
-# for theta in thetas:
-#     for phi in phis:
-#         ax.scatter(phi, theta, c = 'k', s=20, marker = 'h')
+# ax.scatter(phis_hp, thetas_hp, c = 'red', s = 15, label  = 'Healpy')
+for theta in thetas:
+    for phi in phis:
+        ax.scatter(phi, theta, c = 'k', s=20, marker = 'h')
 plt.grid(True)
 plt.legend()
 #plt.show()
