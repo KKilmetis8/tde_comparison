@@ -3,6 +3,7 @@
 """
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
+
 import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
@@ -42,7 +43,7 @@ def tofit(n, R, T):
 ##
 
 if __name__ == '__main__':
-    plot = False
+    plot = True
     save = True
     do = True
 
@@ -79,8 +80,8 @@ if __name__ == '__main__':
             Rztf_Lums = Lums[Rztf_min_idx:Rztf_max_idx]
             Gztf_Lums = Lums[Gztf_min_idx:Gztf_max_idx]
             ultrasat_Lums = Lums[ultrasat_min_idx:ultrasat_max_idx]
-            Lums = np.concatenate((Rztf_Lums, Gztf_Lums, ultrasat_Lums))
-            fit = curve_fit(tofit, fit_freqs, Lums, p0 = (init_R, init_T))
+            Lums_fit = np.concatenate((Rztf_Lums, Gztf_Lums, ultrasat_Lums))
+            fit = curve_fit(tofit, fit_freqs, Lums_fit, p0 = (init_R, init_T))
 
             # # Integrate in log10: better to divide in the 3 bands to integrate
             # shouldn't we consider all the frequencies?
@@ -97,7 +98,7 @@ if __name__ == '__main__':
             Blue.append(b)
             
         if save:
-           np.save('data/bluedata_m'+ str(m), Blue) 
+           np.savetxt('data/bluedata_m' + str(m) + '.txt', Blue) 
                 
     if plot:
         fig, axs = plt.subplots(2,2, tight_layout = True)
@@ -112,8 +113,8 @@ if __name__ == '__main__':
             Rztf_Lums = Lums[Rztf_min_idx:Rztf_max_idx]
             Gztf_Lums = Lums[Gztf_min_idx:Gztf_max_idx]
             ultrasat_Lums = Lums[ultrasat_min_idx:ultrasat_max_idx]
-            Lums = np.concatenate((Rztf_Lums, Gztf_Lums, ultrasat_Lums))
-            fit = curve_fit(tofit, fit_freqs, Lums, p0 = (init_R, init_T))
+            Lums_fit = np.concatenate((Rztf_Lums, Gztf_Lums, ultrasat_Lums))
+            fit = curve_fit(tofit, fit_freqs, Lums_fit, p0 = (init_R, init_T))
             
             # Plot
             fitted = [ tofit(n, fit[0][0], fit[0][1]) for n in freqs]
@@ -128,7 +129,8 @@ if __name__ == '__main__':
             ax.grid()
             ax.set_xscale('log')
             ax.set_yscale('log')
-            ax.set_xlabel('Frequency [Hz]')
+            ax.set_xlabel(r'$\nu$ [Hz]')
             ax.set_ylabel(r'$L_\nu$')
-            #ax.legend()
-            ax.set_ylim(1e19,1e28)
+            ax.legend(fontsize = 6)
+            ax.set_ylim(1e19,1e30)
+        plt.show()

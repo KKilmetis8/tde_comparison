@@ -11,6 +11,8 @@ NOTES FOR OTHERS:
 
 - change m, fixes, loadpath
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
 
 # Vanilla Imports
 import numpy as np
@@ -164,10 +166,12 @@ if __name__ == "__main__":
                 break
 
     img = plt.pcolormesh(radii/6.957e10, np.arange(len(tau)), plot_tau.T, 
-                          cmap = 'Greys', vmin = 0, vmax =  5)
+                          cmap = 'Oranges', vmin = 0, vmax =  5)
     cbar = plt.colorbar(img)
     plt.title('Rays')
     cbar.set_label('Optical depth')
     plt.xlabel('Distance from BH [$R_\odot$]')
     plt.ylabel('Observers')
     img.axes.get_yaxis().set_ticks([])
+    plt.savefig('Paola/thermR.png')
+    plt.show()
