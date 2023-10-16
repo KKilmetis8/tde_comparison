@@ -76,7 +76,7 @@ def ray_maker(fix, m):
         observers.append( (thetas[i], phis[i]) )
     
     #%% Cast
-    T_casted, Den_casted, Rad_casted, counter = THROUPLE_S_CASTERS(radii, R, 
+    T_casted, Den_casted, Rad_casted = THROUPLE_S_CASTERS(radii, R, 
                                                        observers, THETA, PHI,
                                                        T, Den, Rad,
                                                        weights = Mass, 
@@ -110,7 +110,6 @@ def ray_maker(fix, m):
     
     radii *= Rsol_to_cm
     return rays_T, rays_den, rays, radii
-
 
 
 if __name__ == '__main__':
