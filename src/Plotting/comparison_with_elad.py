@@ -21,8 +21,8 @@ elad_blue = mat['L_bb']
 elad_red = mat['L_fld']
 # Ours Load
 m = 6
-x = np.loadtxt('data/onlyfreq.txt')[0] # x = logν
-# b = np.load('data/bluedata_m'+ str(m) + '.npy') 
+x = np.loadtxt('data/L_spectrum_m' + str(m) + '.txt')[0] # x = logν
+b = np.load('data/bluedata_m'+ str(m) + '.npy') 
 fld_data = np.loadtxt('data/reddata_m'+ str(m) +'.txt')
 
 # Elad Plot
@@ -32,8 +32,8 @@ plt.plot(elad_time[0], np.power(10, elad_blue[0]), c = 'b')
 # Our plot
 days = [1, 1.1, 1.3, 1.4]
 days40 = np.multiply(days, 40)
-# plt.plot(days40, b, '--o', c='navy', markersize = 4)
-plt.plot(days40, fld_data[1], '--o', c='maroon', markersize = 4)
+plt.plot(days40[0], b, '--s', c='navy', markersize = 4, alpha = 0.8)
+plt.plot(days40, fld_data[1], '--o', c='maroon', markersize = 4, alpha = 0.8)
 
 # # Make Pretty
 plt.yscale('log')

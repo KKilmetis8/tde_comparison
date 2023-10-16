@@ -1,5 +1,5 @@
 """"
-@author: paola 
+@author: paola , konstantinos
 """
 
 import numpy as np
@@ -29,9 +29,9 @@ UV_min = 1e12
 UV_max = 1e20
 
 if __name__ == '__main__':
-    plot = True
+    plot = False
     save = True
-    do = False
+    do = True
     # Load & Unpack
     path = 'data/'
     data = np.loadtxt(path + 'L_spectrum_m' + str(m) + '.txt')

@@ -54,8 +54,8 @@ def opacity(T, rho, kind, ln = True) -> float:
         T = np.log(T)
         rho = np.log(rho)
         # Remove fuckery
-        T = np.nan_to_num(T, nan = 0, posinf = 0, neginf= 9)
-        rho = np.nan_to_num(rho, nan = 0, posinf = 0, neginf= -49)
+        T = np.nan_to_num(T, nan = 0, posinf = 0, neginf= 0)
+        rho = np.nan_to_num(rho, nan = 0, posinf = 0, neginf= 0)
 
     # Pick Opacity & Use Interpolation Function
     if kind == 'rosseland':
@@ -64,18 +64,32 @@ def opacity(T, rho, kind, ln = True) -> float:
     elif kind == 'planck':
         ln_opacity = lnk_planck_inter((T, rho))
         
+    elif kind == 'scattering':
+        ln_opacity = lnk_scatter_inter((T, rho))
+        
     elif kind == 'effective':
-        planck = lnk_planck_inter((T, rho))
+        absorption = lnk_ross_inter((T, rho))
         scattering = lnk_scatter_inter((T, rho))
         
-        # Rybicky & Lightman eq. 1.98 NO USE STEINGERG & STONE (9)
-        ln_opacity = np.sqrt(3 * planck * (planck + scattering)) 
+        # Apoelenism
+        k_a = np.exp(absorption)
+        k_s = np.exp(scattering)
         
+        # Rybicky & Lightman eq. 1.98 NO USE STEINGERG & STONE (9)
+        opacity = np.sqrt(3 * k_a * (k_a + k_s)) 
+        return opacity
+    
     elif kind == 'red':
         planck = lnk_planck_inter((T, rho))
         scattering = lnk_scatter_inter((T, rho))
         
-        ln_opacity = planck + scattering
+        # Apoelenism
+        k_p = np.exp(planck)
+        k_s = np.exp(scattering)
+        
+        opacity = k_p + k_s
+        return opacity
+    
     else:
         print('Invalid opacity type. Try: rosseland / planck / effective.')
         return 1
@@ -85,6 +99,6 @@ def opacity(T, rho, kind, ln = True) -> float:
     return opacity
 
 if __name__ == '__main__':
-    opa = opacity(6000, 1e-10, 'planck', ln = False)
+    opa = opacity(1e7, 1e-12, 'effective', ln = False)
     print(opa)
     

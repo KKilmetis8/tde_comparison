@@ -45,16 +45,6 @@ def select_fix(m):
         days = [1] # 1.1,]# 1.3, 1.4] #t/t_fb
     return snapshots, days
 
-### OLD
-# if m == 4:
-#     fixes =  np.arange(233,263+1) #from 233 to 263
-#     days = [1.015, 1.025, 1.0325, 1.0435, 1.0525, 1.06, 1.07, 1.08, 1.0875, 1.0975, 1.1075, 1.115, 1.125, 1.135, 1.1425, 1.1525, 1.1625, 1.17, 1.18, 1.19, 1.1975, 1.2075, 1.2175, 1.2275, 1.235, 1.245, 1.255, 1.2625, 1.2725, 1.2825, 1.29] #t/t_fb
-# if m == 6:
-#     fixes = [844] #[844, 881, 925, 950] # 1006]
-#     days = [1.00325, 1.13975, 1.302, 1.39425] # 1.6] #t/t_fb
-###
-
-
 @numba.njit
 def grad_calculator(rays, radii, sphere_radius = 15_000): 
     # Get the index of radius closest in sphere radius
@@ -84,7 +74,7 @@ def converger(rays, radii):
         idxs.append(idx)
         
     rel_error = [ 100 * (1 - (grad_Es[i]/grad_Es[i-1])) 
-                 for i in range(1, len(grad_Es))]
+                  for i in range(1, len(grad_Es))]
     
     plt.figure( figsize = (16,4))
     plt.plot(radii[1::10], rel_error[::10], '-o', c='k')
@@ -109,26 +99,26 @@ def flux_calculator(grad_E, idx,
         Density = rays_den[i][idx]
         
         # Ensure we can interpolate
-        rho_low = np.exp(-22)
-        T_low = np.exp(8.77)
-        T_high = np.exp(17.8)
+        rho_low = np.exp(-49.2)
+        T_low = np.exp(8.666)
+        T_high = np.exp(17.87)
         
         # If here is nothing, light continues
         if Density < rho_low:
             zero_count += 1
             f[i] = max_travel
+            continue      
+        elif Temperature < T_low:
             continue
-        
-        if Temperature < T_low:
-            continue
-        
         # T too high => Thompson opacity
-        if Temperature > T_high:
-            print('hiiiiiiiiiii')
+        elif Temperature > T_high:
             Temperature = np.exp(17.7)
-            
+            X = 0.734
+            thompson = Density * 0.2 * (1 + X) # 1/cm units
+            k_ross = thompson
+        else: 
         # Get Opacity, NOTE: Breaks Numba
-        k_ross = opacity(Temperature, Density, 'rosseland', ln = False)
+            k_ross = opacity(Temperature, Density, 'rosseland', ln = False)
         
         # Calc R, eq. 28
         R = np.abs(grad_E[i]) /  (k_ross * Energy)
@@ -170,7 +160,8 @@ if __name__ == "__main__":
     #%%
     # Let's see how it looks
     if plot: 
-        img = plt.pcolormesh(radii, np.arange(len(rays)), rays, cmap = 'cet_gouldian',
+        radii_p = radii[:-1] / Rsol_to_cm
+        img = plt.pcolormesh(radii_p, np.arange(192), rays, cmap = 'cet_gouldian',
                              norm = colors.LogNorm())
         cbar = plt.colorbar(img)
         plt.title('Rays')
@@ -182,7 +173,7 @@ if __name__ == "__main__":
         # plt.xscale('log')
         
         plt.figure()
-        img = plt.pcolormesh(radii, np.arange(len(rays)), rays_den, 
+        img = plt.pcolormesh(radii_p, np.arange(192), rays_den, 
                              cmap = 'cet_fire', norm = colors.LogNorm())
         cbar = plt.colorbar(img)
         plt.title('Rays')
@@ -190,11 +181,11 @@ if __name__ == "__main__":
         plt.xlabel('r')
         plt.ylabel('Various observers')
         img.axes.get_yaxis().set_ticks([])
-        plt.xlim(0,3000)
+        #plt.xlim(0,3000)
         # plt.xscale('log')
         
         plt.figure()
-        img = plt.pcolormesh(radii, np.arange(len(rays)), rays_T, 
+        img = plt.pcolormesh(radii_p, np.arange(192), rays_T, 
                              cmap = 'cet_bmy', norm = colors.LogNorm())
         cbar = plt.colorbar(img)
         plt.title('Rays')
@@ -202,43 +193,43 @@ if __name__ == "__main__":
         plt.xlabel('r')
         plt.ylabel('Various observers')
         img.axes.get_yaxis().set_ticks([])
-        plt.xlim(0,3000)
+        # plt.xlim(0,3000)
         # plt.xscale('log')
         
-        # Calculate
-        grad_Es, idxs = converger(rays, radii)
-        # Calculate Flux
-        # grad_E, radius_idx = grad_calculator(rays, radii, sphere_radius)
-        lums = []
-        for grad_E, idx, radius in zip(grad_Es, idxs, radii):
-            flux = flux_calculator(grad_E, idx, 
-                                    rays, rays_T, rays_den)
-        
-            # Divide by number of observers
-            flux = np.sum(flux) / 192
-        
-            print('Flux %.3e' % flux )
-            # Turn to luminosity
-            lum = flux * 4 * np.pi * radius**2
-            print('Lum %.3e' % lum )
-            lums.append(lum)
-        
-        # Lums Plot
-        plt.figure( figsize = (8,4))
-        plt.plot(radii[1:-2] / Rsol_to_cm, lums[1:-2], c='maroon')
-        plt.yscale('log')
-        plt.ylabel('Luminosity [erg/s]')
-        plt.xlabel('Sphere Radii [$R_\odot$]')
-        plt.title('Flux Limited Diffusion')
-        
-        # Conv. Check
-        rel_error = [ int(100 * (1 - (lums[i]/lums[i-1]))) for i in range(1, len(lums) -1)]
-        plt.figure(figsize = (16,4))
-        plt.title('Convergance Test')
-        plt.plot(radii[1:-1], rel_error, '-o', c='k')
-        plt.xlabel('Sphere Radii [$R_\odot$]')
-        plt.ylabel('Relative Error in L')
-        plt.ylim(-35, 35)
-        # stop
+    # Calculate
+    grad_Es, idxs = converger(rays, radii)
+    # Calculate Flux
+    # grad_E, radius_idx = grad_calculator(rays, radii, sphere_radius)
+    lums = []
+    for grad_E, idx, radius in zip(grad_Es, idxs, radii):
+        flux = flux_calculator(grad_E, idx, 
+                                rays, rays_T, rays_den)
+    
+        # Divide by number of observers
+        flux = np.sum(flux) / 192
+    
+        print('Flux %.3e' % flux )
+        # Turn to luminosity
+        lum = flux * 4 * np.pi * radius**2
+        print('Lum %.3e' % lum )
+        lums.append(lum)
+    
+    # Lums Plot
+    plt.figure( figsize = (8,4))
+    plt.plot(radii[1:] / Rsol_to_cm, lums[1:], c='maroon')
+    plt.yscale('log')
+    plt.ylabel('Luminosity [erg/s]')
+    plt.xlabel('Sphere Radii [$R_\odot$]')
+    plt.title('Flux Limited Diffusion')
+    
+    # Conv. Check
+    rel_error = [ int(100 * (1 - (lums[i]/lums[i-1]))) for i in range(1, len(lums) -1)]
+    plt.figure(figsize = (16,4))
+    plt.title('Convergance Test')
+    plt.plot(radii[1:-1], rel_error, '-o', c='k')
+    plt.xlabel('Sphere Radii [$R_\odot$]')
+    plt.ylabel('Relative Error in L')
+    plt.ylim(-35, 35)
+    # stop
 
 

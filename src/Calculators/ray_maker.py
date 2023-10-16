@@ -57,10 +57,10 @@ def ray_maker(fix, m):
     #print('Den (weight) from simulation:', np.divide(np.sum(Den*Mass), np.sum(Mass)))
 
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = 100
-    stop = 40 * Rt
+    start = 8 * Rt
+    stop = 400 * Rt
     if m == 6:
-        num = 600 + 1 # about the average of cell radius
+        num = 750 + 1 # about the average of cell radius
     if m == 4:
         num = 500 #350
     radii = np.linspace(start, stop, num) #simulator units

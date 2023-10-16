@@ -51,18 +51,19 @@ def optical_depth(T, rho, dr):
         The optical depth in [cgs].
     '''    
     # If there is nothing, the ray continues unimpeded
-    print('rho: ', rho)
     if rho < np.exp(-49.3):
-        # print('rho small')
+        #print('rho small')
         return 0
     
     # Stream material, is opaque
     if T < np.exp(8.666):
         # T = np.exp(8.87)
+        print('T low')
         return 1e4
     
-    # Too hot: Thompson Opacity. 
+    # Too hot: Thompson Opacity.
     # Make it fall inside the table: from here the extrapolation is constant
+    # This could be made faster
     if T > np.exp(17.876):
         # print('high T')
         T = np.exp(17.7)
@@ -101,10 +102,12 @@ def calc_photosphere(rs, T, rho, m, threshold = 1):
     taus = []
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
+    print('--new ray--')
     while tau < threshold and i > -len(T):
         new_tau = optical_depth(T[i], rho[i], dr)
         tau += new_tau
-        taus.append(new_tau) 
+        taus.append(new_tau)
+        print('tau: ', tau)
         i -= 1
 
     photosphere =  rs[i] #i it's negative

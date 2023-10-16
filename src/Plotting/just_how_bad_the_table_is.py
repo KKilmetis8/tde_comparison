@@ -33,12 +33,21 @@ ax.plot(np.log10(np.array(rays_den).ravel()), np.log10(np.array(rays_T).ravel())
 fig, ax = plt.subplots( figsize = (8,4) )
 ax.axvline( np.log10(np.exp(-23)) , 
             color = 'b', linestyle = 'dashed')
-ax.axvline( np.log10(np.exp(4)) , 
+ax.axvline( np.log10(np.exp(-0.18)) , 
             color = 'b', linestyle = 'dashed')
-ax.axhline( np.log10(np.exp(8.6)) , 
+ax.axhline( np.log10(np.exp(8.666)) , 
             color = 'r', linestyle = 'dashed')
-ax.axhline( np.log10(np.exp(17.7)) , 
+ax.axhline( np.log10(np.exp(17.876)) , 
             color = 'r', linestyle = 'dashed')
 
-ax.plot(np.log10(Den_triple_casted.ravel() ), np.log10(T_triple_casted.ravel()), 
-        'x', c='k', markersize = 1)
+# ax.plot(np.log10(Den_triple_casted.ravel() ), np.log10(T_triple_casted.ravel()), 
+#         'x', c='k', markersize = 1)
+# ax.plot([],[], 'x', c = 'k', label = 'Triple' )
+ax.plot(np.log10(np.array(rays_den).ravel()), np.log10(np.array(rays_T).ravel()), 
+        'x', c='g', markersize = 1, alpha = 0.1)
+ax.plot([],[], 'x', c = 'g', label = 'Spherical' )
+
+ax.legend( loc = 'upper right')
+ax.grid()
+ax.set_xlabel(r'$\log( \rho )$ $[g/cm^3]$')
+ax.set_ylabel('$\log(T)$ $[K]$')

@@ -103,7 +103,7 @@ def flux_calculator(grad_E, idx,
         Density = rays_den[i][idx]
         
         # Ensure we can interpolate
-        rho_low = np.exp(-22)
+        rho_low = np.exp(-45)
         T_low = np.exp(8.77)
         T_high = np.exp(17.8)
         
