@@ -20,8 +20,8 @@ from scipy.interpolate import interp1d
 # VARIABLES 
 ##
 
-kind = 'rosseland'
-save = False
+kind = 'planck'
+save = True
 plot = True
 
 ##
@@ -80,45 +80,62 @@ if save:
 # Plotting
 if plot:
     # Norm
-    cmin = -30
-    cmax = 20
+    # cmin = -30
+    # cmax = 20
     
-    k = lnk
+    # k = lnk
         
-    # Elad's Table
-    fig  = plt.figure( figsize = (6,4))
-    img = plt.pcolormesh(lnrho, lnT, k, 
-                          cmap = 'cet_fire', vmin = cmin, vmax = cmax)
+    # # Elad's Table
+    # fig  = plt.figure( figsize = (6,4))
+    # img = plt.pcolormesh(lnrho, lnT, k, 
+    #                       cmap = 'cet_fire', vmin = cmin, vmax = cmax)
 
-    plt.xlabel(r'$\ln ( \rho )$ $[g/cm^3]$')
-    plt.ylabel('$\ln(T)$ $[K]$')
-    plt.title('Rosseland Mean Opacity | Elads Table')
+    # plt.xlabel(r'$\ln ( \rho )$ $[g/cm^3]$')
+    # plt.ylabel('$\ln(T)$ $[K]$')
+    # if kind == 'rosseland':
+    #     plt.title('Rosseland Mean Opacity | Elad Table')
+    # elif kind == 'planck':
+    #     plt.title('Planck Mean Opacity | Elad Table')
+    # elif kind == 'scatter':
+    #     plt.title('Scatter Mean Opacity | Elad Table')
         
-    cax = fig.add_axes([0.93, 0.125, 0.04, 0.76])
-    cbar = fig.colorbar(img, cax=cax)
-    cbar.set_label('$\ln(\kappa)$ $[cm^-1]$', rotation=270, labelpad = 15)
+    # cax = fig.add_axes([0.93, 0.125, 0.04, 0.76])
+    # cbar = fig.colorbar(img, cax=cax)
+    # cbar.set_label('$\ln(\kappa)$ $[cm^-1]$', rotation=270, labelpad = 15)
     
-    # Extrapolated Table
-    fig = plt.figure( figsize = (8,4) )
-    img = plt.pcolormesh(new_rho, lnT, new_table, 
-                          cmap = 'cet_fire', vmin = cmin, vmax = cmax)
-    plt.xlabel(r'$\ln( \rho )$ $[g/cm^3]$')
-    plt.ylabel('$\ln(T)$ $[K]$')
+    # # Extrapolated Table
+    # fig = plt.figure( figsize = (8,4) )
+    # img = plt.pcolormesh(new_rho, lnT, new_table, 
+    #                       cmap = 'cet_fire', vmin = cmin, vmax = cmax)
+    # plt.xlabel(r'$\ln( \rho )$ $[g/cm^3]$')
+    # plt.ylabel('$\ln(T)$ $[K]$')
+    
+    # plt.axvline( (expanding_rho[-1] + lnrho[0]) /2 , 
+    #             color = 'b', linestyle = 'dashed')
+    
+    # cax = fig.add_axes([0.92, 0.125, 0.03, 0.76])
+    # cbar = fig.colorbar(img, cax=cax)
+    # cbar.set_label('$\ln(\kappa)$ $[cm^{-1}]$', rotation=270, labelpad = 15)
+    # if kind == 'rosseland':
+    #     plt.title('Rosseland Mean Opacity | Extrapolated Table')
+    #     plt.savefig('Figs/rosseland.png')
+    # elif kind == 'planck':
+    #     plt.title('Planck Mean Opacity | Extrapolated Table')
+    #     plt.savefig('Figs/planck.png')
+    # elif kind == 'scatter':
+    #     plt.title('Scatter Mean Opacity | Extrapolated Table')
+    #     plt.savefig('Figs/scatter.png')
+    
+    old_planck = np.loadtxt('OLD stuff/OLDplanck_expansion.txt')
+    plt.plot(new_rho, new_table[2,:], label = 'HOPE extrapolation', c = 'orange')
+    plt.plot(new_rho, old_planck[2,:], label = 'OLD extrapolation', linestyle = '--', c ='g')
+    plt.scatter(lnrho, lnk[2,:], c = 'r', s = 2, label = 'Elad')
+    plt.axvline(lnrho[1], c = 'black', linestyle = '--')
+    plt.legend()
     if kind == 'rosseland':
-        plt.title('Rosseland Mean Opacity | Extrapolated Table')
+        plt.title('Rosseland Mean Opacity')
     elif kind == 'planck':
-        plt.title('Planck Mean Opacity | Extrapolated Table')
+        plt.title('Planck Mean Opacity')
     elif kind == 'scatter':
-        plt.title('Scatter Mean Opacity | Extrapolated Table')
-    
-    plt.axvline( (expanding_rho[-1] + lnrho[0]) /2 , 
-                color = 'b', linestyle = 'dashed')
-    
-    cax = fig.add_axes([0.92, 0.125, 0.03, 0.76])
-    cbar = fig.colorbar(img, cax=cax)
-    cbar.set_label('$\ln(\kappa)$ $[cm^{-1}]$', rotation=270, labelpad = 15)
-    
-    # plt.plot(new_rho, new_table[5,:])
-    # plt.scatter(lnrho, lnk[5,:], c = 'r', s = 2)
-    # plt.axvline(lnrho[1], c = 'black', linestyle = '--')
+        plt.title('Scatter Mean Opacity')
     plt.show()
