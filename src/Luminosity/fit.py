@@ -90,7 +90,8 @@ if __name__ == '__main__':
             # b = np.trapz(x_fitted, x) 
             # b *= np.log(10)
 
-            fitted = [tofit(n, fit[0][0], fit[0][1]) for n in freqs]
+            #fitted = [tofit(n, fit[0][0], fit[0][1]) for n in freqs]
+            fitted = tofit(freqs, fit[0][0], fit[0][1] )
             x_fitted =  freqs * fitted
             b = np.trapz(x_fitted, x) 
             b *= np.log(10)
@@ -117,7 +118,8 @@ if __name__ == '__main__':
             fit = curve_fit(tofit, fit_freqs, Lums_fit, p0 = (init_R, init_T))
             
             # Plot
-            fitted = [ tofit(n, fit[0][0], fit[0][1]) for n in freqs]
+            #fitted = [ tofit(n, fit[0][0], fit[0][1]) for n in freqs]
+            fitted = tofit(freqs, fit[0][0], fit[0][1] )
             ax.plot(freqs, fitted,
                       color = AEK, label = 'Fitted')
             ax.plot(freqs, Lums,

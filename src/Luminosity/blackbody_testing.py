@@ -135,8 +135,8 @@ if __name__ == "__main__":
                 T = rays_T[j][reverse_idx]
                 rho = rays_den[j][reverse_idx] 
                 opt_depth = rays_tau[j][i]
-                # print('pure tau: ', opt_depth)
                 cell_vol = volume[reverse_idx]
+                # print('pure tau: ', opt_depth)
                 # print('T:', T)
                 # print('rho: ', rho)
                 
