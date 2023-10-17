@@ -34,7 +34,6 @@ plt.plot(elad_time[0], np.power(10, elad_blue[0]), c = 'b')
 # Our plot
 days = [1, 1.1, 1.3, 1.4]
 days40 = np.multiply(days, 40)
-print(np.shape(days))
 plt.plot(days40, b, '--s', c='navy', markersize = 4, alpha = 0.8)
 plt.plot(days40, fld_data[1], '--o', c='maroon', markersize = 4, alpha = 0.8)
 
@@ -45,4 +44,5 @@ plt.grid()
 plt.xlim(39, 59)
 plt.xlabel('Time [days]')
 plt.ylabel('Luminosity [erg/s]')
+plt.savefig('Final plot/Elad_comparison.png')
 plt.show()

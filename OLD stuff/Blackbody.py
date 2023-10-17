@@ -78,7 +78,7 @@ if __name__ == "__main__":
     m = 6
     n_min = 1e12 
     n_max = 1e20
-    n_spacing = 10000
+    n_spacing = 1000
     x_arr = log_array(n_min, n_max, n_spacing)
     n_arr = 10**x_arr
     
