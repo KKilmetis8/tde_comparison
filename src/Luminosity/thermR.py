@@ -19,6 +19,7 @@ import numpy as np
 import numba
 import healpy as hp
 import matplotlib.pyplot as plt
+import matplotlib.colors as colors
 import colorcet
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -59,16 +60,15 @@ def optical_depth(T, rho, dr):
     
     # Stream material, is opaque
     if T < np.exp(8.666):
-        # T = np.exp(8.87)
-        print('T low')
-        return 1e4
+        # print('T low')
+        return 100
     
     # Too hot: Thompson Opacity.
     # Make it fall inside the table: from here the extrapolation is constant
     # This could be made faster
     if T > np.exp(17.876):
         # print('high T')
-        T = np.exp(17.7)
+        T = np.exp(17.87)
     
     # Lookup table
     oppi = opacity(T, rho,'effective', ln = False)
@@ -76,7 +76,7 @@ def optical_depth(T, rho, dr):
     
     return tau
 
-def calc_thermr(rs, T, rho, m, threshold = 1):
+def calc_thermr(rs, T, rho, threshold = 1):
     '''
     Finds and saves the effective optical depth at every cell the ray passess through.
     We use it to find the thermr.
@@ -115,7 +115,7 @@ def calc_thermr(rs, T, rho, m, threshold = 1):
     thermr =  rs[i] #i it's negative
     return taus, thermr
 
-def get_thermr(fix, m, get_observer = False):
+def get_thermr(fix, m):
     ''' Wrapper function'''
     rays_T, rays_den, _, radii = ray_maker(fix, m)
     # Get the thermr
@@ -130,7 +130,7 @@ def get_thermr(fix, m, get_observer = False):
         
         # Get thermr
         taus, photo = calc_thermr(radii, T_of_single_ray, Den_of_single_ray, 
-                                       m, threshold = 5)
+                                        threshold = 5)
         # Store
         rays_tau.append(taus)
         thermr[i] = photo
@@ -158,20 +158,20 @@ if __name__ == "__main__":
     #%% Plot tau
     plot_tau = np.zeros( (len(radii), len(tau)))
     for i in range(192):
-        for j in range(1000):
+        for j in range(len(tau[i])):
             temp = tau[i][j]
-            plot_tau[-j,i] =  temp
-            if temp>0:
-                plot_tau[:-j, i ] = temp
+            plot_tau[-j-1,i] =  temp
+            if temp>5:
+                plot_tau[0:-j, i ] = temp
                 break
 
-    img = plt.pcolormesh(radii/6.957e10, np.arange(len(tau)), plot_tau.T, 
-                          cmap = 'Oranges', vmin = 0, vmax =  5)
+    img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_tau.T, 
+                          cmap = 'Greys', norm = colors.LogNorm(vmin = 1e-6, vmax =  5))
     cbar = plt.colorbar(img)
     plt.title('Rays')
     cbar.set_label('Optical depth')
     plt.xlabel('Distance from BH [$R_\odot$]')
     plt.ylabel('Observers')
+    # plt.xscale('log')
     img.axes.get_yaxis().set_ticks([])
-    plt.savefig('Paola/thermR.png')
     plt.show()
