@@ -44,7 +44,7 @@ def tofit(n, R, T):
 
 if __name__ == '__main__':
     plot = True
-    save = True
+    save = False
     do = True
 
     # Load & Unpack
@@ -79,7 +79,7 @@ if __name__ == '__main__':
             Blue.append(b)
             
         if save:
-           np.savetxt('data/bluedata_m' + str(m) + '.txt', Blue) 
+           np.savetxt('data/UV_bluedata_m' + str(m) + '.txt', Blue) 
                 
     if plot:
         fig, axs = plt.subplots(2,2, tight_layout = True)
@@ -112,5 +112,6 @@ if __name__ == '__main__':
             ax.set_ylabel(r'$L_\nu$')
             ax.legend(fontsize = 4)
             ax.set_ylim(1e17,1e30)
-        plt.savefig('Final plot/Fit_m' + str(m) + '.png')
+        if save: 
+            plt.savefig('Final plot/Fit_m' + str(m) + '.png')
         plt.show()
