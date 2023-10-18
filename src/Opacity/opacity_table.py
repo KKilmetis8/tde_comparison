@@ -99,6 +99,55 @@ def opacity(T, rho, kind, ln = True) -> float:
     return opacity
 
 if __name__ == '__main__':
-    opa = opacity(1e7, 1e-12, 'effective', ln = False)
-    print(opa)
     
+    elena = True
+    if elena:
+        lnT = np.loadtxt(loadpath + 'T.txt')
+        lnrho = np.loadtxt(loadpath + 'rho.txt')
+        lnk_ross = np.loadtxt(loadpath + 'ross.txt')
+        lnk_planck = np.loadtxt(loadpath + 'planck.txt')
+        lnk_scatter = np.loadtxt(loadpath + 'scatter.txt')
+        
+        rho1 = lnrho[0]
+        rho2 = lnrho[ len(lnrho)// 2]
+        rho3 = lnrho[-1]
+        
+        scatter1 = [ np.log(opacity(T, rho1, kind = 'scattering', ln = True)) for T in lnT]
+        scatter2 = [ np.log(opacity(T, rho2, kind = 'scattering', ln = True)) for T in lnT]
+        scatter3 = [ np.log(opacity(T, rho3, kind = 'scattering', ln = True)) for T in lnT]
+        
+        planck1 = [ np.log(opacity(T, rho1, kind = 'planck', ln = True)) for T in lnT]
+        planck2 = [ np.log(opacity(T, rho2, kind = 'planck', ln = True)) for T in lnT]
+        planck3 = [ np.log(opacity(T, rho3, kind = 'planck', ln = True)) for T in lnT]
+
+        import matplotlib.pyplot as plt
+        plt.rcParams['text.usetex'] = True
+        plt.rcParams['figure.dpi'] = 300
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['axes.facecolor']= 	'whitesmoke'
+        plt.rcParams['xtick.direction'] = 'in'
+        plt.rcParams['ytick.direction'] = 'in'
+        AEK = '#F1C410'
+        
+        fig, ax = plt.subplots(figsize = (5,4))
+        plt.plot(np.log10(np.exp(lnT)), scatter1, c = AEK, 
+                 label =  rf'Scatter $ \rho $ {np.exp(rho1):.1e}')
+        plt.plot(np.log10(np.exp(lnT)), planck1, c = AEK, linestyle = '--', 
+                 label =  rf'Planck $ \rho $ {np.exp(rho1):.1e}')
+        # 
+        plt.plot(np.log10(np.exp(lnT)), scatter2, c = 'k', 
+                 label =  rf'Scatter $ \rho $ {np.exp(rho2):.1e}')
+        plt.plot(np.log10(np.exp(lnT)), planck2, c = 'k', linestyle = '--', 
+                 label =  rf'Planck $ \rho $ {np.exp(rho2):.1e}')
+        #
+        plt.plot(np.log10(np.exp(lnT)), scatter3, c = 'maroon', 
+                 label =  rf'Scatter $ \rho $ {np.exp(rho3):.1e}')
+        plt.plot(np.log10(np.exp(lnT)), planck3, c = 'maroon', linestyle = '--', 
+                 label =  rf'Planck $ \rho $ {np.exp(rho3):.1e}')
+        #
+        plt.xlabel(r'Temperature $\log_{10}(T)$ [K]')
+        plt.ylabel(r'Opacity $\log_{10}(\kappa)$ [1/cm$^{-1}$]')
+        plt.title('Comparing Planck vs Scattering opacities')
+        plt.legend( bbox_to_anchor=(1.15,-0.15), ncols = 3,
+                   bbox_transform = ax.transAxes )
+        plt.grid()

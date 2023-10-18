@@ -151,3 +151,4 @@ if plot:
     elif kind == 'scatter':
         plt.title('Scatter Mean Opacity')
     plt.show()
+#%% Elena's lines
