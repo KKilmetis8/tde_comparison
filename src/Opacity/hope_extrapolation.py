@@ -21,7 +21,7 @@ from scipy.interpolate import interp1d
 ##
 
 kind = 'planck'
-save = True
+save = False
 plot = True
 
 ##
@@ -52,11 +52,17 @@ for i in range(len(lnT)):
 
     opacity_row = lnk[i]
     
-    delta_opacity = opacity_row[1] - opacity_row[0]
-    m = np.divide(delta_opacity, delta_rho)
-
-    for j in range(len(expanding_rho)-1):           
-        table_expansion[i,j] = opacity_row[0] + m * (expanding_rho[j]-lnrho[0])
+    if kind == 'planck':
+        delta_opacity = opacity_row[3] - opacity_row[2]
+        delta_rho_fix = lnrho[3] - lnrho[2]
+        m = np.divide(delta_opacity, delta_rho_fix)
+        for j in range(len(expanding_rho)-1):           
+            table_expansion[i,j] = opacity_row[0] + m * (expanding_rho[j]-lnrho[0])
+    else:
+        delta_opacity = opacity_row[1] - opacity_row[0]
+        m = np.divide(delta_opacity, delta_rho)
+        for j in range(len(expanding_rho)-1):           
+            table_expansion[i,j] = opacity_row[0] + m * (expanding_rho[j]-lnrho[0])
 
     expanding_rho[-1] = lnrho[0]
     table_expansion[i][-1] = opacity_row[0]
@@ -126,11 +132,17 @@ if plot:
     #     plt.title('Scatter Mean Opacity | Extrapolated Table')
     #     plt.savefig('Figs/scatter.png')
     
-    old_planck = np.loadtxt('OLD stuff/OLDplanck_expansion.txt')
-    plt.plot(new_rho, new_table[2,:], label = 'HOPE extrapolation', c = 'orange')
-    plt.plot(new_rho, old_planck[2,:], label = 'OLD extrapolation', linestyle = '--', c ='g')
-    plt.scatter(lnrho, lnk[2,:], c = 'r', s = 2, label = 'Elad')
-    plt.axvline(lnrho[1], c = 'black', linestyle = '--')
+    if kind == 'rosseland':
+        old = np.loadtxt('OLD stuff/OLDross_expansion.txt')
+    elif kind == 'planck':
+        old = np.loadtxt('OLD stuff/OLDplanck_expansion.txt')
+    elif kind == 'scatter':
+        old = np.loadtxt('OLD stuff/OLDscatter_expansion.txt')
+        
+    plt.plot(new_rho, new_table[-49,:], label = 'HOPE extrapolation', c = 'orange')
+    plt.plot(new_rho, old[-49,:], label = 'OLD extrapolation', linestyle = '--', c ='g')
+    plt.scatter(lnrho, lnk[-49,:], c = 'r', s = 2, label = 'Elad')
+    plt.axvline(lnrho[0], c = 'black', linestyle = '--')
     plt.legend()
     if kind == 'rosseland':
         plt.title('Rosseland Mean Opacity')
