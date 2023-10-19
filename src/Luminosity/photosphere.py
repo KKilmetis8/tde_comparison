@@ -36,7 +36,8 @@ def get_kappa(T, rho, dr):
     CHECK THE IFs
     '''    
     # If there is nothing, the ray continues unimpeded
-    if rho < np.exp(-49.3):
+    # if rho < np.exp(-49.3):
+    if rho < np.exp(-23):
         return 0
     
     # Stream material, is opaque
@@ -133,4 +134,5 @@ if __name__ == "__main__":
     plt.ylabel('Observers')
     # plt.xscale('log')
     img.axes.get_yaxis().set_ticks([])
+    plt.savefig('Figs/photosphere.png')
     plt.show()
