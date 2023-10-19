@@ -134,5 +134,6 @@ if __name__ == "__main__":
     plt.ylabel('Observers')
     # plt.xscale('log')
     img.axes.get_yaxis().set_ticks([])
+    plt.xlim(0,1500)
     plt.savefig('Figs/photosphere.png')
     plt.show()
