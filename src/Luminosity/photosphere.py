@@ -37,7 +37,7 @@ def get_kappa(T, rho, dr):
     '''    
     # If there is nothing, the ray continues unimpeded
     # if rho < np.exp(-49.3):
-    if rho < np.exp(-23):
+    if rho < np.exp(-35):
         return 0
     
     # Stream material, is opaque
@@ -65,14 +65,14 @@ def calc_photosphere(rs, T, rho):
     kappas = []
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
-    while kappa < threshold and i > -len(T):
+    while kappa <= threshold and i > -len(T):
         new_kappa = get_kappa(T[i], rho[i], dr)
         kappa += new_kappa
         kappas.append(new_kappa)
         #print('kappa: ', kappa)
         i -= 1
-    if kappa < threshold:
-        print('Photoshpere not reached, you are at ', kappa)
+    if kappa == threshold:
+        print('Photoshpere reached, you are at ', kappa)
 
     photo =  rs[i] #i it's negative
     return kappas,photo
@@ -126,7 +126,7 @@ if __name__ == "__main__":
                 break
 
     img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_kappa.T, 
-                          cmap = 'Oranges', norm = colors.LogNorm(vmin = 1e-6, vmax =  2/3))
+                          cmap = 'Oranges', norm = colors.LogNorm(vmin = 1e-4, vmax =  2/3))
     cbar = plt.colorbar(img)
     plt.title('Rays')
     cbar.set_label('Photosphere')
