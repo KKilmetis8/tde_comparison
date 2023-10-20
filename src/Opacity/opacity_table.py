@@ -11,17 +11,25 @@ NOTES FOR OTHERS
 
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
+import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['font.family'] = 'Times New Roman'
+plt.rcParams['axes.facecolor']= 'whitesmoke'
+plt.rcParams['xtick.direction'] = 'in'
+plt.rcParams['ytick.direction'] = 'in'
+AEK = '#F1C410'
 
 # All units are ln[cgs]
 loadpath = 'src/Opacity/'
 lnT = np.loadtxt(loadpath + 'T.txt')
-lnrho = np.loadtxt(loadpath + 'big_lnrho.txt')
+lnrho = np.loadtxt(loadpath + 'hope_big_lnrho.txt')
 # lnk_ross = np.loadtxt(loadpath + 'ross.txt')
 # lnk_planck = np.loadtxt(loadpath + 'planck.txt')
 # lnk_scatter = np.loadtxt(loadpath + 'scatter.txt')
-lnk_ross = np.loadtxt(loadpath + 'ross_expansion.txt')
-lnk_planck = np.loadtxt(loadpath + 'planck_expansion.txt')
-lnk_scatter = np.loadtxt(loadpath + 'scatter_expansion.txt')
+lnk_ross = np.loadtxt(loadpath + 'hope_ross_expansion.txt')
+lnk_planck = np.loadtxt(loadpath + 'hope_planck_expansion.txt')
+lnk_scatter = np.loadtxt(loadpath + 'hope_scatter_expansion.txt')
 
 lnk_ross_inter = RegularGridInterpolator( (lnT, lnrho), lnk_ross)
 lnk_planck_inter = RegularGridInterpolator( (lnT, lnrho), lnk_planck)
@@ -100,7 +108,8 @@ def opacity(T, rho, kind, ln = True) -> float:
 
 if __name__ == '__main__':
     
-    elena = True
+    elena = False
+    extrapolation_comp = True
     if elena:
         lnT = np.loadtxt(loadpath + 'T.txt')
         lnrho = np.loadtxt(loadpath + 'rho.txt')
@@ -120,15 +129,6 @@ if __name__ == '__main__':
         planck1 = [ np.log(opacity(T, rho1, kind = 'planck', ln = True)) for T in lnT]
         planck2 = [ np.log(opacity(T, rho2, kind = 'planck', ln = True)) for T in lnT]
         planck3 = [ np.log(opacity(T, rho3, kind = 'planck', ln = True)) for T in lnT]
-
-        import matplotlib.pyplot as plt
-        plt.rcParams['text.usetex'] = True
-        plt.rcParams['figure.dpi'] = 300
-        plt.rcParams['font.family'] = 'Times New Roman'
-        plt.rcParams['axes.facecolor']= 'whitesmoke'
-        plt.rcParams['xtick.direction'] = 'in'
-        plt.rcParams['ytick.direction'] = 'in'
-        AEK = '#F1C410'
         
         fig, ax = plt.subplots(figsize = (5,4))
         plt.plot(np.log10(np.exp(lnT)), scatter0, c = 'b', 
@@ -160,3 +160,69 @@ if __name__ == '__main__':
         plt.grid()
         plt.savefig('Figs/opacities_comparison.jpg')
         plt.show()
+        
+    if extrapolation_comp:
+        lnT = np.loadtxt(loadpath + 'T.txt')
+        lnrho = np.loadtxt(loadpath + 'big_lnrho.txt')
+        lnk_planck_inter = RegularGridInterpolator( (lnT, lnrho), lnk_planck)
+
+        plancks = []
+        for T in lnT:   
+            planck = [ np.log(opacity(T, rho, kind = 'planck', ln = True)) for rho in lnrho]
+            plancks.append(planck)
+        
+        fig, ax = plt.subplots( 1,3 , figsize = (12,4), tight_layout = True, 
+                               sharey = True, sharex = True)
+        oldrho = np.loadtxt(loadpath + 'rho.txt')
+
+        for planck in plancks:
+            ax[0].plot(np.log10(np.exp(lnrho)), planck, c = 'k')
+            
+        ax[0].axvline( np.log10(np.exp(oldrho[0])), c = 'r')
+        ax[0].grid()
+        ax[0].set_title( 'Old Extrapolation')
+        ax[0].set_xlabel(r'Density $\log_{10}( \rho )$ [g/cm$^3$]')
+        ax[0].set_ylabel(r'Opacity $\log_{10}(\kappa)$ [1/cm$^{-1}$]')
+        ax[0].set_ylim(-120, 30)
+        #######################################################################
+        # HOPE EXTRAPOLATION
+        #######################################################################
+        lnrho = np.loadtxt(loadpath + 'big_lnrho.txt')
+        lnk_planck = np.loadtxt(loadpath + 'planck_expansion.txt')
+        lnk_planck_inter = RegularGridInterpolator( (lnT, lnrho), lnk_planck)
+        
+        plancks = []
+        for T in lnT:   
+            planck = [ np.log(opacity(T, rho, kind = 'planck', ln = True)) for rho in lnrho]
+            plancks.append(planck)
+            
+        oldrho = np.loadtxt(loadpath + 'rho.txt')
+
+        for planck in plancks:
+            ax[1].plot(np.log10(np.exp(lnrho)), planck, c = 'k')           
+            
+        ax[1].axvline( np.log10(np.exp(oldrho[0])), c = 'r')
+        ax[1].grid()
+        ax[1].set_title( 'NEW Extrapolation, Every T')
+        ax[1].set_xlabel(r'Density $\log_{10}( \rho )$ [g/cm$^3$]')
+        ax[1].set_ylabel(r'Opacity $\log_{10}(\kappa)$ [1/cm$^{-1}$]')
+        
+        #######################################################################
+        # BASE PLOT
+        #######################################################################
+        lnT = np.loadtxt(loadpath + 'T.txt')
+        lnrho = np.loadtxt(loadpath + 'rho.txt')
+        lnk_planck = np.loadtxt(loadpath + 'planck.txt')
+        plancks = []
+        for i, T in enumerate(lnT):   
+            planck = [ np.log( np.exp( lnk_planck[i,j])) for j, rho in enumerate(lnrho)]
+            plancks.append(planck)
+            
+        for planck in plancks:
+            ax[2].plot(np.log10(np.exp(lnrho)), planck, c = 'k')      
+            
+        ax[2].axvline( np.log10(np.exp(lnrho[0])), c = 'r')
+        ax[2].grid()
+        ax[2].set_title('Data from Elad')
+        ax[2].set_xlabel(r'Density $\log_{10}( \rho )$ [g/cm$^3$]')
+        ax[2].set_ylabel(r'Opacity $\log_{10}(\kappa)$ [1/cm$^{-1}$]')

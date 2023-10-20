@@ -102,6 +102,7 @@ def calc_thermr(rs, T, rho, threshold = 1):
     '''
     tau = 0
     taus = []
+    cumulative_taus = []
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
     #print('--new ray--')
@@ -109,17 +110,17 @@ def calc_thermr(rs, T, rho, threshold = 1):
         new_tau = optical_depth(T[i], rho[i], dr)
         tau += new_tau
         taus.append(new_tau)
-        #print('tau: ', tau)
+        cumulative_taus.append(tau)
         i -= 1
-
     thermr =  rs[i] #i it's negative
-    return taus, thermr
+    return taus, thermr, cumulative_taus
 
 def get_thermr(fix, m):
     ''' Wrapper function'''
     rays_T, rays_den, _, radii = ray_maker(fix, m)
     # Get the thermr
     rays_tau = []
+    rays_cumulative_taus = []
     thermr = np.zeros(len(rays_T))
     
     for i in range(len(rays_T)):
@@ -129,13 +130,14 @@ def get_thermr(fix, m):
         Den_of_single_ray = rays_den[i]
         
         # Get thermr
-        taus, photo = calc_thermr(radii, T_of_single_ray, Den_of_single_ray, 
+        taus, photo, cumulative_taus = calc_thermr(radii, T_of_single_ray, Den_of_single_ray, 
                                         threshold = 5)
         # Store
         rays_tau.append(taus)
+        rays_cumulative_taus.append(cumulative_taus)
         thermr[i] = photo
 
-    return rays_T, rays_den, rays_tau, thermr, radii
+    return rays_T, rays_den, rays_tau, thermr, radii, rays_cumulative_taus
 
 ################
 # MAIN
@@ -153,25 +155,27 @@ if __name__ == "__main__":
         loadpath = '6/'
 
     for fix in fixes:
-        rays_T , rays_den , tau, photoo, radii = get_thermr(fix,m)
+        rays_T , rays_den , tau, photoo, radii, cumulative_taus = get_thermr(fix,m)
         photoo /=  6.957e10
     #%% Plot tau
     plot_tau = np.zeros( (len(radii), len(tau)))
     for i in range(192):
-        for j in range(len(tau[i])):
-            temp = tau[i][j]
+        for j in range(len(cumulative_taus)):
+            temp = cumulative_taus[i][j]
             plot_tau[-j-1,i] =  temp
             if temp>5:
                 plot_tau[0:-j, i ] = temp
                 break
+        plot_tau[0:-j, i ] = temp
 
     img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_tau.T, 
-                          cmap = 'Greys', norm = colors.LogNorm(vmin = 1e-6, vmax =  5))
+                          cmap = 'Greys', norm = colors.LogNorm(vmin = 1e-4, vmax =  5))
     cbar = plt.colorbar(img)
     plt.title('Rays')
     cbar.set_label('Optical depth')
     plt.xlabel('Distance from BH [$R_\odot$]')
+    # plt.ylim(60,80)
     plt.ylabel('Observers')
     # plt.xscale('log')
     img.axes.get_yaxis().set_ticks([])
-    plt.show()
+

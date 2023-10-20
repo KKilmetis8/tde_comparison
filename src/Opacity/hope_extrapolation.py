@@ -13,16 +13,14 @@ plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 import colorcet
-from scipy.interpolate import CubicSpline
-from scipy.interpolate import interp1d
 
 ##
 # VARIABLES 
 ##
 
-kind = 'planck'
-save = False
-plot_linear = True
+kind = 'scatter'
+save = True
+plot_linear = False
 real_value = False
 plot_mesh = False
 
@@ -34,57 +32,84 @@ plot_mesh = False
 loadpath = 'src/Opacity/'
 lnT = np.loadtxt(loadpath + 'T.txt')
 lnrho = np.loadtxt(loadpath + 'rho.txt')
+if kind == 'rosseland':
+    lnk = np.loadtxt(loadpath + 'ross.txt')
+elif kind == 'planck':
+    lnk = np.loadtxt(loadpath + 'planck.txt')
+elif kind == 'scatter':
+    lnk = np.loadtxt(loadpath + 'scatter.txt')
 
 # Minimum we need is 3.99e-22, Elad's lnrho stops at 1e-10
 #we set rho_max = min(lnrho), and use lnrho[1] to make the line. 
 # Otherwise there's a jump.
-rho_min = np.log(3.99e-22)
-rho_max = lnrho[0] #np.log(8e-11)
-expanding_rho = np.arange(rho_min,rho_max, 0.2)
-table_expansion = np.zeros( (len(lnT), len(expanding_rho) ))
+rho_min = np.log(3.99e-20)
 delta_rho = lnrho[1] - lnrho[0]
+rho_max = lnrho[0] - delta_rho
+
+expanding_rho = np.arange(rho_min,rho_max, delta_rho)
+table_expansion = np.zeros( (len(lnT), len(expanding_rho) ))
+
 
 for i in range(len(lnT)):
-    if kind == 'rosseland':
-        lnk = np.loadtxt(loadpath + 'ross.txt')
-    elif kind == 'planck':
-        lnk = np.loadtxt(loadpath + 'planck.txt')
-    elif kind == 'scatter':
-        lnk = np.loadtxt(loadpath + 'scatter.txt')
 
     opacity_row = lnk[i]
+    fit = np.polyfit(lnrho[0:100], opacity_row[0:100], deg = 1)
     
-    if kind == 'planck':
-        delta_opacity = opacity_row[3] - opacity_row[2]
-        delta_rho_fix = lnrho[3] - lnrho[2]
-        m = np.divide(delta_opacity, delta_rho_fix)
-        for j in range(len(expanding_rho)-1):           
-            table_expansion[i,j] = opacity_row[0] + m * (expanding_rho[j]-lnrho[0])
-    else:
-        delta_opacity = opacity_row[1] - opacity_row[0]
-        m = np.divide(delta_opacity, delta_rho)
-        for j in range(len(expanding_rho)-1):           
-            table_expansion[i,j] = opacity_row[0] + m * (expanding_rho[j]-lnrho[0])
+    for j, rho in enumerate(expanding_rho):
+        table_expansion[i, j] = fit[0] * rho + fit[1]
+    # if kind == 'planck':s
+    # midx = 1
+    # sidx = 1
+    # delta_opacity = opacity_row[midx] - opacity_row[midx - 1]
+    # delta_rho_fix = lnrho[midx] - lnrho[midx -1]
+    # m = np.divide(delta_opacity, delta_rho_fix)
+    # for j in range(len(expanding_rho)):           
+    #     table_expansion[i,j] = opacity_row[sidx] + m * (expanding_rho[j]-lnrho[sidx])
+    # else:
+    #     delta_opacity = opacity_row[1] - opacity_row[0]
+    #     m = np.divide(delta_opacity, delta_rho)
+    #     for j in range(len(expanding_rho)-1):           
+    #         table_expansion[i,j] = opacity_row[2] + m * (expanding_rho[j]-lnrho[2])
 
-    expanding_rho[-1] = lnrho[0]
-    table_expansion[i][-1] = opacity_row[0]
+    # expanding_rho[-1] = lnrho[0]
+    # table_expansion[i][-1] = opacity_row[0]
 # Combine
 # lnrho_adjust = np.delete(lnrho,0)
 # lnk = np.delete(lnk,0, axis = 1)
 ln_new_rho = np.concatenate((expanding_rho, lnrho))
 ln_new_table = np.concatenate( (table_expansion, lnk), axis = 1)
 
-
 if save:
     if kind == 'rosseland':
-        np.savetxt(loadpath + 'ross_expansion.txt', ln_new_table)
+        np.savetxt(loadpath + 'hope_ross_expansion.txt', ln_new_table)
     elif kind == 'planck':
-        np.savetxt(loadpath + 'planck_expansion.txt', ln_new_table)
+        np.savetxt(loadpath + 'hope_planck_expansion.txt', ln_new_table)
     elif kind == 'scatter':
-        np.savetxt(loadpath + 'scatter_expansion.txt', ln_new_table)
+        np.savetxt(loadpath + 'hope_scatter_expansion.txt', ln_new_table)
             
-    np.savetxt(loadpath + 'big_lnrho.txt', ln_new_rho)
+    np.savetxt(loadpath + 'hope_big_lnrho.txt', ln_new_rho)
+    
+    # Extrapol.
+    lnrho = np.loadtxt(loadpath + 'hope_big_lnrho.txt')
+    lnk_planck = np.loadtxt(loadpath + 'hope_planck_expansion.txt')
+    
+    plancks = []
+    for i, T in enumerate(lnT):   
+        planck = [ np.log10( np.exp(lnk_planck[i, j])) for j, rho in enumerate(lnrho)]
+        plancks.append(planck)
+        
+    oldrho = np.loadtxt(loadpath + 'rho.txt')
 
+    for planck in plancks:
+        plt.plot(np.log10(np.exp(lnrho)), planck, c = 'k')           
+        
+    plt.axvline( np.log10(np.exp(oldrho[0])), c = 'r')
+    plt.grid()
+    #plt.ylim(-120, 10)
+    plt.title( 'Our Extrapolation, Every T')
+    plt.xlabel(r'Density $\log_{10}( \rho )$ [g/cm$^3$]')
+    plt.ylabel(r'Opacity $\log_{10}(\kappa)$ [1/cm$^{-1}$]')
+    
 # Plotting
 if plot_mesh:
     # Norm

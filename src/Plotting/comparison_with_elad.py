@@ -25,7 +25,7 @@ elad_red = mat['L_fld']
 # Ours Load
 m = 6
 x = np.loadtxt('data/L_spectrum_m' + str(m) + '.txt')[0] # x = logν
-b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt') 
+b = np.loadtxt('data/UV_bluedata_m'+ str(m) + '.txt') 
 fld_data = np.loadtxt('data/reddata_m'+ str(m) +'.txt')
 
 # Elad Plot

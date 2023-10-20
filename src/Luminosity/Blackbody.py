@@ -94,8 +94,8 @@ if __name__ == "__main__":
     
     # Choose BH and freq range
     m = 6
-    n_min = 1e12 
-    n_max = 1e20
+    n_min = 6e13
+    n_max = 3e18
     n_spacing = 100
     x_arr = log_array(n_min, n_max, n_spacing)
     
@@ -113,7 +113,7 @@ if __name__ == "__main__":
     #%% Get Photosphere
     fixes, days = select_fix(m)
     for idx, fix in enumerate(fixes):
-        rays_T, rays_den, rays_tau, photosphere, radii = get_thermr(fix, m)
+        rays_T, rays_den, rays_tau, photosphere, radii, cumulative_taus = get_thermr(fix, m)
 
         #%%   
         dr = radii[1] - radii[0]
@@ -122,7 +122,7 @@ if __name__ == "__main__":
 
         for j in range(192):
             print('ray :', j)
-            for i in range(len(rays_tau[j])):        
+            for i in range(len(cumulative_taus[j])):        
                 # Temperature, Density and volume: np.array from near to the BH
                 # to far away. 
                 # Thus we will use negative index in the for loop.
@@ -130,7 +130,7 @@ if __name__ == "__main__":
                 reverse_idx = -i -1
                 T = rays_T[j][reverse_idx]
                 rho = rays_den[j][reverse_idx] 
-                opt_depth = rays_tau[j][i]
+                opt_depth = cumulative_taus[j][i]
                 cell_vol = volume[reverse_idx]
                 # print('pure tau: ', opt_depth)
                 # print('T:', T)
@@ -185,13 +185,18 @@ if __name__ == "__main__":
             plt.loglog()
             plt.grid()
             plt.savefig('Figs/Ltildan_m' + str(m) + '_snap' + str(fix))
-            plt.show()
         
-            plt.figure(figsize=(4,5))
-            plt.plot(n_arr, n_arr * lum_tilde_n)
-            plt.xlabel(r'$log_{10}\nu$ [Hz]')
-            plt.ylabel(r'$log_{10}(\nu\tilde{L}_\nu)$ [erg/s]')
-            plt.loglog()
-            plt.grid()
+            fig, ax1 = plt.subplots( figsize = (6,6) )
+            ax1.plot(n_arr, n_arr * lum_tilde_n)
+            ax2 = ax1.twiny()
+            ax1.set_xlabel(r'$log_{10}\nu$ [Hz]')
+            ax1.set_ylabel(r'$log_{10}(\nu\tilde{L}_\nu)$ [erg/s]')
+            ax1.loglog()
+            ax1.grid()
+            wavelength = np.divide(c, n_arr) * 1e8 # A
+            ax2.plot(wavelength, n_arr * lum_tilde_n)
+            ax2.invert_xaxis()
+            ax2.loglog()
+            ax2.set_xlabel(r'Wavelength [\AA]')
             plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
-            plt.show()
+                        

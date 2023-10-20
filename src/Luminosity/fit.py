@@ -44,7 +44,7 @@ def tofit(n, R, T):
 
 if __name__ == '__main__':
     plot = True
-    save = False
+    save = True
     do = True
 
     # Load & Unpack
@@ -63,7 +63,7 @@ if __name__ == '__main__':
 
     if do:
         Blue = []
-        for i in range(1 , len(data)):
+        for i in range(27 , len(data)):
             Lums = data[i] 
             # print(Lums)
             Lums_fit = Lums[freq_min_idx:freq_max_idx]
@@ -90,7 +90,7 @@ if __name__ == '__main__':
               
         for i, ax in enumerate(axs2):
             i += 1
-            Lums = data[i] # First snapshot
+            Lums = data[26 + i] # First snapshot
             Lums_fit = Lums[freq_min_idx:freq_max_idx]
             fit = curve_fit(tofit, fit_freqs, Lums_fit, p0 = (init_R, init_T))
             

@@ -25,7 +25,7 @@ lnk_planck = np.loadtxt(loadpath + 'planck.txt')
 lnk_scatter = np.loadtxt(loadpath + 'scatter.txt')
 
 # Minimum we need is 3.99e-22, Elad's lnrho stops at 1e-10
-kind = 'scatter'
+kind = 'planck'
 save = True
 
 rho_min = np.log(3.99e-22)
@@ -54,13 +54,13 @@ new_table = np.concatenate( (table_expansion, lnk_scatter), axis = 1)
 
 if save:
     if kind == 'rosseland':
-        np.savetxt('OLD stuff/OLDross_expansion.txt', new_table)
+        np.savetxt(loadpath + 'ross_expansion.txt', new_table)
     elif kind == 'planck':
-        np.savetxt('OLD stuff/OLDplanck_expansion.txt', new_table)
+        np.savetxt(loadpath + 'planck_expansion.txt', new_table)
     elif kind == 'scatter':
-        np.savetxt('OLD stuff/OLDscatter_expansion.txt', new_table)
+        np.savetxt(loadpath + 'scatter_expansion.txt', new_table)
             
-    np.savetxt('OLD stuff/OLDbig_lnrho.txt', new_rho)
+    np.savetxt(loadpath + 'big_lnrho.txt', new_rho)
 
 # Plotting
 plot = True

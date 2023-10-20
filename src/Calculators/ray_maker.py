@@ -58,7 +58,7 @@ def ray_maker(fix, m):
 
     # Ensure that the regular grid cells are smaller than simulation cells
     start = 2 * Rt
-    stop = 2000 #400 * Rt
+    stop = 10_000 #400 * Rt
     if m == 6:
         num = 750 + 1 # about the average of cell radius
     if m == 4:
