@@ -23,6 +23,7 @@ import colorcet
 # Custom Imports
 from src.Calculators.ray_maker import ray_maker
 from src.Opacity.opacity_table import opacity
+from src.Luminosity.photosphere import get_photosphere
 # from src.Luminosity.photosphere import get_photosphere
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -151,15 +152,18 @@ def doer_of_thing(fix, m):
     rays_T, rays_den, rays, radii = ray_maker(fix, m)
 
     # NEW: Find the correct spehere radius
-    if m == 4:
-        if fix < 270:
-            sphere_radius = 3000 
-        elif np.logical_and(fix > 270, fix < 290):
-            sphere_radius = 3500
-        else:
-            sphere_radius = 7000
-    if m == 6:
-        sphere_radius = 900
+    # if m == 4:
+    #     if fix < 270:
+    #         sphere_radius = 3000 
+    #     elif np.logical_and(fix > 270, fix < 290):
+    #         sphere_radius = 3500
+    #     else:
+    #         sphere_radius = 7000
+    # if m == 6:
+    #     sphere_radius = 900
+    _, photos, _ = get_photosphere(rays_T, rays_den, radii)
+    sphere_radius = np.max(photos)/Rsol_to_cm
+    print(sphere_radius)
 
     # Calculate Flux
     grad_E, idx = grad_calculator(rays, radii, sphere_radius)

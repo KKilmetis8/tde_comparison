@@ -16,7 +16,6 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 
 # Vanilla Imports
 import numpy as np
-import numba
 import healpy as hp
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -67,7 +66,6 @@ def optical_depth(T, rho, dr):
     # Make it fall inside the table: from here the extrapolation is constant
     # This could be made faster
     if T > np.exp(17.876):
-        # print('high T')
         T = np.exp(17.87)
     
     # Lookup table
@@ -178,4 +176,5 @@ if __name__ == "__main__":
     plt.ylabel('Observers')
     # plt.xscale('log')
     img.axes.get_yaxis().set_ticks([])
+    plt.show()
 

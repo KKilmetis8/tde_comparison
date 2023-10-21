@@ -12,7 +12,6 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 
 # Vanilla Imports
 import numpy as np
-import numba
 import healpy as hp
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -36,8 +35,7 @@ def get_kappa(T, rho, dr):
     CHECK THE IFs
     '''    
     # If there is nothing, the ray continues unimpeded
-    # if rho < np.exp(-49.3):
-    if rho < np.exp(-35):
+    if rho < np.exp(-49.3):
         return 0
     
     # Stream material, is opaque
@@ -52,9 +50,9 @@ def get_kappa(T, rho, dr):
     # Lookup table
     kp = opacity(T, rho,'planck', ln = False)
     ks = opacity(T, rho,'scattering', ln = False)
-    kappa =  (kp + ks) * dr
+    kappar =  (kp + ks) * dr
     
-    return kappa
+    return kappar
 
 def calc_photosphere(rs, T, rho):
     '''
@@ -63,25 +61,23 @@ def calc_photosphere(rs, T, rho):
     threshold = 2/3
     kappa = 0
     kappas = []
+    cumulative_kappas = []
     dr = rs[1]-rs[0] # Cell seperation
     i = -1 # Initialize reverse loop
     while kappa <= threshold and i > -len(T):
         new_kappa = get_kappa(T[i], rho[i], dr)
         kappa += new_kappa
         kappas.append(new_kappa)
-        #print('kappa: ', kappa)
+        cumulative_kappas.append(kappa)
         i -= 1
-    if kappa == threshold:
-        print('Photoshpere reached, you are at ', kappa)
 
     photo =  rs[i] #i it's negative
-    return kappas,photo
+    return kappas, photo, cumulative_kappas
 
-def get_photosphere(fix, m):
-    ''' Wrapper function'''
-    rays_T, rays_den, _, radii = ray_maker(fix, m)
+def get_photosphere(rays_T, rays_den, radii):
     # Get the thermr
     rays_kappa = []
+    rays_cumulative_kappas = []
     photos = np.zeros(len(rays_T))
     
     for i in range(len(rays_T)):
@@ -90,12 +86,13 @@ def get_photosphere(fix, m):
         Den_of_single_ray = rays_den[i]
         
         # Get photosphere
-        kappas, photo = calc_photosphere(radii, T_of_single_ray, Den_of_single_ray)
+        kappas, photo, cumulative_kappas = calc_photosphere(radii, T_of_single_ray, Den_of_single_ray)
         # Store
         rays_kappa.append(kappas)
+        rays_cumulative_kappas.append(cumulative_kappas)
         photos[i] = photo
 
-    return rays_T, rays_den, rays_kappa, photos, radii
+    return rays_kappa, photos, rays_cumulative_kappas
 
 ################
 # MAIN
@@ -113,27 +110,29 @@ if __name__ == "__main__":
         loadpath = '6/'
 
     for fix in fixes:
-        rays_T, rays_den, rays_kappa, photos, radii = get_photosphere(fix,m)
+        rays_T, rays_den, _, radii = ray_maker(fix, m)
+        rays_kappa, photos, rays_cumulative_kappas = get_photosphere(rays_T, rays_den, radii)
         photos /=  6.957e10
+        print(np.max(photos))
     
     plot_kappa = np.zeros( (len(radii), len(rays_kappa)))
     for i in range(192):
-        for j in range(len(rays_kappa[i])):
-            temp = rays_kappa[i][j]
+        for j in range(len(rays_cumulative_kappas)):
+            temp = rays_cumulative_kappas[i][j]
             plot_kappa[-j-1,i] =  temp
             if temp > 2/3:
+                print('Photosphere reached')
                 plot_kappa[0:-j, i ] = temp
                 break
+        plot_kappa[0:-j, i ] = temp
 
     img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_kappa.T, 
-                          cmap = 'Oranges', norm = colors.LogNorm(vmin = 1e-4, vmax =  2/3))
+                          cmap = 'Oranges', norm = colors.LogNorm(vmin = 1e-2, vmax =  2/3))
     cbar = plt.colorbar(img)
     plt.title('Rays')
     cbar.set_label('Photosphere')
     plt.xlabel('Distance from BH [$R_\odot$]')
     plt.ylabel('Observers')
-    # plt.xscale('log')
     img.axes.get_yaxis().set_ticks([])
-    plt.xlim(0,1500)
-    plt.savefig('Figs/photosphere.png')
+    plt.savefig('Final plot/photosphere.png')
     plt.show()

@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-@author: paola
+@author: paola, konstantinos
 
 Produce a new table already expanded, in order to interpolate here.
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -18,8 +20,9 @@ import colorcet
 # VARIABLES 
 ##
 
-kind = 'scatter'
-save = True
+kind = 'rosseland'
+save = False
+plot = True
 plot_linear = False
 real_value = False
 plot_mesh = False
@@ -88,7 +91,8 @@ if save:
         np.savetxt(loadpath + 'hope_scatter_expansion.txt', ln_new_table)
             
     np.savetxt(loadpath + 'hope_big_lnrho.txt', ln_new_rho)
-    
+
+if plot:   
     # Extrapol.
     lnrho = np.loadtxt(loadpath + 'hope_big_lnrho.txt')
     lnk_planck = np.loadtxt(loadpath + 'hope_planck_expansion.txt')
@@ -109,6 +113,7 @@ if save:
     plt.title( 'Our Extrapolation, Every T')
     plt.xlabel(r'Density $\log_{10}( \rho )$ [g/cm$^3$]')
     plt.ylabel(r'Opacity $\log_{10}(\kappa)$ [1/cm$^{-1}$]')
+    plt.show()
     
 # Plotting
 if plot_mesh:
@@ -160,60 +165,3 @@ if plot_mesh:
         plt.savefig('Figs/scatter.png')
     plt.show()
     
-
-if plot_linear:   
-    ln_rho_old = np.loadtxt('OLD stuff/OLDbig_lnrho.txt')
-    if kind == 'rosseland':
-        ln_old = np.loadtxt('OLD stuff/OLDross_expansion.txt')
-    elif kind == 'planck':
-        ln_old = np.loadtxt('OLD stuff/OLDplanck_expansion.txt')
-    elif kind == 'scatter':
-        ln_old = np.loadtxt('OLD stuff/OLDscatter_expansion.txt')
-    
-    if real_value:
-        rho_old = np.exp(ln_rho_old)
-        rho = np.exp(lnrho)
-        old = np.exp(ln_old)  
-        k = np.exp(lnk)     
-        new_rho = np.exp(ln_new_rho)
-        new_table = np.exp(ln_new_table) 
-
-        plt.plot(new_rho, new_table[i, :], label = 'HOPE extrapolation', c = 'orange')
-        plt.plot(rho_old, old[i, :], label = 'OLD extrapolation', linestyle = '--', c ='g')
-        plt.scatter(rho, k[i, :], c = 'r', s = 2, label = 'Elad')
-        plt.axvline(rho[0], c = 'black', linestyle = '--')
-        #plt.text(-50, 25, 'T:  {:.2f}'.format(np.exp(lnT[i])) + '\n position: ' + str(i))
-        plt.xlabel(r'$\rho$ [g/cm$^2$]')
-        plt.ylabel('K [1/cm]')
-        #plt.ylim(-50,25)
-        #plt.legend()
-        if kind == 'rosseland':
-            plt.title('Rosseland Mean Opacity')
-            #plt.savefig('Figs/rosseland_linear.png')
-            #plt.savefig('Figs/rosseland_linear.png')
-        elif kind == 'planck':
-            plt.title('Planck Mean Opacity')
-        elif kind == 'scatter':
-            plt.title('Scatter Mean Opacity')
-        plt.show()
-
-    else:
-        for i in range(62,len(lnT)):
-            fig  = plt.figure(figsize = (4,3))  
-            plt.plot(ln_new_rho, ln_new_table[i, :], label = 'HOPE extrapolation', c = 'orange')
-            plt.plot(ln_rho_old, ln_old[i, :], label = 'OLD extrapolation', linestyle = '--', c ='g')
-            plt.scatter(lnrho, lnk[i, :], c = 'r', s = 2, label = 'Elad')
-            plt.axvline(lnrho[0], c = 'black', linestyle = '--')
-            plt.text(-50, 20, 'T:  {:.2f}'.format(np.exp(lnT[i])) + '\n position: ' + str(i))
-            plt.ylim(-100,30)
-            plt.xlabel(r'$\ln\rho$ [g/cm$^2$]')
-            plt.ylabel(r'$\ln$ K [1/cm]')
-            #plt.legend()
-            if kind == 'rosseland':
-                plt.title('Rosseland Mean Opacity')
-                #plt.savefig('Figs/rosseland_linear.png')
-            elif kind == 'planck':
-                plt.title('Planck Mean Opacity')
-            elif kind == 'scatter':
-                plt.title('Scatter Mean Opacity')
-            plt.show()
