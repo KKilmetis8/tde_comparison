@@ -29,7 +29,6 @@ plt.rcParams['axes.facecolor'] = 'whitesmoke'
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_maker import ray_maker
 
-
 ################
 # FUNCTIONS
 ################
@@ -110,12 +109,10 @@ def calc_thermr(rs, T, rho, threshold = 1):
         taus.append(new_tau)
         cumulative_taus.append(tau)
         i -= 1
-    thermr =  rs[i] #i it's negative
+    thermr =  rs[i] #i it's negativesrc/Luminosity/Blackbody.py
     return taus, thermr, cumulative_taus
 
-def get_thermr(fix, m):
-    ''' Wrapper function'''
-    rays_T, rays_den, _, radii = ray_maker(fix, m)
+def get_thermr(rays_T, rays_den, radii):
     # Get the thermr
     rays_tau = []
     rays_cumulative_taus = []
@@ -135,7 +132,7 @@ def get_thermr(fix, m):
         rays_cumulative_taus.append(cumulative_taus)
         thermr[i] = photo
 
-    return rays_T, rays_den, rays_tau, thermr, radii, rays_cumulative_taus
+    return rays_tau, thermr, rays_cumulative_taus
 
 ################
 # MAIN
@@ -160,7 +157,8 @@ if __name__ == "__main__":
     fix_thermr_geom = np.zeros(len(fixes))
 
     for index,fix in enumerate(fixes):
-        rays_T , rays_den , tau, thermr, radii, cumulative_taus = get_thermr(fix,m)
+        rays_T, rays_den, _, radii = ray_maker(fix, m)
+        tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
         thermr /=  6.957e10
         fix_thermr_arit[index] = np.mean(thermr)
         fix_thermr_geom[index] = gmean(thermr)

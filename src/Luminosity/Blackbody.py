@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 AEK = '#F1C410'
 
 # Chocolate imports
+from src.Calculators.ray_maker import ray_maker
 from src.Luminosity.thermR import get_thermr
 from src.Opacity.opacity_table import opacity
 
@@ -90,7 +91,7 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 # MAIN
 if __name__ == "__main__":
     plot = True
-    save = True
+    save = False
     
     # Choose BH and freq range
     m = 6
@@ -111,10 +112,11 @@ if __name__ == "__main__":
     luminosity_fld_fix = fld_data[1]
     n_arr = 10**x_arr
     
-    #%% Get Photosphere
+    #%% Get thermalisation radius
     fixes, days = select_fix(m)
     for idx, fix in enumerate(fixes):
-        rays_T, rays_den, rays_tau, photosphere, radii, cumulative_taus = get_thermr(fix, m)
+        rays_T, rays_den, _, radii = ray_maker(fix, m)
+        rays_tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
 
         #%%   
         dr = radii[1] - radii[0]
@@ -185,7 +187,7 @@ if __name__ == "__main__":
             plt.ylabel(r'$log_{10}\tilde{L}_\nu$ [erg/sHz]')
             plt.loglog()
             plt.grid()
-            plt.savefig('Figs/Ltildan_m' + str(m) + '_snap' + str(fix))
+            #plt.savefig('Figs/Ltildan_m' + str(m) + '_snap' + str(fix))
         
             fig, ax1 = plt.subplots( figsize = (6,6) )
             ax1.plot(n_arr, n_arr * lum_tilde_n)
@@ -199,6 +201,6 @@ if __name__ == "__main__":
             ax2.invert_xaxis()
             ax2.loglog()
             ax2.set_xlabel(r'Wavelength [\AA]')
-            plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
+            #plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
             plt.show()
                         

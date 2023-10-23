@@ -27,6 +27,7 @@ import matplotlib.pyplot as plt
 AEK = '#F1C410'
 
 # Chocolate imports
+from src.Calculators.ray_maker import ray_maker
 from src.Luminosity.thermR import get_thermr
 from src.Opacity.opacity_table import opacity
 
@@ -90,7 +91,7 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 # MAIN
 if __name__ == "__main__":
     plot = True
-    save = True
+    save = False
     
     # Choose BH and freq range
     m = 6
@@ -101,7 +102,7 @@ if __name__ == "__main__":
     
     # Save frequency range
     if save:
-        with open('data/L_spectrum_m'+ str(m) + '.txt', 'w') as f:
+        with open('data/frequencies_m'+ str(m) + '.txt', 'w') as f:
             f.write('# exponents x of frequencues: n = 10^x  \n')
             f.write(' '.join(map(str, x_arr)) + '\n') 
             f.close()
@@ -111,17 +112,19 @@ if __name__ == "__main__":
     luminosity_fld_fix = fld_data[1]
     n_arr = 10**x_arr
     
-    #%% Get Photosphere
+    #%% Get thermalisation radius
     fixes, days = select_fix(m)
     for idx, fix in enumerate(fixes):
-        rays_T, rays_den, rays_tau, photosphere, radii, cumulative_taus = get_thermr(fix, m)
+        rays_T, rays_den, _, radii, index_observers, new_thetas, new_phis = ray_maker(fix, m, select=True)
+        rays_tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
 
         #%%   
         dr = radii[1] - radii[0]
-        volume = 4 * np.pi * radii**2 * dr  / 192         
-        lum_n = np.zeros(len(x_arr))
+        volume = 4 * np.pi * radii**2 * dr  / 192 
+        lum_ray = []        
 
-        for j in range(192):
+        for j in index_observers:
+            lum_n = np.zeros(len(x_arr))
             print('ray :', j)
             for i in range(len(cumulative_taus[j])):        
                 # Temperature, Density and volume: np.array from near to the BH
@@ -153,26 +156,16 @@ if __name__ == "__main__":
                 
                 for i, n in enumerate(n_arr): #we need linearspace
                     lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
-                    lum_n[i] += lum_n_cell
+                    lum_n[i] = lum_n_cell
+
                     
-        # Normalise with the bolometric luminosity from red curve (FLD)
-        const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
-        lum_tilde_n = lum_n * const_norm
-        #%%
-        # Find the bolometic energy (should be = to the one from FLD)
-        bolom_integrand =  n_arr * lum_tilde_n
-        bolom = np.log(10) * np.trapz(bolom_integrand, x_arr)
-        bolom = "{:.4e}".format(bolom) #scientific notation
-        print('bolometric L:', bolom)
+            # Normalise with the bolometric luminosity from red curve (FLD)
+            const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
+            lum_tilde_n = lum_n * const_norm
+            lum_ray.append(lum_tilde_n)
 
         # Save data and plot
         if save:
-            # Bolometric
-            with open('data/L_tilda_bolom_m' + str(m) + '.txt', 'a') as fbolo:
-                fbolo.write('#snap '+ str(fix) + '\n')
-                fbolo.write(bolom + '\n')
-                fbolo.close()
-                
             # Spectrum
             with open('data/L_tilda_spectrum_m'+ str(m) + '.txt', 'a') as f:
                 f.write('#snap '+ str(fix) + ' L_tilde_n \n')
@@ -180,12 +173,12 @@ if __name__ == "__main__":
                 f.close()    
         if plot:
             plt.figure( figsize=(4,5))
-            plt.plot(n_arr, lum_tilde_n)
+            plt.plot(n_arr, lum_tilde_n[1])
             plt.xlabel(r'$log_{10}\nu$ [Hz]')
             plt.ylabel(r'$log_{10}\tilde{L}_\nu$ [erg/sHz]')
             plt.loglog()
             plt.grid()
-            plt.savefig('Figs/Ltildan_m' + str(m) + '_snap' + str(fix))
+            #plt.savefig('Figs/Ltildan_m' + str(m) + '_snap' + str(fix))
         
             fig, ax1 = plt.subplots( figsize = (6,6) )
             ax1.plot(n_arr, n_arr * lum_tilde_n)
@@ -199,5 +192,6 @@ if __name__ == "__main__":
             ax2.invert_xaxis()
             ax2.loglog()
             ax2.set_xlabel(r'Wavelength [\AA]')
-            plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
+            #plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
+            plt.show()
                         
