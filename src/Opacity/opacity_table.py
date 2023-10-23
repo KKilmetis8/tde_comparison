@@ -38,7 +38,7 @@ lnk_scatter_inter = RegularGridInterpolator( (lnT, lnrho), lnk_scatter)
 def opacity(T, rho, kind, ln = True) -> float:
     '''
     Return the rosseland mean opacity in [cgs], given a value of density,
-    temperature and and a kind of opacity. If ln = True, then T and rho are
+    temperature and a kind of opacity. If ln = True, then T and rho are
     lnT and lnrho. Otherwise we convert them.
     
      Parameters

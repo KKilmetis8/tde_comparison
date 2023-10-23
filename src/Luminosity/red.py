@@ -161,8 +161,8 @@ def doer_of_thing(fix, m):
     #         sphere_radius = 7000
     # if m == 6:
     #     sphere_radius = 900
-    _, photos, _ = get_photosphere(rays_T, rays_den, radii)
-    sphere_radius = np.max(photos)/Rsol_to_cm
+    _, _, photos = get_photosphere(rays_T, rays_den, radii)
+    sphere_radius = np.mean(photos)/Rsol_to_cm
     print(sphere_radius)
 
     # Calculate Flux

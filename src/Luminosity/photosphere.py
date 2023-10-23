@@ -15,7 +15,6 @@ import numpy as np
 import healpy as hp
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-import colorcet
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 3]
@@ -23,15 +22,13 @@ plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
 # Custom Imports
 from src.Opacity.opacity_table import opacity
-from src.Calculators.ray_maker import ray_maker
-
 
 ################
 # FUNCTIONS
 ################
-def get_kappa(T, rho, dr):
+def get_kappa(T: float, rho: float, dr: float):
     '''
-    Calculates the integrand from eq.(8) Steinber&Stone22.
+    Calculates the integrand of eq.(8) Steinberg&Stone22.
     CHECK THE IFs
     '''    
     # If there is nothing, the ray continues unimpeded
@@ -48,15 +45,16 @@ def get_kappa(T, rho, dr):
         T = np.exp(17.87)
     
     # Lookup table
-    kp = opacity(T, rho,'planck', ln = False)
-    ks = opacity(T, rho,'scattering', ln = False)
-    kappar =  (kp + ks) * dr
+    k = opacity(T, rho,'red', ln = False)
+    kappar =  k * dr
     
     return kappar
 
-def calc_photosphere(rs, T, rho):
+def calc_photosphere(T, rho, rs):
     '''
-    Finds and saves the photosphere
+    Input: 1D arrays.
+    Finds and saves the photosphere (in CGS).
+    The kappas' arrays go from far to near the BH.
     '''
     threshold = 2/3
     kappa = 0
@@ -72,13 +70,26 @@ def calc_photosphere(rs, T, rho):
         i -= 1
 
     photo =  rs[i] #i it's negative
-    return kappas, photo, cumulative_kappas
+    return kappas, cumulative_kappas, photo
 
 def get_photosphere(rays_T, rays_den, radii):
-    # Get the thermr
-    rays_kappa = []
+    '''
+    Finds and saves the photosphere (in CGS) for every ray.
+
+    Parameters
+    ----------
+    rays_T, rays_den: n-D arrays.
+    radii: 1D array.
+
+    Returns
+    -------
+    rays_kappas, rays_cumulative_kappas: nD arrays.
+    photos: 1D array.
+    '''
+    # Get the thermalisation radius
+    rays_kappas = []
     rays_cumulative_kappas = []
-    photos = np.zeros(len(rays_T))
+    rays_photo = np.zeros(len(rays_T))
     
     for i in range(len(rays_T)):
         # Isolate each ray
@@ -86,20 +97,23 @@ def get_photosphere(rays_T, rays_den, radii):
         Den_of_single_ray = rays_den[i]
         
         # Get photosphere
-        kappas, photo, cumulative_kappas = calc_photosphere(radii, T_of_single_ray, Den_of_single_ray)
-        # Store
-        rays_kappa.append(kappas)
-        rays_cumulative_kappas.append(cumulative_kappas)
-        photos[i] = photo
+        kappas, cumulative_kappas, photo  = calc_photosphere(T_of_single_ray, Den_of_single_ray, radii)
 
-    return rays_kappa, photos, rays_cumulative_kappas
+        # Store
+        rays_kappas.append(kappas)
+        rays_cumulative_kappas.append(cumulative_kappas)
+        rays_photo[i] = photo
+
+    return rays_kappas, rays_cumulative_kappas, rays_photo
 
 ################
 # MAIN
 ################
 
 if __name__ == "__main__":
-    m = 6 # M_bh = 10^m M_sol | Choose 4 or 6
+    from src.Calculators.ray_maker import ray_maker
+
+    m = 6 
     
     # Make Paths
     if m == 4:
@@ -111,9 +125,9 @@ if __name__ == "__main__":
 
     for fix in fixes:
         rays_T, rays_den, _, radii = ray_maker(fix, m)
-        rays_kappa, photos, rays_cumulative_kappas = get_photosphere(rays_T, rays_den, radii)
-        photos /=  6.957e10
-        print(np.max(photos))
+        rays_kappa, rays_cumulative_kappas, rays_photo = get_photosphere(rays_T, rays_den, radii)
+        rays_photo /=  6.957e10
+        print(np.max(rays_photo))
     
     plot_kappa = np.zeros( (len(radii), len(rays_kappa)))
     for i in range(192):
@@ -129,6 +143,7 @@ if __name__ == "__main__":
     img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_kappa.T, 
                           cmap = 'Oranges', norm = colors.LogNorm(vmin = 1e-2, vmax =  2/3))
     cbar = plt.colorbar(img)
+    plt.axvline(x=np.max(rays_photo), c = 'black', linestyle = '--')
     plt.title('Rays')
     cbar.set_label('Photosphere')
     plt.xlabel('Distance from BH [$R_\odot$]')
