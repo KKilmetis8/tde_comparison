@@ -17,9 +17,9 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 # Vanilla Imports
 import numpy as np
 import healpy as hp
+from scipy.stats import gmean
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-import colorcet
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 3]
@@ -141,40 +141,70 @@ def get_thermr(fix, m):
 # MAIN
 ################
 
-if __name__ == "__main__":
-    m = 6 # M_bh = 10^m M_sol | Choose 4 or 6
+if __name__ == "__main__":    
+    plot_taus = False 
+    plot_thermr = True 
+    m = 6 
     
     # Make Paths
     if m == 4:
-        fixes = [233] #[233, 254, 263, 277, 293, 308, 322]
+        fixes = [233, 254, 263, 277 , 293, 308, 322]
+        days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
         loadpath = '4/'
     if m == 6:
-        fixes = [844] #[844, 881, 925, 950]
+        fixes = [844, 881, 925, 950]
+        days = [1, 1.1, 1.3, 1.4] #t/t_fb
         loadpath = '6/'
+    
+    fix_thermr_arit = np.zeros(len(fixes))
+    fix_thermr_geom = np.zeros(len(fixes))
 
-    for fix in fixes:
-        rays_T , rays_den , tau, photoo, radii, cumulative_taus = get_thermr(fix,m)
-        photoo /=  6.957e10
+    for index,fix in enumerate(fixes):
+        rays_T , rays_den , tau, thermr, radii, cumulative_taus = get_thermr(fix,m)
+        thermr /=  6.957e10
+        fix_thermr_arit[index] = np.mean(thermr)
+        fix_thermr_geom[index] = gmean(thermr)
     #%% Plot tau
-    plot_tau = np.zeros( (len(radii), len(tau)))
-    for i in range(192):
-        for j in range(len(cumulative_taus)):
-            temp = cumulative_taus[i][j]
-            plot_tau[-j-1,i] =  temp
-            if temp>5:
+        if plot_taus:
+            plot_tau = np.zeros( (len(radii), len(tau)))
+            for i in range(192):
+                for j in range(len(cumulative_taus)):
+                    temp = cumulative_taus[i][j]
+                    plot_tau[-j-1,i] =  temp
+                    if temp>5:
+                        plot_tau[0:-j, i ] = temp
+                        break
                 plot_tau[0:-j, i ] = temp
-                break
-        plot_tau[0:-j, i ] = temp
 
-    img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_tau.T, 
-                          cmap = 'Greys', norm = colors.LogNorm(vmin = 1e-4, vmax =  5))
-    cbar = plt.colorbar(img)
-    plt.title('Rays')
-    cbar.set_label('Optical depth')
-    plt.xlabel('Distance from BH [$R_\odot$]')
-    # plt.ylim(60,80)
-    plt.ylabel('Observers')
-    # plt.xscale('log')
-    img.axes.get_yaxis().set_ticks([])
-    plt.show()
+            img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_tau.T, 
+                                cmap = 'Greys', norm = colors.LogNorm(vmin = 1e-4, vmax =  5))
+            cbar = plt.colorbar(img)
+            plt.title('Rays')
+            cbar.set_label('Optical depth')
+            plt.xlabel('Distance from BH [$R_\odot$]')
+            # plt.ylim(60,80)
+            plt.ylabel('Observers')
+            # plt.xscale('log')
+            img.axes.get_yaxis().set_ticks([])
+            plt.show()
 
+        print('Fix ', fix)
+        
+    if plot_thermr:
+        fix_thermr_arit = "{:.4e}".format(fix_thermr_arit)
+        fix_thermr_geom = "{:.4e}".format(fix_thermr_geom)
+        with open('data/thermr_m' + str(m) + '.txt', 'a') as file:
+                file.write('# t/t_fb \n')
+                file.write(' '.join(map(str, days)) + '\n')
+                file.write('# Thermalisation radius arithmetic mean \n')
+                file.write(' '.join(map(str, fix_thermr_arit)) + '\n')
+                file.write('# Thermalisation radius geometric mean \n')
+                file.write(' '.join(map(str, fix_thermr_geom)) + '\n')
+                file.close()
+        plt.plot(days, fix_thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
+        plt.plot(days, fix_thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
+        plt.xlabel(r't/$t_{fb}$')
+        plt.ylabel(r'R$_{th}$ [$R_\odot$]')
+        plt.grid()
+        plt.legend()
+        plt.show()

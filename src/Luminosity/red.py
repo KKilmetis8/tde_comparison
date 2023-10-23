@@ -69,24 +69,23 @@ def grad_calculator(rays, radii, sphere_radius = 15_000):
 
     return grad_E, idx
 
-def converger(rays, radii):
-    
-    grad_Es = []
-    idxs = []
-    for sphere_radius in radii:
-        grad_E, idx = grad_calculator(rays, radii, sphere_radius)
-        grad_Es.append(grad_E)
-        idxs.append(idx)
+# def converger(rays, radii):
+#     grad_Es = []
+#     idxs = []
+#     for sphere_radius in radii:
+#         grad_E, idx = grad_calculator(rays, radii, sphere_radius)
+#         grad_Es.append(grad_E)
+#         idxs.append(idx)
         
-    rel_error = [ 100 * (1 - (grad_Es[i]/grad_Es[i-1])) 
-                 for i in range(1, len(grad_Es))]
+#     rel_error = [ 100 * (1 - (grad_Es[i]/grad_Es[i-1])) 
+#                  for i in range(1, len(grad_Es))]
     
-    plt.figure( figsize = (16,4))
-    plt.plot(radii[1::10], rel_error[::10], '-o', c='k')
-    plt.xlabel('Sphere Radii')
-    plt.ylabel('Relative Error')
-    plt.ylim(-25, 25)
-    return grad_Es, idxs
+#     plt.figure( figsize = (16,4))
+#     plt.plot(radii[1::10], rel_error[::10], '-o', c='k')
+#     plt.xlabel('Sphere Radii')
+#     plt.ylabel('Relative Error')
+#     plt.ylim(-25, 25)
+#     return grad_Es, idxs
     
 def flux_calculator(grad_E, idx, 
                     rays, rays_T, rays_den):
@@ -151,7 +150,7 @@ def flux_calculator(grad_E, idx,
 def doer_of_thing(fix, m):
     rays_T, rays_den, rays, radii = ray_maker(fix, m)
 
-    # NEW: Find the correct spehere radius
+    # Find the correct spehere radius
     # if m == 4:
     #     if fix < 270:
     #         sphere_radius = 3000 
@@ -163,7 +162,7 @@ def doer_of_thing(fix, m):
     #     sphere_radius = 900
     _, _, photos = get_photosphere(rays_T, rays_den, radii)
     sphere_radius = np.mean(photos)/Rsol_to_cm
-    print(sphere_radius)
+    print('Photosphere: ', sphere_radius)
 
     # Calculate Flux
     grad_E, idx = grad_calculator(rays, radii, sphere_radius)
@@ -172,6 +171,7 @@ def doer_of_thing(fix, m):
 
     # Divide by number of observers
     flux = np.sum(flux) / 192
+    
     # Turn to luminosity
     sphere_radius *= Rsol_to_cm
     lum = flux * 4 * np.pi * sphere_radius**2

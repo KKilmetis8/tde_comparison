@@ -56,4 +56,4 @@ for theta in thetas:
         ax.scatter(phi, theta, c = 'k', s=20, marker = 'h')
 plt.grid(True)
 plt.legend()
-#plt.show()
+plt.show()

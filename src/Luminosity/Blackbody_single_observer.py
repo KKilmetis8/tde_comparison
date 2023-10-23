@@ -101,7 +101,7 @@ if __name__ == "__main__":
     
     # Save frequency range
     if save:
-        with open('data/frequencies_m'+ str(m) + '.txt', 'w') as f:
+        with open('data/L_spectrum_m'+ str(m) + '.txt', 'w') as f:
             f.write('# exponents x of frequencues: n = 10^x  \n')
             f.write(' '.join(map(str, x_arr)) + '\n') 
             f.close()
@@ -200,5 +200,4 @@ if __name__ == "__main__":
             ax2.loglog()
             ax2.set_xlabel(r'Wavelength [\AA]')
             plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
-            plt.show()
                         

@@ -7,6 +7,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
+from src.Luminosity.Blackbody import select_fix
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.family'] = 'Times New Roman'
@@ -49,21 +50,24 @@ if __name__ == '__main__':
 
     # Load & Unpack
     path = 'data/'
+    fixes, days = select_fix(m)
+    x = np.loadtxt(path + 'frequencies_m' + str(m) + '.txt') # x = logν
     data = np.loadtxt(path + 'L_tilda_spectrum_m' + str(m) + '.txt')
-    x = data[0] # x = logν
 
     freqs = np.power(10, x)
     init_R = 1e12
     init_T = 3e6
     
-    freq_min_idx = np.argmin( np.abs(freqs -freq_min))
-    freq_max_idx = np.argmin( np.abs(freqs -freq_max))
+    freq_min_idx = np.argmin( np.abs(freqs - freq_min))
+    freq_max_idx = np.argmin( np.abs(freqs - freq_max))
 
     fit_freqs = freqs[freq_min_idx:freq_max_idx]
 
     if do:
-        Blue = []
-        for i in range(27 , len(data)):
+        temp = np.zeros(len(data))
+        radius = np.zeros(len(data))
+        Blue = np.zeros(len(data))
+        for i in range(len(data)):
             Lums = data[i] 
             # print(Lums)
             Lums_fit = Lums[freq_min_idx:freq_max_idx]
@@ -76,10 +80,19 @@ if __name__ == '__main__':
             # b = np.trapz(x_fitted, x) 
             # b *= np.log(10)
             b = 4 * np.pi * (fit[0][0])**2 * sigma * (fit[0][1])**4
-            Blue.append(b)
+            temp[i] = fit[0][1]
+            radius[i] = fit[0][0]
+            Blue[i]= b
             
         if save:
-           np.savetxt('data/UV_bluedata_m' + str(m) + '.txt', Blue) 
+           with open('data/bluedata_m' + str(m) + '.txt', 'w') as f:
+                f.write('# Fitted quantities for snapshots '+ str(fixes) + '\n#Temperature \n')
+                f.write(' '.join(map(str, temp)) + '\n')
+                f.write('# Radius \n')
+                f.write(' '.join(map(str, radius)) + '\n')
+                f.write('# Bolometric L \n')
+                f.write(' '.join(map(str, Blue)) + '\n')
+                f.close()
                 
     if plot:
         fig, axs = plt.subplots(2,2, tight_layout = True)
@@ -89,8 +102,7 @@ if __name__ == '__main__':
                 axs2.append(axs[i,j])
               
         for i, ax in enumerate(axs2):
-            i += 1
-            Lums = data[26 + i] # First snapshot
+            Lums = data[i]
             Lums_fit = Lums[freq_min_idx:freq_max_idx]
             fit = curve_fit(tofit, fit_freqs, Lums_fit, p0 = (init_R, init_T))
             
