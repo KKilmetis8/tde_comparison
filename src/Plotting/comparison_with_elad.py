@@ -18,8 +18,8 @@ plt.rcParams['figure.figsize'] = [5 , 4]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
 plot_curves = False
-plot_radii_sphere = False
-plot_fit = True
+plot_radii_sphere = True
+plot_fit = False
 m = 6
 
 if plot_curves:
@@ -51,8 +51,8 @@ if plot_curves:
     plt.show()
 
 if plot_radii_sphere:
-    photo = np.loadtxt('data/photosphere_'+ str(m) + '.txt') 
-    thermr = np.loadtxt('data/thermr_'+ str(m) + '.txt')
+    photo = np.loadtxt('data/photosphere_m'+ str(m) + '.txt') 
+    thermr = np.loadtxt('data/thermr_m'+ str(m) + '.txt')
     days = np.multiply(photo[0], 40)
     photo_arit = photo[1]
     photo_geom = photo[2]
@@ -64,7 +64,6 @@ if plot_radii_sphere:
     plt.plot(days, thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
     plt.xlabel('Time (days)')
     plt.xlim(40,65)
-    #plt.ylim(10, 1e4)
     plt.ylabel(r'Average radius [$R_\odot$]')
     plt.grid()
     plt.yscale('log')

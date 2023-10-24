@@ -208,6 +208,6 @@ if __name__ == "__main__":
             plt.title('FLD for $10^4 \quad M_\odot$')
             plt.ylim(1e39,1e42)
         plt.grid()
-        plt.savefig('red' + str(m) + '.png')
+        plt.savefig('Final plot/red' + str(m) + '.png')
         plt.show()
 

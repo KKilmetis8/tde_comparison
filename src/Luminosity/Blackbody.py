@@ -67,8 +67,8 @@ def planck(Temperature: float, n: float) -> float:
 def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, n: float):
     """ Luminosity in a cell: L_ni = \epsilon e^(-\tau) B_ni / B where  
     B = \sigma T^4/\pi"""
-    
-    if T > T_high:
+    T_high = np.exp(17.87)
+    if Temperature > T_high:
         # X = 0.734
         # thompson = Density * 0.2 * (1 + X) # [cm^-1] 
         # k_planck = thompson

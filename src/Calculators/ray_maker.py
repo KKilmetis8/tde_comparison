@@ -31,6 +31,8 @@ den_converter = Msol_to_g / Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 
 def select_observer(angles, angle):
+    """ Given an array of angles of lenght = len(observers), 
+    gives you the index of the observer at theta/phi = angle. """
     index = np.argmin(np.abs(angles - angle))
     return index
 
@@ -57,6 +59,8 @@ def ray_maker(fix, m, select = False):
     R = R.value 
     THETA = THETA.value
     PHI = PHI.value
+    print(np.min(PHI))
+    print(np.min(THETA))
     
     #print('Den (weight) from simulation:', np.divide(np.sum(Den*Mass), np.sum(Mass)))
 
@@ -102,68 +106,40 @@ def ray_maker(fix, m, select = False):
     rays = []
     rays_den = []
     rays_T = []
-    if select:
-        new_thetas = []
-        new_phis = []
-        x1_obs = select_observer(thetas, 0)
-        # x2_obs = select_observers(thetas, phis, 0, np.pi)
-        # y1_obs = select_observers(thetas, phis, 0, np.pi/2)
-        # y2_obs = select_observers(thetas, phis, 0, 3*np.pi/2)
-        z1_obs = select_observer(phis, np.pi/2)
-        #z2_obs = select_observer(phis, -np.pi/2)
-        index_observers = np.concatenate((x1_obs, z1_obs))
-        for i in index_observers:
-            # Ray holds Erad
-            rays.append(Rad_casted[: , i])
+    for i, observer in enumerate(observers):
+        # Ray holds Erad
+        rays.append(Rad_casted[: , i])
 
-            # The Density in each ray
-            d_ray = Den_casted[:, i]
-            rays_den.append(d_ray)    
+        # The Density in each ray
+        d_ray = Den_casted[:, i]
+        rays_den.append(d_ray)    
 
-            # The Temperature in each ray
-            t_ray = T_casted[:, i]
-            rays_T.append(t_ray)
-
-            new_thetas.append(thetas[index_observers])
-            new_phis.append(phis[index_observers])
-
-        return rays_T, rays_den, rays, radii, index_observers, new_thetas, new_phis
+        # The Temperature in each ray
+        t_ray = T_casted[:, i]
+        rays_T.append(t_ray)
+    
+    if select == True:
+        return rays_T, rays_den, rays, radii, thetas, phis
     
     else:
-        for i, observer in enumerate(observers):
-            # Ray holds Erad
-            rays.append(Rad_casted[: , i])
-
-            # The Density in each ray
-            d_ray = Den_casted[:, i]
-            rays_den.append(d_ray)    
-
-            # The Temperature in each ray
-            t_ray = T_casted[:, i]
-            rays_T.append(t_ray)
-        
         return rays_T, rays_den, rays, radii
 
-# def select_observers(thetas, phis, theta, phi):
-#     find_theta = np.min(np.abs(thetas-theta))
-#     theta_indexes = []
-#     new_phis = []
-#     for i in range(len(thetas)):
-#         if (np.abs(thetas[i]-theta) == find_theta):
-#             new_phis.append(phis[i])
-#             theta_indexes.append(i)
-#     find_index_phi = np.argmin(np.abs(np.array(new_phis)-phi))
-#     theta_indexes = np.array[theta_indexes]
-#     final_index = theta_indexes[find_index_phi]
-#     #observer = [thetas[final_index], phis[final_index]]
-#     return final_index
+
+def find_observer(rays_T, rays_den, thetas, phis, theta):
+    index_observers = select_observer(thetas, theta)
+    new_thetas = thetas[index_observers]
+    new_phis = phis[index_observers]
+    new_rays_T = rays_T[index_observers]
+    new_rays_den = rays_den[index_observers]
+
+    return new_rays_T, new_rays_den, new_thetas, new_phis
 
 
 if __name__ == '__main__':
     #rays_T, rays_den, _, _ =  ray_maker(844, 6)
-    rays_T, rays_den, rays, radii, index_observers, new_thetas, new_phis = ray_maker(844, 6)
-    fig, ax = plt.subplots(1,1, subplot_kw=dict(projection="mollweide"))
-    ax.scatter(new_thetas, new_phis, c = 'k', s=20, marker = 'h')
-    plt.grid(True)
-    plt.title('Selected observers')
-    plt.show()
+    rays_T, rays_den, rays, radii = ray_maker(844, 6)
+    # fig, ax = plt.subplots(1,1, subplot_kw=dict(projection="mollweide"))
+    # ax.scatter(new_thetas, new_phis, c = 'k', s=20, marker = 'h')
+    # plt.grid(True)
+    # plt.title('Selected observers')
+    # plt.show()

@@ -76,7 +76,7 @@ def optical_depth(T, rho, dr):
 def calc_thermr(rs, T, rho, threshold = 1):
     '''
     Finds and saves the effective optical depth at every cell the ray passess through.
-    We use it to find the thermr.
+    We use it to find the thermr of the ray.
 
     Parameters
     ----------
@@ -92,10 +92,13 @@ def calc_thermr(rs, T, rho, threshold = 1):
     Returns
     -------
     taus : np.array,
-        The optical depth of every cell.
+        The optical depth of a single cell.
         
     thermr : float,
         Where the thermr is for that ray.
+
+    cumulative_taus : np.array,
+        The total optical depth of a single cell.
     '''
     tau = 0
     taus = []
@@ -113,7 +116,7 @@ def calc_thermr(rs, T, rho, threshold = 1):
     return taus, thermr, cumulative_taus
 
 def get_thermr(rays_T, rays_den, radii):
-    # Get the thermr
+    # Get the thermr for every observer
     rays_tau = []
     rays_cumulative_taus = []
     thermr = np.zeros(len(rays_T))
@@ -133,6 +136,7 @@ def get_thermr(rays_T, rays_den, radii):
         thermr[i] = photo
 
     return rays_tau, thermr, rays_cumulative_taus
+
 
 ################
 # MAIN
