@@ -59,10 +59,7 @@ def ray_maker(fix, m, select = False):
     R = R.value 
     THETA = THETA.value
     PHI = PHI.value
-    print(np.min(PHI))
-    print(np.min(THETA))
     
-    #print('Den (weight) from simulation:', np.divide(np.sum(Den*Mass), np.sum(Mass)))
 
     # Ensure that the regular grid cells are smaller than simulation cells
     start = 2 * Rt
@@ -125,15 +122,16 @@ def ray_maker(fix, m, select = False):
         return rays_T, rays_den, rays, radii
 
 
-def find_observer(rays_T, rays_den, thetas, phis, theta):
+def find_observer(rays_T, rays_den, rays, thetas, phis, theta):
     index_observers = select_observer(thetas, theta)
     new_thetas = thetas[index_observers]
     new_phis = phis[index_observers]
     new_rays_T = rays_T[index_observers]
     new_rays_den = rays_den[index_observers]
+    new_rays = rays[index_observers]
 
-    return new_rays_T, new_rays_den, new_thetas, new_phis
-
+    return new_rays_T, new_rays_den, new_rays, new_thetas, new_phis
+ 
 
 if __name__ == '__main__':
     #rays_T, rays_den, _, _ =  ray_maker(844, 6)

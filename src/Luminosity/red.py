@@ -51,13 +51,12 @@ def select_fix(m):
     return snapshots, days
 
 @numba.njit
-def grad_calculator(rays, radii, sphere_radius = 15_000): 
+def grad_calculator(rays, radii, sphere_radius): 
     # Get the index of radius closest in sphere radius
-    # diffs = np.abs(radii - sphere_radius)
-    # idx = np.argmin(diffs)
-    sphere_radius_cgs = sphere_radius * Rsol_to_cm
+    # sphere radius is in CGS
+    print('Photosphere:', sphere_radius/Rsol_to_cm)
     for i, radius in enumerate(radii):
-        if radius > sphere_radius_cgs:
+        if radius > sphere_radius:
             idx = i - 1 
             break
         
@@ -110,7 +109,10 @@ def flux_calculator(grad_E, idx,
         # If here is nothing, light continues
         if Density < rho_low:
             zero_count += 1
-            f[i] = max_travel
+            if (grad_E[i] * max_travel) > 0:
+                f[i] = - max_travel
+            else: 
+                f[i] = max_travel
             continue
         
         # Stream
@@ -136,7 +138,10 @@ def flux_calculator(grad_E, idx,
         
         # Choose
         if Flux > max_travel:
-            f[i] = max_travel
+            if (grad_E[i] * max_travel) > 0:
+                f[i] = - max_travel
+            else: 
+                f[i] = max_travel
             max_count += 1
         else:
             f[i] = Flux
@@ -150,19 +155,8 @@ def flux_calculator(grad_E, idx,
 def doer_of_thing(fix, m):
     rays_T, rays_den, rays, radii = ray_maker(fix, m)
 
-    # Find the correct spehere radius
-    # if m == 4:
-    #     if fix < 270:
-    #         sphere_radius = 3000 
-    #     elif np.logical_and(fix > 270, fix < 290):
-    #         sphere_radius = 3500
-    #     else:
-    #         sphere_radius = 7000
-    # if m == 6:
-    #     sphere_radius = 900
     _, _, photos = get_photosphere(rays_T, rays_den, radii)
-    sphere_radius = np.mean(photos)/Rsol_to_cm
-    print('Photosphere: ', sphere_radius)
+    sphere_radius = np.mean(photos)
 
     # Calculate Flux
     grad_E, idx = grad_calculator(rays, radii, sphere_radius)
@@ -173,7 +167,6 @@ def doer_of_thing(fix, m):
     flux = np.sum(flux) / 192
     
     # Turn to luminosity
-    sphere_radius *= Rsol_to_cm
     lum = flux * 4 * np.pi * sphere_radius**2
     print('Lum %.3e' % lum )
     return lum

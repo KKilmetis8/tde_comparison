@@ -64,6 +64,7 @@ if plot_radii_sphere:
     plt.plot(days, thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
     plt.xlabel('Time (days)')
     plt.xlim(40,65)
+    plt.ylim(10,1e4)
     plt.ylabel(r'Average radius [$R_\odot$]')
     plt.grid()
     plt.yscale('log')

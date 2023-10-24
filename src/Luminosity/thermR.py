@@ -112,7 +112,7 @@ def calc_thermr(rs, T, rho, threshold = 1):
         taus.append(new_tau)
         cumulative_taus.append(tau)
         i -= 1
-    thermr =  rs[i] #i it's negativesrc/Luminosity/Blackbody.py
+    thermr =  rs[i] #i it's negative
     return taus, thermr, cumulative_taus
 
 def get_thermr(rays_T, rays_den, radii):
@@ -128,12 +128,12 @@ def get_thermr(rays_T, rays_den, radii):
         Den_of_single_ray = rays_den[i]
         
         # Get thermr
-        taus, photo, cumulative_taus = calc_thermr(radii, T_of_single_ray, Den_of_single_ray, 
-                                        threshold = 5)
+        taus, th, cumulative_taus = calc_thermr(radii, T_of_single_ray, Den_of_single_ray, 
+                                        threshold = 1)
         # Store
         rays_tau.append(taus)
         rays_cumulative_taus.append(cumulative_taus)
-        thermr[i] = photo
+        thermr[i] = th
 
     return rays_tau, thermr, rays_cumulative_taus
 
@@ -179,7 +179,7 @@ if __name__ == "__main__":
                 plot_tau[0:-j, i ] = temp
 
             img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_tau.T, 
-                                cmap = 'Greys', norm = colors.LogNorm(vmin = 1e-4, vmax =  5))
+                                cmap = 'Greys', norm = colors.LogNorm(vmin = 1e-4, vmax =  1))
             cbar = plt.colorbar(img)
             plt.title('Rays')
             cbar.set_label('Optical depth')
@@ -193,8 +193,6 @@ if __name__ == "__main__":
         print('Fix ', fix)
         
     if plot_thermr:
-        fix_thermr_arit = "{:.4e}".format(fix_thermr_arit)
-        fix_thermr_geom = "{:.4e}".format(fix_thermr_geom)
         with open('data/thermr_m' + str(m) + '.txt', 'a') as file:
                 file.write('# t/t_fb \n')
                 file.write(' '.join(map(str, days)) + '\n')
