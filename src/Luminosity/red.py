@@ -23,7 +23,7 @@ import colorcet
 # Custom Imports
 from src.Calculators.ray_maker import ray_maker
 from src.Opacity.opacity_table import opacity
-from src.Luminosity.photosphere import get_photosphere
+from src.Luminosity.photosphere import get_photosphere, calc_photosphere
 # from src.Luminosity.photosphere import get_photosphere
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -51,7 +51,7 @@ def select_fix(m):
     return snapshots, days
 
 @numba.njit
-def grad_calculator(rays, radii, sphere_radius): 
+def grad_calculator(ray, radii, sphere_radius): 
     # Get the index of radius closest in sphere radius
     # sphere radius is in CGS
     print('Photosphere:', sphere_radius/Rsol_to_cm)
@@ -61,10 +61,10 @@ def grad_calculator(rays, radii, sphere_radius):
             break
         
     step = radii[1] - radii[0]
-    grad_E = np.zeros(len(rays))
+    #grad_E = np.zeros(len(rays))
     
-    for i, ray in enumerate(rays):
-        grad_E[i] = (ray[idx+1] - ray[idx]) / step 
+    #for i, ray in enumerate(rays):
+    grad_E = (ray[idx+1] - ray[idx]) / step 
 
     return grad_E, idx
 
@@ -86,15 +86,15 @@ def grad_calculator(rays, radii, sphere_radius):
 #     plt.ylim(-25, 25)
 #     return grad_Es, idxs
     
-def flux_calculator(grad_E, idx, 
+def flux_calculator(grad_E, idx_tot, 
                     rays, rays_T, rays_den):
     f = np.zeros(len(grad_E))
     max_count = 0
     zero_count = 0
     flux_count = 0
-    idx += 1
     for i, ray in enumerate(rays):
         # Get opacity
+        idx = idx_tot[i]+1
         Energy = ray[idx]
         max_travel = c_cgs * Energy
         
@@ -155,19 +155,33 @@ def flux_calculator(grad_E, idx,
 def doer_of_thing(fix, m):
     rays_T, rays_den, rays, radii = ray_maker(fix, m)
 
-    _, _, photos = get_photosphere(rays_T, rays_den, radii)
-    sphere_radius = np.mean(photos)
-
+    #_, _, photos = get_photosphere(rays_T, rays_den, radii)
+    #sphere_radius = np.mean(photos)
+    grad_E_tot = []
+    idx_tot = []
+    sphere_radius = []
+    for i in range(len(rays_T)):
+        temp = rays_T[i]
+        dens = rays_den[i]
+        ray = rays[i]
+        _, _, photo = calc_photosphere(temp, dens, radii)
+        sphere_radius.append(photo)
     # Calculate Flux
-    grad_E, idx = grad_calculator(rays, radii, sphere_radius)
-    flux = flux_calculator(grad_E, idx, 
+        grad_E, idx = grad_calculator(ray, radii, photo)
+        grad_E_tot.append(grad_E)
+        idx_tot.append(idx)
+    flux = flux_calculator(grad_E_tot, idx_tot, 
                             rays, rays_T, rays_den)
-
+    
+    lum = np.zeros(len(flux))
+    for i in range(len(flux)):
+        lum[i] = flux[i] * 4 * np.pi * sphere_radius[i]**2
     # Divide by number of observers
-    flux = np.sum(flux) / 192
+    #flux = np.sum(flux) / 192
     
     # Turn to luminosity
-    lum = flux * 4 * np.pi * sphere_radius**2
+    #lum = flux * 4 * np.pi * sphere_radius**2
+    lum = np.sum(lum)/192
     print('Lum %.3e' % lum )
     return lum
 #%%
@@ -186,7 +200,7 @@ if __name__ == "__main__":
         lums.append(lum)
     
     if save:
-        np.savetxt('data/reddata_m'+ str(m) + '.txt', (days, lums)) 
+        np.savetxt('data/new_reddata_m'+ str(m) + '.txt', (days, lums)) 
     #%% Plotting
     if plot:
         plt.figure()
@@ -201,6 +215,6 @@ if __name__ == "__main__":
             plt.title('FLD for $10^4 \quad M_\odot$')
             plt.ylim(1e39,1e42)
         plt.grid()
-        plt.savefig('Final plot/red' + str(m) + '.png')
+        plt.savefig('Final plot/new_red' + str(m) + '.png')
         plt.show()
 

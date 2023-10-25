@@ -90,7 +90,7 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 
 # MAIN
 if __name__ == "__main__":
-    plot = True
+    plot = False
     save = False
     
     # Choose BH and freq range
@@ -160,6 +160,7 @@ if __name__ == "__main__":
         # Normalise with the bolometric luminosity from red curve (FLD)
         const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
         lum_tilde_n = lum_n * const_norm
+        print(const_norm)
         #%%
         # Find the bolometic energy (should be = to the one from FLD)
         bolom_integrand =  n_arr * lum_tilde_n

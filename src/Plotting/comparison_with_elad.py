@@ -17,8 +17,8 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['figure.figsize'] = [5 , 4]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
-plot_curves = False
-plot_radii_sphere = True
+plot_curves = True
+plot_radii_sphere = False
 plot_fit = False
 m = 6
 
@@ -32,6 +32,7 @@ if plot_curves:
     x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
     b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
     fld_data = np.loadtxt('data/reddata_m'+ str(m) +'.txt')
+    fld_newdata = np.loadtxt('data/new_reddata_m'+ str(m) +'.txt')
 
     # Elad Plot
     plt.plot(elad_time[0], np.power(10, elad_red[0]), c = 'r')
@@ -41,6 +42,7 @@ if plot_curves:
     days40 = np.multiply(days, 40)
     plt.plot(days40, b, '--s', c='navy', markersize = 4, alpha = 0.8)
     plt.plot(days40, fld_data[1], '--o', c='maroon', markersize = 4, alpha = 0.8)
+    #plt.plot(days40, fld_newdata[1], '--o', c='maroon', markersize = 4, alpha = 0.8)
 
     plt.yscale('log')
     plt.grid()
