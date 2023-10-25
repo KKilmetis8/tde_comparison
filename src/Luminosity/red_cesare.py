@@ -21,9 +21,9 @@ import matplotlib.colors as colors
 import numba
 import colorcet
 # Custom Imports
-from src.Calculators.ray_maker import ray_maker
+from src.Calculators.ray_cesare import ray_maker
 from src.Opacity.opacity_table import opacity
-from src.Luminosity.photosphere import get_photosphere, calc_photosphere
+from src.Luminosity.special_radii import get_photosphere, calc_photosphere
 # from src.Luminosity.photosphere import get_photosphere
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -60,7 +60,7 @@ def grad_calculator(ray, radii, sphere_radius):
             idx = i - 1 
             break
         
-    step = radii[1] - radii[0]
+    step = radii[idx+1] - radii[idx]
     #grad_E = np.zeros(len(rays))
     
     #for i, ray in enumerate(rays):
@@ -68,23 +68,6 @@ def grad_calculator(ray, radii, sphere_radius):
 
     return grad_E, idx
 
-# def converger(rays, radii):
-#     grad_Es = []
-#     idxs = []
-#     for sphere_radius in radii:
-#         grad_E, idx = grad_calculator(rays, radii, sphere_radius)
-#         grad_Es.append(grad_E)
-#         idxs.append(idx)
-        
-#     rel_error = [ 100 * (1 - (grad_Es[i]/grad_Es[i-1])) 
-#                  for i in range(1, len(grad_Es))]
-    
-#     plt.figure( figsize = (16,4))
-#     plt.plot(radii[1::10], rel_error[::10], '-o', c='k')
-#     plt.xlabel('Sphere Radii')
-#     plt.ylabel('Relative Error')
-#     plt.ylim(-25, 25)
-#     return grad_Es, idxs
     
 def flux_calculator(grad_E, idx_tot, 
                     rays, rays_T, rays_den):
@@ -155,8 +138,6 @@ def flux_calculator(grad_E, idx_tot,
 def doer_of_thing(fix, m):
     rays_T, rays_den, rays, radii = ray_maker(fix, m)
 
-    #_, _, photos = get_photosphere(rays_T, rays_den, radii)
-    #sphere_radius = np.mean(photos)
     grad_E_tot = []
     idx_tot = []
     sphere_radius = []
