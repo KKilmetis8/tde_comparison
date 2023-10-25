@@ -143,8 +143,8 @@ def get_thermr(rays_T, rays_den, radii):
 ################
 
 if __name__ == "__main__":    
-    plot_taus = False 
-    plot_thermr = True 
+    plot_taus = True 
+    plot_thermr = False 
     m = 6 
     
     # Make Paths
@@ -153,7 +153,7 @@ if __name__ == "__main__":
         days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
         loadpath = '4/'
     if m == 6:
-        fixes = [844, 881, 925, 950]
+        fixes = [844,]# 881, 925, 950]
         days = [1, 1.1, 1.3, 1.4] #t/t_fb
         loadpath = '6/'
     
@@ -167,31 +167,31 @@ if __name__ == "__main__":
         fix_thermr_arit[index] = np.mean(thermr)
         fix_thermr_geom[index] = gmean(thermr)
     #%% Plot tau
-        if plot_taus:
-            plot_tau = np.zeros( (len(radii), len(tau)))
-            for i in range(192):
-                for j in range(len(cumulative_taus)):
-                    temp = cumulative_taus[i][j]
-                    plot_tau[-j-1,i] =  temp
-                    if temp>5:
-                        plot_tau[0:-j, i ] = temp
-                        break
-                plot_tau[0:-j, i ] = temp
+    if plot_taus:
+        plot_tau = np.zeros( (len(radii), len(tau)))
+        for i in range(192):
+            for j in range(len(cumulative_taus)):
+                temp = cumulative_taus[i][j]
+                plot_tau[-j-1,i] =  temp
+                if temp>5:
+                    plot_tau[0:-j, i ] = temp
+                    break
+            plot_tau[0:-j, i ] = temp
 
-            img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_tau.T, 
-                                cmap = 'Greys', norm = colors.LogNorm(vmin = 1e-4, vmax =  1))
-            cbar = plt.colorbar(img)
-            plt.title('Rays')
-            cbar.set_label('Optical depth')
-            plt.xlabel('Distance from BH [$R_\odot$]')
-            # plt.ylim(60,80)
-            plt.ylabel('Observers')
-            # plt.xscale('log')
-            img.axes.get_yaxis().set_ticks([])
-            plt.show()
+        img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_tau.T, 
+                            cmap = 'Greys', norm = colors.LogNorm(vmin = 1e-4, vmax =  1))
+        cbar = plt.colorbar(img)
+        plt.title('Rays')
+        cbar.set_label('Optical depth')
+        plt.xlabel('Distance from BH [$R_\odot$]')
+        # plt.ylim(60,80)
+        plt.ylabel('Observers')
+        # plt.xscale('log')
+        img.axes.get_yaxis().set_ticks([])
+        plt.show()
 
-        print('Fix ', fix)
-        
+    print('Fix ', fix)
+    
     if plot_thermr:
         with open('data/thermr_m' + str(m) + '.txt', 'a') as file:
                 file.write('# t/t_fb \n')

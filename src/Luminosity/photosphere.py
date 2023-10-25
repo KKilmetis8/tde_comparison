@@ -113,8 +113,8 @@ def get_photosphere(rays_T, rays_den, radii):
 
 if __name__ == "__main__":
     from src.Calculators.ray_maker import ray_maker
-    plot_kappas = False 
-    plot_photosphere = True 
+    plot_kappas = True 
+    plot_photosphere = False 
     m = 6 
     
     # Make Paths
@@ -123,8 +123,8 @@ if __name__ == "__main__":
         days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
         loadpath = '4/'
     if m == 6:
-        fixes = [844, 881, 925, 950]
-        days = [1, 1.1, 1.3, 1.4] #t/t_fb
+        fixes = [881] # [844, 881, 925, 950]
+        days = [1.1] #[1, 1.1, 1.3, 1.4] #t/t_fb
         loadpath = '6/'
 
     fix_photo_arit = np.zeros(len(fixes))

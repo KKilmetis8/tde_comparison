@@ -15,7 +15,7 @@ def finished():
     old_dir = os.getcwd()
     
     # Navigate to the new one
-    os.chdir('/home/konstantinos') # allazeis se panos
+    os.chdir('/home/konstantinos') 
     
     # Choose randomly one of the files to play
     rng = random.randint(1,3)

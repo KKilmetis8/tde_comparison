@@ -172,15 +172,12 @@ def doer_of_thing(fix, m):
         idx_tot.append(idx)
     flux = flux_calculator(grad_E_tot, idx_tot, 
                             rays, rays_T, rays_den)
-    
     lum = np.zeros(len(flux))
     for i in range(len(flux)):
+        # Turn to luminosity
         lum[i] = flux[i] * 4 * np.pi * sphere_radius[i]**2
-    # Divide by number of observers
-    #flux = np.sum(flux) / 192
-    
-    # Turn to luminosity
-    #lum = flux * 4 * np.pi * sphere_radius**2
+
+    # Average in observers
     lum = np.sum(lum)/192
     print('Lum %.3e' % lum )
     return lum
