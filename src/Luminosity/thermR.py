@@ -61,11 +61,17 @@ def optical_depth(T, rho, dr):
         # print('T low')
         return 100
     
-    # Too hot: Thompson Opacity.
-    # Make it fall inside the table: from here the extrapolation is constant
-    # This could be made faster
+    # Too hot: Kramers' law
     if T > np.exp(17.876):
-        T = np.exp(17.87)
+        # T = np.exp(17.87)
+        X = 0.7389
+        kplanck = 3.68 * 1e22 * (1 + X) * T**(-3.5) * rho #Kramers' opacity [cm^2/g]
+        kplanck *= rho
+        Tscatter = np.exp(17.87)
+        kscattering = opacity(Tscatter, rho,'scattering', ln = False)
+        oppi = np.sqrt(3 * kplanck * (kplanck + kscattering)) 
+        tau_high = oppi * dr
+        return tau_high 
     
     # Lookup table
     oppi = opacity(T, rho,'effective', ln = False)
@@ -145,6 +151,7 @@ def get_thermr(rays_T, rays_den, radii):
 if __name__ == "__main__":    
     plot_taus = True 
     plot_thermr = False 
+
     m = 6 
     
     # Make Paths
@@ -153,7 +160,7 @@ if __name__ == "__main__":
         days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
         loadpath = '4/'
     if m == 6:
-        fixes = [844,]# 881, 925, 950]
+        fixes = [881,]# 881, 925, 950]
         days = [1, 1.1, 1.3, 1.4] #t/t_fb
         loadpath = '6/'
     
@@ -166,45 +173,42 @@ if __name__ == "__main__":
         thermr /=  6.957e10
         fix_thermr_arit[index] = np.mean(thermr)
         fix_thermr_geom[index] = gmean(thermr)
-    #%% Plot tau
-    if plot_taus:
-        plot_tau = np.zeros( (len(radii), len(tau)))
-        for i in range(192):
-            for j in range(len(cumulative_taus)):
-                temp = cumulative_taus[i][j]
-                plot_tau[-j-1,i] =  temp
-                if temp>5:
-                    plot_tau[0:-j, i ] = temp
-                    break
-            plot_tau[0:-j, i ] = temp
-
-        img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_tau.T, 
-                            cmap = 'Greys', norm = colors.LogNorm(vmin = 1e-4, vmax =  1))
-        cbar = plt.colorbar(img)
-        plt.title('Rays')
-        cbar.set_label('Optical depth')
-        plt.xlabel('Distance from BH [$R_\odot$]')
-        # plt.ylim(60,80)
-        plt.ylabel('Observers')
-        # plt.xscale('log')
-        img.axes.get_yaxis().set_ticks([])
-        plt.show()
-
-    print('Fix ', fix)
-    
-    if plot_thermr:
-        with open('data/thermr_m' + str(m) + '.txt', 'a') as file:
-                file.write('# t/t_fb \n')
-                file.write(' '.join(map(str, days)) + '\n')
-                file.write('# Thermalisation radius arithmetic mean \n')
-                file.write(' '.join(map(str, fix_thermr_arit)) + '\n')
-                file.write('# Thermalisation radius geometric mean \n')
-                file.write(' '.join(map(str, fix_thermr_geom)) + '\n')
-                file.close()
-        plt.plot(days, fix_thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
-        plt.plot(days, fix_thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
-        plt.xlabel(r't/$t_{fb}$')
-        plt.ylabel(r'R$_{th}$ [$R_\odot$]')
-        plt.grid()
-        plt.legend()
-        plt.show()
+        #%% Plot tau
+        if plot_taus:
+            plot_tau = np.zeros((len(tau),len(radii)))
+            for i in range(len(tau)):
+                for j in range(len(cumulative_taus[i])):
+                    temp = cumulative_taus[i][j]
+                    plot_tau[i][-j-1] = temp
+                    if temp > 5:
+                        plot_tau[i][0:-j] = temp
+                        break
+                plot_tau[i,0:-j] = temp
+            img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_tau, 
+                                cmap = 'Greys', norm = colors.LogNorm(vmin = 1e-4, vmax =  1))
+            cbar = plt.colorbar(img)
+            plt.title('Rays')
+            cbar.set_label('Optical depth')
+            plt.xlabel('Distance from BH [$R_\odot$]')
+            # plt.ylim(60,80)
+            plt.ylabel('Observers')
+            # plt.xscale('log')
+            img.axes.get_yaxis().set_ticks([])
+            plt.show()
+                    
+        if plot_thermr:
+            with open('data/thermr_m' + str(m) + '.txt', 'a') as file:
+                    file.write('# t/t_fb \n')
+                    file.write(' '.join(map(str, days)) + '\n')
+                    file.write('# Thermalisation radius arithmetic mean \n')
+                    file.write(' '.join(map(str, fix_thermr_arit)) + '\n')
+                    file.write('# Thermalisation radius geometric mean \n')
+                    file.write(' '.join(map(str, fix_thermr_geom)) + '\n')
+                    file.close()
+            plt.plot(days, fix_thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
+            plt.plot(days, fix_thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
+            plt.xlabel(r't/$t_{fb}$')
+            plt.ylabel(r'R$_{th}$ [$R_\odot$]')
+            plt.grid()
+            plt.legend()
+            plt.show()

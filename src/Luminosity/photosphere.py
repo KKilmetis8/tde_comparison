@@ -40,10 +40,17 @@ def get_kappa(T: float, rho: float, dr: float):
     if T < np.exp(8.666):
         return 100
     
-    # Too hot: Thompson Opacity.
-    # Make it fall inside the table: from here the extrapolation is constant
+    # Too hot: Kramers' law
     if T > np.exp(17.876):
-        T = np.exp(17.87)
+        # T = np.exp(17.87)
+        X = 0.7389
+        kplanck = 3.68 * 1e22 * (1 + X) * T**(-3.5) * rho #Kramers' opacity [cm^2/g]
+        kplanck *= rho
+        Tscatter = np.exp(17.87)
+        kscattering = opacity(Tscatter, rho, 'scattering', ln = False)
+        oppi = kplanck + kscattering
+        tau_high = oppi * dr
+        return tau_high
     
     # Lookup table
     k = opacity(T, rho,'red', ln = False)
@@ -123,8 +130,8 @@ if __name__ == "__main__":
         days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
         loadpath = '4/'
     if m == 6:
-        fixes = [881] # [844, 881, 925, 950]
-        days = [1.1] #[1, 1.1, 1.3, 1.4] #t/t_fb
+        fixes = [844, 881, 925, 950]
+        days = [1, 1.1, 1.3, 1.4] #t/t_fb
         loadpath = '6/'
 
     fix_photo_arit = np.zeros(len(fixes))
@@ -139,7 +146,7 @@ if __name__ == "__main__":
         if plot_kappas:
             plot_kappa = np.zeros( (len(radii), len(rays_kappa)))
             for i in range(192):
-                for j in range(len(rays_cumulative_kappas)):
+                for j in range(len(rays_cumulative_kappas[i])):
                     temp = rays_cumulative_kappas[i][j]
                     plot_kappa[-j-1,i] =  temp
                     if temp > 2/3:
@@ -157,7 +164,7 @@ if __name__ == "__main__":
             plt.xlabel('Distance from BH [$R_\odot$]')
             plt.ylabel('Observers')
             img.axes.get_yaxis().set_ticks([])
-            plt.savefig('Final plot/photosphere.png')
+            #plt.savefig('Final plot/photosphere.png')
             plt.show()
 
         print('Fix ', fix)

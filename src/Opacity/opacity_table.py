@@ -76,7 +76,7 @@ def opacity(T, rho, kind, ln = True) -> float:
         ln_opacity = lnk_scatter_inter((T, rho))
         
     elif kind == 'effective':
-        absorption = lnk_ross_inter((T, rho))
+        absorption = lnk_planck_inter((T, rho))
         scattering = lnk_scatter_inter((T, rho))
         
         # Apoelenism
