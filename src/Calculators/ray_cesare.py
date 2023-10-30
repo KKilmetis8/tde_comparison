@@ -68,10 +68,7 @@ def ray_maker(fix, m, select = False):
     stop = 10_000 #400 * Rt
     log_start = np.log10(start)
     log_stop = np.log10(stop)
-    if m == 6:
-        num = 750 + 1 # about the average of cell radius
-    if m == 4:
-        num = 500 #350
+    num = 4000
     log_radii = np.linspace(log_start, log_stop, num) #simulator units
     radii = 10**log_radii
     

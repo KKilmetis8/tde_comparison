@@ -50,7 +50,7 @@ def get_kappa(T: float, rho: float, dr: float):
         kscattering = opacity(Tscatter, rho, 'scattering', ln = False)
         oppi = kplanck + kscattering
         tau_high = oppi * dr
-        return tau_high
+        return tau_high 
     
     # Lookup table
     k = opacity(T, rho,'red', ln = False)
@@ -167,25 +167,24 @@ if __name__ == "__main__":
             #plt.savefig('Final plot/photosphere.png')
             plt.show()
 
+        if plot_photosphere:
+            fix_photo_arit = "{:.4e}".format(fix_photo_arit)
+            fix_photo_geom = "{:.4e}".format(fix_photo_geom)
+            with open('data/photosphere_m' + str(m) + '.txt', 'a') as file:
+                    file.write('# t/t_fb \n')
+                    file.write(' '.join(map(str, days)) + '\n')
+                    file.write('# Photosphere arithmetic mean \n')
+                    file.write(' '.join(map(str, fix_photo_arit)) + '\n')
+                    file.write('# Photosphere geometric mean \n')
+                    file.write(' '.join(map(str, fix_photo_geom)) + '\n')
+                    file.close()
+            plt.plot(days, fix_photo_arit, '-o', color = 'black', label = 'Photospehere radius, arithmetic mean')
+            plt.plot(days, fix_photo_geom, '-o', color = 'pink', label = 'Photospehere radius, geometric mean')
+            plt.xlabel(r't/$t_{fb}$')
+            plt.ylabel(r'Photosphere [$R_\odot$]')
+            plt.grid()
+            plt.legend()
+            plt.show()
+
         print('Fix ', fix)
-
-    if plot_photosphere:
-        fix_photo_arit = "{:.4e}".format(fix_photo_arit)
-        fix_photo_geom = "{:.4e}".format(fix_photo_geom)
-        with open('data/photosphere_m' + str(m) + '.txt', 'a') as file:
-                file.write('# t/t_fb \n')
-                file.write(' '.join(map(str, days)) + '\n')
-                file.write('# Photosphere arithmetic mean \n')
-                file.write(' '.join(map(str, fix_photo_arit)) + '\n')
-                file.write('# Photosphere geometric mean \n')
-                file.write(' '.join(map(str, fix_photo_geom)) + '\n')
-                file.close()
-        plt.plot(days, fix_photo_arit, '-o', color = 'black', label = 'Photospehere radius, arithmetic mean')
-        plt.plot(days, fix_photo_geom, '-o', color = 'pink', label = 'Photospehere radius, geometric mean')
-        plt.xlabel(r't/$t_{fb}$')
-        plt.ylabel(r'Photosphere [$R_\odot$]')
-        plt.grid()
-        plt.legend()
-        plt.show()
-
         

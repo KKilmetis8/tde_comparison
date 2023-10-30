@@ -45,10 +45,16 @@ def get_kappa(T: float, rho: float, dr: float):
     if T < np.exp(8.666):
         return 100
     
-    # Too hot: Thompson Opacity.
-    # Make it fall inside the table: from here the extrapolation is constant
+    # Too hot: Kramers' law for absorption (planck)
     if T > np.exp(17.876):
-        T = np.exp(17.87)
+        X = 0.7389
+        kplanck = 3.68 * 1e22 * (1 + X) * T**(-3.5) * rho #Kramers' opacity [cm^2/g]
+        kplanck *= rho
+        Tscatter = np.exp(17.87)
+        kscattering = opacity(Tscatter, rho, 'scattering', ln = False)
+        oppi = kplanck + kscattering
+        tau_high = oppi * dr
+        return tau_high 
     
     # Lookup table
     k = opacity(T, rho,'red', ln = False)
@@ -142,11 +148,17 @@ def optical_depth(T, rho, dr):
         # print('T low')
         return 100
     
-    # Too hot: Thompson Opacity.
-    # Make it fall inside the table: from here the extrapolation is constant
-    # This could be made faster
+    # Too hot: Kramers' law
     if T > np.exp(17.876):
-        T = np.exp(17.87)
+        # T = np.exp(17.87)
+        X = 0.7389
+        kplanck = 3.68 * 1e22 * (1 + X) * T**(-3.5) * rho #Kramers' opacity [cm^2/g]
+        kplanck *= rho
+        Tscatter = np.exp(17.87)
+        kscattering = opacity(Tscatter, rho,'scattering', ln = False)
+        oppi = np.sqrt(3 * kplanck * (kplanck + kscattering)) 
+        tau_high = oppi * dr
+        return tau_high 
     
     # Lookup table
     oppi = opacity(T, rho,'effective', ln = False)

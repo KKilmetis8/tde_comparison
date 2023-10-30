@@ -74,6 +74,7 @@ def flux_calculator(grad_E, idx_tot,
     f = np.zeros(len(grad_E))
     max_count = 0
     zero_count = 0
+    neg_count = 0
     flux_count = 0
     for i, ray in enumerate(rays):
         # Get opacity
@@ -104,10 +105,13 @@ def flux_calculator(grad_E, idx_tot,
         
         # T too high => Thompson opacity, we follow the table
         if Temperature > T_high:
-            Temperature = np.exp(17.7)
-            
-        # Get Opacity, NOTE: Breaks Numba
-        k_ross = opacity(Temperature, Density, 'rosseland', ln = False)
+            #Temperature = np.exp(17.7)
+            X = 0.7389
+            k_ross = 3.68 * 1e22 * (1 + X) * Temperature**(-3.5) * Density #Kramers' opacity [cm^2/g]
+            k_ross *= Density
+        else:    
+            # Get Opacity, NOTE: Breaks Numba
+            k_ross = opacity(Temperature, Density, 'rosseland', ln = False)
         
         # Calc R, eq. 28
         R = np.abs(grad_E[i]) /  (k_ross * Energy)
@@ -130,9 +134,15 @@ def flux_calculator(grad_E, idx_tot,
             f[i] = Flux
             flux_count += 1
             
+        if f[i] < 0:
+            neg_count += 1
+            f[i] = 0    
+
+    neg_count = neg_count/ flux_count        
     print('Max: ', max_count)
     print('Zero: ', zero_count)
     print('Flux: ', flux_count)
+    print('Ratio neg flux: ', neg_count)
     return f
 
 def doer_of_thing(fix, m):
@@ -160,7 +170,7 @@ def doer_of_thing(fix, m):
 
     # Average in observers
     lum = np.sum(lum)/192
-    print('Lum %.3e' % lum )
+    print('Fix %i' %fix, ', Lum %.3e' %lum )
     return lum
 #%%
 ##
@@ -178,7 +188,7 @@ if __name__ == "__main__":
         lums.append(lum)
     
     if save:
-        np.savetxt('data/new_reddata_m'+ str(m) + '.txt', (days, lums)) 
+        np.savetxt('data/new_reddata2_m'+ str(m) + '.txt', (days, lums)) 
     #%% Plotting
     if plot:
         plt.figure()
@@ -193,6 +203,6 @@ if __name__ == "__main__":
             plt.title('FLD for $10^4 \quad M_\odot$')
             plt.ylim(1e39,1e42)
         plt.grid()
-        plt.savefig('Final plot/new_red' + str(m) + '.png')
+        plt.savefig('Final plot/new2_red' + str(m) + '.png')
         plt.show()
 
