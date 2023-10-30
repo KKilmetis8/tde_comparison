@@ -38,7 +38,8 @@ def select_observer(angles, angle):
     index = np.argmin(np.abs(angles - angle))
     return index
 
-def ray_maker(fix, m, select = False):
+def ray_maker(fix, m, num, select = False):
+    """ Outputs are in CGS """
     fix = str(fix)
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
@@ -64,11 +65,10 @@ def ray_maker(fix, m, select = False):
     
 
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = 2 * Rt
+    start = 0.5 * Rt
     stop = 10_000 #400 * Rt
     log_start = np.log10(start)
     log_stop = np.log10(stop)
-    num = 4000
     log_radii = np.linspace(log_start, log_stop, num) #simulator units
     radii = 10**log_radii
     

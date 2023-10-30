@@ -27,7 +27,7 @@ plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
 # Custom Imports
 from src.Opacity.opacity_table import opacity
-from src.Calculators.ray_maker import ray_maker
+from src.Calculators.ray_maker import lin_ray_maker
 
 ################
 # FUNCTIONS
@@ -121,7 +121,7 @@ def calc_thermr(rs, T, rho, threshold = 1):
     thermr =  rs[i] #i it's negative
     return taus, thermr, cumulative_taus
 
-def get_thermr(rays_T, rays_den, radii):
+def get_lin_thermr(rays_T, rays_den, radii):
     # Get the thermr for every observer
     rays_tau = []
     rays_cumulative_taus = []
@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     for index,fix in enumerate(fixes):
         rays_T, rays_den, _, radii = ray_maker(fix, m)
-        tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
+        tau, thermr, cumulative_taus = get_lin_thermr(rays_T, rays_den, radii)
         thermr /=  6.957e10
         fix_thermr_arit[index] = np.mean(thermr)
         fix_thermr_geom[index] = gmean(thermr)

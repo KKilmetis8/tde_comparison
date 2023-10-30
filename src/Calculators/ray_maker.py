@@ -36,7 +36,7 @@ def select_observer(angles, angle):
     index = np.argmin(np.abs(angles - angle))
     return index
 
-def ray_maker(fix, m, select = False):
+def lin_ray_maker(fix, m, select = False):
     fix = str(fix)
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
@@ -65,7 +65,7 @@ def ray_maker(fix, m, select = False):
     start = 2 * Rt
     stop = 10_000 #400 * Rt
     if m == 6:
-        num = 750 + 1 # about the average of cell radius
+        num = 1200 # about the average of cell radius
     if m == 4:
         num = 500 #350
     radii = np.linspace(start, stop, num) #simulator units

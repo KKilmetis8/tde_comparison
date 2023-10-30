@@ -32,10 +32,21 @@ from src.Calculators.ray_cesare import ray_maker
 ################
 # FUNCTIONS
 ################
+def select_fix(m):
+    if m == 4:
+        snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
+        days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
+    if m == 6:
+        snapshots = [844, 881, 925, 950]
+        days = [1, 1.1, 1.3, 1.4] # t/t_fb
+        num_array = 1200 * np.ones(len(snapshots))
+        for i in range(1,len(num_array)):
+            num_array[i] = int(1.5 * num_array[i-1])
+    return snapshots, days, num_array
+
 def get_kappa(T: float, rho: float, dr: float):
     '''
     Calculates the integrand of eq.(8) Steinberg&Stone22.
-    CHECK THE IFs
     '''    
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):
@@ -50,8 +61,10 @@ def get_kappa(T: float, rho: float, dr: float):
         X = 0.7389
         kplanck = 3.68 * 1e22 * (1 + X) * T**(-3.5) * rho #Kramers' opacity [cm^2/g]
         kplanck *= rho
+
         Tscatter = np.exp(17.87)
         kscattering = opacity(Tscatter, rho, 'scattering', ln = False)
+
         oppi = kplanck + kscattering
         tau_high = oppi * dr
         return tau_high 
@@ -236,18 +249,18 @@ def get_thermr(rays_T, rays_den, radii):
 ################
 
 if __name__ == "__main__":
-    plot_kappas = True 
+    plot_kappas = False 
+    plot_photosphere_single_fix = False 
     plot_photosphere = True 
     m = 6 
+    loadpath = str(m) + '/'
 
-    fixes = [844, 881, 925, 950]
-    days = [1, 1.1, 1.3, 1.4] #t/t_fb
-    loadpath = '6/'
+    snapshots, days, num_array = select_fix(m)
+    fix_photo_arit = np.zeros(len(snapshots))
+    fix_photo_geom = np.zeros(len(snapshots))
 
-    fix_photo_arit = np.zeros(len(fixes))
-    fix_photo_geom = np.zeros(len(fixes))
-    for index, fix in enumerate(fixes):
-        rays_T, rays_den, _, radii = ray_maker(fix, m)
+    for index, fix in enumerate(snapshots):
+        rays_T, rays_den, _, radii = ray_maker(fix, m, int(num_array[index]))
         rays_kappa, rays_cumulative_kappas, rays_photo = get_photosphere(rays_T, rays_den, radii)
         rays_photo /=  6.957e10
         fix_photo_arit[index] = np.mean(rays_photo)
@@ -277,9 +290,17 @@ if __name__ == "__main__":
             plt.savefig('Final plot/photosphere.png')
             plt.show()
 
+        if plot_photosphere_single_fix:
+            np.savetxt('data/dataph1500.txt', rays_photo)
+            plt.figure(figsize = [8,5])
+            plt.scatter(np.arange(192), rays_photo, s = 3, c = 'k')
+            plt.xlabel('Observers')
+            plt.ylabel(r'R$_{ph}$ [R$_\odot$]')
+            plt.text(8,8000, 'num=1500')
+            plt.savefig('Figs/844_photo1500.jpg')
+            plt.show()
+
         if plot_photosphere:
-            fix_photo_arit = "{:.4e}".format(fix_photo_arit)
-            fix_photo_geom = "{:.4e}".format(fix_photo_geom)
             with open('data/photosphere_m' + str(m) + '.txt', 'a') as file:
                     file.write('# t/t_fb \n')
                     file.write(' '.join(map(str, days)) + '\n')
@@ -294,7 +315,7 @@ if __name__ == "__main__":
             plt.ylabel(r'Photosphere [$R_\odot$]')
             plt.grid()
             plt.legend()
-            plt.show()
+        plt.show()
 
         print('Fix ', fix)
         
