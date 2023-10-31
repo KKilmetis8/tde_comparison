@@ -18,7 +18,7 @@ from astropy.coordinates import cartesian_to_spherical
 from src.Calculators.legion_of_casters import THROUPLE_S_CASTERS
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-
+alice = True
 #%% Constants & Converter
 NSIDE = 4
 G = 6.6743e-11 # SI
@@ -44,14 +44,25 @@ def ray_maker(fix, m, num, select = False):
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
     
-    # Import
-    X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
-    Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
-    Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
-    Mass = np.load( str(m) + '/'  + fix + '/Mass_' + fix + '.npy')
-    T = np.load( str(m) + '/'  + fix + '/T_' + fix + '.npy')
-    Den = np.load( str(m) + '/'  + fix + '/Den_' + fix + '.npy')
-    Rad = np.load( str(m) + '/'  +fix + '/Rad_' + fix + '.npy')
+    if alice:
+        pre = '~/s3745597/data1/TDE/'
+        # Import
+        X = np.load(pre + str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
+        Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
+        Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
+        Mass = np.load( str(m) + '/'  + fix + '/Mass_' + fix + '.npy')
+        T = np.load( str(m) + '/'  + fix + '/T_' + fix + '.npy')
+        Den = np.load( str(m) + '/'  + fix + '/Den_' + fix + '.npy')
+        Rad = np.load( str(m) + '/'  +fix + '/Rad_' + fix + '.npy')
+    else:
+        # Import
+        X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
+        Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
+        Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
+        Mass = np.load( str(m) + '/'  + fix + '/Mass_' + fix + '.npy')
+        T = np.load( str(m) + '/'  + fix + '/T_' + fix + '.npy')
+        Den = np.load( str(m) + '/'  + fix + '/Den_' + fix + '.npy')
+        Rad = np.load( str(m) + '/'  +fix + '/Rad_' + fix + '.npy')
 
     # Convert Energy / Mass to Energy Density in CGS
     Rad *= Den 

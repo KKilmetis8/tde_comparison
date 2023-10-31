@@ -39,7 +39,7 @@ if plot_curves:
     # Our plot
     days = fld_data[0]
     days40 = np.multiply(days, 40)
-    plt.plot(days40, b, '--s', c='navy', markersize = 4, alpha = 0.8)
+    plt.plot(days40, b[len(b) - 4:], '--s', c='navy', markersize = 4, alpha = 0.8)
     plt.plot(days40, fld_data[1], '--o', c='maroon', markersize = 4, alpha = 0.8)
 
     plt.yscale('log')

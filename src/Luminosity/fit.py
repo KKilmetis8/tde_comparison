@@ -67,7 +67,9 @@ if __name__ == '__main__':
         temp = np.zeros(len(data))
         radius = np.zeros(len(data))
         Blue = np.zeros(len(data))
-        for i in range(len(data)):
+        
+        # NOTE: last 4 because we save on top all the time and should fix that
+        for i in range(len(data) - 4, len(data)):
             Lums = data[i] 
             # print(Lums)
             Lums_fit = Lums[freq_min_idx:freq_max_idx]
@@ -102,7 +104,7 @@ if __name__ == '__main__':
                 axs2.append(axs[i,j])
               
         for i, ax in enumerate(axs2):
-            Lums = data[i]
+            Lums = data[i + len(data) - 4] # NOTE: last 4 because we save on top all the time and should fix that
             Lums_fit = Lums[freq_min_idx:freq_max_idx]
             fit = curve_fit(tofit, fit_freqs, Lums_fit, p0 = (init_R, init_T))
             
