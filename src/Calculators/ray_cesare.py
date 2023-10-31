@@ -47,7 +47,7 @@ def ray_maker(fix, m, num, select = False):
     if alice:
         pre = '/home/s3745597/data1/TDE/'
         # Import
-        X = np.load(pre + str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
+        X = np.load(pre + str(m) + '/snap_'  + fix + '/CMx_' + fix + '.npy')
         Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
         Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
         Mass = np.load( str(m) + '/'  + fix + '/Mass_' + fix + '.npy')
