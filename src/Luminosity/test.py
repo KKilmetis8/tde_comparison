@@ -26,7 +26,6 @@ print(
 m = np.arange(NPIX)
 hp.mollview(m, title="Mollview image RING")
 hp.graticule()
-plt.show()
 
 # Healpix and my plots
 thetas_hp = np.zeros(192)
