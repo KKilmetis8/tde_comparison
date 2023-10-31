@@ -231,7 +231,7 @@ if __name__ == "__main__":
     if save:
         if alice:
             np.savetxt('red_backup_save'+ str(m) + '.txt', (days, lums))
-            np.savetxt('tde_comparison/data/new2_reddata_m'+ str(m) + '.txt', (days, lums))
+            np.savetxt('data/new2_reddata_m'+ str(m) + '.txt', (days, lums))
         else:
             np.savetxt('data/new2_reddata_m'+ str(m) + '.txt', (days, lums)) 
     #%% Plotting
