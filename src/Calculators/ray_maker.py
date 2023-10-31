@@ -36,7 +36,7 @@ def select_observer(angles, angle):
     index = np.argmin(np.abs(angles - angle))
     return index
 
-def lin_ray_maker(fix, m, select = False):
+def ray_maker(fix, m, select = False):
     fix = str(fix)
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1

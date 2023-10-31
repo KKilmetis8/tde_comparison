@@ -7,7 +7,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
-from src.Luminosity.Blackbody import select_fix
+from src.Luminosity.Blackbody_cesare import select_fix
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.family'] = 'Times New Roman'
@@ -50,7 +50,7 @@ if __name__ == '__main__':
 
     # Load & Unpack
     path = 'data/'
-    fixes, days = select_fix(m)
+    fixes, days, _ = select_fix(m)
     x = np.loadtxt(path + 'frequencies_m' + str(m) + '.txt') # x = logν
     data = np.loadtxt(path + 'L_tilda_spectrum_m' + str(m) + '.txt')
 

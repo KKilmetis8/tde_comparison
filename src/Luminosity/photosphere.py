@@ -80,7 +80,7 @@ def calc_photosphere(T, rho, rs):
     photo =  rs[i] #i it's negative
     return kappas, cumulative_kappas, photo
 
-def get_lin_photosphere(rays_T, rays_den, radii):
+def get_photosphere(rays_T, rays_den, radii):
     '''
     Finds and saves the photosphere (in CGS) for every ray.
 
@@ -138,7 +138,7 @@ if __name__ == "__main__":
     fix_photo_geom = np.zeros(len(fixes))
     for index, fix in enumerate(fixes):
         rays_T, rays_den, _, radii = ray_maker(fix, m)
-        rays_kappa, rays_cumulative_kappas, rays_photo = get_lin_photosphere(rays_T, rays_den, radii)
+        rays_kappa, rays_cumulative_kappas, rays_photo = get_photosphere(rays_T, rays_den, radii)
         rays_photo /=  6.957e10
         fix_photo_arit[index] = np.mean(rays_photo)
         fix_photo_geom[index] = gmean(rays_photo)

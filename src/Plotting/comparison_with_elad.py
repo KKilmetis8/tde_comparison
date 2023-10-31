@@ -29,17 +29,17 @@ if plot_curves:
     elad_blue = mat['L_bb']
     elad_red = mat['L_fld']
     # Ours Load
-    #x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
-    #b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
-    fld_data = np.loadtxt('data/new_reddata_m'+ str(m) +'.txt')
+    x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
+    b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
+    fld_data = np.loadtxt('data/reddata_m'+ str(m) +'.txt')
 
     # Elad Plot
     plt.plot(elad_time[0], np.power(10, elad_red[0]), c = 'r')
-    #plt.plot(elad_time[0], np.power(10, elad_blue[0]), c = 'b')
+    plt.plot(elad_time[0], np.power(10, elad_blue[0]), c = 'b')
     # Our plot
     days = fld_data[0]
     days40 = np.multiply(days, 40)
-    #plt.plot(days40, b, '--s', c='navy', markersize = 4, alpha = 0.8)
+    plt.plot(days40, b, '--s', c='navy', markersize = 4, alpha = 0.8)
     plt.plot(days40, fld_data[1], '--o', c='maroon', markersize = 4, alpha = 0.8)
 
     plt.yscale('log')
@@ -47,7 +47,7 @@ if plot_curves:
     plt.xlim(39, 59)
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
-    plt.savefig('Final plot/Elad_comparison.png')
+    plt.savefig('Final plot/Elad_new_comparison.png')
     plt.show()
 
 if plot_radii_sphere:

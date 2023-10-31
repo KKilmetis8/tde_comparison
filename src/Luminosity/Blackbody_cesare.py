@@ -50,12 +50,17 @@ def log_array(n_min, n_max, lenght):
 
 def select_fix(m):
     if m == 4:
-        snapshots = [233, 254, 263, 277 , 293, 308, 322]
-        days = [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
+        snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
+        days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950]
-        days = [1, 1.1, 1.3, 1.4] #t/t_fb
-    return snapshots, days
+        snapshots = [844, 881, 925, 950] #[844, 881, 882, 898, 925, 950]
+        days = [1, 1.1, 1.3, 1.4] #[1, 1.139, 1.143, 1.2, 1.3, 1.4] # t/t_fb
+        const = 0.05
+        beginning = 1200
+    num_array = beginning * np.ones(len(snapshots))
+    for i in range(1,len(num_array)):
+            num_array[i] = int(1.5 * num_array[i-1])
+    return snapshots, days, num_array
 
 def planck(Temperature: float, n: float) -> float:
     """ Planck function in a cell. It needs temperature and frequency. """
@@ -89,8 +94,8 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 
 # MAIN
 if __name__ == "__main__":
-    plot = False
-    save = False
+    plot = True
+    save = True
     
     # Choose BH and freq range
     m = 6
@@ -112,9 +117,9 @@ if __name__ == "__main__":
     n_arr = 10**x_arr
     
     #%% Get thermalisation radius
-    fixes, days = select_fix(m)
+    fixes, days, num_array = select_fix(m)
     for idx, fix in enumerate(fixes):
-        rays_T, rays_den, _, radii = ray_maker(fix, m)
+        rays_T, rays_den, _, radii = ray_maker(fix, m, int(num_array[idx]))
         rays_tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
 
         #%%   
@@ -159,13 +164,13 @@ if __name__ == "__main__":
         # Normalise with the bolometric luminosity from red curve (FLD)
         const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
         lum_tilde_n = lum_n * const_norm
-        print(const_norm)
+        print('Normalisation constant:',const_norm)
         #%%
         # Find the bolometic energy (should be = to the one from FLD)
         bolom_integrand =  n_arr * lum_tilde_n
         bolom = np.log(10) * np.trapz(bolom_integrand, x_arr)
         bolom = "{:.4e}".format(bolom) #scientific notation
-        print('bolometric L:', bolom)
+        print('Fix', fix, ', bolometric L:', bolom)
 
         # Save data and plot
         if save:
@@ -187,7 +192,7 @@ if __name__ == "__main__":
             plt.ylabel(r'$log_{10}\tilde{L}_\nu$ [erg/sHz]')
             plt.loglog()
             plt.grid()
-            #plt.savefig('Figs/Ltildan_m' + str(m) + '_snap' + str(fix))
+            plt.savefig('Figs/Ltildan_m' + str(m) + '_snap' + str(fix))
         
             fig, ax1 = plt.subplots( figsize = (6,6) )
             ax1.plot(n_arr, n_arr * lum_tilde_n)
@@ -201,6 +206,6 @@ if __name__ == "__main__":
             ax2.invert_xaxis()
             ax2.loglog()
             ax2.set_xlabel(r'Wavelength [\AA]')
-            #plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
+            plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
             plt.show()
                         
