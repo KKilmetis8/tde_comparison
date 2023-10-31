@@ -45,7 +45,7 @@ def ray_maker(fix, m, num, select = False):
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
     
     if alice:
-        pre = '~/s3745597/data1/TDE/'
+        pre = '/home/s3745597/data1/TDE/'
         # Import
         X = np.load(pre + str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
         Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
