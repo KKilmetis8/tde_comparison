@@ -48,12 +48,12 @@ def ray_maker(fix, m, num, select = False):
         pre = '/home/s3745597/data1/TDE/'
         # Import
         X = np.load(pre + str(m) + '/snap_'  + fix + '/CMx_' + fix + '.npy')
-        Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
-        Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
-        Mass = np.load( str(m) + '/'  + fix + '/Mass_' + fix + '.npy')
-        T = np.load( str(m) + '/'  + fix + '/T_' + fix + '.npy')
-        Den = np.load( str(m) + '/'  + fix + '/Den_' + fix + '.npy')
-        Rad = np.load( str(m) + '/'  +fix + '/Rad_' + fix + '.npy')
+        Y = np.load(pre + str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
+        Z = np.load(pre + str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
+        Mass = np.load(pre + str(m) + '/'  + fix + '/Mass_' + fix + '.npy')
+        T = np.load(pre + str(m) + '/'  + fix + '/T_' + fix + '.npy')
+        Den = np.load(pre + str(m) + '/'  + fix + '/Den_' + fix + '.npy')
+        Rad = np.load(pre + str(m) + '/'  +fix + '/Rad_' + fix + '.npy')
     else:
         # Import
         X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
