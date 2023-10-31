@@ -219,7 +219,7 @@ def doer_of_thing(fix, m, num):
 ##
 if __name__ == "__main__":
     save = True
-    plot = True
+    plot = False
     m = 6 # Choose BH
     fixes, days, num_array = select_fix(m)
     lums = []
@@ -229,7 +229,11 @@ if __name__ == "__main__":
         lums.append(lum)
     
     if save:
-        np.savetxt('data/new2_reddata_m'+ str(m) + '.txt', (days, lums)) 
+        if alice:
+            np.savetxt('red_backup_save'+ str(m) + '.txt', (days, lums))
+            np.savetxt('tde_comparison/data/new2_reddata_m'+ str(m) + '.txt', (days, lums))
+        else:
+            np.savetxt('data/new2_reddata_m'+ str(m) + '.txt', (days, lums)) 
     #%% Plotting
     if plot:
         plt.figure()
