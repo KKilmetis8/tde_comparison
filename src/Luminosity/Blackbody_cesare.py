@@ -48,18 +48,26 @@ def log_array(n_min, n_max, lenght):
     x_arr = np.linspace(x_min, x_max , num = lenght)
     return x_arr
 
+def spacing(t):
+    start = 1
+    end = 1.4
+    n = (t-start) * 4050 - (t - end) * 1200
+    n /= (end - start)
+    return n
+
 def select_fix(m):
     if m == 4:
         snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
         snapshots = [844, 881, 925, 950] #[844, 881, 882, 898, 925, 950]
-        days = [1, 1.1, 1.3, 1.4] #[1, 1.139, 1.143, 1.2, 1.3, 1.4] # t/t_fb
-        const = 0.05
-        beginning = 1200
-    num_array = beginning * np.ones(len(snapshots))
-    for i in range(1,len(num_array)):
-            num_array[i] = int(1.5 * num_array[i-1])
+        days = [1, 1.1, 1.3, 1.4] # [1, 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
+    #     const = 0.05
+    #     beginning = 1200
+    # num_array = beginning * np.ones(len(snapshots))
+    # for i in range(1,len(num_array)):
+    #         num_array[i] = int(1.5 * num_array[i-1])
+        num_array = [spacing(d) for d in days]
     return snapshots, days, num_array
 
 def planck(Temperature: float, n: float) -> float:

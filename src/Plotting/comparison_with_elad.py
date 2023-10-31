@@ -31,7 +31,7 @@ if plot_curves:
     # Ours Load
     x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
     b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
-    fld_data = np.loadtxt('data/reddata_m'+ str(m) +'.txt')
+    fld_data = np.loadtxt('data/new2_reddata_m'+ str(m) +'.txt')
 
     # Elad Plot
     plt.plot(elad_time[0], np.power(10, elad_red[0]), c = 'r')

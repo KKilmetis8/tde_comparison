@@ -71,7 +71,8 @@ def optical_depth(T, rho, dr):
         kscattering = opacity(Tscatter, rho,'scattering', ln = False)
         oppi = np.sqrt(3 * kplanck * (kplanck + kscattering)) 
         tau_high = oppi * dr
-        return tau_high 
+        #return tau_high 
+        return kscattering * dr # checking
     
     # Lookup table
     oppi = opacity(T, rho,'effective', ln = False)
@@ -169,6 +170,7 @@ if __name__ == "__main__":
 
     for index,fix in enumerate(fixes):
         rays_T, rays_den, _, radii = ray_maker(fix, m)
+        #%%
         tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
         thermr /=  6.957e10
         fix_thermr_arit[index] = np.mean(thermr)
