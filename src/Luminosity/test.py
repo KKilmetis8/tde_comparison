@@ -24,7 +24,7 @@ print(
     )
 ) 
 m = np.arange(NPIX)
-hp.mollview(m, title="Mollview image RING")
+hp.orthview(m, title="Mollview image RING")
 hp.graticule()
 
 # Healpix and my plots
