@@ -32,16 +32,29 @@ from src.Calculators.ray_cesare import ray_maker
 ################
 # FUNCTIONS
 ################
+def spacing(t):
+    start = 1
+    end = 1.4
+    n_start = 1200
+    n_end = 4050
+    n = (t-start) * n_end - (t - end) * n_start
+    n /= (end - start)
+    return n
+
 def select_fix(m):
     if m == 4:
         snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950]
-        days = [1, 1.1, 1.3, 1.4] # t/t_fb
-        num_array = 1200 * np.ones(len(snapshots))
-        for i in range(1,len(num_array)):
-            num_array[i] = int(1.5 * num_array[i-1])
+        snapshots = [844, 881, 925, 950] #[844, 881, 882, 898, 925, 950]
+        days = [1, 1.1, 1.3, 1.4] #[1, 1.139, 1.143, 1.2, 1.3, 1.4] # t/t_fb
+            
+        #     const = 0.05
+    #     beginning = 1200
+    # num_array = beginning * np.ones(len(snapshots))
+    # for i in range(1,len(num_array)):
+    #         num_array[i] = int(1.5 * num_array[i-1])
+        num_array = [spacing(d) for d in days]
     return snapshots, days, num_array
 
 def get_kappa(T: float, rho: float, dr: float):
@@ -250,24 +263,31 @@ def get_thermr(rays_T, rays_den, radii):
 ################
 
 if __name__ == "__main__":
-    plot_kappas = False 
-    plot_photosphere_single_fix = False 
-    plot_photosphere = True 
+    plot_tau_ph = True 
+    plot_radii = False 
     m = 6 
     loadpath = str(m) + '/'
 
     snapshots, days, num_array = select_fix(m)
     fix_photo_arit = np.zeros(len(snapshots))
     fix_photo_geom = np.zeros(len(snapshots))
+    
+    fix_thermr_arit = np.zeros(len(snapshots))
+    fix_thermr_geom = np.zeros(len(snapshots))
 
-    for index, fix in enumerate(snapshots):
-        rays_T, rays_den, _, radii = ray_maker(fix, m, int(num_array[index]))
+    for index in range(0,1):
+        rays_T, rays_den, _, radii = ray_maker(snapshots[index], m, int(num_array[index]))
         rays_kappa, rays_cumulative_kappas, rays_photo = get_photosphere(rays_T, rays_den, radii)
         rays_photo /=  6.957e10
         fix_photo_arit[index] = np.mean(rays_photo)
         fix_photo_geom[index] = gmean(rays_photo)
+
+        tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
+        thermr /=  6.957e10
+        fix_thermr_arit[index] = np.mean(thermr)
+        fix_thermr_geom[index] = gmean(thermr)
     
-        if plot_kappas:
+        if plot_tau_ph:
             plot_kappa = np.zeros( (len(radii), len(rays_kappa)))
             for i in range(192):
                 for j in range(len(rays_cumulative_kappas)):
@@ -282,41 +302,41 @@ if __name__ == "__main__":
             img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_kappa.T, 
                                 cmap = 'Oranges', norm = colors.LogNorm(vmin = 1e-2, vmax =  2/3))
             cbar = plt.colorbar(img)
-            plt.axvline(x=np.max(rays_photo), c = 'black', linestyle = '--')
+            plt.axvline(x=np.mean(rays_photo), c = 'k', linestyle = '--', label = 'arit mean')
+            plt.axvline(x=gmean(rays_photo), c = 'b', linestyle = '--', label = 'geom mean')
             plt.title('Rays')
-            cbar.set_label(r'$K_{ph}$')
-            plt.xlabel('Distance from BH [$R_\odot$]')
+            cbar.set_label(r'$\tau_{ph}$')
+            plt.xlabel(r'Distance from BH [$\log_{10}R_\odot$]')
             plt.ylabel('Observers')
             img.axes.get_yaxis().set_ticks([])
-            plt.savefig('Final plot/photosphere.png')
-            plt.show()
-
-        if plot_photosphere_single_fix:
-            np.savetxt('data/dataph1500.txt', rays_photo)
-            plt.figure(figsize = [8,5])
-            plt.scatter(np.arange(192), rays_photo, s = 3, c = 'k')
-            plt.xlabel('Observers')
-            plt.ylabel(r'R$_{ph}$ [R$_\odot$]')
-            plt.text(8,8000, 'num=1500')
-            plt.savefig('Figs/844_photo1500.jpg')
-            plt.show()
-
-        if plot_photosphere:
-            with open('data/photosphere_m' + str(m) + '.txt', 'a') as file:
-                    file.write('# t/t_fb \n')
-                    file.write(' '.join(map(str, days)) + '\n')
-                    file.write('# Photosphere arithmetic mean \n')
-                    file.write(' '.join(map(str, fix_photo_arit)) + '\n')
-                    file.write('# Photosphere geometric mean \n')
-                    file.write(' '.join(map(str, fix_photo_geom)) + '\n')
-                    file.close()
-            plt.plot(days, fix_photo_arit, '-o', color = 'black', label = 'Photospehere radius, arithmetic mean')
-            plt.plot(days, fix_photo_geom, '-o', color = 'pink', label = 'Photospehere radius, geometric mean')
-            plt.xlabel(r't/$t_{fb}$')
-            plt.ylabel(r'Photosphere [$R_\odot$]')
-            plt.grid()
             plt.legend()
-        plt.show()
+            plt.xscale('log')
+            plt.savefig('Final plot/photosphere_' + str(snapshots[index]) + 'num_' + str(int(num_array[index])) + '.png')
+            plt.show()
 
-        print('Fix ', fix)
+        print('Fix', snapshots[index])
+        
+    if plot_radii:
+        with open('data/special_radii_m' + str(m) + '.txt', 'a') as file:
+                file.write('# t/t_fb \n')
+                file.write(' '.join(map(str, days)) + '\n')
+                file.write('# Photosphere arithmetic mean \n')
+                file.write(' '.join(map(str, fix_photo_arit)) + '\n')
+                file.write('# Photosphere geometric mean \n')
+                file.write(' '.join(map(str, fix_photo_geom)) + '\n')
+                file.write('# Thermalisation radius arithmetic mean \n')
+                file.write(' '.join(map(str, fix_thermr_arit)) + '\n')
+                file.write('# Thermalisation radius geometric mean \n')
+                file.write(' '.join(map(str, fix_thermr_geom)) + '\n')
+                file.close()
+        plt.plot(days, fix_photo_arit, '-o', color = 'black', label = 'Photospehere radius, arithmetic mean')
+        plt.plot(days, fix_photo_geom, '-o', color = 'pink', label = 'Photospehere radius, geometric mean')
+        plt.plot(days, fix_thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
+        plt.plot(days, fix_thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
+        plt.xlabel(r't/$t_{fb}$')
+        plt.ylabel(r'Photosphere [$R_\odot$]')
+        plt.grid()
+        plt.legend()
+    plt.show()
+
         
