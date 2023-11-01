@@ -201,7 +201,7 @@ def doer_of_thing(fix, m, num):
     plt.savefig('Figs/' + str(fix) + '_NEWflux.png')                   
 
     # Save flux
-    with open('data/flux_m'+ str(m) + '.txt', 'a') as f:
+    with open('data/flux_m'+ str(m) + 'num_' + str(num) + '.txt', 'a') as f:
         f.write('#snap '+ str(fix) + '\n')
         f.write(' '.join(map(str, flux)) + '\n')
         f.close() 

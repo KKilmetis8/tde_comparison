@@ -18,7 +18,7 @@ from astropy.coordinates import cartesian_to_spherical
 from src.Calculators.legion_of_casters import THROUPLE_S_CASTERS
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
-alice = True
+alice = False
 #%% Constants & Converter
 NSIDE = 4
 G = 6.6743e-11 # SI
