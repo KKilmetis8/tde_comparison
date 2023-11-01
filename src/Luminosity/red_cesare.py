@@ -171,6 +171,9 @@ def flux_calculator(grad_E, idx_tot,
     return f
 
 def doer_of_thing(fix, m, num):
+    """
+    Gives bolometric L and R_ph (of evry observer)
+    """
     rays_T, rays_den, rays, radii = ray_maker(fix, m, num)
 
     grad_E_tot = []
@@ -197,19 +200,28 @@ def doer_of_thing(fix, m, num):
     plt.grid()
     plt.savefig('Figs/' + str(fix) + '_NEWflux.png')                   
 
+    # Save flux
+    with open('data/flux_m'+ str(m) + '.txt', 'a') as f:
+        f.write('#snap '+ str(fix) + '\n')
+        f.write(' '.join(map(str, flux)) + '\n')
+        f.close() 
+
     # Calculate luminosity 
     lum = np.zeros(len(flux))
     zero_count = 0
+    neg_count = 0
     for i in range(len(flux)):
         # Turn to luminosity
         if flux[i] == 0:
             zero_count += 1
         if flux[i] < 0:
+            neg_count += 1
             flux[i] = 0 
         lum[i] = flux[i] * 4 * np.pi * sphere_radius[i]**2
 
     # Average in observers
     lum = np.sum(lum)/192
+    print('Tot zeros:', zero_count)
     print('tot zeros:', zero_count)
     print('Fix %i' %fix, ', Lum %.3e' %lum )
     return lum
@@ -225,7 +237,7 @@ if __name__ == "__main__":
     lums = []
             
     for idx,fix in enumerate(fixes):
-        lum = doer_of_thing(fix, m, int(num_array[idx]))
+        lum, sphere_radius = doer_of_thing(fix, m, int(num_array[idx]))
         lums.append(lum)
     
     if save:
