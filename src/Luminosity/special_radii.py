@@ -302,8 +302,8 @@ if __name__ == "__main__":
             img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_kappa.T, 
                                 cmap = 'Oranges', norm = colors.LogNorm(vmin = 1e-2, vmax =  2/3))
             cbar = plt.colorbar(img)
-            plt.axvline(x=np.mean(rays_photo), c = 'k', linestyle = '--', label = 'arit mean')
-            plt.axvline(x=gmean(rays_photo), c = 'b', linestyle = '--', label = 'geom mean')
+            plt.axvline(x=np.mean(rays_photo), c = 'k', linestyle = '--', label = r'$\bar{R}_{ph}$ arit mean')
+            plt.axvline(x=gmean(rays_photo), c = 'b', linestyle = '--', label = r'$\bar{R}_{ph}$ geom mean')
             plt.title('Rays')
             cbar.set_label(r'$\tau_{ph}$')
             plt.xlabel(r'Distance from BH [$\log_{10}R_\odot$]')
