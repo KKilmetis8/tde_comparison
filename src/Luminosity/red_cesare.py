@@ -18,6 +18,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 import matplotlib.pyplot as plt
 import numba
+from datetime import datetime
 # Custom Imports
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_cesare import ray_maker
@@ -27,6 +28,7 @@ plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
 
 #%% Constants & Converter
+today = datetime.now()
 c_cgs = 3e10 # [cm/s]
 Rsol_to_cm = 6.957e10 # [cm]
 alice = False
@@ -193,16 +195,16 @@ def doer_of_thing(fix, m, num):
     # Calculate Flux and see how it looks
     flux = flux_calculator(grad_E_tot, idx_tot, 
                             rays, rays_T, rays_den)
-    plt.figure(figsize = [8,5])
-    plt.scatter(np.arange(192), flux, s = 3, color = 'orange')     
-    plt.xlabel('Observer')
-    plt.ylabel(r'Flux [erg/s cm$^2$]')
-    plt.grid()
-    plt.savefig('Figs/' + str(fix) + '_NEWflux.png')                   
+    # plt.figure(figsize = [8,5])
+    # plt.scatter(np.arange(192), flux, s = 3, color = 'orange')     
+    # plt.xlabel('Observer')
+    # plt.ylabel(r'Flux [erg/s cm$^2$]')
+    # plt.grid()
+    # plt.savefig('Figs/' + str(fix) + '_NEWflux.png')                   
 
     # Save flux
-    with open('data/flux_m'+ str(m) + 'num_' + str(num) + '.txt', 'a') as f:
-        f.write('#snap '+ str(fix) + '\n')
+    with open('data/flux_m'+ str(m) + '_fix' + str(fix) + '.txt', 'a') as f:
+        f.write('#snap '+ str(fix) + 'num ' + str(num) + ', ' + str(today) + '\n')
         f.write(' '.join(map(str, flux)) + '\n')
         f.close() 
 
@@ -222,15 +224,15 @@ def doer_of_thing(fix, m, num):
     # Average in observers
     lum = np.sum(lum)/192
     print('Tot zeros:', zero_count)
-    print('tot zeros:', zero_count)
+    print('Negative: ', neg_count)      
     print('Fix %i' %fix, ', Lum %.3e' %lum )
-    return lum
+    return lum, sphere_radius
 #%%
 ##
 # MAIN
 ##
 if __name__ == "__main__":
-    save = True
+    save = False
     plot = False
     m = 6 # Choose BH
     fixes, days, num_array = select_fix(m)
@@ -246,7 +248,7 @@ if __name__ == "__main__":
             np.savetxt('red_backup_save'+ str(m) + '.txt', (days, lums))
             np.savetxt(pre + 'tde_comparison/data/alicered'+ str(m) + '.txt', (days, lums))
         else:
-            np.savetxt('data/new2_reddata_m'+ str(m) + '.txt', (days, lums)) 
+            np.savetxt('data/new_reddata_m'+ str(m) + '.txt', (days, lums)) 
     #%% Plotting
     if plot:
         plt.figure()
@@ -261,6 +263,6 @@ if __name__ == "__main__":
             plt.title('FLD for $10^4 \quad M_\odot$')
             plt.ylim(1e39,1e42)
         plt.grid()
-        plt.savefig('Final plot/new2_red' + str(m) + '.png')
+        plt.savefig('Final plot/new_red' + str(m) + '.png')
         plt.show()
 
