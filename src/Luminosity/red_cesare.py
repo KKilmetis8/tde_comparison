@@ -203,7 +203,7 @@ def doer_of_thing(fix, m, num):
     # plt.savefig('Figs/' + str(fix) + '_NEWflux.png')                   
 
     # Save flux
-    with open('data/flux_m'+ str(m) + '_fix' + str(fix) + '.txt', 'a') as f:
+    with open('data/red/flux_m'+ str(m) + '_fix' + str(fix) + '.txt', 'a') as f:
         f.write('#snap '+ str(fix) + 'num ' + str(num) + ', ' + str(today) + '\n')
         f.write(' '.join(map(str, flux)) + '\n')
         f.close() 
@@ -248,7 +248,7 @@ if __name__ == "__main__":
             np.savetxt('red_backup_save'+ str(m) + '.txt', (days, lums))
             np.savetxt(pre + 'tde_comparison/data/alicered'+ str(m) + '.txt', (days, lums))
         else:
-            np.savetxt('data/new_reddata_m'+ str(m) + '.txt', (days, lums)) 
+            np.savetxt('data/red/new_reddata_m'+ str(m) + '.txt', (days, lums)) 
     #%% Plotting
     if plot:
         plt.figure()
