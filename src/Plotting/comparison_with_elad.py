@@ -17,8 +17,8 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['figure.figsize'] = [5 , 4]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
-plot_curves = True
-plot_radii_sphere = False
+plot_curves = False
+plot_radii_sphere = True
 plot_fit = False
 m = 6
 
@@ -31,7 +31,7 @@ if plot_curves:
     # Ours Load
     x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
     b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
-    fld_data = np.loadtxt('data/new2_reddata_m'+ str(m) +'.txt')
+    fld_data = np.loadtxt('data/red/new_reddata_m'+ str(m) +'.txt')
 
     # Elad Plot
     plt.plot(elad_time[0], np.power(10, elad_red[0]), c = 'r')
@@ -47,21 +47,21 @@ if plot_curves:
     plt.xlim(39, 59)
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
-    plt.savefig('Final plot/Elad_new_comparison.png')
+    #plt.savefig('Final plot/Elad_new_comparison.png')
     plt.show()
 
 if plot_radii_sphere:
-    photo = np.loadtxt('data/photosphere_m'+ str(m) + '.txt') 
-    thermr = np.loadtxt('data/thermr_m'+ str(m) + '.txt')
-    days = np.multiply(photo[0], 40)
-    photo_arit = photo[1]
-    photo_geom = photo[2]
-    thermr_arit = thermr[1]
-    thermr_geom = thermr[2]
+    spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '.txt') 
+    photo = spec_radii
+    days = np.multiply(spec_radii[0], 40)
+    photo_arit = spec_radii[1]
+    photo_geom = spec_radii[2]
+    thermr_arit = spec_radii[3]
+    thermr_geom = spec_radii[4]
     plt.plot(days, photo_arit, '-o', color = 'black', label = 'Photosphere radius, arithmetic mean')
     plt.plot(days, photo_geom, '-o', color = 'pink', label = 'Photosphere radius, geometric mean')
-    plt.plot(days, thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
-    plt.plot(days, thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
+    # plt.plot(days, thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
+    # plt.plot(days, thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
     plt.xlabel('Time (days)')
     plt.xlim(40,65)
     plt.ylim(10,1e4)
