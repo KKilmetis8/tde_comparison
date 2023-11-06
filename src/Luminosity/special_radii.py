@@ -34,9 +34,9 @@ from src.Calculators.ray_cesare import ray_maker
 ################
 def spacing(t):
     start = 1
-    end = 1.4
-    n_start = 1200
-    n_end = 4050
+    end = 1.3
+    n_start = 700
+    n_end = 3000
     n = (t-start) * n_end - (t - end) * n_start
     n /= (end - start)
     return n
@@ -266,7 +266,7 @@ def get_thermr(rays_T, rays_den, radii):
 ################
 
 if __name__ == "__main__":
-    plot_tau_ph = True 
+    plot_tau_ph = False 
     plot_radii = False 
     m = 6 
     loadpath = str(m) + '/'
@@ -279,9 +279,11 @@ if __name__ == "__main__":
     fix_thermr_geom = np.zeros(len(snapshots))
 
     for index in range(0,1):
-        rays_T, rays_den, _, radii = ray_maker(snapshots[index], m, int(num_array[index]))
+        num = int(num_array[index])
+        rays_T, rays_den, _, radii = ray_maker(snapshots[index], m, num)
         rays_kappa, rays_cumulative_kappas, rays_photo = get_photosphere(rays_T, rays_den, radii)
         rays_photo /=  6.957e10
+        np.savetxt('data/red/photosphere' + str(snapshots[index]) + '_num' + str(num) + '.txt', rays_photo)
         fix_photo_arit[index] = np.mean(rays_photo)
         fix_photo_geom[index] = gmean(rays_photo)
 

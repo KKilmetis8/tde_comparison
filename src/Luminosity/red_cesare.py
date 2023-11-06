@@ -3,7 +3,7 @@
 """
 Created on Mon Sep  4 16:42:47 2023
 
-@author: paola
+@author: paola 
 
 Equations refer to Krumholtz '07
 
