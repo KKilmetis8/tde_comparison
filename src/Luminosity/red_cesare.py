@@ -46,7 +46,7 @@ def spacing(t):
     else:
         start = 1
         end = 1.4
-        n_start = 1200
+        n_start = 1400
         n_end = 4050
     n = (t-start) * n_end - (t - end) * n_start
     n /= (end - start)
@@ -134,12 +134,10 @@ def flux_calculator(grad_E, idx_tot,
             f[i] = 0 
             continue
         
-        # T too high => Kramers'law
+        # T too high => scattering
         if Temperature > T_high:
-            X = 0.7389
-            k_ross = 3.68 * 1e22 * (1 + X) * Temperature**(-3.5) * Density #Kramers' opacity [cm^2/g]
-            # Tscatter = np.exp(17.87)
-            # k_ross = opacity(Tscatter, Density, 'scattering', ln = False)
+            Tscatter = np.exp(17.87)
+            k_ross = opacity(Tscatter, Density, 'scattering', ln = False)
             k_ross *= Density
         else:    
             # Get Opacity, NOTE: Breaks Numba
@@ -168,10 +166,10 @@ def flux_calculator(grad_E, idx_tot,
                 flux_zero += 1
 
     print('Max: ', max_count)
-    print('Zero due to: \n - max travel: ', max_but_zero_count)
+    print('Zero due to: \n- max travel: ', max_but_zero_count)
     print('- T_low:', zero_count)
     print('- flux:', flux_zero) 
-    print('Flux: ', flux_count)
+    print('Flux: ', flux_count, '\n---------') 
     return f
 
 def doer_of_thing(fix, m, num):
@@ -234,7 +232,7 @@ def doer_of_thing(fix, m, num):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = False
+    save = True
     plot = False
     m = 6 # Choose BH
     fixes, days, num_array = select_fix(m)

@@ -17,8 +17,8 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['figure.figsize'] = [5 , 4]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
-plot_curves = False
-plot_radii_sphere = True
+plot_curves = True
+plot_radii_sphere = False
 plot_fit = False
 m = 6
 
@@ -29,8 +29,8 @@ if plot_curves:
     elad_blue = mat['L_bb']
     elad_red = mat['L_fld']
     # Ours Load
-    x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
-    b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
+    # x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
+    # b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
     fld_data = np.loadtxt('data/red/new_reddata_m'+ str(m) +'.txt')
 
     # Elad Plot
@@ -39,7 +39,7 @@ if plot_curves:
     # Our plot
     days = fld_data[0]
     days40 = np.multiply(days, 40)
-    plt.plot(days40, b[len(b) - 4:], '--s', c='navy', markersize = 4, alpha = 0.8)
+    # plt.plot(days40, b[len(b) - 4:], '--s', c='navy', markersize = 4, alpha = 0.8)
     plt.plot(days40, fld_data[1], '--o', c='maroon', markersize = 4, alpha = 0.8)
 
     plt.yscale('log')
