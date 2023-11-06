@@ -138,6 +138,8 @@ def flux_calculator(grad_E, idx_tot,
         if Temperature > T_high:
             X = 0.7389
             k_ross = 3.68 * 1e22 * (1 + X) * Temperature**(-3.5) * Density #Kramers' opacity [cm^2/g]
+            # Tscatter = np.exp(17.87)
+            # k_ross = opacity(Tscatter, Density, 'scattering', ln = False)
             k_ross *= Density
         else:    
             # Get Opacity, NOTE: Breaks Numba

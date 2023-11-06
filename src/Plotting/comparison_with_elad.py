@@ -59,7 +59,7 @@ if plot_radii_sphere:
     thermr_arit = spec_radii[3]
     thermr_geom = spec_radii[4]
     plt.plot(days, photo_arit, '-o', color = 'black', label = 'Photosphere radius, arithmetic mean')
-    plt.plot(days, photo_geom, '-o', color = 'pink', label = 'Photosphere radius, geometric mean')
+    plt.plot(days, photo_geom, '-o', color = 'magenta', label = 'Photosphere radius, geometric mean')
     # plt.plot(days, thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
     # plt.plot(days, thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
     plt.xlabel('Time (days)')

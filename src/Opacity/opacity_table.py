@@ -87,16 +87,16 @@ def opacity(T, rho, kind, ln = True) -> float:
         opacity = np.sqrt(3 * k_a * (k_a + k_s)) 
         return opacity
     
-    # elif kind == 'red':
-    #     planck = lnk_planck_inter((T, rho))
-    #     scattering = lnk_scatter_inter((T, rho))
+    elif kind == 'red':
+        planck = lnk_planck_inter((T, rho))
+        scattering = lnk_scatter_inter((T, rho))
         
-    #     # Apoelenism
-    #     k_p = np.exp(planck)
-    #     k_s = np.exp(scattering)
+        # Apoelenism
+        k_p = np.exp(planck)
+        k_s = np.exp(scattering)
         
-    #     opacity = k_p + k_s
-    #     return opacity
+        opacity = k_p + k_s
+        return opacity
     
     else:
         print('Invalid opacity type. Try: scattering/ rosseland / planck / effective.')
