@@ -35,7 +35,7 @@ if plot_curves:
 
     # Elad Plot
     plt.plot(elad_time[0], np.power(10, elad_red[0]), c = 'r')
-    plt.plot(elad_time[0], np.power(10, elad_blue[0]), c = 'b')
+    # plt.plot(elad_time[0], np.power(10, elad_blue[0]), c = 'b')
     # Our plot
     days = fld_data[0]
     days40 = np.multiply(days, 40)
@@ -47,7 +47,7 @@ if plot_curves:
     plt.xlim(39, 59)
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
-    #plt.savefig('Final plot/Elad_new_comparison.png')
+    plt.savefig('Final plot/Elad_new_comparison.png')
     plt.show()
 
 if plot_radii_sphere:
