@@ -18,20 +18,17 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 import matplotlib.pyplot as plt
 import numba
-from datetime import datetime
 # Custom Imports
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_cesare import ray_maker
 from src.Luminosity.special_radii import calc_photosphere
-plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
 
 #%% Constants & Converter
-today = datetime.now()
 c_cgs = 3e10 # [cm/s]
 Rsol_to_cm = 6.957e10 # [cm]
-alice = False
+alice = True
 #%%
 ##
 # FUNCTIONS
@@ -40,14 +37,14 @@ alice = False
 def spacing(t):
     if alice:
         start = 1.00325
-        end = 1.608
-        n_start = 1200
-        n_end = 6000
+        end = 1.3
+        n_start = 1400
+        n_end = 1800
     else:
         start = 1
-        end = 1.4
+        end = 1.3
         n_start = 1400
-        n_end = 4050
+        n_end = 1800
     n = (t-start) * n_end - (t - end) * n_start
     n /= (end - start)
     return n
@@ -138,7 +135,6 @@ def flux_calculator(grad_E, idx_tot,
         if Temperature > T_high:
             Tscatter = np.exp(17.87)
             k_ross = opacity(Tscatter, Density, 'scattering', ln = False)
-            k_ross *= Density
         else:    
             # Get Opacity, NOTE: Breaks Numba
             k_ross = opacity(Temperature, Density, 'rosseland', ln = False)
@@ -166,16 +162,13 @@ def flux_calculator(grad_E, idx_tot,
                 flux_zero += 1
 
     print('Max: ', max_count)
-    print('Zero due to: \n- max travel: ', max_but_zero_count)
+    print('Zero due to: \n - max travel: ', max_but_zero_count)
     print('- T_low:', zero_count)
     print('- flux:', flux_zero) 
-    print('Flux: ', flux_count, '\n---------') 
+    print('Flux: ', flux_count)
     return f
 
 def doer_of_thing(fix, m, num):
-    """
-    Gives bolometric L and R_ph (of evry observer)
-    """
     rays_T, rays_den, rays, radii = ray_maker(fix, m, num)
 
     grad_E_tot = []
@@ -194,39 +187,25 @@ def doer_of_thing(fix, m, num):
 
     # Calculate Flux and see how it looks
     flux = flux_calculator(grad_E_tot, idx_tot, 
-                            rays, rays_T, rays_den)
-    # plt.figure(figsize = [8,5])
-    # plt.scatter(np.arange(192), flux, s = 3, color = 'orange')     
-    # plt.xlabel('Observer')
-    # plt.ylabel(r'Flux [erg/s cm$^2$]')
-    # plt.grid()
-    # plt.savefig('Figs/' + str(fix) + '_NEWflux.png')                   
-
-    # Save flux
-    with open('data/red/flux_m'+ str(m) + '_fix' + str(fix) + '.txt', 'a') as f:
-        f.write('#snap '+ str(fix) + 'num ' + str(num) + ', ' + str(today) + '\n')
-        f.write(' '.join(map(str, flux)) + '\n')
-        f.close() 
+                            rays, rays_T, rays_den)                   
 
     # Calculate luminosity 
     lum = np.zeros(len(flux))
     zero_count = 0
-    neg_count = 0
     for i in range(len(flux)):
         # Turn to luminosity
         if flux[i] == 0:
             zero_count += 1
         if flux[i] < 0:
-            neg_count += 1
             flux[i] = 0 
+            zero_count += 1
         lum[i] = flux[i] * 4 * np.pi * sphere_radius[i]**2
 
     # Average in observers
     lum = np.sum(lum)/192
-    print('Tot zeros:', zero_count)
-    print('Negative: ', neg_count)      
+    print('final tot zeros:', zero_count)
     print('Fix %i' %fix, ', Lum %.3e' %lum )
-    return lum, sphere_radius
+    return lum
 #%%
 ##
 # MAIN
@@ -239,7 +218,7 @@ if __name__ == "__main__":
     lums = []
             
     for idx,fix in enumerate(fixes):
-        lum, sphere_radius = doer_of_thing(fix, m, int(num_array[idx]))
+        lum = doer_of_thing(fix, m, int(num_array[idx]))
         lums.append(lum)
     
     if save:
@@ -248,21 +227,14 @@ if __name__ == "__main__":
             np.savetxt('red_backup_save'+ str(m) + '.txt', (days, lums))
             np.savetxt(pre + 'tde_comparison/data/alicered'+ str(m) + '.txt', (days, lums))
         else:
-            np.savetxt('data/red/new_reddata_m'+ str(m) + '.txt', (days, lums)) 
-    #%% Plotting
-    if plot:
-        plt.figure()
-        plt.plot(lums, '-o', color = 'maroon')
-        plt.yscale('log')
-        plt.ylabel('Bolometric Luminosity [erg/s]')
-        plt.xlabel('Days')
-        if m == 6:
-            plt.title('FLD for $10^6 \quad M_\odot$')
-            plt.ylim(1e41,1e45)
-        if m == 4:
-            plt.title('FLD for $10^4 \quad M_\odot$')
-            plt.ylim(1e39,1e42)
-        plt.grid()
-        plt.savefig('Final plot/new_red' + str(m) + '.png')
-        plt.show()
+            np.savetxt('data/new2_reddata_m'+ str(m) + '.txt', (days, lums)) 
+    
+
+
+
+
+
+
+
+
 
