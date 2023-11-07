@@ -44,7 +44,7 @@ if plot_curves:
 
     plt.yscale('log')
     plt.grid()
-    plt.xlim(39, 59)
+    plt.xlim(39, 65)
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
     plt.savefig('Final plot/Elad_new_comparison.png')

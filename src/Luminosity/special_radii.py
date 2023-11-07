@@ -46,8 +46,8 @@ def select_fix(m):
         snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950] #[844, 881, 882, 898, 925, 950]
-        days = [1, 1.1, 1.3, 1.4] #[1, 1.139, 1.143, 1.2, 1.3, 1.4] # t/t_fb
+        snapshots = [844, 881, 925, 950, 1008] #[844, 881, 882, 898, 925, 950]
+        days = [1, 1.1, 1.3, 1.4, 1.608] #[1, 1.139, 1.143, 1.2, 1.3, 1.4] # t/t_fb
             
         #     const = 0.05
     #     beginning = 1200
@@ -278,12 +278,16 @@ if __name__ == "__main__":
     fix_thermr_arit = np.zeros(len(snapshots))
     fix_thermr_geom = np.zeros(len(snapshots))
 
-    for index in range(0,1):
+    for index in range(4,5):
         num = int(num_array[index])
         rays_T, rays_den, _, radii = ray_maker(snapshots[index], m, num)
         rays_kappa, rays_cumulative_kappas, rays_photo = get_photosphere(rays_T, rays_den, radii)
         rays_photo /=  6.957e10
-        np.savetxt('data/red/photosphere' + str(snapshots[index]) + '_num' + str(num) + '.txt', rays_photo)
+        
+        with open('data/red/photosphere' + str(snapshots[index]) + '_num' + str(num) + '.txt', 'a') as fileph:
+            fileph.write(' '.join(map(str,rays_photo)) + '\n')
+            fileph.close()
+
         fix_photo_arit[index] = np.mean(rays_photo)
         fix_photo_geom[index] = gmean(rays_photo)
 
