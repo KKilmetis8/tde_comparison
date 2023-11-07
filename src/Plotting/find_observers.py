@@ -45,10 +45,10 @@ if see_observers:
 if flux:
     flux = np.loadtxt('data/red/flux_m' + str(m) + '_fix' + str(fix) + '.txt')[index_num]/1e15
     fig, ax = plt.subplots(1,1, subplot_kw=dict(projection = "mollweide"))
-    img = ax.scatter(phis, thetas, c = flux, cmap = plt.cm.coolwarm, s=90, marker = 'h', vmin = -5, vmax = 5)
+    img = ax.scatter(phis, thetas, c = flux, cmap = plt.cm.coolwarm, s = 70, marker = 'h', vmin = -5, vmax = 5)
     cbar = fig.colorbar(img)
     cbar.set_label(r'Flux [$10^{15}$ erg/$cm^2$s]', fontsize = 8)
-    plt.grid(True)
+    # plt.grid(True)
     plt.savefig('Final plot/observers_flux' + str(fix) + '.png')
     plt.show()
 
@@ -59,9 +59,10 @@ if photosphere:
     photo = np.loadtxt('data/red/photosphere' + str(fix) + '_num' + str(num) + '.txt')
     photo_to_plot = (photo/Rref) - 1
     fig, ax = plt.subplots(1,1, subplot_kw=dict(projection = "mollweide"))
-    img = ax.scatter(phis, thetas, c = photo_to_plot, cmap = plt.cm.winter, s = 90, marker = 'h', vmin = 0, vmax = 90)
+    import colorcet
+    img = ax.scatter(phis, thetas, c = photo_to_plot, cmap = "cet_rainbow4", s = 70, marker = 'h', vmin = 0, vmax = 90)
     cbar = fig.colorbar(img)
     cbar.set_label(r'$\frac{R_{ph}}{R_{ph,ref}}$-1', fontsize = 8)
-    plt.grid(True)
+    # plt.grid(True)
     plt.savefig('Final plot/observers_photo' + str(fix) + '.png')
     plt.show()
