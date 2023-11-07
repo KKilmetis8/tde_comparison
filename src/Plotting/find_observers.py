@@ -16,9 +16,9 @@ plt.rcParams['figure.figsize'] = [10 , 3]
 
 NSIDE = 4
 m = 6
-fix = 1008
-num = 5300 #700 for 844, 3000 for 925, 5360 for 1008
-index_num = 2
+fix = 844
+num = 700 #700 for 844, 3000 for 925, 5360 for 1008
+index_num = 3
 see_observers = False
 photosphere = True
 flux = True
@@ -31,7 +31,7 @@ for i in range(0,192):
     thetas[i] -= np.pi/2 # Enforce theta in -pi/2 to pi/2
     phis[i] -= np.pi # Enforce theta in -pi to pi
     observers.append( (thetas[i], phis[i]) )
-
+print(phis)
 # Plot
 if see_observers:
     fig, ax = plt.subplots(1,1, subplot_kw=dict(projection="mollweide"))
@@ -45,7 +45,7 @@ if see_observers:
 if flux:
     flux = np.loadtxt('data/red/flux_m' + str(m) + '_fix' + str(fix) + '.txt')[index_num]/1e15
     fig, ax = plt.subplots(1,1, subplot_kw=dict(projection = "mollweide"))
-    img = ax.scatter(phis, thetas, c = flux, cmap = plt.cm.coolwarm, s=15, marker = 'h', vmin = -5, vmax = 5)
+    img = ax.scatter(phis, thetas, c = flux, cmap = plt.cm.coolwarm, s=90, marker = 'h', vmin = -5, vmax = 5)
     cbar = fig.colorbar(img)
     cbar.set_label(r'Flux [$10^{15}$ erg/$cm^2$s]', fontsize = 8)
     plt.grid(True)
@@ -59,9 +59,9 @@ if photosphere:
     photo = np.loadtxt('data/red/photosphere' + str(fix) + '_num' + str(num) + '.txt')
     photo_to_plot = (photo/Rref) - 1
     fig, ax = plt.subplots(1,1, subplot_kw=dict(projection = "mollweide"))
-    img = ax.scatter(phis, thetas, c = photo_to_plot, cmap = plt.cm.Paired, s = 15, marker = 'h', vmin = 0, vmax = 100)
+    img = ax.scatter(phis, thetas, c = photo_to_plot, cmap = plt.cm.winter, s = 90, marker = 'h', vmin = 0, vmax = 90)
     cbar = fig.colorbar(img)
-    cbar.set_label(r'1-$\frac{R_{ph}}{R_{ph,ref}}$', fontsize = 8)
+    cbar.set_label(r'$\frac{R_{ph}}{R_{ph,ref}}$-1', fontsize = 8)
     plt.grid(True)
     plt.savefig('Final plot/observers_photo' + str(fix) + '.png')
     plt.show()
