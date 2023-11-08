@@ -5,6 +5,9 @@ Created on Tue Nov  7 17:55:24 2023
 
 @author: konstantinos
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
+
 import numpy as np
 import numba
 from src.Opacity.opacity_table import opacity
@@ -146,11 +149,11 @@ def red(fixes, m):
         np.savetxt(pre + 'data/photosphere_alice', photos)
     else:
         np.savetxt('data/red_tube',bols)
-        np.savetxt('data/photosphere', bols)
+        np.savetxt('data/photosphere', photos)
         
-    if not alice:
-        from src.Utilities.finished import finished
-        finished()
+    # if not alice:
+    #     from src.Utilities.finished import finished
+    #     finished()
             
     return bols, photos
 #%% Main
@@ -202,4 +205,5 @@ if plot and not alice:
     ax[1].set_title('Photosphere')
     ax[1].set_ylabel(r'Photosphere Radius [$R_\odot$]')
     ax[1].set_xlabel('Observers')
+    plt.show()
     

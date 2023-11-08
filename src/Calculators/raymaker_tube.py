@@ -73,18 +73,15 @@ def loader(fix, m, prune = 1, plot = False):
     observers = []
     delta_thetas = []
     delta_phis = []
-    fig, ax = plt.subplots(1,1, subplot_kw=dict(projection="mollweide"))
     for i in range(192):
         # Get Observers
-        thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
+        thetas[i], phis[i] = hp.pix2ang(4, i)
         thetas[i] -= np.pi/2 # Enforce theta in -pi to pi    
         observers.append( (thetas[i], phis[i]) )
         
         # Get their opening angles
-        theta_diff = 0
         phi_diff = 0
         corner_angles = []
-        
         # Corner XYZ coordinates
         corner_x, corner_y, corner_z = hp.boundaries(4,i)
         corners = np.zeros((4,3))
@@ -95,9 +92,13 @@ def loader(fix, m, prune = 1, plot = False):
             corners[i] = corner_x[i], corner_y[i], corner_z[i]
             corner_angles[i][0] = hp.vec2ang(corners[i])[0][0]
             corner_angles[i][1] = hp.vec2ang(corners[i])[1][0]
-            
-        # Biggest possible Delta phi and Delta theta
-        # print(corner_angles.T[1].max() - corner_angles.T[1].min())
+
+        for j in range(4):
+            if corner_angles[j][1] > 3/2 * np.pi:
+                for k in range(4):
+                    if corner_angles[k][1] < np.pi:
+                        corner_angles[k][1] = 2 * np.pi - 0.001
+        
         corner_angles_phi_plot = list(corner_angles.T[1] - np.pi)
         corner_angles_theta_plot = list(corner_angles.T[0] - np.pi/2)
         
@@ -105,41 +106,36 @@ def loader(fix, m, prune = 1, plot = False):
         corner_angles_phi_plot.append(corner_angles_phi_plot[0]) 
         corner_angles_theta_plot.append(corner_angles_theta_plot[0])
         
-        if plot:
-            plt.plot(corner_angles_phi_plot, corner_angles_theta_plot, '-x', 
-                      markersize = 1, c='k', linewidth = 1, zorder = 4,)
-        for i in range(0,4):
-            theta_diff_temp = np.max(np.abs(corner_angles[i][0] - corner_angles[:][0]))
-            phi_diff_temp = np.max(np.abs(corner_angles[i][1] - corner_angles[:][1])) 
-            
-            if theta_diff_temp > theta_diff:
-                theta_diff = theta_diff_temp
+        theta_max = np.max(corner_angles_theta_plot)
+        theta_min = np.min(corner_angles_theta_plot)
+
+        phi_max = np.max(corner_angles_phi_plot)
+        phi_min = np.min(corner_angles_phi_plot)
+
+        theta_diff = theta_max - theta_min
+        phi_diff = phi_max - phi_min
                 
-            if phi_diff_temp > phi_diff:
-                phi_diff = phi_diff_temp
-                
-        delta_thetas.append(theta_diff/2)
-        delta_phis.append(phi_diff/2)
+        delta_thetas.append(theta_diff)
+        delta_phis.append(phi_diff)
 
     # Simulation Points plot
     if plot:
         plt.plot(PHI[::100] - np.pi, THETA[::100], 
                  'x',  c = 'r', markersize = 0.1, zorder = 2) 
-    return THETA, PHI, R, T, Den, Rad, observers
+    return THETA, PHI, R, T, Den, Rad, observers, delta_thetas, delta_phis
 
 @numba.njit
-def ray_maker_doer(THETA, PHI, R, T, Den, Rad, observers):
+def ray_maker_doer(THETA, PHI, R, T, Den, Rad, observers, delta_thetas, delta_phis):
     # Make rays
     rays_T = []
     rays_Den = []
     rays_R = []
     rays_Rad = []
     
-    # NOTE: These are kind of wrong, we should be more explicit about this
-    delta_phi = 0.392 / 2 # rad
-    delta_theta = 0.339 / 2 # rad
-    for observer in observers:
-
+    for i, observer in enumerate(observers):
+        delta_theta = delta_thetas[i]
+        delta_phi = delta_phis[i]
+        
         # numpy thinks in C
         theta_mask = ( observer[0] - delta_theta < THETA) & \
                       ( THETA < observer[0] + delta_theta)
@@ -201,9 +197,9 @@ def ray_maker_doer(THETA, PHI, R, T, Den, Rad, observers):
 #         rays_T.append( ray_T)
 #         rays_Rad.append(ray_Rad)
 def ray_maker(fix, m, prune = 1, plot = False):
-    THETA, PHI, R, T, Den, Rad, observers = loader(fix, m, prune, plot)
+    THETA, PHI, R, T, Den, Rad, observers, delta_thetas, delta_phis = loader(fix, m, prune, plot)
     rays_T, rays_Den, rays_Rad, rays_R = ray_maker_doer(THETA, PHI, R, T, Den, 
-                                                        Rad, observers)
+                                                        Rad, observers, delta_thetas, delta_phis)
     
     return rays_T, rays_Den, rays_Rad, rays_R
 
