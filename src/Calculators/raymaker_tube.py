@@ -36,7 +36,9 @@ en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 
 def loader(fix, m, prune = 1, plot = False):
     fix = str(fix)
-    
+    if plot:
+           fig = plt.figure()
+           ax = fig.add_subplot(111,) #projection='mollweide')
     if alice:
         pre = '/home/s3745597/data1/TDE/'
         # Import
@@ -60,7 +62,7 @@ def loader(fix, m, prune = 1, plot = False):
     Rad *= Den 
     Rad *= en_den_converter
     Den *= den_converter 
-    
+
     # Convert to spherical
     R, THETA, PHI = cartesian_to_spherical(X,Y,Z)
     R = R.value 
@@ -88,24 +90,28 @@ def loader(fix, m, prune = 1, plot = False):
         corner_angles = np.zeros((4,2))
         
         # Corner 
-        for i in range(4):
-            corners[i] = corner_x[i], corner_y[i], corner_z[i]
-            corner_angles[i][0] = hp.vec2ang(corners[i])[0][0]
-            corner_angles[i][1] = hp.vec2ang(corners[i])[1][0]
+        for l in range(4):
+            corners[l] = corner_x[l], corner_y[l], corner_z[l]
+            corner_angles[l][0] = hp.vec2ang(corners[l])[0][0]
+            corner_angles[l][1] = hp.vec2ang(corners[l])[1][0]
 
         for j in range(4):
             if corner_angles[j][1] > 3/2 * np.pi:
                 for k in range(4):
                     if corner_angles[k][1] < np.pi:
                         corner_angles[k][1] = 2 * np.pi - 0.001
-        
+
         corner_angles_phi_plot = list(corner_angles.T[1] - np.pi)
         corner_angles_theta_plot = list(corner_angles.T[0] - np.pi/2)
+        
         
         # last point to close the rectangle
         corner_angles_phi_plot.append(corner_angles_phi_plot[0]) 
         corner_angles_theta_plot.append(corner_angles_theta_plot[0])
-        
+
+        if plot:
+            ax.plot(corner_angles_phi_plot, corner_angles_theta_plot, '-h', 
+                      markersize = 5, c='k', linewidth = 0.3, zorder = 4,)
         theta_max = np.max(corner_angles_theta_plot)
         theta_min = np.min(corner_angles_theta_plot)
 
@@ -120,12 +126,15 @@ def loader(fix, m, prune = 1, plot = False):
 
     # Simulation Points plot
     if plot:
-        plt.plot(PHI[::100] - np.pi, THETA[::100], 
-                 'x',  c = 'r', markersize = 0.1, zorder = 2) 
+        ax.plot(PHI[::20] - np.pi, THETA[::20], 
+                  'x',  c = AEK, markersize = 0.1, zorder = 2) 
+        # ax.set_xticks([])
+        # ax.set_yticks([])
     return THETA, PHI, R, T, Den, Rad, observers, delta_thetas, delta_phis
 
 @numba.njit
-def ray_maker_doer(THETA, PHI, R, T, Den, Rad, observers, delta_thetas, delta_phis):
+def ray_maker_doer(THETA, PHI, R, T, Den, Rad, observers, 
+                   delta_thetas, delta_phis):
     # Make rays
     rays_T = []
     rays_Den = []
@@ -133,8 +142,9 @@ def ray_maker_doer(THETA, PHI, R, T, Den, Rad, observers, delta_thetas, delta_ph
     rays_Rad = []
     
     for i, observer in enumerate(observers):
-        delta_theta = delta_thetas[i]
-        delta_phi = delta_phis[i]
+        delta_theta = delta_thetas[i] # 0.332 / 2 
+        delta_phi = delta_phis[i] # 0.339 / 2 
+        
         
         # numpy thinks in C
         theta_mask = ( observer[0] - delta_theta < THETA) & \
@@ -142,8 +152,8 @@ def ray_maker_doer(THETA, PHI, R, T, Den, Rad, observers, delta_thetas, delta_ph
                      
         phi_mask = ( observer[1] - delta_phi < PHI) & \
                     ( PHI < observer[1] + delta_phi)
-        fluff_mask = ( Den > 1e-17 )
-        
+        fluff_mask = ( Den > 1e-17 ) # 1e-17 works
+ 
         # Mask
         ray_R = R[theta_mask & phi_mask & fluff_mask] 
         ray_Den = Den[theta_mask & phi_mask  & fluff_mask ]# * ray_Mass / sum_mass
@@ -162,40 +172,10 @@ def ray_maker_doer(THETA, PHI, R, T, Den, Rad, observers, delta_thetas, delta_ph
         rays_Den.append( ray_Den )
         rays_T.append( ray_T)
         rays_Rad.append(ray_Rad)
-    
+        break
     return rays_T, rays_Den, rays_Rad, rays_R
         
-#         # These are kind of wrong, we should be more explicit about this
-#         delta_phi = 0.392 / 2 # rad
-#         delta_theta = 0.339 / 2 # rad
-#         # numpy thinks in C
-#         theta_mask = ( observer[0] - delta_theta < THETA) & \
-#                      ( THETA < observer[0] + delta_theta)
-                     
-#         phi_mask = ( observer[1] - delta_phi < PHI) & \
-#                    ( PHI < observer[1] + delta_phi)
-#         fluff_mask = ( Den > 1e-17 )
-#         #
-#         # Mask & Mass Weigh
-#         # ray_Mass = Mass[theta_mask & phi_mask]
-#         # sum_mass = np.sum(ray_Mass)
-#         ray_R = R[theta_mask & phi_mask & fluff_mask] 
-#         ray_Den = Den[theta_mask & phi_mask  & fluff_mask ]# * ray_Mass / sum_mass
-#         ray_T = T[theta_mask & phi_mask  & fluff_mask]# * ray_Mass / sum_mass
-#         ray_Rad = Rad[theta_mask & phi_mask  & fluff_mask]# * ray_Mass / sum_mass
-#         #
-#         # Sort by r
-#         bookeeper = np.argsort(ray_R)
-#         ray_R = ray_R[bookeeper]
-#         ray_Den = ray_Den[bookeeper]
-#         ray_T = ray_T[bookeeper]
-#         ray_Rad = ray_Rad[bookeeper]
-#         #
-#         # Keep
-#         rays_R.append(ray_R)
-#         rays_Den.append( ray_Den )
-#         rays_T.append( ray_T)
-#         rays_Rad.append(ray_Rad)
+
 def ray_maker(fix, m, prune = 1, plot = False):
     THETA, PHI, R, T, Den, Rad, observers, delta_thetas, delta_phis = loader(fix, m, prune, plot)
     rays_T, rays_Den, rays_Rad, rays_R = ray_maker_doer(THETA, PHI, R, T, Den, 
@@ -206,5 +186,13 @@ def ray_maker(fix, m, prune = 1, plot = False):
 def isalice():
     return alice
 if __name__ == '__main__':
-    # ray_maker('844', 6, prune = 1 , plot = True)
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['figure.dpi'] = 300
+    plt.rcParams['font.family'] = 'Times New Roman'
+    plt.rcParams['figure.figsize'] = [5 , 4]
+    plt.rcParams['axes.facecolor']= 	'whitesmoke'
+    plt.rcParams['xtick.direction'] = 'in'
+    plt.rcParams['ytick.direction'] = 'in'
+    AEK = '#F1C410' # Important color 
+    loader('844', 6, prune = 1 , plot = True)
     isalice()

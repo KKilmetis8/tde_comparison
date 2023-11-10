@@ -18,8 +18,11 @@ from src.Luminosity.special_radii_tube import get_photosphere
 # Setup
 if alice:
     fixes = np.arange(845, 1005, step = 10)
+    prunes = [1] * len(fixes)
 else:
-    fixes = [844]
+    fixes = [844, 881, 925, 950]
+    prunes = [1,  4, 10, 20]
+    
 m = 6
 # Constants
 c_cgs = 3e10 # [cm/s]
@@ -103,12 +106,12 @@ def flux_calculator(grad_E, idx,
     else:
         return Flux
 
-def red(fixes, m):
+def red(fixes, m, prunes):
 
     bols = []
     photos = []
     for d, fix in enumerate(fixes):
-        rays_T, rays_Den, rays_Rad, rays_R = ray_maker(fix, m)
+        rays_T, rays_Den, rays_Rad, rays_R = ray_maker(fix, m, prunes[d])
         cumul_kappa, photo =  get_photosphere(rays_T, rays_Den, rays_R)
         fluxes = []
         for i in range(len(rays_T)):
@@ -158,7 +161,7 @@ def red(fixes, m):
     return bols, photos
 #%% Main
 
-bols, photos = red(fixes, m)
+bols, photos = red(fixes, m, prunes)
 #%% Plot & Print
 
 plot = True 
@@ -169,7 +172,6 @@ if plot and not alice:
     plt.rcParams['font.family'] = 'Times New Roman'
     plt.rcParams['figure.figsize'] = [5 , 4]
     plt.rcParams['axes.facecolor']= 	'whitesmoke'
-    plt.rcParams['figure.figsize'] = [5 , 4]
     plt.rcParams['xtick.direction'] = 'in'
     plt.rcParams['ytick.direction'] = 'in'
     AEK = '#F1C410' # Important color 
