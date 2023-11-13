@@ -24,7 +24,7 @@ import colorcet
 # Custom Imports
 from src.Calculators.ray_maker import ray_maker
 from src.Opacity.opacity_table import opacity
-from src.Luminosity.photosphere import get_photosphere, calc_photosphere
+from OLD stuff.photosphere import get_photosphere, calc_photosphere
 # from src.Luminosity.photosphere import get_photosphere
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300

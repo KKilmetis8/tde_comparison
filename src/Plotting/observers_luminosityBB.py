@@ -16,7 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Chocolate imports
-from Luminosity.thermR import get_photosphere
+from OLD stuff.thermR import get_photosphere
 from src.Optical_Depth.opacity_table import opacity
 import luminosityBB
 

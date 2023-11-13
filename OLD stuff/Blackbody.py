@@ -29,7 +29,7 @@ AEK = '#F1C410'
 
 # Chocolate imports
 from src.Calculators.ray_maker import ray_maker
-from src.Luminosity.thermR import get_thermr
+from OLD stuff.thermR import get_thermr
 from src.Opacity.opacity_table import opacity
 
 # Constants
