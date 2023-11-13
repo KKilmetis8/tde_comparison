@@ -76,11 +76,11 @@ def ray_maker(fix, m, select = False):
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = 50 #50 Solar radii
-    stop = 7_000 
+    start = 50 #Solar radii
+    stop = 10_000 
     log_start = np.log10(start)
     log_stop = np.log10(stop)
-    log_radii = np.linspace(log_start, log_stop, 1000) #simulator units
+    log_radii = np.linspace(log_start, log_stop, 2000) #simulator units
     radii = 10**log_radii
     
     # Find observers with Healpix
@@ -129,4 +129,3 @@ def ray_maker(fix, m, select = False):
 if __name__ == '__main__':
     m = 6
     tree_indexes, rays_T, rays_den, rays, radii = ray_maker(844, m)
-    print(len(rays_T[90]))
