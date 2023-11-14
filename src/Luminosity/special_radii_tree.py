@@ -77,9 +77,17 @@ def get_kappa(T: float, rho: float, dr: float):
 
 def calc_photosphere(T, rho, rs):
     '''
-    Input: 1D arrays.
-    Finds and saves the photosphere (in solar units).
-    The kappas' arrays go from far to near the BH.
+    Parameters
+    ----------
+    T, rho, rs: 1D arrays.
+
+    Returns
+    -------
+    kappas, cumulative_kappas: 1D arrays from far to near the BH
+    photo: int
+           Photosphere (in solar units) 
+    index_ph: int
+              photosphere's index (from near to far)
     '''
     threshold = 2/3
     kappa = 0
@@ -111,9 +119,9 @@ def get_photosphere(rays_T, rays_den, radii):
     Returns
     -------
     rays_kappas, rays_cumulative_kappas: nD arrays.
-    photos: 1D array.
+    ray_photo: 1D array.
+    rays_index_photo: 1D array.
     '''
-    # Get the thermalisation radius
     rays_kappas = []
     rays_cumulative_kappas = []
     rays_photo = np.zeros(len(rays_T))
@@ -318,8 +326,8 @@ if __name__ == "__main__":
                 # file.write('# Thermalisation radius geometric mean \n')
                 # file.write(' '.join(map(str, fix_thermr_geom)) + '\n')
                 file.close()
-        plt.plot(days, fix_photo_arit, '-o', color = 'black', label = 'Photosphere radius, arithmetic mean')
-        plt.plot(days, fix_photo_geom, '-o', color = 'pink', label = 'Photosphere radius, geometric mean')
+        plt.plot(days[0:2], fix_photo_arit[0:2], '-o', color = 'black', label = 'Photosphere radius, arithmetic mean')
+        plt.plot(days[0:2], fix_photo_geom[0:2], '-o', color = 'pink', label = 'Photosphere radius, geometric mean')
         # plt.plot(days, fix_thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
         # plt.plot(days, fix_thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
         plt.xlabel(r't/$t_{fb}$')

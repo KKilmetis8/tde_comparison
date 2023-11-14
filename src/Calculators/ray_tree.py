@@ -90,7 +90,6 @@ def ray_maker(fix, m, select = False):
     for i in range(0,192):
         thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
         thetas[i] -= np.pi/2 # Enforce theta in -pi to pi
-        
         observers.append( (thetas[i], phis[i]) )
     
     #%% Find the neighbour to the cell of our grid and keep its values
@@ -118,9 +117,9 @@ def ray_maker(fix, m, select = False):
         branch_T = np.nan_to_num(branch_T, neginf = 0)
 
         tree_indexes.append(branch_indexes)
-        rays.append(branch_energy)
-        rays_den.append(branch_den)
         rays_T.append(branch_T)
+        rays_den.append(branch_den)
+        rays.append(branch_energy)
         rays_vol.append(branch_vol)
     
     if select == True:
@@ -133,4 +132,4 @@ def ray_maker(fix, m, select = False):
 
 if __name__ == '__main__':
     m = 6
-    tree_indexes, rays_T, rays_den, rays, radii = ray_maker(844, m)
+    tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(844, m)
