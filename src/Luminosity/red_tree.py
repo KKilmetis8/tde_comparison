@@ -21,9 +21,8 @@ import numba
 from datetime import datetime
 # Custom Imports
 from src.Opacity.opacity_table import opacity
-#from src.Calculators.ray_cesare import ray_maker
-from OLDstuff.ray_cesare import ray_tree
-from src.Luminosity.special_radii import calc_photosphere
+from src.Calculators.ray_tree import ray_maker
+from Luminosity.special_radii_tree import calc_photosphere
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
@@ -38,21 +37,6 @@ alice = False
 # FUNCTIONS
 ##
 ###
-def spacing(t):
-    if alice:
-        start = 1.00325
-        end = 1.3
-        n_start = 700 #850
-        n_end = 3000
-    else:
-        start = 1
-        end = 1.3
-        n_start = 700 #850
-        n_end = 3000
-    n = (t-start) * n_end - (t - end) * n_start
-    n /= (end - start)
-    return n
-
 def select_fix(m):
     if m == 4:
         snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
@@ -64,14 +48,7 @@ def select_fix(m):
         else:
             snapshots = [844, 881, 925, 950, 1008] #[844, 881, 882, 898, 925, 950]
             days = [1, 1.1, 1.3, 1.4, 1.608] #[1, 1.139, 1.143, 1.2, 1.3, 1.4] # t/t_fb
-            
-        #     const = 0.05
-    #     beginning = 1200
-    # num_array = beginning * np.ones(len(snapshots))
-    # for i in range(1,len(num_array)):
-    #         num_array[i] = int(1.5 * num_array[i-1])
-        num_array = [spacing(d) for d in days]
-    return snapshots, days, num_array
+    return snapshots, days
 
 @numba.njit
 def grad_calculator(ray: np.array, radii: np.array, sphere_radius: int): 
@@ -83,9 +60,9 @@ def grad_calculator(ray: np.array, radii: np.array, sphere_radius: int):
             idx = i - 1 
             break
         
-    step = radii[idx+1] - radii[idx]
+    step = radii[idx+2] - radii[idx-1] #radii[idx+1] - radii[idx]
     
-    grad_E = (ray[idx+1] - ray[idx]) / step 
+    grad_E = (ray[idx+2] - ray[idx-1]) / step #(ray[idx+1] - ray[idx]) / step
 
     return grad_E, idx
 

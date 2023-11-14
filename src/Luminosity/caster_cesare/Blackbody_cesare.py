@@ -27,8 +27,8 @@ import matplotlib.pyplot as plt
 AEK = '#F1C410'
 
 # Chocolate imports
-from OLDstuff.ray_cesare import ray_maker
-from src.Luminosity.special_radii import get_thermr
+from src.Luminosity.caster_cesare.ray_cesare import ray_maker
+from Luminosity.special_radii_tree import get_thermr
 from src.Opacity.opacity_table import opacity
 
 # Constants

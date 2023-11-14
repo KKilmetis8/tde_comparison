@@ -7,7 +7,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
-from src.Luminosity.Blackbody_cesare import select_fix
+from Luminosity.caster_cesare.Blackbody_cesare import select_fix
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.family'] = 'Times New Roman'
