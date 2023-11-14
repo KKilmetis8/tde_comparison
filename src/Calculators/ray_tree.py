@@ -56,7 +56,7 @@ def ray_maker(fix, m, select = False):
         X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
         Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
         Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
-        Mass = np.load( str(m) + '/'  + fix + '/Mass_' + fix + '.npy')
+        Vol = np.load( str(m) + '/'  + fix + '/Vol_' + fix + '.npy')
         T = np.load( str(m) + '/'  + fix + '/T_' + fix + '.npy')
         Den = np.load( str(m) + '/'  + fix + '/Den_' + fix + '.npy')
         Rad = np.load( str(m) + '/'  +fix + '/Rad_' + fix + '.npy')
@@ -76,11 +76,11 @@ def ray_maker(fix, m, select = False):
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = 50 #Solar radii
+    start = 0.5 * Rt #Solar radii
     stop = 10_000 
     log_start = np.log10(start)
     log_stop = np.log10(stop)
-    log_radii = np.linspace(log_start, log_stop, 2000) #simulator units
+    log_radii = np.linspace(log_start, log_stop, 3000) #simulator units
     radii = 10**log_radii
     
     # Find observers with Healpix
@@ -98,11 +98,13 @@ def ray_maker(fix, m, select = False):
     rays_T = []
     rays_den = []
     rays = []
+    rays_vol = []
     for j in range (len(observers)):
         branch_indexes = np.zeros(len(radii))
         branch_T = np.zeros(len(radii))
         branch_den = np.zeros(len(radii))
         branch_energy = np.zeros(len(radii))
+        branch_vol = np.zeros(len(radii))
         for i,radius in enumerate(radii):
             queried_value = [radius, thetas[j], phis[j]]
             _, idx = sim_tree.query(queried_value)
@@ -110,19 +112,22 @@ def ray_maker(fix, m, select = False):
             branch_energy[i] = Rad[idx]
             branch_den[i] = Den[idx]
             branch_T[i] = T[idx]
+            branch_vol[i] = Vol[idx]
         branch_energy = np.nan_to_num(branch_energy, neginf = 0)
         branch_den = np.nan_to_num(branch_den, neginf = 0)
         branch_T = np.nan_to_num(branch_T, neginf = 0)
+
         tree_indexes.append(branch_indexes)
         rays.append(branch_energy)
         rays_den.append(branch_den)
         rays_T.append(branch_T)
+        rays_vol.append(branch_vol)
     
     if select == True:
         return tree_indexes, rays_T, rays_den, rays, radii, thetas, phis
     
     else:
-        return tree_indexes, rays_T, rays_den, rays, radii
+        return tree_indexes, rays_T, rays_den, rays, radii, rays_vol
 
  
 

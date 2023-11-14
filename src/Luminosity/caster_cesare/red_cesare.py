@@ -21,9 +21,8 @@ import numba
 from datetime import datetime
 # Custom Imports
 from src.Opacity.opacity_table import opacity
-#from src.Calculators.ray_cesare import ray_maker
-from OLDstuff.ray_cesare import ray_tree
-from src.Luminosity.special_radii import calc_photosphere
+from src.Luminosity.caster_cesare.ray_cesare import ray_maker
+from src.Luminosity.caster_cesare.special_radii import calc_photosphere
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]

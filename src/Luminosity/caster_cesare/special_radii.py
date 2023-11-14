@@ -27,11 +27,19 @@ plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
 # Custom Imports
 from src.Opacity.opacity_table import opacity
-from src.Calculators.ray_tree import ray_maker
+from src.Luminosity.caster_cesare.ray_cesare import ray_maker
 
 ################
 # FUNCTIONS
 ################
+def spacing(t):
+    start = 1
+    end = 1.3
+    n_start = 700
+    n_end = 3000
+    n = (t-start) * n_end - (t - end) * n_start
+    n /= (end - start)
+    return n
 
 def select_fix(m):
     if m == 4:
@@ -40,7 +48,14 @@ def select_fix(m):
     if m == 6:
         snapshots = [844, 881, 925, 950, 1008] #[844, 881, 882, 898, 925, 950]
         days = [1, 1.1, 1.3, 1.4, 1.608] #[1, 1.139, 1.143, 1.2, 1.3, 1.4] # t/t_fb
-    return snapshots, days
+            
+        #     const = 0.05
+    #     beginning = 1200
+    # num_array = beginning * np.ones(len(snapshots))
+    # for i in range(1,len(num_array)):
+    #         num_array[i] = int(1.5 * num_array[i-1])
+    num_array = [spacing(d) for d in days]
+    return snapshots, days, num_array
 
 def get_kappa(T: float, rho: float, dr: float):
     '''
@@ -114,7 +129,6 @@ def get_photosphere(rays_T, rays_den, radii):
     rays_kappas = []
     rays_cumulative_kappas = []
     rays_photo = np.zeros(len(rays_T))
-    rays_index_photo = np.zeros(len(rays_T))
     
     for i in range(len(rays_T)):
         # Isolate each ray
@@ -123,15 +137,13 @@ def get_photosphere(rays_T, rays_den, radii):
         
         # Get photosphere
         kappas, cumulative_kappas, photo  = calc_photosphere(T_of_single_ray, Den_of_single_ray, radii)
-        index_photo = np.argmin(np.abs(photo-radii))
 
         # Store
         rays_kappas.append(kappas)
         rays_cumulative_kappas.append(cumulative_kappas)
         rays_photo[i] = photo
-        rays_index_photo[i] = index_photo
 
-    return rays_kappas, rays_cumulative_kappas, rays_photo, rays_index_photo
+    return rays_kappas, rays_cumulative_kappas, rays_photo
 
 
 def optical_depth(T, rho, dr):
@@ -254,54 +266,36 @@ def get_thermr(rays_T, rays_den, radii):
 ################
 
 if __name__ == "__main__":
-    plot_ph = True
     plot_tau_ph = False 
     plot_radii = False 
     m = 6 
     loadpath = str(m) + '/'
 
-    snapshots, days = select_fix(m)
+    snapshots, days, num_array = select_fix(m)
     fix_photo_arit = np.zeros(len(snapshots))
     fix_photo_geom = np.zeros(len(snapshots))
     
     fix_thermr_arit = np.zeros(len(snapshots))
     fix_thermr_geom = np.zeros(len(snapshots))
 
-    for index in range(0,1):#len(snapshots)):
-        tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m)
-        rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii)
-        dim_ph = np.zeros(len(rays_index_photo))
-        for j in range(len(rays_index_photo)):
-            find_index_cell = int(rays_index_photo[j])
-            vol_ph = rays_vol[j][find_index_cell]
-            dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3)
-        print(dim_ph)
-
-        # with open('data/red/photosphere' + str(snapshots[index]) + '.txt', 'a') as fileph:
-        #     fileph.write(' '.join(map(str,rays_photo)) + '\n')
-        #     fileph.close()
+    for index in range(4,5):
+        num = int(num_array[index])
+        rays_T, rays_den, _, radii = ray_maker(snapshots[index], m, num)
+        rays_kappa, rays_cumulative_kappas, rays_photo = get_photosphere(rays_T, rays_den, radii)
+        rays_photo /=  6.957e10
+        
+        with open('data/red/photosphere' + str(snapshots[index]) + '_num' + str(num) + '.txt', 'a') as fileph:
+            fileph.write(' '.join(map(str,rays_photo)) + '\n')
+            fileph.close()
 
         fix_photo_arit[index] = np.mean(rays_photo)
         fix_photo_geom[index] = gmean(rays_photo)
 
         tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
+        thermr /=  6.957e10
         fix_thermr_arit[index] = np.mean(thermr)
         fix_thermr_geom[index] = gmean(thermr)
-
-        if plot_ph:
-            fig, ax = plt.subplots(figsize = (6,8))
-            img = ax.scatter(np.arange(192), rays_photo, c = dim_ph, s = 15)
-            cbar = fig.colorbar(img)
-            cbar.set_label(r'Cell dimension [$R_\odot$]')
-            plt.axhline(np.mean(rays_photo), c = 'r', linestyle = '--', label = r'$\bar{R}_{ph}$ arit mean')
-            plt.axhline(gmean(rays_photo), c = 'b', linestyle = '--', label = r'$\bar{R}_{ph}$ geom mean')
-            plt.xlabel('Observers')
-            plt.ylabel('$\log_{10} R_{ph} [R_\odot]$')
-            plt.yscale('log')
-            plt.grid()
-            plt.legend()
-            plt.show()   
-
+    
         if plot_tau_ph:
             plot_kappa = np.zeros( (len(radii), len(rays_kappa)))
             for i in range(192):
@@ -314,7 +308,7 @@ if __name__ == "__main__":
                         break
                 plot_kappa[0:-j, i ] = temp
 
-            img = plt.pcolormesh(radii, np.arange(192), plot_kappa.T, 
+            img = plt.pcolormesh(radii/6.957e10, np.arange(192), plot_kappa.T, 
                                 cmap = 'Oranges', norm = colors.LogNorm(vmin = 1e-2, vmax =  2/3))
             cbar = plt.colorbar(img)
             plt.axvline(x=np.mean(rays_photo), c = 'k', linestyle = '--', label = r'$\bar{R}_{ph}$ arit mean')
@@ -326,11 +320,11 @@ if __name__ == "__main__":
             img.axes.get_yaxis().set_ticks([])
             plt.legend()
             plt.xscale('log')
-            #plt.savefig('Final plot/photosphere_' + str(snapshots[index]) + '.png')
+            plt.savefig('Final plot/photosphere_' + str(snapshots[index]) + 'num_' + str(int(num_array[index])) + '.png')
             plt.show()
 
-        print('Snapshot ' + str(snapshots[index]))
-
+        print('Fix', snapshots[index])
+        
     if plot_radii:
         with open('data/special_radii_m' + str(m) + '.txt', 'a') as file:
                 file.write('# t/t_fb \n')
