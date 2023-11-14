@@ -1,0 +1,18 @@
+# t/t_fb 
+1 1.1 1.3 1.4
+# Photosphere arithmetic mean 
+869.0079012021191 0.0 0.0 0.0
+# Photosphere geometric mean 
+79.41366815273304 0.0 0.0 0.0
+# t/t_fb 
+1 1.1 1.3 1.4
+# Photosphere arithmetic mean 
+869.0079012021191 0.0 0.0 0.0
+# Photosphere geometric mean 
+79.41366815273304 0.0 0.0 0.0
+# t/t_fb 
+1 1.1 1.3 1.4
+# Photosphere arithmetic mean 
+869.0079012021191 101.2736493090221 0.0 0.0
+# Photosphere geometric mean 
+79.41366815273304 51.396146044129594 0.0 0.0

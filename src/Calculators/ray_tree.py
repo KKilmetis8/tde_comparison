@@ -80,7 +80,7 @@ def ray_maker(fix, m, select = False):
     stop = 10_000 
     log_start = np.log10(start)
     log_stop = np.log10(stop)
-    log_radii = np.linspace(log_start, log_stop, 3000) #simulator units
+    log_radii = np.linspace(log_start, log_stop, 2000) #simulator units
     radii = 10**log_radii
     
     # Find observers with Healpix

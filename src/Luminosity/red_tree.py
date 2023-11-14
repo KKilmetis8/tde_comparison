@@ -22,13 +22,12 @@ from datetime import datetime
 # Custom Imports
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
-from src.Luminosity.special_radii_tree import calc_photosphere
+from src.Luminosity.special_radii_tree import get_photosphere
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
 
 #%% Constants & Converter
-today = datetime.now()
 c_cgs = 3e10 # [cm/s]
 Rsol_to_cm = 6.957e10 # [cm]
 alice = False
@@ -61,10 +60,10 @@ def grad_calculator(ray: np.array, radii: np.array, sphere_radius: int):
             idx = i - 1 
             break
         
-    step = radii[idx+2] - radii[idx-1] #radii[idx+1] - radii[idx]
+    step = radii[idx+2] - radii[idx] 
     step *= Rsol_to_cm
 
-    grad_E = (ray[idx+2] - ray[idx-1]) / step #(ray[idx+1] - ray[idx]) / step # now in CGS
+    grad_E = (ray[idx+2] - ray[idx]) / step # now in CGS
 
     return grad_E, idx
 
@@ -73,10 +72,10 @@ def flux_calculator(grad_E, idx_tot,
                     rays, rays_T, rays_den):
     """
     Get the flux for every observer.
-    Eevrything is in CGS.
+    Everything is in CGS.
 
     Parameters: 
-    grad_E idx_tot are 1D-array of lenght = len(rays)
+    grad_E, idx_tot are 1D-array of lenght = len(rays)
     rays, rays_T, rays_den are len(rays) x N_cells arrays
     """
     f = np.zeros(len(grad_E))
@@ -88,7 +87,7 @@ def flux_calculator(grad_E, idx_tot,
     for i, ray in enumerate(rays):
         # We compute stuff OUTSIDE the photosphere
         # (which is at index idx_tot[i])
-        idx = idx_tot[i]+1 #  
+        idx = int(idx_tot[i]+1) #  
         Energy = ray[idx]
         max_travel = np.sign(-grad_E[i]) * c_cgs * Energy # or should we keep the abs???
         
@@ -155,21 +154,18 @@ def doer_of_thing(fix, m):
     """
     Gives bolometric L and R_ph (of evry observer)
     """
-    tree_indexes, rays_T, rays_den, rays, radii, _ = ray_maker(fix, m)
+    _, rays_T, rays_den, rays, radii, _ = ray_maker(fix, m)
+    _, _, rays_photo, _ = get_photosphere(rays_T, rays_den, radii)
 
-    grad_E_tot = []
-    idx_tot = []
-    sphere_radius = []
+    grad_E_tot = np.zeros(len(rays_T))
+    idx_tot = np.zeros(len(rays_T))
     for i in range(len(rays_T)):
     # Calculate gradE for every ray
-        temp = rays_T[i]
-        dens = rays_den[i]
         ray = rays[i]
-        _, _, photo, _ = calc_photosphere(temp, dens, radii)
-        sphere_radius.append(photo)
+        photo = rays_photo[i]
         grad_E, idx = grad_calculator(ray, radii, photo)
-        grad_E_tot.append(grad_E)
-        idx_tot.append(idx)
+        grad_E_tot[i]= grad_E
+        idx_tot[i] = idx
 
     # Calculate Flux and see how it looks
     flux = flux_calculator(grad_E_tot, idx_tot, 
@@ -192,15 +188,16 @@ def doer_of_thing(fix, m):
             neg_count += 1
             flux[i] = 0 
 
-        sphere_radius_cgs = sphere_radius[i] * Rsol_to_cm
+        sphere_radius_cgs = rays_photo[i] * Rsol_to_cm
         lum[i] = flux[i] * 4 * np.pi * sphere_radius_cgs**2
+        print(lum)
 
     # Average in observers
     lum = np.sum(lum)/192
     print('Tot zeros:', zero_count)
     print('Negative: ', neg_count)      
     print('Fix %i' %fix, ', Lum %.3e' %lum, '\n---------' )
-    return lum, sphere_radius
+    return lum, rays_photo
 #%%
 ##
 # MAIN
