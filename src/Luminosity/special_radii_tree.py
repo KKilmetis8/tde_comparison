@@ -77,7 +77,7 @@ def get_kappa(T: float, rho: float, dr: float):
 def calc_photosphere(T, rho, rs):
     '''
     Input: 1D arrays.
-    Finds and saves the photosphere (in CGS).
+    Finds and saves the photosphere (in solar units).
     The kappas' arrays go from far to near the BH.
     '''
     threshold = 2/3
@@ -94,11 +94,13 @@ def calc_photosphere(T, rho, rs):
         i -= 1
 
     photo =  rs[i] #i it's negative
-    return kappas, cumulative_kappas, photo
+    index_ph = i 
+
+    return kappas, cumulative_kappas, photo, index_ph
 
 def get_photosphere(rays_T, rays_den, radii):
     '''
-    Finds and saves the photosphere (in CGS) for every ray.
+    Finds and saves the photosphere (in solar units) for every ray.
 
     Parameters
     ----------
@@ -122,14 +124,13 @@ def get_photosphere(rays_T, rays_den, radii):
         Den_of_single_ray = rays_den[i]
         
         # Get photosphere
-        kappas, cumulative_kappas, photo  = calc_photosphere(T_of_single_ray, Den_of_single_ray, radii)
-        index_photo = np.argmin(np.abs(photo-radii))
+        kappas, cumulative_kappas, photo, index_ph  = calc_photosphere(T_of_single_ray, Den_of_single_ray, radii)
 
         # Store
         rays_kappas.append(kappas)
         rays_cumulative_kappas.append(cumulative_kappas)
         rays_photo[i] = photo
-        rays_index_photo[i] = index_photo
+        rays_index_photo[i] = index_ph
 
     return rays_kappas, rays_cumulative_kappas, rays_photo, rays_index_photo
 

@@ -22,7 +22,7 @@ from datetime import datetime
 # Custom Imports
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
-from Luminosity.special_radii_tree import calc_photosphere
+from src.Luminosity.special_radii_tree import calc_photosphere
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
@@ -54,15 +54,17 @@ def select_fix(m):
 def grad_calculator(ray: np.array, radii: np.array, sphere_radius: int): 
     # For a single ray (in logspace) get 
     # the index of radius closest to sphere_radius and the gradE there.
-    # Everything is in CGS.
+    # Ray is in CGS
+    # Radii and sphere_radius are in simulator units.
     for i, radius in enumerate(radii):
         if radius > sphere_radius:
             idx = i - 1 
             break
         
     step = radii[idx+2] - radii[idx-1] #radii[idx+1] - radii[idx]
-    
-    grad_E = (ray[idx+2] - ray[idx-1]) / step #(ray[idx+1] - ray[idx]) / step
+    step *= Rsol_to_cm
+
+    grad_E = (ray[idx+2] - ray[idx-1]) / step #(ray[idx+1] - ray[idx]) / step # now in CGS
 
     return grad_E, idx
 
@@ -149,11 +151,11 @@ def flux_calculator(grad_E, idx_tot,
     print('Flux: ', flux_count) 
     return f
 
-def doer_of_thing(fix, m, num):
+def doer_of_thing(fix, m):
     """
     Gives bolometric L and R_ph (of evry observer)
     """
-    rays_T, rays_den, rays, radii = ray_maker(fix, m, num)
+    tree_indexes, rays_T, rays_den, rays, radii, _ = ray_maker(fix, m)
 
     grad_E_tot = []
     idx_tot = []
@@ -163,7 +165,7 @@ def doer_of_thing(fix, m, num):
         temp = rays_T[i]
         dens = rays_den[i]
         ray = rays[i]
-        _, _, photo = calc_photosphere(temp, dens, radii)
+        _, _, photo, _ = calc_photosphere(temp, dens, radii)
         sphere_radius.append(photo)
         grad_E, idx = grad_calculator(ray, radii, photo)
         grad_E_tot.append(grad_E)
@@ -172,18 +174,11 @@ def doer_of_thing(fix, m, num):
     # Calculate Flux and see how it looks
     flux = flux_calculator(grad_E_tot, idx_tot, 
                             rays, rays_T, rays_den)
-    # plt.figure(figsize = [8,5])
-    # plt.scatter(np.arange(192), flux, s = 3, color = 'orange')     
-    # plt.xlabel('Observer')
-    # plt.ylabel(r'Flux [erg/s cm$^2$]')
-    # plt.grid()
-    # plt.savefig('Figs/' + str(fix) + '_NEWflux.png')                   
-
     # Save flux
-    with open('data/red/flux_m'+ str(m) + '_fix' + str(fix) + '.txt', 'a') as f:
-        f.write('#snap '+ str(fix) + 'num ' + str(num) + ', ' + str(today) + '\n')
-        f.write(' '.join(map(str, flux)) + '\n')
-        f.close() 
+    # with open('data/red/flux_m'+ str(m) + '_fix' + str(fix) + '.txt', 'a') as f:
+    #     f.write('#snap '+ str(fix) + 'num ' + str(num) + ', ' + str(today) + '\n')
+    #     f.write(' '.join(map(str, flux)) + '\n')
+    #     f.close() 
 
     # Calculate luminosity 
     lum = np.zeros(len(flux))
@@ -196,7 +191,9 @@ def doer_of_thing(fix, m, num):
         if flux[i] < 0:
             neg_count += 1
             flux[i] = 0 
-        lum[i] = flux[i] * 4 * np.pi * sphere_radius[i]**2
+
+        sphere_radius_cgs = sphere_radius[i] * Rsol_to_cm
+        lum[i] = flux[i] * 4 * np.pi * sphere_radius_cgs**2
 
     # Average in observers
     lum = np.sum(lum)/192
@@ -209,14 +206,14 @@ def doer_of_thing(fix, m, num):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = True
-    plot = False
+    save = False
+    plot = True
     m = 6 # Choose BH
-    fixes, days, num_array = select_fix(m)
+    fixes, days = select_fix(m)
     lums = []
             
-    for idx,fix in enumerate(fixes):
-        lum, sphere_radius = doer_of_thing(fix, m, int(num_array[idx]))
+    for idx in range(0,1):#len(fixes)):
+        lum, sphere_radius = doer_of_thing(fixes[idx], m)
         lums.append(lum)
     
     if save:
@@ -226,7 +223,6 @@ if __name__ == "__main__":
             np.savetxt(pre + 'tde_comparison/data/alicered'+ str(m) + '.txt', (days, lums))
         else:
              with open('data/red/new_reddata_m'+ str(m) + '.txt', 'a') as flum:
-                 flum.write('# Line (t,num) between (' + str(days[0]) + ', ' + str(num_array[0]) + ') and (' + str(days[2]) + ', ' + str(num_array[2]) + ') \n')
                  flum.write('# t/t_fb') 
                  flum.write(' '.join(map(str, days)) + '\n')
                  flum.write('# Lum') 
@@ -247,6 +243,6 @@ if __name__ == "__main__":
             plt.title('FLD for $10^4 \quad M_\odot$')
             plt.ylim(1e39,1e42)
         plt.grid()
-        plt.savefig('Final plot/new_red' + str(m) + '.png')
+        #plt.savefig('Final plot/new_red' + str(m) + '.png')
         plt.show()
 
