@@ -29,6 +29,7 @@ plt.rcParams['axes.facecolor'] = 'whitesmoke'
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
 
+Rsol_to_cm = 6.957e10 # [cm]
 ################
 # FUNCTIONS
 ################
@@ -44,8 +45,11 @@ def select_fix(m):
 
 def get_kappa(T: float, rho: float, dr: float):
     '''
+    T,rho in CGS.
+    dr in solar units.
     Calculates the integrand of eq.(8) Steinberg&Stone22.
     '''    
+    dr *= Rsol_to_cm
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):
         return 0
@@ -79,7 +83,8 @@ def calc_photosphere(T, rho, rs):
     '''
     Parameters
     ----------
-    T, rho, rs: 1D arrays.
+    T, rho: 1D arrays (CGS)
+    rs: 1D array (solar units)
 
     Returns
     -------
@@ -95,7 +100,7 @@ def calc_photosphere(T, rho, rs):
     cumulative_kappas = []
     i = -1 # Initialize reverse loop
     while kappa <= threshold and i > -len(T):
-        dr = rs[i]-rs[i-1] # Cell seperation
+        dr = rs[i]-rs[i-1] # Step in the grid
         new_kappa = get_kappa(T[i], rho[i], dr)
         kappa += new_kappa
         kappas.append(new_kappa)
@@ -163,6 +168,7 @@ def optical_depth(T, rho, dr):
     tau : float,
         The optical depth in [cgs].
     '''    
+    dr *= Rsol_to_cm
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):
         #print('rho small')
@@ -226,7 +232,7 @@ def calc_thermr(rs, T, rho, threshold = 1):
     cumulative_taus = []
     i = -1 # Initialize reverse loop
     while tau < threshold and i > -len(T):
-        dr = rs[i]-rs[i-1] # Cell seperation
+        dr = rs[i]-rs[i-1] # Cell separation
         new_tau = optical_depth(T[i], rho[i], dr)
         tau += new_tau
         taus.append(new_tau)
@@ -282,9 +288,10 @@ if __name__ == "__main__":
         for j in range(len(rays_index_photo)):
             find_index_cell = int(rays_index_photo[j])
             vol_ph = rays_vol[j][find_index_cell]
-            dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3)
+            dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
+            dim_grid = (radii[find_index_cell+1]-radii[find_index_cell]) #in solar units
             print('Simulation cell R: ' + str(dim_ph[j]))
-            print('Our grid: ' + str(radii[find_index_cell+1]-radii[find_index_cell]))
+            print('Our grid: ' + str(dim_grid))
 
         # with open('data/red/photosphere' + str(snapshots[index]) + '.txt', 'a') as fileph:
         #     fileph.write(' '.join(map(str,rays_photo)) + '\n')
@@ -293,9 +300,9 @@ if __name__ == "__main__":
         fix_photo_arit[index] = np.mean(rays_photo)
         fix_photo_geom[index] = gmean(rays_photo)
 
-        tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
-        fix_thermr_arit[index] = np.mean(thermr)
-        fix_thermr_geom[index] = gmean(thermr)
+        # tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
+        # fix_thermr_arit[index] = np.mean(thermr)
+        # fix_thermr_geom[index] = gmean(thermr)
 
         if plot_ph:
             fig, ax = plt.subplots(figsize = (6,8))
@@ -331,7 +338,8 @@ if __name__ == "__main__":
         # plt.plot(days, fix_thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
         # plt.plot(days, fix_thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
         plt.xlabel(r't/$t_{fb}$')
-        plt.ylabel(r'Photosphere [$R_\odot$]')
+        plt.ylabel(r'$\log_{10}$ Photosphere [$R_\odot$]')
+        plt.yscale('log')
         plt.grid()
         plt.legend()
     plt.show()

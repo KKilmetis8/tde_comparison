@@ -29,14 +29,9 @@ Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 
-def select_observer(angles, angle):
-    """ Given an array of angles of lenght = len(observers), 
-    gives you the index of the observer at theta/phi = angle. """
-    index = np.argmin(np.abs(angles - angle))
-    return index
 
-def ray_maker(fix, m, select = False):
-    """ Outputs are in CGS """
+def ray_maker(fix, m):
+    """ Outputs are in CGS with exception of radii, ray_vol (in solar units) """
     fix = str(fix)
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
@@ -70,9 +65,9 @@ def ray_maker(fix, m, select = False):
     THETA = THETA.value
     PHI = PHI.value
 
-    #make a tree
-    sim_value = [R, THETA, PHI]
-    sim_value = np.transpose(sim_value) 
+    # make a tree
+    sim_value = [R, THETA, PHI] 
+    sim_value = np.transpose(sim_value) #array of dim (number_points, 3)
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
@@ -80,7 +75,7 @@ def ray_maker(fix, m, select = False):
     stop = 10_000 
     log_start = np.log10(start)
     log_stop = np.log10(stop)
-    log_radii = np.linspace(log_start, log_stop, 2000) #simulator units
+    log_radii = np.linspace(log_start, log_stop, 5_000) #simulator units
     radii = 10**log_radii
     
     # Find observers with Healpix
@@ -98,7 +93,7 @@ def ray_maker(fix, m, select = False):
     rays_den = []
     rays = []
     rays_vol = []
-    for j in range (len(observers)):
+    for j in range(len(observers)):
         branch_indexes = np.zeros(len(radii))
         branch_T = np.zeros(len(radii))
         branch_den = np.zeros(len(radii))
@@ -108,9 +103,9 @@ def ray_maker(fix, m, select = False):
             queried_value = [radius, thetas[j], phis[j]]
             _, idx = sim_tree.query(queried_value)
             branch_indexes[i] = idx
-            branch_energy[i] = Rad[idx]
-            branch_den[i] = Den[idx]
             branch_T[i] = T[idx]
+            branch_den[i] = Den[idx]
+            branch_energy[i] = Rad[idx]
             branch_vol[i] = Vol[idx]
         branch_energy = np.nan_to_num(branch_energy, neginf = 0)
         branch_den = np.nan_to_num(branch_den, neginf = 0)
@@ -121,12 +116,8 @@ def ray_maker(fix, m, select = False):
         rays_den.append(branch_den)
         rays.append(branch_energy)
         rays_vol.append(branch_vol)
-    
-    if select == True:
-        return tree_indexes, rays_T, rays_den, rays, radii, thetas, phis
-    
-    else:
-        return tree_indexes, rays_T, rays_den, rays, radii, rays_vol
+
+    return tree_indexes, rays_T, rays_den, rays, radii, rays_vol
 
  
 
