@@ -45,11 +45,9 @@ def select_fix(m):
 
 def get_kappa(T: float, rho: float, dr: float):
     '''
-    T,rho in CGS.
-    dr in solar units.
+    T,rho, dr in CGS.
     Calculates the integrand of eq.(8) Steinberg&Stone22.
     '''    
-    dr *= Rsol_to_cm
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):
         return 0
@@ -269,7 +267,7 @@ def get_thermr(rays_T, rays_den, radii):
 ################
 
 if __name__ == "__main__":
-    plot_ph = True
+    plot_ph = False
     plot_radii = True 
     m = 6 
     loadpath = str(m) + '/'
@@ -281,15 +279,16 @@ if __name__ == "__main__":
     fix_thermr_arit = np.zeros(len(snapshots))
     fix_thermr_geom = np.zeros(len(snapshots))
 
-    for index in range(0,2):#len(snapshots)):
+    for index in range(0,len(snapshots)):
         tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m)
         rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii)
+        rays_photo = rays_photo/Rsol_to_cm
         dim_ph = np.zeros(len(rays_index_photo))
         for j in range(len(rays_index_photo)):
             find_index_cell = int(rays_index_photo[j])
             vol_ph = rays_vol[j][find_index_cell]
             dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
-            dim_grid = (radii[find_index_cell+1]-radii[find_index_cell]) #in solar units
+            dim_grid = (radii[find_index_cell+1]-radii[find_index_cell])/Rsol_to_cm #in solar units
             print('Simulation cell R: ' + str(dim_ph[j]))
             print('Our grid: ' + str(dim_grid))
 
@@ -333,10 +332,11 @@ if __name__ == "__main__":
                 # file.write('# Thermalisation radius geometric mean \n')
                 # file.write(' '.join(map(str, fix_thermr_geom)) + '\n')
                 file.close()
-        plt.plot(days[0:2], fix_photo_arit[0:2], '-o', color = 'black', label = 'Photosphere radius, arithmetic mean')
-        plt.plot(days[0:2], fix_photo_geom[0:2], '-o', color = 'pink', label = 'Photosphere radius, geometric mean')
+        plt.plot(days, fix_photo_arit, '-o', color = 'black', label = 'Photosphere radius, arithmetic mean')
+        plt.plot(days, fix_photo_geom, '-o', color = 'pink', label = 'Photosphere radius, geometric mean')
         # plt.plot(days, fix_thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
         # plt.plot(days, fix_thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
+        plt.ylim(1e1,1e4)
         plt.xlabel(r't/$t_{fb}$')
         plt.ylabel(r'$\log_{10}$ Photosphere [$R_\odot$]')
         plt.yscale('log')

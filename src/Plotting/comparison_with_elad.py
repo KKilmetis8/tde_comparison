@@ -17,8 +17,8 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['figure.figsize'] = [5 , 4]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
-plot_curves = True
-plot_radii_sphere = False
+plot_curves = False
+plot_radii_sphere = True
 plot_fit = False
 m = 6
 
@@ -56,15 +56,15 @@ if plot_radii_sphere:
     days = np.multiply(spec_radii[0], 40)
     photo_arit = spec_radii[1]
     photo_geom = spec_radii[2]
-    thermr_arit = spec_radii[3]
-    thermr_geom = spec_radii[4]
+    # thermr_arit = spec_radii[3]
+    # thermr_geom = spec_radii[4]
     plt.plot(days, photo_arit, '-o', color = 'black', label = 'Photosphere radius, arithmetic mean')
     plt.plot(days, photo_geom, '-o', color = 'magenta', label = 'Photosphere radius, geometric mean')
     # plt.plot(days, thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
     # plt.plot(days, thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
     plt.xlabel('Time (days)')
     plt.xlim(40,65)
-    plt.ylim(10,1e4)
+    #plt.ylim(10,1e4)
     plt.ylabel(r'Average radius [$R_\odot$]')
     plt.grid()
     plt.yscale('log')

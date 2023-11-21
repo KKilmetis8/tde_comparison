@@ -31,7 +31,7 @@ en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 
 
 def ray_maker(fix, m):
-    """ Outputs are in CGS with exception of radii, ray_vol (in solar units) """
+    """ Outputs are in CGS with exception of ray_vol (in solar units) """
     fix = str(fix)
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
@@ -86,7 +86,7 @@ def ray_maker(fix, m):
         thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
         thetas[i] -= np.pi/2 # Enforce theta in -pi to pi
         observers.append( (thetas[i], phis[i]) )
-    
+
     #%% Find the neighbour to the cell of our grid and keep its values
     tree_indexes = []
     rays_T = []
@@ -116,11 +116,11 @@ def ray_maker(fix, m):
         rays_den.append(branch_den)
         rays.append(branch_energy)
         rays_vol.append(branch_vol)
+    radii *= Rsol_to_cm
 
     return tree_indexes, rays_T, rays_den, rays, radii, rays_vol
 
  
-
 if __name__ == '__main__':
     m = 6
     tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(844, m)
