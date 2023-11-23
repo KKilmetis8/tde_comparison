@@ -28,7 +28,7 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
-
+cell_num = 5000
 
 def ray_maker(fix, m):
     """ Outputs are in CGS with exception of ray_vol (in solar units) """
@@ -75,7 +75,7 @@ def ray_maker(fix, m):
     stop = 10_000 
     log_start = np.log10(start)
     log_stop = np.log10(stop)
-    log_radii = np.linspace(log_start, log_stop, 5_000) #simulator units
+    log_radii = np.linspace(log_start, log_stop, cell_num) #simulator units
     radii = 10**log_radii
     
     # Find observers with Healpix
@@ -98,7 +98,7 @@ def ray_maker(fix, m):
         branch_T = np.zeros(len(radii))
         branch_den = np.zeros(len(radii))
         branch_energy = np.zeros(len(radii))
-        branch_vol = np.zeros(len(radii))
+        branch_vol = np.zeros(len(radii)) # not in CGS
         for i,radius in enumerate(radii):
             queried_value = [radius, thetas[j], phis[j]]
             _, idx = sim_tree.query(queried_value)
@@ -106,16 +106,21 @@ def ray_maker(fix, m):
             branch_T[i] = T[idx]
             branch_den[i] = Den[idx]
             branch_energy[i] = Rad[idx]
-            branch_vol[i] = Vol[idx]
+            branch_vol[i] = Vol[idx] # not in CGS
+        
+        # Remove Bullshit
         branch_energy = np.nan_to_num(branch_energy, neginf = 0)
         branch_den = np.nan_to_num(branch_den, neginf = 0)
         branch_T = np.nan_to_num(branch_T, neginf = 0)
-
+        
+        # Store as rays
         tree_indexes.append(branch_indexes)
         rays_T.append(branch_T)
         rays_den.append(branch_den)
         rays.append(branch_energy)
-        rays_vol.append(branch_vol)
+        rays_vol.append(branch_vol) # not in CGS
+        
+    # Convert to CGS
     radii *= Rsol_to_cm
 
     return tree_indexes, rays_T, rays_den, rays, radii, rays_vol
@@ -124,3 +129,23 @@ def ray_maker(fix, m):
 if __name__ == '__main__':
     m = 6
     tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(844, m)
+    #%%
+    fig, ax = plt.subplots(1,1)
+    import colorcet
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['figure.dpi'] = 300
+    plt.rcParams['font.family'] = 'Times New Roman'
+    plt.rcParams['figure.figsize'] = [6, 4]
+    plt.rcParams['axes.facecolor']= 	'whitesmoke'
+    
+    den_plot = np.log10(rays_den)
+    den_plot = np.nan_to_num(den_plot, neginf= -19)
+    den_plot = np.reshape(den_plot, (192, len(radii)))
+    ax.set_ylabel('Observers', fontsize = 14)
+    ax.set_xlabel(r'r [R$_\odot$]', fontsize = 14)
+    img = ax.pcolormesh(radii/Rsol_to_cm, range(len(rays_den)), den_plot, cmap = 'cet_fire',
+                        vmin = -17, vmax = - 7)
+    cb = plt.colorbar(img)
+    cb.set_label(r'Density [g/cm$^3$]', fontsize = 14)
+    ax.set_title('N: ' + str(cell_num), fontsize = 16)
+    

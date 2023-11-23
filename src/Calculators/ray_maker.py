@@ -134,10 +134,24 @@ def find_observer(rays_T, rays_den, rays, thetas, phis, theta):
  
 
 if __name__ == '__main__':
+
     #rays_T, rays_den, _, _ =  ray_maker(844, 6)
     rays_T, rays_den, rays, radii = ray_maker(844, 6)
-    # fig, ax = plt.subplots(1,1, subplot_kw=dict(projection="mollweide"))
-    # ax.scatter(new_thetas, new_phis, c = 'k', s=20, marker = 'h')
-    # plt.grid(True)
-    # plt.title('Selected observers')
-    # plt.show()
+    fig, ax = plt.subplots(1,1)
+    import colorcet
+    plt.rcParams['text.usetex'] = True
+    plt.rcParams['figure.dpi'] = 300
+    plt.rcParams['font.family'] = 'Times New Roman'
+    plt.rcParams['figure.figsize'] = [6, 4]
+    plt.rcParams['axes.facecolor']= 	'whitesmoke'
+    
+    den_plot = np.log10(rays_den)
+    den_plot = np.nan_to_num(den_plot, neginf= -19)
+    den_plot = np.reshape(den_plot, (192, len(radii)))
+    ax.set_ylabel('Observers', fontsize = 14)
+    ax.set_xlabel(r'r [R$_\odot$]', fontsize = 14)
+    img = ax.pcolormesh(radii/Rsol_to_cm, range(len(rays_den)), den_plot, cmap = 'cet_fire',
+                        vmin = -17, vmax = - 7)
+    cb = plt.colorbar(img)
+    cb.set_label(r'Density [g/cm$^3$]', fontsize = 14)
+    ax.set_title('Regular Grid (N: 1200)', fontsize = 16)
