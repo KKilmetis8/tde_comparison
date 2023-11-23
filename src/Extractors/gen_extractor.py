@@ -73,12 +73,12 @@ def extractor(filename):
     return T, Z
 
 #%% Doing the thing
-fixes = ['950']
+fixes = ['881', '925', '950']
 for fix in fixes:
     snapshot = '6/' + fix+'/snap_'+fix+'.h5'
     T, _ = extractor(snapshot)   
     # Save to another file.
-    np.save('6/' + fix + '/Volume_'+fix, T)
+    np.save('6/' + fix + '/Vol_'+fix, T)
 
 
     

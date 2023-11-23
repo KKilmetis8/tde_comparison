@@ -4,17 +4,17 @@
 Gives ray which are logspaced. Around photosphere they sould be 1.
 Created on Tue Oct 10 10:19:34 2023
 
-@author: paola
+@author: paola, konstantinos
 
 """
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
-
 import numpy as np
 from scipy.spatial import KDTree
 import healpy as hp
-from astropy.coordinates import cartesian_to_spherical
+from astropy.coordinates import cartesian_to_spherical, spherical_to_cartesian
 import matplotlib.pyplot as plt
+AEK = '#F1C410'
 alice = False
 #%% Constants & Converter
 NSIDE = 4
@@ -28,6 +28,10 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
+
+fix = 844
+m = 6
+num = 2000
 
 def ray_maker(fix, m, num = 5000):
     """ Outputs are in CGS with exception of ray_vol (in solar units) """
@@ -54,18 +58,14 @@ def ray_maker(fix, m, num = 5000):
         T = np.load( str(m) + '/'  + fix + '/T_' + fix + '.npy')
         Den = np.load( str(m) + '/'  + fix + '/Den_' + fix + '.npy')
         Rad = np.load( str(m) + '/'  +fix + '/Rad_' + fix + '.npy')
-
+    
     # Convert Energy / Mass to Energy Density in CGS
     Rad *= Den 
     Rad *= en_den_converter
     Den *= den_converter 
-    R, THETA, PHI = cartesian_to_spherical(X,Y,Z)
-    R = R.value 
-    THETA = THETA.value
-    PHI = PHI.value
-
+    
     # make a tree
-    sim_value = [R, THETA, PHI] 
+    sim_value = [X, Y, Z] 
     sim_value = np.transpose(sim_value) #array of dim (number_points, 3)
     sim_tree = KDTree(sim_value) 
     
@@ -85,7 +85,29 @@ def ray_maker(fix, m, num = 5000):
         thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
         thetas[i] -= np.pi/2 # Enforce theta in -pi to pi
         observers.append( (thetas[i], phis[i]) )
-
+    
+    # Reshape
+    many_thetas = np.repeat(thetas, len(radii))
+    many_phis = np.repeat(phis, len(radii))
+    many_radii = list(radii)
+    many_radii *= 192 # num of observers 
+    our_x, our_y, our_z = spherical_to_cartesian(many_radii, many_thetas, many_phis)
+    #%% Plot
+    # ax = plt.figure().add_subplot(projection='3d')
+    # radii = np.array(radii)
+    # ax.scatter(our_x[::10], our_y[::10], our_z[::10], 
+    #             c = radii[::10], cmap = 'cet_bmy', alpha = 0.18, zorder = 2)
+    # # Selecting one ray
+    # pick = 107
+    # rat = pick * num
+    # old_rat = rat - num
+    # r_rat = np.sqrt(our_x[old_rat:rat]**2 + our_y[old_rat:rat]**2 + our_z[old_rat:rat]**2)
+    # ax.scatter(our_x[old_rat:rat], our_y[old_rat:rat], our_z[old_rat:rat], 
+    #             c = 'k', alpha = 1, zorder = 10)
+    # ax.set_xlim(-10_000, 10_000)
+    # ax.set_ylim(-10_000, 10_000)
+    # ax.set_zlim(-10_000, 10_000)
+    
     #%% Find the neighbour to the cell of our grid and keep its values
     tree_indexes = []
     rays_T = []
@@ -98,14 +120,20 @@ def ray_maker(fix, m, num = 5000):
         branch_den = np.zeros(len(radii))
         branch_energy = np.zeros(len(radii))
         branch_vol = np.zeros(len(radii)) # not in CGS
-        for i,radius in enumerate(radii):
-            queried_value = [radius, thetas[j], phis[j]]
+        
+        ray_start = j * num
+        ray_end = ray_start + num
+        for i, k in zip(range(ray_start, ray_end), range(num)):
+            # Get closest neighboor from tree
+            queried_value = [our_x[i], our_y[i], our_z[i]]
             _, idx = sim_tree.query(queried_value)
-            branch_indexes[i] = idx
-            branch_T[i] = T[idx]
-            branch_den[i] = Den[idx]
-            branch_energy[i] = Rad[idx]
-            branch_vol[i] = Vol[idx] # not in CGS
+                                    
+            # Store
+            branch_indexes[k] = idx
+            branch_T[k] = T[idx]
+            branch_den[k] = Den[idx]
+            branch_energy[k] = Rad[idx]
+            branch_vol[k] = Vol[idx] # not in CGS
         
         # Remove Bullshit
         branch_energy = np.nan_to_num(branch_energy, neginf = 0)
@@ -121,16 +149,17 @@ def ray_maker(fix, m, num = 5000):
         
     # Convert to CGS
     radii *= Rsol_to_cm
-
+    
     return tree_indexes, rays_T, rays_den, rays, radii, rays_vol
 
  
 if __name__ == '__main__':
     m = 6
-    tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(844, m)
-    #%%
-    fig, ax = plt.subplots(1,1)
+    num = 1000
+    tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(844, m, num)
+#%% Plot
     import colorcet
+    fig, ax = plt.subplots(1,1)
     plt.rcParams['text.usetex'] = True
     plt.rcParams['figure.dpi'] = 300
     plt.rcParams['font.family'] = 'Times New Roman'
@@ -146,5 +175,5 @@ if __name__ == '__main__':
                         vmin = -17, vmax = - 7)
     cb = plt.colorbar(img)
     cb.set_label(r'Density [g/cm$^3$]', fontsize = 14)
-    ax.set_title('N: ' + str(cell_num), fontsize = 16)
+    ax.set_title('N: ' + str(num), fontsize = 16)
     

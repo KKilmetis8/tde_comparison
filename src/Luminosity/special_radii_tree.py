@@ -98,7 +98,8 @@ def calc_photosphere(T, rho, rs):
     cumulative_kappas = []
     i = -1 # Initialize reverse loop
     while kappa <= threshold and i > -len(T):
-        dr = rs[i]-rs[i-1] # Step in the grid
+        dlogr = np.log(rs[i]) - np.log(rs[i-1])
+        dr = rs[i] * dlogr #-rs[i-1] # Step in the grid
         new_kappa = get_kappa(T[i], rho[i], dr)
         kappa += new_kappa
         kappas.append(new_kappa)
@@ -268,8 +269,8 @@ def get_thermr(rays_T, rays_den, radii):
 
 if __name__ == "__main__":
     plot_ph = False
-    plot_radii = False 
-    convergence_check = True 
+    plot_radii = True
+    convergence_check = False 
     m = 6 
     loadpath = str(m) + '/'
 
@@ -315,22 +316,23 @@ if __name__ == "__main__":
             file.close()
 
     else:
-        for index in range(0,1):#len(snapshots)):
-            tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, num=1000)
+        for index in range(0,len(snapshots)):
+            print('Snapshot ' + str(snapshots[index]))
+            tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, num=5000)
             rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii)
             rays_photo = rays_photo/Rsol_to_cm
             dim_ph = np.zeros(len(rays_index_photo))
             sushi = np.zeros(192)
-            for j in range(len(rays_index_photo)):
-                find_index_cell = int(rays_index_photo[j])
-                vol_ph = rays_vol[j][find_index_cell]
-                dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
-                dim_grid = (radii[find_index_cell+1]-radii[find_index_cell])/Rsol_to_cm #in solar units
-                sushi[j] = dim_ph[j] / dim_grid
-                print('Simulation cell R: ' + str(dim_ph[j]))
-                print('Our grid: ' + str(dim_grid))
-            sushi_mean = np.mean(sushi)
-            print('ratio: ' + str(sushi_mean))
+            # for j in range(len(rays_index_photo)):
+            #     find_index_cell = int(rays_index_photo[j])
+            #     vol_ph = rays_vol[j][find_index_cell]
+            #     dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
+            #     dim_grid = (radii[find_index_cell+1]-radii[find_index_cell])/Rsol_to_cm #in solar units
+            #     sushi[j] = dim_ph[j] / dim_grid
+            #     print('Simulation cell R: ' + str(dim_ph[j]))
+            #     print('Our grid: ' + str(dim_grid))
+            # sushi_mean = np.mean(sushi)
+            # print('ratio: ' + str(sushi_mean))
 
             # with open('data/red/photosphere' + str(snapshots[index]) + '.txt', 'a') as fileph:
             #     fileph.write(' '.join(map(str,rays_photo)) + '\n')
@@ -357,8 +359,6 @@ if __name__ == "__main__":
                 plt.legend()
                 plt.savefig('test.png')
                 plt.show()   
-
-            print('Snapshot ' + str(snapshots[index]))
 
         if plot_radii:
             with open('data/special_radii_m' + str(m) + '.txt', 'a') as file:
