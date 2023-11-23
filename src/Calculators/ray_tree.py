@@ -28,9 +28,8 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
-cell_num = 5000
 
-def ray_maker(fix, m):
+def ray_maker(fix, m, num = 5000):
     """ Outputs are in CGS with exception of ray_vol (in solar units) """
     fix = str(fix)
     Mbh = 10**m 
@@ -75,7 +74,7 @@ def ray_maker(fix, m):
     stop = 10_000 
     log_start = np.log10(start)
     log_stop = np.log10(stop)
-    log_radii = np.linspace(log_start, log_stop, cell_num) #simulator units
+    log_radii = np.linspace(log_start, log_stop, num) #simulator units
     radii = 10**log_radii
     
     # Find observers with Healpix
