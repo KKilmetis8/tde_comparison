@@ -83,7 +83,7 @@ def calc_photosphere(T, rho, radius, branch_indexes):
     Parameters
     ----------
     T, rho: 1D arrays (CGS)
-    radius: 1D array (CGS)
+    radius, branch_indexes: 1D array (CGS)
 
     Returns
     -------

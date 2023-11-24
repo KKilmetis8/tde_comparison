@@ -29,7 +29,16 @@ plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
 
 #%% Constants & Converter
+G = 6.6743e-11 # SI
+Msol = 1.98847e30 # kg
+Rsol = 6.957e8 # m
+t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
+c = 3e8 * t/Rsol # simulator units. Need these for the PW potential
 c_cgs = 3e10 # [cm/s]
+Msol_to_g = 1.989e33 # [g]
+Rsol_to_cm = 6.957e10 # [cm]
+den_converter = Msol_to_g / Rsol_to_cm**3
+en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2)
 #Rsol_to_cm = 6.957e10 # [cm]
 alice = False
 #%%
@@ -46,37 +55,54 @@ def select_fix(m):
             snapshots = np.arange(844, 1008 + 1)
             days = [1.00325,1.007,1.01075,1.01425,1.018,1.02175,1.0255,1.029,1.03275,1.0365,1.04025,1.04375,1.0475,1.05125,1.055,1.0585,1.06225,1.066,1.06975,1.07325,1.077,1.08075,1.0845,1.088,1.09175,1.0955,1.09925,1.10275,1.1065,1.11025,1.114,1.1175,1.12125,1.125,1.12875,1.13225,1.136,1.13975,1.1435,1.147,1.15075,1.1545,1.15825,1.16175,1.1655,1.16925,1.173,1.1765,1.18025,1.184,1.18775,1.19125,1.195,1.19875,1.2025,1.206,1.20975,1.2135,1.21725,1.22075,1.2245,1.22825,1.232,1.2355,1.23925,1.243,1.24675,1.25025,1.254,1.25775,1.2615,1.265,1.26875,1.2725,1.27625,1.27975,1.2835,1.28725,1.291,1.2945,1.29825,1.302,1.30575,1.30925,1.313,1.31675,1.3205,1.324,1.32775,1.3315,1.33525,1.33875,1.3425,1.34625,1.35,1.3535,1.35725,1.361,1.36475,1.36825,1.372,1.37575,1.3795,1.383,1.38675,1.3905,1.39425,1.39775,1.4015,1.40525,1.409,1.4125,1.41625,1.42,1.42375,1.42725,1.431,1.43475,1.4385,1.442,1.44575,1.4495,1.45325,1.45675,1.4605,1.46425,1.468,1.4715,1.47525,1.479,1.48275,1.48625,1.49,1.49375,1.4975,1.501,1.50475,1.5085,1.51225,1.51575,1.5195,1.52325,1.527,1.5305,1.53425,1.538,1.54175,1.54525,1.549,1.55275,1.5565,1.56,1.56375,1.5675,1.57125,1.57475,1.5785,1.58225,1.586,1.5895,1.59325,1.597,1.60075,1.60425,1.608]
         else:
-            snapshots = [844, 881, 925, 950]#, 1008] #[844, 881, 882, 898, 925, 950]
-            days = [1, 1.1, 1.3, 1.4]#, 1.608] #[1, 1.139, 1.143, 1.2, 1.3, 1.4] # t/t_fb
+            snapshots = [844, 881, 925, 950] #, 1008] 
+            days = [1, 1.1, 1.3, 1.4] #, 1.608] 
     return snapshots, days
 
-def find_neighbours(fix, m, tree_indexes):
-    X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
-    Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
-    Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
-    x_selected = X[tree_indexes]
-    y_selected = Y[tree_indexes]
-    z_selected = Z[tree_indexes]
-    for i in range(len(x_selected)):
-        
+def find_neighbours(fix, m, rays_index_photo):
+    X = np.load( str(m) + '/'  + str(fix) + '/CMx_' + str(fix) + '.npy')
+    Y = np.load( str(m) + '/'  + str(fix) + '/CMy_' + str(fix) + '.npy')
+    Z = np.load( str(m) + '/'  + str(fix) + '/CMz_' + str(fix) + '.npy')
+    Rad = np.load(str(m) + '/'  +str(fix) + '/Rad_' + str(fix) + '.npy')
+    T = np.load( str(m) + '/'  + str(fix) + '/T_' + str(fix) + '.npy')
+    Den = np.load( str(m) + '/'  + str(fix) + '/Den_' + str(fix) + '.npy')
+    Rad *= Den 
+    Rad *= en_den_converter
 
+    # make a tree
+    sim_value = [X, Y, Z] 
+    sim_value = np.transpose(sim_value) #array of dim (number_points, 3)
+    sim_tree = KDTree(sim_value)
 
-@numba.njit
-def grad_calculator(ray: np.array, radii: np.array, index_photo: int): 
-    # For a single ray (in logspace) get 
-    # the index of radius closest to sphere_radius and the gradE there.
-    # In(out)puts in CGS
+    rays_index_photo = [int(x) for x in rays_index_photo]
+    xyz_selected = [X[rays_index_photo], Y[rays_index_photo], Z[rays_index_photo]]
+    r_selected = np.sqrt(xyz_selected[0]**2 + xyz_selected[1]**2 + xyz_selected[2]**2)
+    xyz_selected = np.transpose(xyz_selected) #you need it to query
+    energy_selected = Rad[rays_index_photo]
 
-    #QUERY NEIGHB AND BUILD A SMALL RAY
-        
-    step = radii[idx+2] - radii[idx-1] 
-    grad_E = (ray[idx+2] - ray[idx-1]) / step 
+    dist_neigh, idx_neigh = sim_tree.query(xyz_selected, k = [2]) #find the 2nd nearest neighbour (in a wierd format)
+    dist_neigh = np.concatenate(dist_neigh) #so you have a single array
+    idx_neigh = np.concatenate(idx_neigh) #so you have a single array
+    xyz_neigh = [X[idx_neigh], Y[idx_neigh], Z[idx_neigh]]
+    r_neigh = np.sqrt(xyz_neigh[0]**2 + xyz_neigh[1]**2 + xyz_neigh[2]**2)
+    energy_neigh= Rad[idx_neigh]
+    T_neigh = T[idx_neigh]
+    den_neigh = Den[idx_neigh]
+  
+    # r_leaf = np.sqrt(x_selected[i]**2 + y_selected[i]**2 + z_selected[i]**2)
+    # _, idx = sim_tree.query(leaf, k = 4)
+    # x_neigh = X[idx]
+    # y_neigh = Y[idx]
+    # z_neigh = Z[idx]
+    # r_neigh = np.sqrt(x_neigh[i]**2 + y_neigh[i]**2 + z_neigh[i]**2)
+    # idx_lower = np.argmin(r_neigh-r_leaf) #we want it to be negative so the neighbour is before photo
+    # idx_lower = np.argmax(r_neigh-r_leaf) #we want it to be positive so the neighbour is after photo
 
-    return grad_E, idx #you should save the value of the less outside point of photo
+    return dist_neigh, idx_neigh, energy_neigh, T_neigh, den_neigh, energy_selected
 
     
-def flux_calculator(grad_E, idx_tot, rays, 
-                    rays_T, rays_den):
+def flux_calculator(grad_E, selected_energy, 
+                    selected_temperature, selected_density):
     """
     Get the flux for every observer.
     Everything is in CGS.
@@ -91,15 +117,15 @@ def flux_calculator(grad_E, idx_tot, rays,
     zero_count = 0
     flux_zero = 0
     flux_count = 0
-    for i, ray in enumerate(rays):
+
+    for i in range(len(selected_energy)):
         # We compute stuff OUTSIDE the photosphere
         # (which is at index idx_tot[i])
-        idx = idx_tot[i] #int(idx_tot[i]+1) #PROBABLY NO MORE AND USE IDX_TOT[i]
-        Energy = ray[idx]
+        Energy = selected_energy[i]
         max_travel = np.sign(-grad_E[i]) * c_cgs * Energy # or should we keep the abs???
         
-        Temperature = rays_T[i][idx]
-        Density = rays_den[i][idx]
+        Temperature = selected_temperature[i]
+        Density = selected_density[i]
         
         # Ensure we can interpolate
         rho_low = np.exp(-45)
@@ -161,27 +187,19 @@ def doer_of_thing(fix, m):
     """
     Gives bolometric L and R_ph (of evry observer)
     """
-    _, rays_T, rays_den, rays, radii, _ = ray_maker(fix, m)
-    _, _, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii)
+    tree_indexes, rays_T, rays_den, _, radii, _ = ray_maker(fix, m)
+    _, _, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
 
-    grad_E_tot = np.zeros(len(rays_T))
-    idx_tot = np.zeros(len(rays_T))
-    for i in range(len(rays_T)):
-    # Calculate gradE for every ray
-        ray = rays[i]
-        index_photo = rays_index_photo[i]
-        grad_E, idx = grad_calculator(ray, radii, index_photo)
-        grad_E_tot[i]= grad_E
-        idx_tot[i] = idx
+    #Find the neighbour to photosphere and save its quantities
+    dist_neigh, _, energy_neigh, T_neigh, den_neigh, energy_selected  = find_neighbours(fix, m, rays_index_photo)
+    
+    # Calculate gradE for all rays
+    deltaE = energy_neigh - energy_selected
+    grad_E = (deltaE) / dist_neigh
 
     # Calculate Flux and see how it looks
-    flux = flux_calculator(grad_E_tot, idx_tot, 
-                           rays, rays_T, rays_den)
-    # Save flux
-    # with open('data/red/flux_m'+ str(m) + '_fix' + str(fix) + '.txt', 'a') as f:
-    #     f.write('#snap '+ str(fix) + 'num ' + str(num) + ', ' + str(today) + '\n')
-    #     f.write(' '.join(map(str, flux)) + '\n')
-    #     f.close() 
+    flux = flux_calculator(grad_E, energy_neigh, 
+                           T_neigh, den_neigh)
 
     # Calculate luminosity 
     lum = np.zeros(len(flux))
@@ -196,10 +214,10 @@ def doer_of_thing(fix, m):
             flux[i] = 0 
 
         lum[i] = flux[i] * 4 * np.pi * rays_photo[i]**2
-    #lum = np.nan_to_num(lum, posinf=0, neginf=0)
 
     # Average in observers
     lum = np.sum(lum)/192
+
     print('Tot zeros:', zero_count)
     print('Negative: ', neg_count)      
     print('Fix %i' %fix, ', Lum %.3e' %lum, '\n---------' )
@@ -209,13 +227,13 @@ def doer_of_thing(fix, m):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = True
+    save = False
     plot = False
     m = 6 # Choose BH
     fixes, days = select_fix(m)
     lums = []
             
-    for idx in range(0,len(fixes)):
+    for idx in range(0,1):#len(fixes)):
         lum, sphere_radius = doer_of_thing(fixes[idx], m)
         lums.append(lum)
     
@@ -226,7 +244,7 @@ if __name__ == "__main__":
             np.savetxt(pre + 'tde_comparison/data/alicered'+ str(m) + '.txt', (days, lums))
         else:
              with open('data/red/new_reddata_m'+ str(m) + '.txt', 'a') as flum:
-                 flum.write('# t/t_fb \n') 
+                 flum.write('# t/t_fb SWIP\n') 
                  flum.write(' '.join(map(str, days)) + '\n')
                  flum.write('# Lum \n') 
                  flum.write(' '.join(map(str, lums)) + '\n')
