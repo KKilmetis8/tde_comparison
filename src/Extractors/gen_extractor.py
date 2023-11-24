@@ -4,6 +4,8 @@ Created on Thu Jan 12 18:02:14 2023
 
 @author: Konstantinos
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
 
 import numpy as np
 import h5py
@@ -73,7 +75,7 @@ def extractor(filename):
     return T, Z
 
 #%% Doing the thing
-fixes = ['881', '925', '950']
+fixes = ['1008']
 for fix in fixes:
     snapshot = '6/' + fix+'/snap_'+fix+'.h5'
     T, _ = extractor(snapshot)   

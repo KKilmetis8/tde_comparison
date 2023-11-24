@@ -17,8 +17,8 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['figure.figsize'] = [5 , 4]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
-plot_curves = False
-plot_radii_sphere = True
+plot_curves = True
+plot_radii_sphere = False
 plot_fit = False
 m = 6
 

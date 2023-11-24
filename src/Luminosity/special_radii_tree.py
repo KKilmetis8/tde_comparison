@@ -18,6 +18,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 import healpy as hp
 from scipy.stats import gmean
+
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 plt.rcParams['text.usetex'] = True
@@ -43,9 +44,9 @@ def select_fix(m):
         days = [1, 1.1, 1.3, 1.4] 
     return snapshots, days
 
-def get_kappa(T: float, rho: float, dr: float):
+def get_kappa(T: float, rho: float, r_dlogr: float):
     '''
-    T,rho, dr in CGS.
+    T,rho, r_dlogr in CGS.
     Calculates the integrand of eq.(8) Steinberg&Stone22.
     '''    
     # If there is nothing, the ray continues unimpeded
@@ -68,21 +69,21 @@ def get_kappa(T: float, rho: float, dr: float):
         kscattering = opacity(Tscatter, rho, 'scattering', ln = False)
 
         oppi = kplanck + kscattering
-        tau_high = oppi * dr
+        tau_high = oppi * r_dlogr
         return tau_high 
     
     # Lookup table
     k = opacity(T, rho,'red', ln = False)
-    kappar =  k * dr
+    kappar =  k * r_dlogr
     
     return kappar
 
-def calc_photosphere(T, rho, rs):
+def calc_photosphere(T, rho, radius, branch_indexes):
     '''
     Parameters
     ----------
     T, rho: 1D arrays (CGS)
-    rs: 1D array (solar units)
+    radius: 1D array (CGS)
 
     Returns
     -------
@@ -98,27 +99,27 @@ def calc_photosphere(T, rho, rs):
     cumulative_kappas = []
     i = -1 # Initialize reverse loop
     while kappa <= threshold and i > -len(T):
-        dlogr = np.log(rs[i]) - np.log(rs[i-1])
-        dr = rs[i] * dlogr #-rs[i-1] # Step in the grid
-        new_kappa = get_kappa(T[i], rho[i], dr)
+        dlogr = np.log(radius[i]) - np.log(radius[i-1])
+        r_dlogr = radius[i] * dlogr #to integrate in log space
+        new_kappa = get_kappa(T[i], rho[i], r_dlogr)
         kappa += new_kappa
         kappas.append(new_kappa)
         cumulative_kappas.append(kappa)
         i -= 1
 
-    photo =  rs[i] #i it's negative
-    index_ph = len(rs) + i # to find the index of photo from inside to outside
+    photo =  radius[i] #i it's negative
+    index_ph = branch_indexes[i]
 
     return kappas, cumulative_kappas, photo, index_ph
 
-def get_photosphere(rays_T, rays_den, radii):
+def get_photosphere(rays_T, rays_den, radii, tree_indexes):
     '''
-    Finds and saves the photosphere (in solar units) for every ray.
+    Finds and saves the photosphere (CGS) for every ray.
 
     Parameters
     ----------
-    rays_T, rays_den: n-D arrays.
-    radii: 1D array.
+    rays_T, rays_den: n-D arrays (CGS)
+    radii: 1D array (CGS)
 
     Returns
     -------
@@ -135,9 +136,11 @@ def get_photosphere(rays_T, rays_den, radii):
         # Isolate each ray
         T_of_single_ray = rays_T[i]
         Den_of_single_ray = rays_den[i]
+        branch_indexes = tree_indexes[i]
         
         # Get photosphere
-        kappas, cumulative_kappas, photo, index_ph  = calc_photosphere(T_of_single_ray, Den_of_single_ray, radii)
+        kappas, cumulative_kappas, photo, index_ph  = calc_photosphere(T_of_single_ray, Den_of_single_ray, 
+                                                                       radii, branch_indexes)
 
         # Store
         rays_kappas.append(kappas)
@@ -290,7 +293,7 @@ if __name__ == "__main__":
 
         for j,num in enumerate(num_array):
             tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshot, m, num)
-            rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii)
+            rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
             rays_photo = rays_photo/Rsol_to_cm
             num_photo_arit[j] = np.mean(rays_photo)
             num_photo_geom[j] = gmean(rays_photo)
@@ -383,6 +386,7 @@ if __name__ == "__main__":
             plt.yscale('log')
             plt.grid()
             plt.legend()
+            plt.savefig('photospherefromRt.png')
         plt.show()
 
             

@@ -12,7 +12,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 from scipy.spatial import KDTree
 import healpy as hp
-from astropy.coordinates import cartesian_to_spherical, spherical_to_cartesian
+from astropy.coordinates import spherical_to_cartesian
 import matplotlib.pyplot as plt
 AEK = '#F1C410'
 alice = False
@@ -70,7 +70,7 @@ def ray_maker(fix, m, num = 5000):
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = 0.5 * Rt #Solar radii
+    start = 0.01 #Rt #Solar radii
     stop = 10_000 
     log_start = np.log10(start)
     log_stop = np.log10(stop)

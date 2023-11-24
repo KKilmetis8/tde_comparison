@@ -18,6 +18,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 import matplotlib.pyplot as plt
 import numba
+from scipy.spatial import KDTree
 from datetime import datetime
 # Custom Imports
 from src.Opacity.opacity_table import opacity
@@ -29,7 +30,7 @@ plt.rcParams['figure.figsize'] = [5 , 4]
 
 #%% Constants & Converter
 c_cgs = 3e10 # [cm/s]
-Rsol_to_cm = 6.957e10 # [cm]
+#Rsol_to_cm = 6.957e10 # [cm]
 alice = False
 #%%
 ##
@@ -45,31 +46,37 @@ def select_fix(m):
             snapshots = np.arange(844, 1008 + 1)
             days = [1.00325,1.007,1.01075,1.01425,1.018,1.02175,1.0255,1.029,1.03275,1.0365,1.04025,1.04375,1.0475,1.05125,1.055,1.0585,1.06225,1.066,1.06975,1.07325,1.077,1.08075,1.0845,1.088,1.09175,1.0955,1.09925,1.10275,1.1065,1.11025,1.114,1.1175,1.12125,1.125,1.12875,1.13225,1.136,1.13975,1.1435,1.147,1.15075,1.1545,1.15825,1.16175,1.1655,1.16925,1.173,1.1765,1.18025,1.184,1.18775,1.19125,1.195,1.19875,1.2025,1.206,1.20975,1.2135,1.21725,1.22075,1.2245,1.22825,1.232,1.2355,1.23925,1.243,1.24675,1.25025,1.254,1.25775,1.2615,1.265,1.26875,1.2725,1.27625,1.27975,1.2835,1.28725,1.291,1.2945,1.29825,1.302,1.30575,1.30925,1.313,1.31675,1.3205,1.324,1.32775,1.3315,1.33525,1.33875,1.3425,1.34625,1.35,1.3535,1.35725,1.361,1.36475,1.36825,1.372,1.37575,1.3795,1.383,1.38675,1.3905,1.39425,1.39775,1.4015,1.40525,1.409,1.4125,1.41625,1.42,1.42375,1.42725,1.431,1.43475,1.4385,1.442,1.44575,1.4495,1.45325,1.45675,1.4605,1.46425,1.468,1.4715,1.47525,1.479,1.48275,1.48625,1.49,1.49375,1.4975,1.501,1.50475,1.5085,1.51225,1.51575,1.5195,1.52325,1.527,1.5305,1.53425,1.538,1.54175,1.54525,1.549,1.55275,1.5565,1.56,1.56375,1.5675,1.57125,1.57475,1.5785,1.58225,1.586,1.5895,1.59325,1.597,1.60075,1.60425,1.608]
         else:
-            snapshots = [844, 881, 925, 950, 1008] #[844, 881, 882, 898, 925, 950]
-            days = [1, 1.1, 1.3, 1.4, 1.608] #[1, 1.139, 1.143, 1.2, 1.3, 1.4] # t/t_fb
+            snapshots = [844, 881, 925, 950]#, 1008] #[844, 881, 882, 898, 925, 950]
+            days = [1, 1.1, 1.3, 1.4]#, 1.608] #[1, 1.139, 1.143, 1.2, 1.3, 1.4] # t/t_fb
     return snapshots, days
 
+def find_neighbours(fix, m, tree_indexes):
+    X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
+    Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
+    Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
+    x_selected = X[tree_indexes]
+    y_selected = Y[tree_indexes]
+    z_selected = Z[tree_indexes]
+    for i in range(len(x_selected)):
+        
+
+
 @numba.njit
-def grad_calculator(ray: np.array, radii: np.array, sphere_radius: int): 
+def grad_calculator(ray: np.array, radii: np.array, index_photo: int): 
     # For a single ray (in logspace) get 
     # the index of radius closest to sphere_radius and the gradE there.
-    # Ray is in CGS
-    # Radii and sphere_radius are in simulator units.
-    for i, radius in enumerate(radii):
-        if radius > sphere_radius:
-            idx = i - 1 
-            break
+    # In(out)puts in CGS
+
+    #QUERY NEIGHB AND BUILD A SMALL RAY
         
-    step = radii[idx+2] - radii[idx] 
-    step *= Rsol_to_cm
+    step = radii[idx+2] - radii[idx-1] 
+    grad_E = (ray[idx+2] - ray[idx-1]) / step 
 
-    grad_E = (ray[idx+2] - ray[idx]) / step # now in CGS
-
-    return grad_E, idx
+    return grad_E, idx #you should save the value of the less outside point of photo
 
     
-def flux_calculator(grad_E, idx_tot, 
-                    rays, rays_T, rays_den):
+def flux_calculator(grad_E, idx_tot, rays, 
+                    rays_T, rays_den):
     """
     Get the flux for every observer.
     Everything is in CGS.
@@ -87,7 +94,7 @@ def flux_calculator(grad_E, idx_tot,
     for i, ray in enumerate(rays):
         # We compute stuff OUTSIDE the photosphere
         # (which is at index idx_tot[i])
-        idx = int(idx_tot[i]+1) #  
+        idx = idx_tot[i] #int(idx_tot[i]+1) #PROBABLY NO MORE AND USE IDX_TOT[i]
         Energy = ray[idx]
         max_travel = np.sign(-grad_E[i]) * c_cgs * Energy # or should we keep the abs???
         
@@ -155,21 +162,21 @@ def doer_of_thing(fix, m):
     Gives bolometric L and R_ph (of evry observer)
     """
     _, rays_T, rays_den, rays, radii, _ = ray_maker(fix, m)
-    _, _, rays_photo, _ = get_photosphere(rays_T, rays_den, radii)
+    _, _, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii)
 
     grad_E_tot = np.zeros(len(rays_T))
     idx_tot = np.zeros(len(rays_T))
     for i in range(len(rays_T)):
     # Calculate gradE for every ray
         ray = rays[i]
-        photo = rays_photo[i]
-        grad_E, idx = grad_calculator(ray, radii, photo)
+        index_photo = rays_index_photo[i]
+        grad_E, idx = grad_calculator(ray, radii, index_photo)
         grad_E_tot[i]= grad_E
         idx_tot[i] = idx
 
     # Calculate Flux and see how it looks
     flux = flux_calculator(grad_E_tot, idx_tot, 
-                            rays, rays_T, rays_den)
+                           rays, rays_T, rays_den)
     # Save flux
     # with open('data/red/flux_m'+ str(m) + '_fix' + str(fix) + '.txt', 'a') as f:
     #     f.write('#snap '+ str(fix) + 'num ' + str(num) + ', ' + str(today) + '\n')
@@ -188,9 +195,8 @@ def doer_of_thing(fix, m):
             neg_count += 1
             flux[i] = 0 
 
-        sphere_radius_cgs = rays_photo[i] * Rsol_to_cm
-        lum[i] = flux[i] * 4 * np.pi * sphere_radius_cgs**2
-        print(lum)
+        lum[i] = flux[i] * 4 * np.pi * rays_photo[i]**2
+    #lum = np.nan_to_num(lum, posinf=0, neginf=0)
 
     # Average in observers
     lum = np.sum(lum)/192
@@ -203,13 +209,13 @@ def doer_of_thing(fix, m):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = False
-    plot = True
+    save = True
+    plot = False
     m = 6 # Choose BH
     fixes, days = select_fix(m)
     lums = []
             
-    for idx in range(0,1):#len(fixes)):
+    for idx in range(0,len(fixes)):
         lum, sphere_radius = doer_of_thing(fixes[idx], m)
         lums.append(lum)
     
@@ -220,9 +226,9 @@ if __name__ == "__main__":
             np.savetxt(pre + 'tde_comparison/data/alicered'+ str(m) + '.txt', (days, lums))
         else:
              with open('data/red/new_reddata_m'+ str(m) + '.txt', 'a') as flum:
-                 flum.write('# t/t_fb') 
+                 flum.write('# t/t_fb \n') 
                  flum.write(' '.join(map(str, days)) + '\n')
-                 flum.write('# Lum') 
+                 flum.write('# Lum \n') 
                  flum.write(' '.join(map(str, lums)) + '\n')
                  flum.close() 
 
