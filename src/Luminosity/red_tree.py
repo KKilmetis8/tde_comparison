@@ -80,15 +80,49 @@ def find_neighbours(fix, m, rays_index_photo):
     xyz_selected = np.transpose(xyz_selected) #you need it to query
     energy_selected = Rad[rays_index_photo]
 
-    dist_neigh, idx_neigh = sim_tree.query(xyz_selected, k = [2]) #find the 2nd nearest neighbour (in a wierd format)
-    dist_neigh = np.concatenate(dist_neigh) #so you have a single array
-    idx_neigh = np.concatenate(idx_neigh) #so you have a single array
-    xyz_neigh = [X[idx_neigh], Y[idx_neigh], Z[idx_neigh]]
-    r_neigh = np.sqrt(xyz_neigh[0]**2 + xyz_neigh[1]**2 + xyz_neigh[2]**2)
-    energy_neigh= Rad[idx_neigh]
-    T_neigh = T[idx_neigh]
-    den_neigh = Den[idx_neigh]
-  
+    xyz_neigh_up = []
+    dist_neigh_up = np.zeros(len(r_selected))
+    idx_neigh_up = np.zeros(len(r_selected))
+    r_neigh_up = np.zeros(len(r_selected))
+    energy_neigh_up = np.zeros(len(r_selected))
+    T_neigh_up = np.zeros(len(r_selected))
+    den_neigh_up = np.zeros(len(r_selected))
+
+    xyz_neigh_low = []
+    dist_neigh_low = np.zeros(len(r_selected))
+    idx_neigh_low = np.zeros(len(r_selected))
+    r_neigh_low = np.zeros(len(r_selected)) 
+    energy_neigh_low = np.zeros(len(r_selected))
+    T_neigh_low = np.zeros(len(r_selected))
+    den_neigh_low = np.zeros(len(r_selected))
+
+    for j in range(len(r_selected)):
+        i = 1
+        while (r_neigh_low[j] > r_selected[j] or r_neigh_up[j] < r_selected[j]):
+            dist_test, idx_test = sim_tree.query(xyz_selected[j], k = [i]) # find the 2nd nearest neighbours 
+            xyz_test = [X[idx_test], Y[idx_test], Z[idx_test]]
+            r_test = np.sqrt(xyz_test[0]**2 + xyz_test[1]**2 + xyz_test[2]**2)
+            if np.logical_and(r_test > r_selected[j], r_neigh_up[j] == 0):
+                r_neigh_up[j] = r_test
+                dist_neigh_up[j] = dist_test
+                idx_neigh_up[j] = idx_test
+                xyz_neigh_up.append(xyz_test)
+                energy_neigh_up[j] = Rad[idx_test]
+                T_neigh_up[j] = T[idx_test]
+                den_neigh_up[j] = Den[idx_test]
+            elif np.logical_and(r_test < r_selected[j], r_neigh_low[j] == 0):
+                r_neigh_low[j] = r_test
+                dist_neigh_low[j] = dist_test
+                idx_neigh_low[j] = idx_test
+                xyz_neigh_low.append(xyz_test)
+                energy_neigh_low[j] = Rad[idx_test]
+                T_neigh_low[j] = T[idx_test]
+                den_neigh_low[j] = Den[idx_test]
+            i += 1
+
+    deltadist = den_neigh_low + den_neigh_up
+    deltaE = energy_neigh_up - energy_neigh_low
+    grad_E = deltaE / deltadist
     # r_leaf = np.sqrt(x_selected[i]**2 + y_selected[i]**2 + z_selected[i]**2)
     # _, idx = sim_tree.query(leaf, k = 4)
     # x_neigh = X[idx]
@@ -98,7 +132,7 @@ def find_neighbours(fix, m, rays_index_photo):
     # idx_lower = np.argmin(r_neigh-r_leaf) #we want it to be negative so the neighbour is before photo
     # idx_lower = np.argmax(r_neigh-r_leaf) #we want it to be positive so the neighbour is after photo
 
-    return dist_neigh, idx_neigh, energy_neigh, T_neigh, den_neigh, energy_selected
+    return grad_E, energy_neigh_up, T_neigh_up, den_neigh_up
 
     
 def flux_calculator(grad_E, selected_energy, 
@@ -141,7 +175,7 @@ def flux_calculator(grad_E, selected_energy,
             continue
         
         # If stream, no light 
-        if Temperature < T_low: 
+        if Temperature < T_low:
             zero_count += 1
             f[i] = 0 
             continue
@@ -191,15 +225,15 @@ def doer_of_thing(fix, m):
     _, _, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
 
     #Find the neighbour to photosphere and save its quantities
-    dist_neigh, _, energy_neigh, T_neigh, den_neigh, energy_selected  = find_neighbours(fix, m, rays_index_photo)
+    grad_E, energy_neigh_up, T_neigh_up, den_neigh_up  = find_neighbours(fix, m, rays_index_photo)
     
     # Calculate gradE for all rays
-    deltaE = energy_neigh - energy_selected
-    grad_E = (deltaE) / dist_neigh
+    #deltaE = energy_neigh - energy_selected
+    #grad_E = (deltaE) / dist_neigh
 
     # Calculate Flux and see how it looks
-    flux = flux_calculator(grad_E, energy_neigh, 
-                           T_neigh, den_neigh)
+    flux = flux_calculator(grad_E, energy_neigh_up, 
+                           T_neigh_up, den_neigh_up)
 
     # Calculate luminosity 
     lum = np.zeros(len(flux))
