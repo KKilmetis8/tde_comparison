@@ -261,13 +261,13 @@ def doer_of_thing(fix, m):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = False
+    save = True
     plot = False
     m = 6 # Choose BH
     fixes, days = select_fix(m)
     lums = []
             
-    for idx in range(0,1):#len(fixes)):
+    for idx in range(0,len(fixes)):
         lum, sphere_radius = doer_of_thing(fixes[idx], m)
         lums.append(lum)
     
@@ -277,8 +277,8 @@ if __name__ == "__main__":
             np.savetxt('red_backup_save'+ str(m) + '.txt', (days, lums))
             np.savetxt(pre + 'tde_comparison/data/alicered'+ str(m) + '.txt', (days, lums))
         else:
-             with open('data/red/new_reddata_m'+ str(m) + '.txt', 'a') as flum:
-                 flum.write('# t/t_fb SWIP\n') 
+             with open('data/red/new_reddatauplow_m'+ str(m) + '.txt', 'a') as flum:
+                 flum.write('# t/t_fb\n') 
                  flum.write(' '.join(map(str, days)) + '\n')
                  flum.write('# Lum \n') 
                  flum.write(' '.join(map(str, lums)) + '\n')
