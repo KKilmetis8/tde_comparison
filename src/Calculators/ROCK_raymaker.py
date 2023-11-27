@@ -60,8 +60,7 @@ PHI = PHI.value
 thetas = np.zeros(192)
 phis = np.zeros(192)
 observers = []
-delta_thetas = []
-delta_phis = []
+corners = []
 fig, ax = plt.subplots(1,1, subplot_kw=dict(projection="mollweide"))
 for i in range(192):
     # Get Observers
@@ -75,22 +74,22 @@ for i in range(192):
     corner_angles = []
     # Corner XYZ coordinates
     corner_x, corner_y, corner_z = hp.boundaries(4,i)
-    corners = np.zeros((4,3))
+    corners_xyz = np.zeros((4,3))
     corner_angles = np.zeros((4,2))
     
     # Corner 
     for j in range(4):
-        corners[j] = corner_x[j], corner_y[j], corner_z[j]
-        corner_angles[j][0] = hp.vec2ang(corners[j])[0][0] - np.pi/2
-        corner_angles[j][1] = hp.vec2ang(corners[j])[1][0] 
-
+        corners_xyz[j] = corner_x[j], corner_y[j], corner_z[j]
+        corner_angles[j][0] = hp.vec2ang(corners_xyz[j])[0][0] - np.pi/2
+        corner_angles[j][1] = hp.vec2ang(corners_xyz[j])[1][0] 
         
     # Fix horizontals
     if any(corner_angles.T[1] > 6):
         for k, corner in enumerate(corner_angles.T[1]):
             if corner > 6.28 or corner < 0.4: # 2 * np.pi for healpix
                 corner_angles[k][1] = 6.27
-
+    
+    corners.append(corner_angles.T)
     if plot:
         corner_angles_phi_plot = list(corner_angles.T[1] - np.pi)
         corner_angles_theta_plot = list(corner_angles.T[0])
@@ -104,35 +103,33 @@ for i in range(192):
                   markersize = 1, c='k', linewidth = 1, zorder = 4,)    
 
 if plot:
-    plt.plot(PHI[::1000] - np.pi, THETA[::1000], 'x',  c = 'r', markersize = 0.1, zorder = 2) 
+    plt.plot(PHI[::1000] - np.pi, THETA[::1000], 'x',  c = 'r', 
+             markersize = 0.1, zorder = 2) 
 
 
-#%% Make rays
-
+# Make rays
 rays_T = []
 rays_Den = []
 rays_R = []
 rays_Rad = []
 rays_M = []
 
-
-for observer in observers:
-    delta_theta = delta_thetas[i] # 0.332 / 2 
-    delta_phi = delta_phis[i] # 0.339 / 2 
+for observer, corner in zip(observers, corners):
+    corner_theta = corner[0] # 0.332 / 2 
+    corner_phi = corner[1] # 0.339 / 2 
     
-    patrol = borderlands(corners_theta, corners_phi)
-    tube_mask = patrol()
-    # numpy thinks in C
-
-    fluff_mask = ( Den > 1e-17 )
+    # Make mask
+    patrol = borderlands(corner_theta, corner_phi)
+    tube_mask = patrol(THETA, PHI)
+    fluff_mask = ( Den > 1e-17 ) # a bit agressive
     
     # Mask & Mass Weigh
-    ray_Mass = Mass[theta_mask & phi_mask & fluff_mask]
-    ray_R = R[theta_mask & phi_mask & fluff_mask] 
-    ray_Den = Den[theta_mask & phi_mask  & fluff_mask ]# * ray_Mass / sum_mass
-    ray_T = T[theta_mask & phi_mask  & fluff_mask]# * ray_Mass / sum_mass
-    ray_Rad = Rad[theta_mask & phi_mask  & fluff_mask]# * ray_Mass / sum_mass
-    ray_M = Mass[theta_mask & phi_mask & fluff_mask]
+    ray_Mass = Mass[tube_mask & fluff_mask]
+    ray_R = R[tube_mask & fluff_mask] 
+    ray_Den = Den[tube_mask  & fluff_mask ]# * ray_Mass / sum_mass
+    ray_T = T[tube_mask  & fluff_mask]# * ray_Mass / sum_mass
+    ray_Rad = Rad[tube_mask  & fluff_mask]# * ray_Mass / sum_mass
+    ray_M = Mass[tube_mask & fluff_mask]
     
     # Sort by r
     bookeeper = np.argsort(ray_R)
@@ -148,6 +145,11 @@ for observer in observers:
     rays_T.append( ray_T)
     rays_Rad.append(ray_Rad)
     rays_M.append(ray_M)
+    
+    if plot:
+        ray_phi = PHI[tube_mask & fluff_mask] - np.pi
+        ray_theta = THETA[tube_mask & fluff_mask]
+        plt.plot(ray_phi,ray_theta, 'x', markersize = 0.2, zorder = 2) 
 
 #%%
 def get_kappa(T: float, rho: float, dr: float):
