@@ -271,8 +271,8 @@ def get_thermr(rays_T, rays_den, radii):
 ################
 
 if __name__ == "__main__":
-    plot_ph = False
-    plot_radii = True
+    plot_ph = True
+    plot_radii = False
     convergence_check = False 
     m = 6 
     loadpath = str(m) + '/'
@@ -319,7 +319,7 @@ if __name__ == "__main__":
             file.close()
 
     else:
-        for index in range(0,len(snapshots)):
+        for index in range(0,1):#len(snapshots)):
             print('Snapshot ' + str(snapshots[index]))
             tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, num=5000)
             rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
@@ -362,7 +362,7 @@ if __name__ == "__main__":
                 plt.yscale('log')
                 plt.grid()
                 plt.legend()
-                plt.savefig('test.png')
+                plt.savefig('testRt.png')
                 plt.show()   
 
         if plot_radii:
