@@ -5,13 +5,17 @@ Created on Tue Oct 31 16:22:40 2023
 
 @author: konstantinos
 """
-
+# Vanilla Imports
+import numba
 import numpy as np
 import healpy as hp
 import matplotlib.pyplot as plt
 from astropy.coordinates import cartesian_to_spherical
+# Custom Imports
 from src.Opacity.opacity_table import opacity
-import numba
+from src.Calculators.borderlands import borderlands
+
+#%% Load and Init
 
 # Constants
 NSIDE = 4
@@ -26,9 +30,13 @@ Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 
+# This will be a function soon
 fix = '844'
 m = 6
 prune = 1
+plot = True
+
+# Data Load
 X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')[::prune]
 Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')[::prune]
 Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')[::prune]
@@ -36,13 +44,15 @@ Mass = np.load( str(m) + '/'  + fix + '/Mass_' + fix + '.npy')[::prune]
 T = np.load( str(m) + '/'  + fix + '/T_' + fix + '.npy')[::prune]
 Den = np.load( str(m) + '/'  + fix + '/Den_' + fix + '.npy')[::prune]
 Rad = np.load( str(m) + '/'  +fix + '/Rad_' + fix + '.npy')[::prune]
+Vol = np.load( str(m) + '/'  +fix + '/Vol_' + fix + '.npy')[::prune]
 
+# Conversions
 Rad *= Den 
 Rad *= en_den_converter
 Den *= den_converter 
+Mass *= Msol_to_g
 # Convert to spherical
 R, THETA, PHI = cartesian_to_spherical(X,Y,Z)
-# R = R.value 
 THETA = THETA.value
 PHI = PHI.value
 
@@ -69,36 +79,32 @@ for i in range(192):
     corner_angles = np.zeros((4,2))
     
     # Corner 
-    for i in range(4):
-        corners[i] = corner_x[i], corner_y[i], corner_z[i]
-        corner_angles[i][0] = hp.vec2ang(corners[i])[0][0]
-        corner_angles[i][1] = hp.vec2ang(corners[i])[1][0]
-        
-    # Biggest possible Delta phi and Delta theta
-    print(corner_angles.T[1].max() - corner_angles.T[1].min())
-    corner_angles_phi_plot = list(corner_angles.T[1] - np.pi)
-    corner_angles_theta_plot = list(corner_angles.T[0] - np.pi/2)
-    
-    # last point to close the rectangle
-    corner_angles_phi_plot.append(corner_angles_phi_plot[0]) 
-    corner_angles_theta_plot.append(corner_angles_theta_plot[0])
-    
-    plt.plot(corner_angles_phi_plot, corner_angles_theta_plot, '-x', 
-              markersize = 1, c='k', linewidth = 1, zorder = 4,)
+    for j in range(4):
+        corners[j] = corner_x[j], corner_y[j], corner_z[j]
+        corner_angles[j][0] = hp.vec2ang(corners[j])[0][0] - np.pi/2
+        corner_angles[j][1] = hp.vec2ang(corners[j])[1][0] 
 
-    for i in range(0,4):
-        theta_diff_temp = np.max(np.abs(corner_angles[i][0] - corner_angles[:][0]))
-        phi_diff_temp = np.max(np.abs(corner_angles[i][1] - corner_angles[:][1])) 
         
-        if theta_diff_temp > theta_diff:
-            theta_diff = theta_diff_temp
-            
-        if phi_diff_temp > phi_diff:
-            phi_diff = phi_diff_temp
-            
-    delta_thetas.append(theta_diff/2)
-    delta_phis.append(phi_diff/2)
-plt.plot(PHI[::100] - np.pi, THETA[::100], 'x',  c = 'r', markersize = 0.1, zorder = 2) 
+    # Fix horizontals
+    if any(corner_angles.T[1] > 6):
+        for k, corner in enumerate(corner_angles.T[1]):
+            if corner > 6.28 or corner < 0.4: # 2 * np.pi for healpix
+                corner_angles[k][1] = 6.27
+
+    if plot:
+        corner_angles_phi_plot = list(corner_angles.T[1] - np.pi)
+        corner_angles_theta_plot = list(corner_angles.T[0])
+        
+        # last point to close the rectangle
+        corner_angles_phi_plot.append(corner_angles_phi_plot[0]) 
+        corner_angles_theta_plot.append(corner_angles_theta_plot[0])       
+    
+    if plot:
+        plt.plot(corner_angles_phi_plot, corner_angles_theta_plot, '-x', 
+                  markersize = 1, c='k', linewidth = 1, zorder = 4,)    
+
+if plot:
+    plt.plot(PHI[::1000] - np.pi, THETA[::1000], 'x',  c = 'r', markersize = 0.1, zorder = 2) 
 
 
 #%% Make rays
@@ -107,26 +113,26 @@ rays_T = []
 rays_Den = []
 rays_R = []
 rays_Rad = []
+rays_M = []
+
 
 for observer in observers:
-    # These are kind of wrong, we should be more explicit about this
-    delta_phi = 0.392 / 2 # rad
-    delta_theta = 0.339 / 2 # rad
+    delta_theta = delta_thetas[i] # 0.332 / 2 
+    delta_phi = delta_phis[i] # 0.339 / 2 
+    
+    patrol = borderlands(corners_theta, corners_phi)
+    tube_mask = patrol()
     # numpy thinks in C
-    theta_mask = ( observer[0] - delta_theta < THETA) & \
-                 ( THETA < observer[0] + delta_theta)
-                 
-    phi_mask = ( observer[1] - delta_phi < PHI) & \
-               ( PHI < observer[1] + delta_phi)
+
     fluff_mask = ( Den > 1e-17 )
     
     # Mask & Mass Weigh
-    # ray_Mass = Mass[theta_mask & phi_mask]
-    # sum_mass = np.sum(ray_Mass)
+    ray_Mass = Mass[theta_mask & phi_mask & fluff_mask]
     ray_R = R[theta_mask & phi_mask & fluff_mask] 
     ray_Den = Den[theta_mask & phi_mask  & fluff_mask ]# * ray_Mass / sum_mass
     ray_T = T[theta_mask & phi_mask  & fluff_mask]# * ray_Mass / sum_mass
     ray_Rad = Rad[theta_mask & phi_mask  & fluff_mask]# * ray_Mass / sum_mass
+    ray_M = Mass[theta_mask & phi_mask & fluff_mask]
     
     # Sort by r
     bookeeper = np.argsort(ray_R)
@@ -134,12 +140,15 @@ for observer in observers:
     ray_Den = ray_Den[bookeeper]
     ray_T = ray_T[bookeeper]
     ray_Rad = ray_Rad[bookeeper]
+    ray_M = ray_M[bookeeper]
 
     # Keep
     rays_R.append(ray_R)
     rays_Den.append( ray_Den )
     rays_T.append( ray_T)
     rays_Rad.append(ray_Rad)
+    rays_M.append(ray_M)
+
 #%%
 def get_kappa(T: float, rho: float, dr: float):
     '''
@@ -167,37 +176,40 @@ def get_kappa(T: float, rho: float, dr: float):
         kscattering = opacity(Tscatter, rho, 'scattering', ln = False)
 
         oppi = kplanck + kscattering
-        tau_high = oppi * dr
+        tau_high = oppi / rho # go back to cm^2/g 
         return tau_high 
     
     # Lookup table
     k = opacity(T, rho,'red', ln = False)
-    kappar =  k * dr
+    kappar =  k / rho # go back to cm^2/g 
     
     return kappar
 
-def calc_photosphere(T, rho, rs):
+def calc_photosphere(T, rho, rs, M):
     '''
     Input: 1D arrays.
     Finds and saves the photosphere (in CGS).
     The kappas' arrays go from far to near the BH.
     '''
     threshold = 2/3
+    tube_area = 1 # 4 * np.pi / 192
+    rs_cgs = rs * Rsol_to_cm
     kappa = 0
     kappas = []
     cumulative_kappas = []
     i = -1 # Initialize reverse loop
     while kappa <= threshold and i > -len(T):
-        dr = rs[i]-rs[i-1] # Cell seperation
+        dr = rs_cgs[i]-rs_cgs[i-1] # Cell seperation
         new_kappa = get_kappa(T[i], rho[i], dr)
-        kappa += new_kappa
+        tube_correct = M[i] / (rs_cgs[i]**2 * tube_area)
+        kappa += new_kappa * tube_correct
         kappas.append(new_kappa)
         cumulative_kappas.append(kappa)
         i -= 1
     photo =  rs[i] #i it's negative
     return kappas, cumulative_kappas, photo
 
-def get_photosphere(rays_T, rays_den, rays_R):
+def get_photosphere(rays_T, rays_den, rays_R, rays_M):
     '''
     Finds and saves the photosphere (in CGS) for every ray.
 
@@ -216,16 +228,17 @@ def get_photosphere(rays_T, rays_den, rays_R):
     rays_photo = np.zeros(len(rays_T))
     
     for i in range(len(rays_T)):
-        print('Ray maker ray: ', i) 
         # Isolate each ray
         T_of_single_ray = rays_T[i]
         Den_of_single_ray = rays_den[i]
         R_of_single_ray = rays_R[i]
+        M_of_single_ray = rays_M[i]
         # Get photosphere
-        _, cumulative_kappas, photo  = calc_photosphere(T_of_single_ray, 
-                                                             Den_of_single_ray, 
-                                                             R_of_single_ray)
-
+        kappas, cumulative_kappas, photo  = calc_photosphere(T_of_single_ray, 
+                                                        Den_of_single_ray, 
+                                                        R_of_single_ray,
+                                                        M_of_single_ray)
+        print(np.shape(kappas))
         # Store
         # rays_kappas.append(kappas)
         rays_cumulative_kappas.append(cumulative_kappas)
@@ -234,7 +247,8 @@ def get_photosphere(rays_T, rays_den, rays_R):
     return rays_cumulative_kappas, rays_photo
 
 stop = 192
-cumul_kappa, photo =  get_photosphere(rays_T[:stop], rays_Den[:stop], rays_R[:stop])
+cumul_kappa, photo =  get_photosphere(rays_T[:stop], rays_Den[:stop], 
+                                      rays_R[:stop], rays_M[:stop])
 #%%
 
 @numba.njit
@@ -316,7 +330,7 @@ def flux_calculator(grad_E, idx,
 
 fluxes = []
 for i in range(len(rays_T)):
-    print('Flux ray: ', i) 
+    # print('Flux ray: ', i) 
 
     # Isolate ray
     single_T = rays_T[i]
@@ -383,8 +397,8 @@ ax[1].axhline(np.mean(photo), linestyle = '--' ,c = 'seagreen')
 ax[1].axhline(gmean(photo), linestyle = '--', c = 'darkorange')
 #ax[1].text()
 # Elad's lines
-ax[1].axhline(40 , c = AEK)
-ax[1].axhline(700, c= 'lightseagreen')
+ax[1].axhline(50 , c = AEK)
+ax[1].axhline(800, c= 'lightseagreen')
 
 ax[1].set_yscale('log')
 ax[1].set_title('Photosphere')

@@ -82,7 +82,6 @@ def loader(fix, m, prune = 1, plot = False):
         observers.append( (thetas[i], phis[i]) )
         
         # Get their opening angles
-        phi_diff = 0
         corner_angles = []
         # Corner XYZ coordinates
         corner_x, corner_y, corner_z = hp.boundaries(4,i)
@@ -112,18 +111,8 @@ def loader(fix, m, prune = 1, plot = False):
         if plot:
             ax.plot(corner_angles_phi_plot, corner_angles_theta_plot, '-h', 
                       markersize = 5, c='k', linewidth = 0.3, zorder = 4,)
-        theta_max = np.max(corner_angles_theta_plot)
-        theta_min = np.min(corner_angles_theta_plot)
-
-        phi_max = np.max(corner_angles_phi_plot)
-        phi_min = np.min(corner_angles_phi_plot)
-
-        theta_diff = theta_max - theta_min
-        phi_diff = phi_max - phi_min
-                
-        delta_thetas.append(theta_diff)
-        delta_phis.append(phi_diff)
-
+        
+        
     # Simulation Points plot
     if plot:
         ax.plot(PHI[::20] - np.pi, THETA[::20], 
