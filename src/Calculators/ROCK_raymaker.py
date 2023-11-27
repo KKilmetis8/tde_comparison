@@ -34,7 +34,7 @@ en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 fix = '844'
 m = 6
 prune = 1
-plot = True
+plot = False
 
 # Data Load
 X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')[::prune]
@@ -114,6 +114,7 @@ rays_R = []
 rays_Rad = []
 rays_M = []
 
+i = 0 
 for observer, corner in zip(observers, corners):
     corner_theta = corner[0] # 0.332 / 2 
     corner_phi = corner[1] # 0.339 / 2 
@@ -150,6 +151,7 @@ for observer, corner in zip(observers, corners):
         ray_phi = PHI[tube_mask & fluff_mask] - np.pi
         ray_theta = THETA[tube_mask & fluff_mask]
         plt.plot(ray_phi,ray_theta, 'x', markersize = 0.2, zorder = 2) 
+    # np.savez('ray')
 
 #%%
 def get_kappa(T: float, rho: float, dr: float):
