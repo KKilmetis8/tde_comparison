@@ -47,7 +47,7 @@ if plot_curves:
     plt.xlim(39, 65)
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
-    plt.savefig('Final plot/Elad_comparison.png')
+    plt.savefig('Final plot/newElad_comparison.png')
     plt.show()
 
 if plot_radii_sphere:

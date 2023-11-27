@@ -55,8 +55,8 @@ def select_fix(m):
             snapshots = np.arange(844, 1008 + 1)
             days = [1.00325,1.007,1.01075,1.01425,1.018,1.02175,1.0255,1.029,1.03275,1.0365,1.04025,1.04375,1.0475,1.05125,1.055,1.0585,1.06225,1.066,1.06975,1.07325,1.077,1.08075,1.0845,1.088,1.09175,1.0955,1.09925,1.10275,1.1065,1.11025,1.114,1.1175,1.12125,1.125,1.12875,1.13225,1.136,1.13975,1.1435,1.147,1.15075,1.1545,1.15825,1.16175,1.1655,1.16925,1.173,1.1765,1.18025,1.184,1.18775,1.19125,1.195,1.19875,1.2025,1.206,1.20975,1.2135,1.21725,1.22075,1.2245,1.22825,1.232,1.2355,1.23925,1.243,1.24675,1.25025,1.254,1.25775,1.2615,1.265,1.26875,1.2725,1.27625,1.27975,1.2835,1.28725,1.291,1.2945,1.29825,1.302,1.30575,1.30925,1.313,1.31675,1.3205,1.324,1.32775,1.3315,1.33525,1.33875,1.3425,1.34625,1.35,1.3535,1.35725,1.361,1.36475,1.36825,1.372,1.37575,1.3795,1.383,1.38675,1.3905,1.39425,1.39775,1.4015,1.40525,1.409,1.4125,1.41625,1.42,1.42375,1.42725,1.431,1.43475,1.4385,1.442,1.44575,1.4495,1.45325,1.45675,1.4605,1.46425,1.468,1.4715,1.47525,1.479,1.48275,1.48625,1.49,1.49375,1.4975,1.501,1.50475,1.5085,1.51225,1.51575,1.5195,1.52325,1.527,1.5305,1.53425,1.538,1.54175,1.54525,1.549,1.55275,1.5565,1.56,1.56375,1.5675,1.57125,1.57475,1.5785,1.58225,1.586,1.5895,1.59325,1.597,1.60075,1.60425,1.608]
         else:
-            snapshots = [844, 881, 925, 950] #, 1008] 
-            days = [1, 1.1, 1.3, 1.4] #, 1.608] 
+            snapshots = [844, 881, 925, 950, 1008] 
+            days = [1, 1.1, 1.3, 1.4, 1.608] 
     return snapshots, days
 
 def find_neighbours(fix, m, rays_index_photo):
@@ -80,13 +80,13 @@ def find_neighbours(fix, m, rays_index_photo):
     xyz_selected = np.transpose(xyz_selected) #you need it to query
     energy_selected = Rad[rays_index_photo]
 
-    xyz_neigh_up = []
-    dist_neigh_up = np.zeros(len(r_selected))
-    idx_neigh_up = np.zeros(len(r_selected))
-    r_neigh_up = np.zeros(len(r_selected))
-    energy_neigh_up = np.zeros(len(r_selected))
-    T_neigh_up = np.zeros(len(r_selected))
-    den_neigh_up = np.zeros(len(r_selected))
+    xyz_neigh_high = []
+    dist_neigh_high = np.zeros(len(r_selected))
+    idx_neigh_high = np.zeros(len(r_selected))
+    r_neigh_high = np.zeros(len(r_selected))
+    energy_neigh_high = np.zeros(len(r_selected))
+    T_neigh_high = np.zeros(len(r_selected))
+    den_neigh_high = np.zeros(len(r_selected))
 
     xyz_neigh_low = []
     dist_neigh_low = np.zeros(len(r_selected))
@@ -98,30 +98,46 @@ def find_neighbours(fix, m, rays_index_photo):
 
     for j in range(len(r_selected)):
         i = 1
-        while (r_neigh_low[j] > r_selected[j] or r_neigh_up[j] < r_selected[j]):
+        count_high = 0
+        count_low = 0
+        if r_selected[j] < 5:
+            print('low photo', j)
+            count_low = 2
+            r_neigh_low[j] = r_selected[j]
+            idx_neigh_low[j] = rays_index_photo[j]
+            xyz_neigh_low.append(xyz_selected[j])
+            energy_neigh_low[j] = energy_selected[j]
+            T_neigh_low[j] = T[rays_index_photo[j]]
+            den_neigh_low[j] = Den[rays_index_photo[j]]
+        while (count_high !=2 or count_low !=2):
             dist_test, idx_test = sim_tree.query(xyz_selected[j], k = [i]) # find the 2nd nearest neighbours 
             xyz_test = [X[idx_test], Y[idx_test], Z[idx_test]]
             r_test = np.sqrt(xyz_test[0]**2 + xyz_test[1]**2 + xyz_test[2]**2)
-            if np.logical_and(r_test > r_selected[j], r_neigh_up[j] == 0):
-                r_neigh_up[j] = r_test
-                dist_neigh_up[j] = dist_test
-                idx_neigh_up[j] = idx_test
-                xyz_neigh_up.append(xyz_test)
-                energy_neigh_up[j] = Rad[idx_test]
-                T_neigh_up[j] = T[idx_test]
-                den_neigh_up[j] = Den[idx_test]
-            elif np.logical_and(r_test < r_selected[j], r_neigh_low[j] == 0):
-                r_neigh_low[j] = r_test
-                dist_neigh_low[j] = dist_test
-                idx_neigh_low[j] = idx_test
-                xyz_neigh_low.append(xyz_test)
-                energy_neigh_low[j] = Rad[idx_test]
-                T_neigh_low[j] = T[idx_test]
-                den_neigh_low[j] = Den[idx_test]
+            #print(r_test)
+            if np.logical_and(r_test > r_selected[j], count_high < 2):
+                count_high += 1
+                if count_high == 2:
+                    r_neigh_high[j] = r_test
+                    dist_neigh_high[j] = dist_test
+                    idx_neigh_high[j] = idx_test
+                    xyz_neigh_high.append(xyz_test)
+                    energy_neigh_high[j] = Rad[idx_test]
+                    T_neigh_high[j] = T[idx_test]
+                    den_neigh_high[j] = Den[idx_test]
+            elif np.logical_and(r_test < r_selected[j], count_low < 2):
+                count_low += 1
+                if count_low == 2:
+                    r_neigh_low[j] = r_test
+                    dist_neigh_low[j] = dist_test
+                    idx_neigh_low[j] = idx_test
+                    xyz_neigh_low.append(xyz_test)
+                    energy_neigh_low[j] = Rad[idx_test]
+                    T_neigh_low[j] = T[idx_test]
+                    den_neigh_low[j] = Den[idx_test]
             i += 1
 
-    deltadist = den_neigh_low + den_neigh_up
-    deltaE = energy_neigh_up - energy_neigh_low
+    deltadist = r_neigh_low + r_neigh_high #den_neigh_low + den_neigh_high
+    deltaE = energy_neigh_high - energy_neigh_low
     grad_E = deltaE / deltadist
     # r_leaf = np.sqrt(x_selected[i]**2 + y_selected[i]**2 + z_selected[i]**2)
     # _, idx = sim_tree.query(leaf, k = 4)
@@ -132,7 +148,7 @@ def find_neighbours(fix, m, rays_index_photo):
     # idx_lower = np.argmin(r_neigh-r_leaf) #we want it to be negative so the neighbour is before photo
     # idx_lower = np.argmax(r_neigh-r_leaf) #we want it to be positive so the neighbour is after photo
 
-    return grad_E, energy_neigh_up, T_neigh_up, den_neigh_up
+    return grad_E, energy_neigh_high, T_neigh_high, den_neigh_high
 
     
 def flux_calculator(grad_E, selected_energy, 
@@ -277,7 +293,7 @@ if __name__ == "__main__":
             np.savetxt('red_backup_save'+ str(m) + '.txt', (days, lums))
             np.savetxt(pre + 'tde_comparison/data/alicered'+ str(m) + '.txt', (days, lums))
         else:
-             with open('data/red/new_reddatauplow_m'+ str(m) + '.txt', 'a') as flum:
+             with open('data/red/new_reddata_m'+ str(m) + '.txt', 'a') as flum:
                  flum.write('# t/t_fb\n') 
                  flum.write(' '.join(map(str, days)) + '\n')
                  flum.write('# Lum \n') 

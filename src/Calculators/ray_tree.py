@@ -52,6 +52,7 @@ def ray_maker(fix, m, num = 5000):
     else:
         # Import
         X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
+        X -= Rt
         Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
         Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
         Vol = np.load( str(m) + '/'  + fix + '/Vol_' + fix + '.npy')

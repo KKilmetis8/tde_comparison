@@ -322,7 +322,7 @@ if __name__ == "__main__":
         for index in range(0,len(snapshots)):
             print('Snapshot ' + str(snapshots[index]))
             tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, num=5000)
-            rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii)
+            rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
             rays_photo = rays_photo/Rsol_to_cm
             dim_ph = np.zeros(len(rays_index_photo))
             sushi = np.zeros(192)
@@ -350,11 +350,13 @@ if __name__ == "__main__":
 
             if plot_ph:
                 fig, ax = plt.subplots(figsize = (8,6))
-                img = ax.scatter(np.arange(192), rays_photo, c = dim_ph, s = 15)
+                img = ax.scatter(np.arange(192), rays_photo, c = 'k', s = 15)
                 cbar = fig.colorbar(img)
                 cbar.set_label(r'Cell dimension [$R_\odot$]')
                 plt.axhline(np.mean(rays_photo), c = 'r', linestyle = '--', label = r'$\bar{R}_{ph}$ arit mean')
                 plt.axhline(gmean(rays_photo), c = 'b', linestyle = '--', label = r'$\bar{R}_{ph}$ geom mean')
+                plt.axhline(800, c = 'r', label = r'$\bar{R}_{ph}$ arit mean') #Elad
+                plt.axhline(50, c = 'b', label = r'$\bar{R}_{ph}$ geom mean') #Elad
                 plt.xlabel('Observers')
                 plt.ylabel('$\log_{10} R_{ph} [R_\odot]$')
                 plt.yscale('log')
@@ -364,7 +366,7 @@ if __name__ == "__main__":
                 plt.show()   
 
         if plot_radii:
-            with open('data/special_radii_m' + str(m) + '.txt', 'a') as file:
+            with open('data/SHIFTspecial_radii_m' + str(m) + '.txt', 'a') as file:
                     file.write('# t/t_fb \n')
                     file.write(' '.join(map(str, days)) + '\n')
                     file.write('# Photosphere arithmetic mean \n')
