@@ -293,7 +293,7 @@ if __name__ == "__main__":
             np.savetxt('red_backup_save'+ str(m) + '.txt', (days, lums))
             np.savetxt(pre + 'tde_comparison/data/alicered'+ str(m) + '.txt', (days, lums))
         else:
-             with open('data/red/new_reddata_m'+ str(m) + '.txt', 'a') as flum:
+             with open('data/red/SHIFTnew_reddata_m'+ str(m) + '.txt', 'a') as flum:
                  flum.write('# t/t_fb\n') 
                  flum.write(' '.join(map(str, days)) + '\n')
                  flum.write('# Lum \n') 

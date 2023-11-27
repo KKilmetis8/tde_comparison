@@ -284,111 +284,76 @@ if __name__ == "__main__":
     fix_thermr_arit = np.zeros(len(snapshots))
     fix_thermr_geom = np.zeros(len(snapshots))
 
-    if convergence_check:
-        snapshot = 925
-        num_array = np.arange(1000, 5500, 500)
-        num_photo_arit = np.zeros(len(num_array))
-        num_photo_geom = np.zeros(len(num_array))
-        sushi_mean = np.zeros(len(num_array))
+    for index in range(0,1):#len(snapshots)):
+        print('Snapshot ' + str(snapshots[index]))
+        tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, num=5000)
+        rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
+        rays_photo = rays_photo/Rsol_to_cm
+        dim_ph = np.zeros(len(rays_index_photo))
+        sushi = np.zeros(192)
+        # for j in range(len(rays_index_photo)):
+        #     find_index_cell = int(rays_index_photo[j])
+        #     vol_ph = rays_vol[j][find_index_cell]
+        #     dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
+        #     dim_grid = (radii[find_index_cell+1]-radii[find_index_cell])/Rsol_to_cm #in solar units
+        #     sushi[j] = dim_ph[j] / dim_grid
+        #     print('Simulation cell R: ' + str(dim_ph[j]))
+        #     print('Our grid: ' + str(dim_grid))
+        # sushi_mean = np.mean(sushi)
+        # print('ratio: ' + str(sushi_mean))
 
-        for j,num in enumerate(num_array):
-            tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshot, m, num)
-            rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
-            rays_photo = rays_photo/Rsol_to_cm
-            num_photo_arit[j] = np.mean(rays_photo)
-            num_photo_geom[j] = gmean(rays_photo)
+        # with open('data/red/photosphere' + str(snapshots[index]) + '.txt', 'a') as fileph:
+        #     fileph.write(' '.join(map(str,rays_photo)) + '\n')
+        #     fileph.close()
 
-            sushi = np.zeros(len(rays_index_photo))
-            for k in range(len(rays_index_photo)):
-                find_index_cell = int(rays_index_photo[k])
-                vol_ph = rays_vol[k][find_index_cell]
-                dim_ph = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
-                dim_grid = (radii[find_index_cell+1]-radii[find_index_cell])/Rsol_to_cm #in solar units
-                sushi[k] = dim_ph / dim_grid
-            sushi_mean[j] = np.mean(sushi)
+        fix_photo_arit[index] = np.mean(rays_photo)
+        fix_photo_geom[index] = gmean(rays_photo)
 
-        with open('data/convergence_photo' + str(snapshot) + '.txt', 'a') as file:
-            file.write('# num \n')
-            file.write(' '.join(map(str, num_array)) + '\n')
-            file.write('# Photosphere arithmetic mean \n')
-            file.write(' '.join(map(str, num_photo_arit)) + '\n')
-            file.write('# Photosphere geometric mean \n')
-            file.write(' '.join(map(str, num_photo_geom)) + '\n')
-            file.write('# Simul cell/grid cell \n')
-            file.write(' '.join(map(str, sushi_mean)) + '\n')
-            file.close()
+        # tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
+        # fix_thermr_arit[index] = np.mean(thermr)
+        # fix_thermr_geom[index] = gmean(thermr)
 
-    else:
-        for index in range(0,1):#len(snapshots)):
-            print('Snapshot ' + str(snapshots[index]))
-            tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, num=5000)
-            rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
-            rays_photo = rays_photo/Rsol_to_cm
-            dim_ph = np.zeros(len(rays_index_photo))
-            sushi = np.zeros(192)
-            # for j in range(len(rays_index_photo)):
-            #     find_index_cell = int(rays_index_photo[j])
-            #     vol_ph = rays_vol[j][find_index_cell]
-            #     dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
-            #     dim_grid = (radii[find_index_cell+1]-radii[find_index_cell])/Rsol_to_cm #in solar units
-            #     sushi[j] = dim_ph[j] / dim_grid
-            #     print('Simulation cell R: ' + str(dim_ph[j]))
-            #     print('Our grid: ' + str(dim_grid))
-            # sushi_mean = np.mean(sushi)
-            # print('ratio: ' + str(sushi_mean))
-
-            # with open('data/red/photosphere' + str(snapshots[index]) + '.txt', 'a') as fileph:
-            #     fileph.write(' '.join(map(str,rays_photo)) + '\n')
-            #     fileph.close()
-
-            fix_photo_arit[index] = np.mean(rays_photo)
-            fix_photo_geom[index] = gmean(rays_photo)
-
-            # tau, thermr, cumulative_taus = get_thermr(rays_T, rays_den, radii)
-            # fix_thermr_arit[index] = np.mean(thermr)
-            # fix_thermr_geom[index] = gmean(thermr)
-
-            if plot_ph:
-                fig, ax = plt.subplots(figsize = (8,6))
-                img = ax.scatter(np.arange(192), rays_photo, c = 'k', s = 15)
-                cbar = fig.colorbar(img)
-                cbar.set_label(r'Cell dimension [$R_\odot$]')
-                plt.axhline(np.mean(rays_photo), c = 'r', linestyle = '--', label = r'$\bar{R}_{ph}$ arit mean')
-                plt.axhline(gmean(rays_photo), c = 'b', linestyle = '--', label = r'$\bar{R}_{ph}$ geom mean')
-                plt.axhline(800, c = 'r', label = r'$\bar{R}_{ph}$ arit mean') #Elad
-                plt.axhline(50, c = 'b', label = r'$\bar{R}_{ph}$ geom mean') #Elad
-                plt.xlabel('Observers')
-                plt.ylabel('$\log_{10} R_{ph} [R_\odot]$')
-                plt.yscale('log')
-                plt.grid()
-                plt.legend()
-                plt.savefig('testRt.png')
-                plt.show()   
-
-        if plot_radii:
-            with open('data/SHIFTspecial_radii_m' + str(m) + '.txt', 'a') as file:
-                    file.write('# t/t_fb \n')
-                    file.write(' '.join(map(str, days)) + '\n')
-                    file.write('# Photosphere arithmetic mean \n')
-                    file.write(' '.join(map(str, fix_photo_arit)) + '\n')
-                    file.write('# Photosphere geometric mean \n')
-                    file.write(' '.join(map(str, fix_photo_geom)) + '\n')
-                    # file.write('# Thermalisation radius arithmetic mean \n')
-                    # file.write(' '.join(map(str, fix_thermr_arit)) + '\n')
-                    # file.write('# Thermalisation radius geometric mean \n')
-                    # file.write(' '.join(map(str, fix_thermr_geom)) + '\n')
-                    file.close()
-            plt.plot(days, fix_photo_arit, '-o', color = 'black', label = 'Photosphere radius, arithmetic mean')
-            plt.plot(days, fix_photo_geom, '-o', color = 'pink', label = 'Photosphere radius, geometric mean')
-            # plt.plot(days, fix_thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
-            # plt.plot(days, fix_thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
-            plt.ylim(1e1,1e4)
-            plt.xlabel(r't/$t_{fb}$')
-            plt.ylabel(r'$\log_{10}$ Photosphere [$R_\odot$]')
+        if plot_ph:
+            fig, ax = plt.subplots(figsize = (8,6))
+            img = ax.scatter(np.arange(192), rays_photo, c = 'k', s = 15)
+            cbar = fig.colorbar(img)
+            cbar.set_label(r'Cell dimension [$R_\odot$]')
+            plt.axhline(np.mean(rays_photo), c = 'r', linestyle = '--', label = r'$\bar{R}_{ph}$ arit mean')
+            plt.axhline(gmean(rays_photo), c = 'b', linestyle = '--', label = r'$\bar{R}_{ph}$ geom mean')
+            plt.axhline(800, c = 'r', label = r'$\bar{R}_{ph}$ arit mean') #Elad
+            plt.axhline(50, c = 'b', label = r'$\bar{R}_{ph}$ geom mean') #Elad
+            plt.xlabel('Observers')
+            plt.ylabel('$\log_{10} R_{ph} [R_\odot]$')
             plt.yscale('log')
             plt.grid()
             plt.legend()
-            plt.savefig('photospherefromRt.png')
+            plt.savefig('photo_obs' + str(snapshots[index]) + '.png')
+            plt.show()   
+
+    if plot_radii:
+        with open('data/SHIFTspecial_radii_m' + str(m) + '.txt', 'a') as file:
+                file.write('# t/t_fb \n')
+                file.write(' '.join(map(str, days)) + '\n')
+                file.write('# Photosphere arithmetic mean \n')
+                file.write(' '.join(map(str, fix_photo_arit)) + '\n')
+                file.write('# Photosphere geometric mean \n')
+                file.write(' '.join(map(str, fix_photo_geom)) + '\n')
+                # file.write('# Thermalisation radius arithmetic mean \n')
+                # file.write(' '.join(map(str, fix_thermr_arit)) + '\n')
+                # file.write('# Thermalisation radius geometric mean \n')
+                # file.write(' '.join(map(str, fix_thermr_geom)) + '\n')
+                file.close()
+        plt.plot(days, fix_photo_arit, '-o', color = 'black', label = 'Photosphere radius, arithmetic mean')
+        plt.plot(days, fix_photo_geom, '-o', color = 'pink', label = 'Photosphere radius, geometric mean')
+        # plt.plot(days, fix_thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
+        # plt.plot(days, fix_thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
+        plt.ylim(1e1,1e4)
+        plt.xlabel(r't/$t_{fb}$')
+        plt.ylabel(r'$\log_{10}$ Photosphere [$R_\odot$]')
+        plt.yscale('log')
+        plt.grid()
+        plt.legend()
+        plt.savefig('photosphere_centerinRt.png')
         plt.show()
 
             
