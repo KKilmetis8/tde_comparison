@@ -52,7 +52,6 @@ def ray_maker(fix, m, num = 5000):
     else:
         # Import
         X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
-        X -= Rt
         Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
         Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
         Vol = np.load( str(m) + '/'  + fix + '/Vol_' + fix + '.npy')
@@ -60,6 +59,7 @@ def ray_maker(fix, m, num = 5000):
         Den = np.load( str(m) + '/'  + fix + '/Den_' + fix + '.npy')
         Rad = np.load( str(m) + '/'  +fix + '/Rad_' + fix + '.npy')
     
+    X -= Rt
     # Convert Energy / Mass to Energy Density in CGS
     Rad *= Den 
     Rad *= en_den_converter
