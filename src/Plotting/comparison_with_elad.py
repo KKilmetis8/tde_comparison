@@ -17,25 +17,27 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['figure.figsize'] = [5 , 4]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
-plot_curves = True
-plot_radii_sphere = False
+plot_curves = False
+plot_radii_sphere = True
 plot_fit = False
 m = 6
 
 if plot_curves:
     # Elad Load
-    mat = scipy.io.loadmat('data/elad.mat')
+    mat = scipy.io.loadmat('data/elad_lum.mat')
     elad_time = mat['time']
     elad_blue = mat['L_bb']
     elad_red = mat['L_fld']
+
     # Ours Load
     # x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
     # b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
-    fld_data = np.loadtxt('data/red/SHIFTnew_reddata_m'+ str(m) +'.txt')
+    fld_data = np.loadtxt('data/red/new_reddata_m'+ str(m) +'.txt')
 
     # Elad Plot
     plt.plot(elad_time[0], np.power(10, elad_red[0]), c = 'r')
     # plt.plot(elad_time[0], np.power(10, elad_blue[0]), c = 'b')
+
     # Our plot
     days = fld_data[0]
     days40 = np.multiply(days, 40)
@@ -47,24 +49,37 @@ if plot_curves:
     plt.xlim(39, 65)
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
-    plt.savefig('Final plot/SHIFTnewElad_comparison.png')
+    plt.savefig('Final plot/Elad_comparison.png')
     plt.show()
 
 if plot_radii_sphere:
+    # Elad load 
+    mat = scipy.io.loadmat('data/elad_radii.mat')
+    elad_time = mat['x']
+    elad_amean = mat['a_mean']
+    elad_gmean = mat['g_mean']
+
+    # Our load 
     spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '.txt') 
     photo = spec_radii
     days = np.multiply(spec_radii[0], 40)
     photo_arit = spec_radii[1]
     photo_geom = spec_radii[2]
-    # thermr_arit = spec_radii[3]
-    # thermr_geom = spec_radii[4]
-    plt.plot(days, photo_arit, '-o', color = 'black', label = 'Photosphere radius, arithmetic mean')
-    plt.plot(days, photo_geom, '-o', color = 'magenta', label = 'Photosphere radius, geometric mean')
-    # plt.plot(days, thermr_arit, '-o', color = 'b', label = 'Thermalization radius, arithmetic mean')
-    # plt.plot(days, thermr_geom, '-o', color = 'r', label = 'Thermalization radius, geometric mean')
+    thermr_arit = spec_radii[3]
+    thermr_geom = spec_radii[4]
+
+    #Elad plot
+    plt.plot(elad_time[0], elad_amean[0], c = 'k')
+    plt.plot(elad_time[0], elad_gmean[0], c = 'magenta')
+
+    # Our plot
+    plt.plot(days, photo_arit, '--o', color = 'black', label = 'Photosphere radius, arithmetic mean')
+    plt.plot(days, photo_geom, '--o', color = 'magenta', label = 'Photosphere radius, geometric mean')
+    # plt.plot(days, thermr_arit, '--o', color = 'b', label = 'Thermalization radius, arithmetic mean')
+    # plt.plot(days, thermr_geom, '--o', color = 'r', label = 'Thermalization radius, geometric mean')
     plt.xlabel('Time (days)')
     plt.xlim(40,65)
-    #plt.ylim(10,1e4)
+    plt.ylim(10,1e4)
     plt.ylabel(r'Average radius [$R_\odot$]')
     plt.grid()
     plt.yscale('log')
