@@ -40,8 +40,8 @@ def select_fix(m):
         snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [1008] #[844, 881, 925, 950, 1008] 
-        days = [1.6] #[1, 1.1, 1.3, 1.4, 1.6] 
+        snapshots = [844, 881, 925, 950, 1008] 
+        days = [1, 1.1, 1.3, 1.4, 1.6] 
     return snapshots, days
 
 def get_kappa(T: float, rho: float, r_dlogr: float):
@@ -302,7 +302,7 @@ if __name__ == "__main__":
     fix_thermr_arit = np.zeros(len(snapshots))
     fix_thermr_geom = np.zeros(len(snapshots))
 
-    for index in range(0,len(snapshots)):
+    for index in range(0,2):#len(snapshots)):
         print('Snapshot ' + str(snapshots[index]))
         tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, num=5000)
 

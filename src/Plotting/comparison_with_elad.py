@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['figure.figsize'] = [5 , 4]
+plt.rcParams['figure.figsize'] = [15 , 8]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
 plot_curves = False

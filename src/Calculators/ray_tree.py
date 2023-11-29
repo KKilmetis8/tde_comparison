@@ -84,7 +84,8 @@ def ray_maker(fix, m, num = 5000):
     observers = []
     for i in range(0,192):
         thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
-        thetas[i] -= np.pi/2 # Enforce theta in -pi to pi
+        thetas[i] -= np.pi/2 # Enforce theta in -pi/2 to pi/2 for astropy
+        phis[i] -= np.pi # Enforce theta in -pi to pi for astropy
         observers.append( (thetas[i], phis[i]) )
     
     # Reshape
@@ -134,7 +135,7 @@ def ray_maker(fix, m, num = 5000):
             branch_T[k] = T[idx]
             branch_den[k] = Den[idx]
             branch_energy[k] = Rad[idx]
-            branch_vol[k] = Vol[idx] # not in CGS
+            branch_vol[k] = Vol[idx] # not in CGS 
         
         # Remove Bullshit
         branch_energy = np.nan_to_num(branch_energy, neginf = 0)
