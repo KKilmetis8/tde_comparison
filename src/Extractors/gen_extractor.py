@@ -75,7 +75,7 @@ def extractor(filename):
     return T, Z
 
 #%% Doing the thing
-fixes = ['1008']
+fixes = ['980']
 for fix in fixes:
     snapshot = '6/' + fix+'/snap_'+fix+'.h5'
     T, _ = extractor(snapshot)   
