@@ -46,8 +46,21 @@ def select_fix(m):
 
 def get_kappa(T: float, rho: float, r_dlogr: float):
     '''
-    T,rho, r_dlogr in CGS.
     Calculates the integrand of eq.(8) Steinberg&Stone22.
+
+    Parameters
+    ----------
+    T: int.
+        Cell temperature (CGS).
+    rho: int.
+        Cell density (CGS).
+    r_dlogr: int.
+            Deltar to integrate in logspace (CGS).
+
+    Returns
+    -------
+    kappar: int.
+            The "optical depth" of a cell.
     '''    
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):
@@ -80,20 +93,31 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
 
 def calc_photosphere(T, rho, radius, branch_indexes):
     '''
+    Finds and saves the photosphere (CGS) for ONE every ray.
+
     Parameters
     ----------
-    T, rho: 1D arrays (CGS)
-    radius: np.array
-        Radial coordinates of a ray in [cgs].
+    T: 1D arrays.
+            Temperature of every cell in a ray (CGS).
+    rho: 1D arrays.
+            Density of every cell in a ray (CGS).
+    radius: 1D array.
+            Radius (CGS).
     branch_indexes: 1D array.
+                    Tree indexes for cells in the ray.
 
     Returns
     -------
-    kappas, cumulative_kappas: 1D arrays from far to near the BH
+    kappas: 1D array.
+                The "optical depth" of a single cell. 
+    cumulative_kappas: 1D array.
+                The total "optical depth" of a single cell.
     photo: int
-           Photosphere (in solar units) 
+           Photosphere (CGS) 
     index_ph: int
-              photosphere's index (from near to far)
+              photosphere's index in our radius.
+    branch_index_ph: int.
+                    Photosphere index in the tree.
     '''
     threshold = 2/3
     kappa = 0
@@ -110,29 +134,44 @@ def calc_photosphere(T, rho, radius, branch_indexes):
         i -= 1
 
     photo =  radius[i] #i it's negative
-    index_ph = branch_indexes[i]
+    index_ph = i + len(T) 
+    branch_index_ph = branch_indexes[i]
 
-    return kappas, cumulative_kappas, photo, index_ph
+    return kappas, cumulative_kappas, photo, index_ph, branch_index_ph
 
-def get_photosphere(rays_T, rays_den, radii, tree_indexes):
+def get_photosphere(rays_T, rays_den, radius, tree_indexes):
     '''
-    Finds and saves the photosphere (CGS) for every ray.
+    Finds and saves the photosphere (CGS) at every ray.
 
     Parameters
     ----------
-    rays_T, rays_den: n-D arrays (CGS)
-    radii: 1D array (CGS)
+    rays_T: n-D arrays.
+            Temperature of every ray/cell (CGS).
+    rays_den: n-D arrays.
+            Density of every ray/cell (CGS).
+    radius: 1D array.
+            Radius (CGS).
+    tree_indexes: 1D array.
+                Tree indexes for cells in the rays.
 
     Returns
     -------
-    rays_kappas, rays_cumulative_kappas: nD arrays.
+    rays_kappas: nD array.
+                The "optical depth" of a single cell in every ray. 
+    rays_cumulative_kappas: nD array.
+                The total "optical depth" of a single cell in every ray.
     ray_photo: 1D array.
+                Photosphere value (CGS).
     rays_index_photo: 1D array.
+                        Photosphere index in our radius.
+    tree_index_photo: 1D array.
+                    Photosphere index in the tree.
     '''
     rays_kappas = []
     rays_cumulative_kappas = []
     rays_photo = np.zeros(len(rays_T))
     rays_index_photo = np.zeros(len(rays_T))
+    tree_index_photo = np.zeros(len(rays_T))
     
     for i in range(len(rays_T)):
         # Isolate each ray
@@ -141,16 +180,17 @@ def get_photosphere(rays_T, rays_den, radii, tree_indexes):
         branch_indexes = tree_indexes[i]
         
         # Get photosphere
-        kappas, cumulative_kappas, photo, index_ph  = calc_photosphere(T_of_single_ray, Den_of_single_ray, 
-                                                                       radii, branch_indexes)
+        kappas, cumulative_kappas, photo, index_ph, branch_index_ph  = calc_photosphere(T_of_single_ray, Den_of_single_ray, 
+                                                                       radius, branch_indexes)
 
         # Store
         rays_kappas.append(kappas)
         rays_cumulative_kappas.append(cumulative_kappas)
         rays_photo[i] = photo
         rays_index_photo[i] = index_ph
+        tree_index_photo[i] = branch_index_ph
 
-    return rays_kappas, rays_cumulative_kappas, rays_photo, rays_index_photo
+    return rays_kappas, rays_cumulative_kappas, rays_photo, rays_index_photo, tree_index_photo
 
 
 def optical_depth(T: float, rho: float, r_dlogr: float):
@@ -279,7 +319,7 @@ def get_thermr(rays_T, rays_den, radii, tree_indexes):
         rays_tau.append(taus)
         rays_cumulative_taus.append(cumulative_taus)
         rays_thermr[i] = thermr
-        rays_index_therm[i] = index_term
+        rays_index_therm[i] = int(index_term)
 
     return rays_tau, rays_cumulative_taus, rays_thermr, rays_index_therm
 
@@ -324,7 +364,7 @@ if __name__ == "__main__":
         #     fileph.close()
 
         if photosphere:
-            rays_kappa, rays_cumulative_kappas, rays_photo, rays_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
+            rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_photosphere(rays_T, rays_den, radii, tree_indexes)
             rays_photo = rays_photo/Rsol_to_cm
 
             fix_photo_arit[index] = np.mean(rays_photo)

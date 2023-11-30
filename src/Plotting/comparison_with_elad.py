@@ -17,8 +17,9 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['figure.figsize'] = [15 , 8]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
-plot_curves = False
-plot_radii_sphere = True
+plot_curves = True
+residuals = True
+plot_radii_sphere = False
 plot_fit = False
 m = 6
 
@@ -28,6 +29,7 @@ if plot_curves:
     elad_time = mat['time']
     elad_blue = mat['L_bb']
     elad_red = mat['L_fld']
+    elad_red_topolt = np.power(10, elad_red[0])
 
     # Ours Load
     # x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
@@ -35,7 +37,7 @@ if plot_curves:
     fld_data = np.loadtxt('data/red/new_reddata_m'+ str(m) +'.txt')
 
     # Elad Plot
-    plt.plot(elad_time[0], np.power(10, elad_red[0]), c = 'r')
+    plt.plot(elad_time[0], elad_red_topolt, c = 'r')
     # plt.plot(elad_time[0], np.power(10, elad_blue[0]), c = 'b')
 
     # Our plot
@@ -51,6 +53,20 @@ if plot_curves:
     plt.ylabel('Luminosity [erg/s]')
     plt.savefig('Final plot/Elad_comparison.png')
     plt.show()
+
+    if residuals:
+        y_value = np.zeros(len(days40))
+        for i, day in enumerate(days40):
+            y_index = np.argmin(np.abs(days40[i]-elad_time[0]))
+            y_value[i] = (elad_red_topolt[y_index] - fld_data[1][i]) / elad_red_topolt[y_index]
+
+        plt.plot(days40, y_value, '--o', c='maroon', markersize = 4)
+        plt.grid()
+        plt.xlim(39, 65)
+        plt.xlabel('Time [days]')
+        plt.ylabel(r'$1 - L/L^{Elad}$')
+        plt.savefig('Final plot/residuals.png')
+        plt.show()
 
 if plot_radii_sphere:
     # Elad load 
