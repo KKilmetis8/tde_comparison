@@ -24,6 +24,7 @@ from datetime import datetime
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.special_radii_tree import get_photosphere
+from astropy.coordinates import spherical_to_cartesian, cartesian_to_spherical
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
@@ -58,175 +59,121 @@ def select_fix(m):
             days = [1, 1.1, 1.3, 1.4, 1.5]#, 1.608] 
     return snapshots, days
 
-# def find_neighbours(fix, m, rays_index_photo):
-#     X = np.load( str(m) + '/'  + str(fix) + '/CMx_' + str(fix) + '.npy')
-#     Y = np.load( str(m) + '/'  + str(fix) + '/CMy_' + str(fix) + '.npy')
-#     Z = np.load( str(m) + '/'  + str(fix) + '/CMz_' + str(fix) + '.npy')
-#     Rad = np.load(str(m) + '/'  +str(fix) + '/Rad_' + str(fix) + '.npy')
-#     T = np.load( str(m) + '/'  + str(fix) + '/T_' + str(fix) + '.npy')
+def find_neighbours(fix, m, tree_index_photo, dist_neigh):
+    X = np.load( str(m) + '/'  + str(fix) + '/CMx_' + str(fix) + '.npy')
+    Y = np.load( str(m) + '/'  + str(fix) + '/CMy_' + str(fix) + '.npy')
+    Z = np.load( str(m) + '/'  + str(fix) + '/CMz_' + str(fix) + '.npy')
+    Rad = np.load(str(m) + '/'  +str(fix) + '/Rad_' + str(fix) + '.npy')
+    T = np.load( str(m) + '/'  + str(fix) + '/T_' + str(fix) + '.npy')
+    Den = np.load( str(m) + '/'  + str(fix) + '/Den_' + str(fix) + '.npy')
 
-#     # convert in CGS
-#     Den = np.load( str(m) + '/'  + str(fix) + '/Den_' + str(fix) + '.npy')
-#     Rad *= Den 
-#     Rad *= en_den_converter
+    # convert in CGS
+    Rad *= Den 
+    Rad *= en_den_converter
 
-#     # make a tree
-#     sim_value = [X, Y, Z] 
-#     sim_value = np.transpose(sim_value) #array of dim (number_points, 3)
-#     sim_tree = KDTree(sim_value)
+    # make a tree
+    sim_value = [X, Y, Z] 
+    sim_value = np.transpose(sim_value) # array of dim (number_points, 3)
+    sim_tree = KDTree(sim_value)
 
-#     # store data of the points to query
-#     rays_index_photo = [int(x) for x in rays_index_photo]
-#     xyz_selected = [X[rays_index_photo], Y[rays_index_photo], Z[rays_index_photo]]
-#     r_selected = np.sqrt(xyz_selected[0]**2 + xyz_selected[1]**2 + xyz_selected[2]**2)
-#     xyz_selected = np.transpose(xyz_selected) #you need it to query
-#     energy_selected = Rad[rays_index_photo]
+    # store data of the points to query in solar unit
+    tree_index_photo = [int(x) for x in tree_index_photo]
+    xyz_selected = [X[tree_index_photo], Y[tree_index_photo], Z[tree_index_photo]]
+    r_selected, theta_selected, phi_selected = cartesian_to_spherical(xyz_selected[0], 
+                                                                      xyz_selected[1], xyz_selected[2])
+    r_neigh_low = r_selected - dist_neigh
+    r_neigh_high = r_selected + dist_neigh
+    delta_r = r_neigh_high - r_neigh_low
+    delta_r *= Rsol_to_cm # convert to CGS for the gradient
 
-#     # create lists to save data of the searched higher neighbour
-#     xyz_neigh_high = []
-#     dist_neigh_high = np.zeros(len(r_selected))
-#     idx_neigh_high = np.zeros(len(r_selected))
-#     r_neigh_high = np.zeros(len(r_selected))
-#     energy_neigh_high = np.zeros(len(r_selected))
-#     T_neigh_high = np.zeros(len(r_selected))
-#     den_neigh_high = np.zeros(len(r_selected))
+    x_low, y_low, z_low  = spherical_to_cartesian(r_neigh_low, theta_selected, phi_selected)
+    x_high, y_high, z_high  = spherical_to_cartesian(r_neigh_high, theta_selected, phi_selected)
 
-#     # create lists to save data of the searched lower neighbour
-#     xyz_neigh_low = []
-#     dist_neigh_low = np.zeros(len(r_selected))
-#     idx_neigh_low = np.zeros(len(r_selected))
-#     r_neigh_low = np.zeros(len(r_selected)) 
-#     energy_neigh_low = np.zeros(len(r_selected))
-#     T_neigh_low = np.zeros(len(r_selected))
-#     den_neigh_low = np.zeros(len(r_selected))
+    idx_low = np.zeros(len(tree_index_photo))
+    idx_high = np.zeros(len(tree_index_photo))
+    for i in range(len(x_low)):
+        _, idx_l = sim_tree.query([x_low[i], y_low[i], z_low[i]])
+        _, idx_h = sim_tree.query([x_high[i], y_high[i], z_high[i]])
+        idx_low[i] = idx_l
+        idx_high[i] = idx_h
 
-#     # for every queried point: 
-#     # loop to find the "number_to_stop" (it should be 2nd) neighbour,
-#     # both lower and higher than the queried point
-#     for j in range(len(r_selected)):
-#         number_to_stop = 2
-#         i = 1
-#         # count if you find a higher or lower neighbour
-#         count_high = 0
-#         count_low = 0
+    idx_low = [int(x) for x in idx_low]
+    idx_high = [int(x) for x in idx_high]
+    energy_neigh_low = Rad[idx_low]
+    energy_neigh_high = Rad[idx_high]
+    T_neigh_high = T[idx_high]
+    den_neigh_high = Den[idx_high]
 
-#         # fix the dumb fact that if R is too small you can't find points inside
-#         if r_selected[j] < 5:
-#             print('low photo', j)
-#             count_low = number_to_stop
-#             r_neigh_low[j] = r_selected[j]
-#             idx_neigh_low[j] = rays_index_photo[j]
-#             xyz_neigh_low.append(xyz_selected[j])
-#             energy_neigh_low[j] = energy_selected[j]
-#             T_neigh_low[j] = T[rays_index_photo[j]]
-#             den_neigh_low[j] = Den[rays_index_photo[j]]
-
-#         while (count_high !=number_to_stop or count_low !=number_to_stop):
-#             dist_test, idx_test = sim_tree.query(xyz_selected[j], k = [i]) # find the i nearest neighbours 
-#                                                                         # (but you don't know if higher or lower)
-#             xyz_test = [X[idx_test], Y[idx_test], Z[idx_test]]
-#             r_test = np.sqrt(xyz_test[0]**2 + xyz_test[1]**2 + xyz_test[2]**2)
-
-#             # understand if you have found the higher or lower neighbour 
-#             # if it's the one you want at the end, store its data 
-#             if np.logical_and(r_test > r_selected[j], count_high < number_to_stop):
-#                 count_high += 1
-#                 if count_high == number_to_stop:
-#                     r_neigh_high[j] = r_test
-#                     dist_neigh_high[j] = dist_test
-#                     idx_neigh_high[j] = idx_test
-#                     xyz_neigh_high.append(xyz_test)
-#                     energy_neigh_high[j] = Rad[idx_test]
-#                     T_neigh_high[j] = T[idx_test]
-#                     den_neigh_high[j] = Den[idx_test]
-#             elif np.logical_and(r_test < r_selected[j], count_low < number_to_stop):
-#                 count_low += 1
-#                 if count_low == number_to_stop:
-#                     r_neigh_low[j] = r_test
-#                     dist_neigh_low[j] = dist_test
-#                     idx_neigh_low[j] = idx_test
-#                     xyz_neigh_low.append(xyz_test)
-#                     energy_neigh_low[j] = Rad[idx_test]
-#                     T_neigh_low[j] = T[idx_test]
-#                     den_neigh_low[j] = Den[idx_test]
-#             i += 1
-
-#     # deltadist = np.zeros(len(xyz_neigh_high))
-#     # for i in range(len(xyz_neigh_high)):
-#     #     deltadist[i] = math.dist(xyz_neigh_high[i], xyz_neigh_low[i])
+    deltaE = energy_neigh_high - energy_neigh_low
+    grad_E = deltaE / delta_r
     
-#     deltadist = r_neigh_high - r_neigh_low  
-#     deltadist *= Rsol_to_cm
-#     deltaE = energy_neigh_high - energy_neigh_low
-#     grad_E = deltaE / deltadist
-    
-#     return grad_E, energy_neigh_high, T_neigh_high, den_neigh_high
+    return grad_E, energy_neigh_high, T_neigh_high, den_neigh_high
 
-def find_neighbours(rays_T, rays_den, rays, radii, rays_index_photo, dist_neigh):
-    """
-    For every ray, find the cells that are at +- fixed distance from photosphere.
-    fixed distance = dimension of simulation cell at the photosphere
+# def find_neighbours(rays_T, rays_den, rays, radii, rays_index_photo, dist_neigh):
+#     """
+#     For every ray, find the cells that are at +- fixed distance from photosphere.
+#     fixed distance = dimension of simulation cell at the photosphere
 
-    Parameters
-    ----------
-    rays_T: n-D arrays.
-            Temperature of every ray/cell (CGS).
-    rays_den: n-D arrays.
-            Density of every ray/cell (CGS).
-    rays: n-D arrays.
-        Energy of every ray/cell (CGS).
-    radii: 1D array.
-            Radius (CGS).
-    rays_index_photo: 1D array.
-                Photosphere index in our rays.
-    dist_neigh : 1D array.
-              Distance from photosphere (CGS).
+#     Parameters
+#     ----------
+#     rays_T: n-D arrays.
+#             Temperature of every ray/cell (CGS).
+#     rays_den: n-D arrays.
+#             Density of every ray/cell (CGS).
+#     rays: n-D arrays.
+#         Energy of every ray/cell (CGS).
+#     radii: 1D array.
+#             Radius (CGS).
+#     rays_index_photo: 1D array.
+#                 Photosphere index in our rays.
+#     dist_neigh : 1D array.
+#               Distance from photosphere (CGS).
 
-    Returns
-    -------
-    grad_E: array.
-            Energy gradient for every ray at photosphere. 
-    energy_high: array.
-            Energy for every ray in a cell outside photosphere. 
-    T_high: array.
-            Temperature for every ray in a cell outside photosphere. 
-    den_high: array.
-            Density for every ray in a cell outside photosphere. 
-    """
-    # convert the elements in rays_index_photo in int
-    rays_index_photo = rays_index_photo.astype(int) 
-    dist_neigh_high = radii[rays_index_photo] + dist_neigh
-    dist_neigh_low = radii[rays_index_photo] - dist_neigh
+#     Returns
+#     -------
+#     grad_E: array.
+#             Energy gradient for every ray at photosphere. 
+#     energy_high: array.
+#             Energy for every ray in a cell outside photosphere. 
+#     T_high: array.
+#             Temperature for every ray in a cell outside photosphere. 
+#     den_high: array.
+#             Density for every ray in a cell outside photosphere. 
+#     """
+#     # convert the elements in rays_index_photo in int
+#     rays_index_photo = rays_index_photo.astype(int) 
+#     dist_neigh_high = radii[rays_index_photo] + dist_neigh
+#     dist_neigh_low = radii[rays_index_photo] - dist_neigh
 
-    grad_E = np.zeros(len(rays_index_photo))
-    energy_high = np.zeros(len(rays_index_photo))
-    T_high = np.zeros(len(rays_index_photo))
-    den_high = np.zeros(len(rays_index_photo))
+#     grad_E = np.zeros(len(rays_index_photo))
+#     energy_high = np.zeros(len(rays_index_photo))
+#     T_high = np.zeros(len(rays_index_photo))
+#     den_high = np.zeros(len(rays_index_photo))
 
-    for i in range(len(rays_index_photo)):
+#     for i in range(len(rays_index_photo)):
  
-        # Isolate each ray
-        T_of_single_ray = rays_T[i]
-        Den_of_single_ray = rays_den[i]
-        energy_of_single_ray = rays[i]
+#         # Isolate each ray
+#         T_of_single_ray = rays_T[i]
+#         Den_of_single_ray = rays_den[i]
+#         energy_of_single_ray = rays[i]
 
-        # Find and store the neighbour with R ~ R_{ph} + dist_neigh
-        index_high = np.argmin((np.abs(dist_neigh_high[i] - radii)))
-        radius_high = radii[index_high]
-        energy_high[i] = energy_of_single_ray[index_high]
-        T_high[i] = T_of_single_ray[index_high]
-        den_high[i] = Den_of_single_ray[index_high]
+#         # Find and store the neighbour with R ~ R_{ph} + dist_neigh
+#         index_high = np.argmin((np.abs(dist_neigh_high[i] - radii)))
+#         radius_high = radii[index_high]
+#         energy_high[i] = energy_of_single_ray[index_high]
+#         T_high[i] = T_of_single_ray[index_high]
+#         den_high[i] = Den_of_single_ray[index_high]
 
-        # Find the neighbour with R ~ R_{ph} - dist_neigh
-        index_low = np.argmin((np.abs(dist_neigh_low[i] - radii)))
-        radius_low = radii[index_low]
-        energy_low = energy_of_single_ray[index_low]
+#         # Find the neighbour with R ~ R_{ph} - dist_neigh
+#         index_low = np.argmin((np.abs(dist_neigh_low[i] - radii)))
+#         radius_low = radii[index_low]
+#         energy_low = energy_of_single_ray[index_low]
 
-        # Compute the gradient 
-        dr = radius_high - radius_low
-        grad_E[i] = (energy_high[i] - energy_low) / dr
+#         # Compute the gradient 
+#         dr = radius_high - radius_low
+#         grad_E[i] = (energy_high[i] - energy_low) / dr
 
-    return grad_E, energy_high, T_high, den_high
+#     return grad_E, energy_high, T_high, den_high
 
     
 def flux_calculator(grad_E, selected_energy, 
@@ -263,7 +210,7 @@ def flux_calculator(grad_E, selected_energy,
         
         Temperature = selected_temperature[i]
         Density = selected_density[i]
-        
+
         # Ensure we can interpolate
         rho_low = np.exp(-45)
         T_low = np.exp(8.77)
@@ -294,7 +241,7 @@ def flux_calculator(grad_E, selected_energy,
         # Calc R, eq. 28
         R = np.abs(grad_E[i]) /  (k_ross * Energy)
         invR = 1 / R
-        
+
         # Calc lambda, eq. 27
         coth = 1 / np.tanh(R)
         lamda = invR * (coth - invR)
@@ -325,7 +272,7 @@ def doer_of_thing(fix, m, num = 2000):
     Gives bolometric L 
     """
     tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(fix, m, num)
-    _, _, rays_photo, rays_index_photo, _ = get_photosphere(rays_T, rays_den, radii, tree_indexes)
+    _, _, rays_photo, rays_index_photo, tree_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
     
     dim_ph = np.zeros(len(rays_index_photo))
     for j in range(len(rays_index_photo)):
@@ -333,11 +280,12 @@ def doer_of_thing(fix, m, num = 2000):
         vol_ph = rays_vol[j][find_index_cell]
         dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
     dist_neigh = 2 * dim_ph
-    dist_neigh *= Rsol_to_cm #convert in CGS
+    # dist_neigh *= Rsol_to_cm #convert in CGS
 
     #Find the cell outside the photosphere and save its quantities
-    grad_E, energy_neigh_up, T_neigh_up, den_neigh_up  = find_neighbours(rays_T, rays_den, rays, radii, 
-                                                                         rays_index_photo, dist_neigh)
+    # grad_E, energy_neigh_up, T_neigh_up, den_neigh_up  = find_neighbours(rays_T, rays_den, rays, radii, 
+    #                                                                     rays_index_photo, dist_neigh)
+    grad_E, energy_neigh_up, T_neigh_up, den_neigh_up  = find_neighbours(fix, m, tree_index_photo, dist_neigh)
 
     # Calculate Flux and see how it looks
     flux = flux_calculator(grad_E, energy_neigh_up, 
