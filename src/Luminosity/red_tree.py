@@ -239,11 +239,12 @@ def flux_calculator(grad_E, selected_energy,
             k_ross = opacity(Temperature, Density, 'rosseland', ln = False)
         
         # Calc R, eq. 28
-        R = np.abs(grad_E[i]) /  (k_ross * Energy)
-        invR = 1 / R
-
+        R_kr = np.abs(grad_E[i]) /  (k_ross * Energy)
+        invR = 1 / R_kr
+        R_kr = float(R_kr) # to avoid dumb thing with tanh(R)
+    
         # Calc lambda, eq. 27
-        coth = 1 / np.tanh(R)
+        coth = 1 / np.tanh(R_kr)
         lamda = invR * (coth - invR)
         # Calc Flux, eq. 26
         Flux = - c_cgs * grad_E[i]  * lamda / k_ross
