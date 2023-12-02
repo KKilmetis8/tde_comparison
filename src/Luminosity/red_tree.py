@@ -60,6 +60,33 @@ def select_fix(m):
     return snapshots, days
 
 def find_neighbours(fix, m, tree_index_photo, dist_neigh):
+    """
+     For every ray, find the cells that are at +- fixed distance from photosphere.
+     fixed distance = 2 * dimension of simulation cell at the photosphere
+
+     Parameters
+     ----------
+     fix: int.
+           Snapshot number.
+     m: int.
+        Exponent of BH mass
+     tree_index_photo: 1D array.
+                 Photosphere index in the tree.
+     dist_neigh : 1D array.
+               Distance from photosphere (in Rsol).
+
+     Returns
+     -------
+     grad_E: array.
+             Energy gradient for every ray at photosphere (CGS). 
+     energy_high: array.
+             Energy for every ray in a cell outside photosphere (CGS). 
+     T_high: array.
+             Temperature for every ray in a cell outside photosphere (CGS). 
+     den_high: array.
+             Density for every ray in a cell outside photosphere (CGS). 
+
+    """
     X = np.load( str(m) + '/'  + str(fix) + '/CMx_' + str(fix) + '.npy')
     Y = np.load( str(m) + '/'  + str(fix) + '/CMy_' + str(fix) + '.npy')
     Z = np.load( str(m) + '/'  + str(fix) + '/CMz_' + str(fix) + '.npy')
@@ -73,22 +100,22 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
 
     # make a tree
     sim_value = [X, Y, Z] 
-    sim_value = np.transpose(sim_value) # array of dim (number_points, 3)
+    sim_value = np.transpose(sim_value) # shape (number_points, 3). Need it for the tree.
     sim_tree = KDTree(sim_value)
 
-    # store data of the points to query in solar unit
+    # store data of R_{ph} (lenght in Rsol)
     tree_index_photo = [int(x) for x in tree_index_photo]
     xyz_selected = [X[tree_index_photo], Y[tree_index_photo], Z[tree_index_photo]]
     r_selected, theta_selected, phi_selected = cartesian_to_spherical(xyz_selected[0], 
                                                                       xyz_selected[1], xyz_selected[2])
-    r_neigh_low = r_selected - dist_neigh
-    r_neigh_high = r_selected + dist_neigh
-    delta_r = r_neigh_high - r_neigh_low
-    delta_r *= Rsol_to_cm # convert to CGS for the gradient
+    # Find the coordinates of neighborus.
+    # For every ray, they have its (theta,phi) and R = R_{ph} +- 2dr
+    r_low = r_selected - dist_neigh
+    r_high = r_selected + dist_neigh
 
-    x_low, y_low, z_low  = spherical_to_cartesian(r_neigh_low, theta_selected, phi_selected)
-    x_high, y_high, z_high  = spherical_to_cartesian(r_neigh_high, theta_selected, phi_selected)
-
+    # convert to cartesian and query 
+    x_low, y_low, z_low  = spherical_to_cartesian(r_low, theta_selected, phi_selected)
+    x_high, y_high, z_high  = spherical_to_cartesian(r_high, theta_selected, phi_selected)
     idx_low = np.zeros(len(tree_index_photo))
     idx_high = np.zeros(len(tree_index_photo))
     for i in range(len(x_low)):
@@ -97,17 +124,21 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
         idx_low[i] = idx_l
         idx_high[i] = idx_h
 
-    idx_low = [int(x) for x in idx_low]
-    idx_high = [int(x) for x in idx_high]
-    energy_neigh_low = Rad[idx_low]
-    energy_neigh_high = Rad[idx_high]
-    T_neigh_high = T[idx_high]
-    den_neigh_high = Den[idx_high]
+    # store data of neighbours
+    idx_low = [int(x) for x in idx_low] #necessary to avoid dumb stuff with indexing later
+    idx_high = [int(x) for x in idx_high] #same
+    energy_low = Rad[idx_low]
+    energy_high = Rad[idx_high]
+    T_high = T[idx_high]
+    den_high = Den[idx_high]
 
-    deltaE = energy_neigh_high - energy_neigh_low
+    # compute the gradient 
+    deltaE = energy_high - energy_low
+    delta_r = r_high - r_low
+    delta_r *= Rsol_to_cm # convert to CGS for the gradient
     grad_E = deltaE / delta_r
     
-    return grad_E, energy_neigh_high, T_neigh_high, den_neigh_high
+    return grad_E, energy_high, T_high, den_high
 
 # def find_neighbours(rays_T, rays_den, rays, radii, rays_index_photo, dist_neigh):
 #     """
@@ -283,14 +314,14 @@ def doer_of_thing(fix, m, num = 2000):
     dist_neigh = 2 * dim_ph
     # dist_neigh *= Rsol_to_cm #convert in CGS
 
-    #Find the cell outside the photosphere and save its quantities
-    # grad_E, energy_neigh_up, T_neigh_up, den_neigh_up  = find_neighbours(rays_T, rays_den, rays, radii, 
-    #                                                                     rays_index_photo, dist_neigh)
-    grad_E, energy_neigh_up, T_neigh_up, den_neigh_up  = find_neighbours(fix, m, tree_index_photo, dist_neigh)
+    # Find the cell outside the photosphere and save its quantities
+    # grad_E, energy_high, T_high, den_high  = find_neighbours(rays_T, rays_den, rays, radii, 
+    #                                                          rays_index_photo, dist_neigh)
+    grad_E, energy_high, T_high, den_high  = find_neighbours(fix, m, tree_index_photo, dist_neigh)
 
     # Calculate Flux and see how it looks
-    flux = flux_calculator(grad_E, energy_neigh_up, 
-                           T_neigh_up, den_neigh_up)
+    flux = flux_calculator(grad_E, energy_high, 
+                           T_high, den_high)
 
     # Calculate luminosity 
     lum = np.zeros(len(flux))
