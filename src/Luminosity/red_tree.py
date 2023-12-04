@@ -92,6 +92,7 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
     """
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
+    fix = str(fix)
     if alice:
         pre = '/home/s3745597/data1/TDE/'
         # Import
