@@ -92,13 +92,22 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
     """
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
-    
-    X = np.load( str(m) + '/'  + str(fix) + '/CMx_' + str(fix) + '.npy') - Rt
-    Y = np.load( str(m) + '/'  + str(fix) + '/CMy_' + str(fix) + '.npy')
-    Z = np.load( str(m) + '/'  + str(fix) + '/CMz_' + str(fix) + '.npy')
-    Rad = np.load(str(m) + '/'  +str(fix) + '/Rad_' + str(fix) + '.npy')
-    T = np.load( str(m) + '/'  + str(fix) + '/T_' + str(fix) + '.npy')
-    Den = np.load( str(m) + '/'  + str(fix) + '/Den_' + str(fix) + '.npy')
+    if alice:
+        pre = '/home/s3745597/data1/TDE/'
+        # Import
+        X = np.load(pre + str(m) + '/snap_'  + fix + '/CMx_' + fix + '.npy') - Rt
+        Y = np.load(pre + str(m) + '/snap_'  + fix + '/CMy_' + fix + '.npy')
+        Z = np.load(pre + str(m) + '/snap_'  + fix + '/CMz_' + fix + '.npy')
+        T = np.load(pre + str(m) + '/snap_'  + fix + '/T_' + fix + '.npy')
+        Den = np.load(pre + str(m) + '/snap_'  + fix + '/Den_' + fix + '.npy')
+        Rad = np.load(pre + str(m) + '/snap_'  +fix + '/Rad_' + fix + '.npy')
+    else:
+        X = np.load( str(m) + '/'  + str(fix) + '/CMx_' + str(fix) + '.npy') - Rt
+        Y = np.load( str(m) + '/'  + str(fix) + '/CMy_' + str(fix) + '.npy')
+        Z = np.load( str(m) + '/'  + str(fix) + '/CMz_' + str(fix) + '.npy')
+        Rad = np.load(str(m) + '/'  +str(fix) + '/Rad_' + str(fix) + '.npy')
+        T = np.load( str(m) + '/'  + str(fix) + '/T_' + str(fix) + '.npy')
+        Den = np.load( str(m) + '/'  + str(fix) + '/Den_' + str(fix) + '.npy')
 
     # convert in CGS
     Rad *= Den 
