@@ -15,7 +15,7 @@ import healpy as hp
 from astropy.coordinates import spherical_to_cartesian
 import matplotlib.pyplot as plt
 AEK = '#F1C410'
-alice = False
+alice = True
 #%% Constants & Converter
 NSIDE = 4
 G = 6.6743e-11 # SI
@@ -31,9 +31,12 @@ en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 
 fix = 844
 m = 6
-num = 2000
+num = 1000
 
-def ray_maker(fix, m, num = 5000):
+def isalice():
+    return alice
+
+def ray_maker(fix, m, num = 1000):
     """ Outputs are in CGS with exception of ray_vol (in solar units) """
     fix = str(fix)
     Mbh = 10**m 
@@ -160,22 +163,24 @@ if __name__ == '__main__':
     num = 1000
     tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(844, m, num)
 #%% Plot
-    import colorcet
-    fig, ax = plt.subplots(1,1)
-    plt.rcParams['text.usetex'] = True
-    plt.rcParams['figure.dpi'] = 300
-    plt.rcParams['font.family'] = 'Times New Roman'
-    plt.rcParams['figure.figsize'] = [6, 4]
-    plt.rcParams['axes.facecolor']= 	'whitesmoke'
-    
-    den_plot = np.log10(rays_den)
-    den_plot = np.nan_to_num(den_plot, neginf= -19)
-    den_plot = np.reshape(den_plot, (192, len(radii)))
-    ax.set_ylabel('Observers', fontsize = 14)
-    ax.set_xlabel(r'r [R$_\odot$]', fontsize = 14)
-    img = ax.pcolormesh(radii/Rsol_to_cm, range(len(rays_den)), den_plot, cmap = 'cet_fire',
-                        vmin = -17, vmax = - 7)
-    cb = plt.colorbar(img)
-    cb.set_label(r'Density [g/cm$^3$]', fontsize = 14)
-    ax.set_title('N: ' + str(num), fontsize = 16)
+    plot = False
+    if plot:
+        import colorcet
+        fig, ax = plt.subplots(1,1)
+        plt.rcParams['text.usetex'] = True
+        plt.rcParams['figure.dpi'] = 300
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['figure.figsize'] = [6, 4]
+        plt.rcParams['axes.facecolor']= 	'whitesmoke'
+        
+        den_plot = np.log10(rays_den)
+        den_plot = np.nan_to_num(den_plot, neginf= -19)
+        den_plot = np.reshape(den_plot, (192, len(radii)))
+        ax.set_ylabel('Observers', fontsize = 14)
+        ax.set_xlabel(r'r [R$_\odot$]', fontsize = 14)
+        img = ax.pcolormesh(radii/Rsol_to_cm, range(len(rays_den)), den_plot, cmap = 'cet_fire',
+                            vmin = -17, vmax = - 7)
+        cb = plt.colorbar(img)
+        cb.set_label(r'Density [g/cm$^3$]', fontsize = 14)
+        ax.set_title('N: ' + str(num), fontsize = 16)
     

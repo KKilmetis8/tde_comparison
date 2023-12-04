@@ -90,7 +90,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
         oppi = kplanck + kscattering
         tau_high = oppi * r_dlogr
         
-        # hot_counter += 1
+        # hot_counter += tau_high
         return tau_high 
         #return tau_high, tau_high
     
@@ -99,7 +99,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
         k = opacity(T, rho,'red', ln = False)
         kappar =  k * r_dlogr
 
-        # normal_counter += 1
+        # normal_counter += kappar
         return kappar
         #return kappar, 0 
 
@@ -345,7 +345,7 @@ def get_thermr(rays_T, rays_den, radii, tree_indexes):
 
 if __name__ == "__main__":
     photosphere = True
-    thermalisation = True
+    thermalisation = False
     
     plot = False
     m = 6 

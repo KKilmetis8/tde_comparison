@@ -22,7 +22,8 @@ from scipy.spatial import KDTree
 from datetime import datetime
 # Custom Imports
 from src.Opacity.opacity_table import opacity
-from src.Calculators.ray_tree import ray_maker
+from src.Calculators.ray_tree import ray_maker, isalice
+alice = isalice()
 from src.Luminosity.special_radii_tree import get_photosphere
 from astropy.coordinates import spherical_to_cartesian, cartesian_to_spherical
 plt.rcParams['text.usetex'] = True
@@ -40,13 +41,15 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2)
-alice = False
+pre = '/home/s3745597/data1/TDE/tde_comparison'
 #%%
 ##
 # FUNCTIONS
 ##
 ###
 def select_fix(m):
+    if alice:
+        snapshots = np.arange(844, 1008, step = 1)
     if m == 4:
         snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
@@ -55,8 +58,8 @@ def select_fix(m):
             snapshots = np.arange(844, 1008 + 1)
             days = [1.00325,1.007,1.01075,1.01425,1.018,1.02175,1.0255,1.029,1.03275,1.0365,1.04025,1.04375,1.0475,1.05125,1.055,1.0585,1.06225,1.066,1.06975,1.07325,1.077,1.08075,1.0845,1.088,1.09175,1.0955,1.09925,1.10275,1.1065,1.11025,1.114,1.1175,1.12125,1.125,1.12875,1.13225,1.136,1.13975,1.1435,1.147,1.15075,1.1545,1.15825,1.16175,1.1655,1.16925,1.173,1.1765,1.18025,1.184,1.18775,1.19125,1.195,1.19875,1.2025,1.206,1.20975,1.2135,1.21725,1.22075,1.2245,1.22825,1.232,1.2355,1.23925,1.243,1.24675,1.25025,1.254,1.25775,1.2615,1.265,1.26875,1.2725,1.27625,1.27975,1.2835,1.28725,1.291,1.2945,1.29825,1.302,1.30575,1.30925,1.313,1.31675,1.3205,1.324,1.32775,1.3315,1.33525,1.33875,1.3425,1.34625,1.35,1.3535,1.35725,1.361,1.36475,1.36825,1.372,1.37575,1.3795,1.383,1.38675,1.3905,1.39425,1.39775,1.4015,1.40525,1.409,1.4125,1.41625,1.42,1.42375,1.42725,1.431,1.43475,1.4385,1.442,1.44575,1.4495,1.45325,1.45675,1.4605,1.46425,1.468,1.4715,1.47525,1.479,1.48275,1.48625,1.49,1.49375,1.4975,1.501,1.50475,1.5085,1.51225,1.51575,1.5195,1.52325,1.527,1.5305,1.53425,1.538,1.54175,1.54525,1.549,1.55275,1.5565,1.56,1.56375,1.5675,1.57125,1.57475,1.5785,1.58225,1.586,1.5895,1.59325,1.597,1.60075,1.60425,1.608]
         else:
-            snapshots = [844, 881, 925, 950, 980, 1008] 
-            days = [1, 1.1, 1.3, 1.4, 1.5, 1.608] 
+            snapshots = [844, 881, 925, 950, 1008] 
+            days = [1, 1.1, 1.3, 1.4, 1.608] 
     return snapshots, days
 
 def find_neighbours(fix, m, tree_index_photo, dist_neigh):
@@ -87,7 +90,10 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
              Density for every ray in a cell outside photosphere (CGS). 
 
     """
-    X = np.load( str(m) + '/'  + str(fix) + '/CMx_' + str(fix) + '.npy')
+    Mbh = 10**m 
+    Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
+    
+    X = np.load( str(m) + '/'  + str(fix) + '/CMx_' + str(fix) + '.npy') - Rt
     Y = np.load( str(m) + '/'  + str(fix) + '/CMy_' + str(fix) + '.npy')
     Z = np.load( str(m) + '/'  + str(fix) + '/CMz_' + str(fix) + '.npy')
     Rad = np.load(str(m) + '/'  +str(fix) + '/Rad_' + str(fix) + '.npy')
@@ -313,7 +319,7 @@ def flux_calculator(grad_E, selected_energy,
     print('Flux: ', flux_count) 
     return f
 
-def doer_of_thing(fix, m, num = 2000):
+def doer_of_thing(fix, m, num = 1000):
     """
     Gives bolometric L 
     """
@@ -376,8 +382,8 @@ if __name__ == "__main__":
     if save:
         if alice:
             pre = '/home/s3745597/data1/TDE/'
-            np.savetxt('red_backup_save'+ str(m) + '.txt', (days, lums))
-            np.savetxt(pre + 'tde_comparison/data/alicered'+ str(m) + '.txt', (days, lums))
+            np.savetxt('red_backup_save'+ str(m) + '.txt', lums)
+            np.savetxt(pre + 'tde_comparison/data/alicered'+ str(m) + '.txt', lums)
         else:
              with open('data/red/new_reddata_m'+ str(m) + '.txt', 'a') as flum:
                  flum.write('# t/t_fb\n') 
