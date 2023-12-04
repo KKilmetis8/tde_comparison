@@ -31,6 +31,8 @@ from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
 
 Rsol_to_cm = 6.957e10 # [cm]
+
+
 ################
 # FUNCTIONS
 ################
@@ -40,8 +42,8 @@ def select_fix(m):
         snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881, 925, 950, 980, 1008] 
-        days = [1, 1.1, 1.3, 1.4, 1.5, 1.6] 
+        snapshots = [844, 881,] # 925, 950, 980, 1008] 
+        days = [1, 1.1,]# 1.3, 1.4, 1.5, 1.6] 
     return snapshots, days
 
 def get_kappa(T: float, rho: float, r_dlogr: float):
@@ -62,16 +64,20 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
     kappar: int.
             The "optical depth" of a cell.
     '''    
+    global hot_counter, nothing_counter, cold_counter, normal_counter
     # If there is nothing, the ray continues unimpeded
-    if rho < np.exp(-49.3):
+    if rho < np.exp(-49.3):        
+        nothing_counter += 1
         return 0
     
     # Stream material, is opaque
-    if T < np.exp(8.666):
+    elif T < np.exp(8.666):
+        
+        cold_counter += 1
         return 100
     
     # Too hot: Kramers' law for absorption (planck)
-    if T > np.exp(17.876):
+    elif T > np.exp(17.876):
         X = 0.7389
         Z = 0.02
         # kplanck =  1.2e26 * Z * (1 + X) * T**(-3.5) * rho #Kramers' bound-free opacity [cm^2/g]
@@ -83,13 +89,16 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
 
         oppi = kplanck + kscattering
         tau_high = oppi * r_dlogr
+        
+        hot_counter += 1
         return tau_high 
     
-    # Lookup table
-    k = opacity(T, rho,'red', ln = False)
-    kappar =  k * r_dlogr
-    
-    return kappar
+    else:
+        # Lookup table
+        k = opacity(T, rho,'red', ln = False)
+        kappar =  k * r_dlogr
+        normal_counter += 1
+        return kappar
 
 def calc_photosphere(T, rho, radius, branch_indexes):
     '''
@@ -330,9 +339,9 @@ def get_thermr(rays_T, rays_den, radii, tree_indexes):
 
 if __name__ == "__main__":
     photosphere = True
-    thermalisation = True
+    thermalisation = False
     
-    plot = False
+    plot = True
     m = 6 
     loadpath = str(m) + '/'
     snapshots, days = select_fix(m)
@@ -343,6 +352,13 @@ if __name__ == "__main__":
     fix_thermr_geom = np.zeros(len(snapshots))
 
     for index in range(0,4):#len(snapshots)):
+        
+        # Bad code to debug
+        hot_counter = 0
+        nothing_counter = 0
+        cold_counter = 0
+        normal_counter = 0
+        
         print('Snapshot ' + str(snapshots[index]))
         tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m)
 
@@ -369,6 +385,10 @@ if __name__ == "__main__":
 
             fix_photo_arit[index] = np.mean(rays_photo)
             fix_photo_geom[index] = gmean(rays_photo)
+            print('hot: ', hot_counter )
+            print('cold: ', cold_counter )
+            print('nothing: ', nothing_counter)
+            print('normal: ', normal_counter )
 
             if plot:
                 fig, ax = plt.subplots(figsize = (8,6))
@@ -386,6 +406,7 @@ if __name__ == "__main__":
                 plt.legend()
                 plt.savefig('photo_obs' + str(snapshots[index]) + '.png')
                 plt.show()  
+                
 
         if thermalisation: 
             rays_tau, rays_cumulative_taus, rays_thermr, rays_index_therm = get_thermr(rays_T, rays_den, radii, tree_indexes)

@@ -55,7 +55,7 @@ def select_fix(m):
             snapshots = np.arange(844, 1008 + 1)
             days = [1.00325,1.007,1.01075,1.01425,1.018,1.02175,1.0255,1.029,1.03275,1.0365,1.04025,1.04375,1.0475,1.05125,1.055,1.0585,1.06225,1.066,1.06975,1.07325,1.077,1.08075,1.0845,1.088,1.09175,1.0955,1.09925,1.10275,1.1065,1.11025,1.114,1.1175,1.12125,1.125,1.12875,1.13225,1.136,1.13975,1.1435,1.147,1.15075,1.1545,1.15825,1.16175,1.1655,1.16925,1.173,1.1765,1.18025,1.184,1.18775,1.19125,1.195,1.19875,1.2025,1.206,1.20975,1.2135,1.21725,1.22075,1.2245,1.22825,1.232,1.2355,1.23925,1.243,1.24675,1.25025,1.254,1.25775,1.2615,1.265,1.26875,1.2725,1.27625,1.27975,1.2835,1.28725,1.291,1.2945,1.29825,1.302,1.30575,1.30925,1.313,1.31675,1.3205,1.324,1.32775,1.3315,1.33525,1.33875,1.3425,1.34625,1.35,1.3535,1.35725,1.361,1.36475,1.36825,1.372,1.37575,1.3795,1.383,1.38675,1.3905,1.39425,1.39775,1.4015,1.40525,1.409,1.4125,1.41625,1.42,1.42375,1.42725,1.431,1.43475,1.4385,1.442,1.44575,1.4495,1.45325,1.45675,1.4605,1.46425,1.468,1.4715,1.47525,1.479,1.48275,1.48625,1.49,1.49375,1.4975,1.501,1.50475,1.5085,1.51225,1.51575,1.5195,1.52325,1.527,1.5305,1.53425,1.538,1.54175,1.54525,1.549,1.55275,1.5565,1.56,1.56375,1.5675,1.57125,1.57475,1.5785,1.58225,1.586,1.5895,1.59325,1.597,1.60075,1.60425,1.608]
         else:
-            snapshots = [844, 881, 925, 950, 980]#, 1008] 
+            snapshots = [844, 881, 925, 950] #, 980]#, 1008] 
             days = [1, 1.1, 1.3, 1.4, 1.5]#, 1.608] 
     return snapshots, days
 
@@ -73,7 +73,7 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
      tree_index_photo: 1D array.
                  Photosphere index in the tree.
      dist_neigh : 1D array.
-               Distance from photosphere (in Rsol).
+                2(3πV/4)^(1/3), Distance from photosphere (in Rsol).
 
      Returns
      -------
@@ -105,32 +105,41 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
 
     # store data of R_{ph} (lenght in Rsol)
     tree_index_photo = [int(x) for x in tree_index_photo]
-    xyz_selected = [X[tree_index_photo], Y[tree_index_photo], Z[tree_index_photo]]
-    r_selected, theta_selected, phi_selected = cartesian_to_spherical(xyz_selected[0], 
-                                                                      xyz_selected[1], xyz_selected[2])
+    xyz_obs = [X[tree_index_photo], Y[tree_index_photo], Z[tree_index_photo]]
+    r_obs, theta_obs, phi_obs = cartesian_to_spherical(xyz_obs[0], xyz_obs[1],
+                                                       xyz_obs[2])
     # Find the coordinates of neighborus.
     # For every ray, they have its (theta,phi) and R = R_{ph} +- 2dr
-    r_low = r_selected - dist_neigh
-    r_high = r_selected + dist_neigh
+    r_low = r_obs - dist_neigh
+    r_high = r_obs + dist_neigh
 
     # convert to cartesian and query 
-    x_low, y_low, z_low  = spherical_to_cartesian(r_low, theta_selected, phi_selected)
-    x_high, y_high, z_high  = spherical_to_cartesian(r_high, theta_selected, phi_selected)
+    x_low, y_low, z_low  = spherical_to_cartesian(r_low, theta_obs, phi_obs)
+    x_high, y_high, z_high  = spherical_to_cartesian(r_high, theta_obs, phi_obs)
     idx_low = np.zeros(len(tree_index_photo))
     idx_high = np.zeros(len(tree_index_photo))
-    dist = np.zeros(len(tree_index_photo))
+    grad_r = np.zeros(len(tree_index_photo))
+    
+    # Find inner and outer neighbours
     for i in range(len(x_low)):
         _, idx_l = sim_tree.query([x_low[i], y_low[i], z_low[i]])
         _, idx_h = sim_tree.query([x_high[i], y_high[i], z_high[i]])
         idx_low[i] = idx_l
         idx_high[i] = idx_h
-        xyz_low = [X[idx_l], Y[idx_l], Z[idx_l]]
-        xyz_high = [X[idx_h], Y[idx_h], Z[idx_h]]
-        dist[i] = math.dist(xyz_high, xyz_low)
+        xyz_low = np.array([X[idx_l], Y[idx_l], Z[idx_l]])
+        xyz_high = np.array([X[idx_h], Y[idx_h], Z[idx_h]])
+        diff = 1 / np.subtract(xyz_high, xyz_low)
+        rhat = [np.sin(theta_obs[i]) * np.cos(phi_obs[i]),
+                np.sin(theta_obs[i]) * np.sin(phi_obs[i]),
+                np.cos(theta_obs[i])
+                ]
+        grad_r[i] = np.dot(diff, rhat) # Project
+        # dist[i] = math.dist(xyz_high, xyz_low)
 
+    
     # store data of neighbours
-    idx_low = [int(x) for x in idx_low] #necessary to avoid dumb stuff with indexing later
-    idx_high = [int(x) for x in idx_high] #same
+    idx_low = [int(x) for x in idx_low] #necavoid dumb stuff with indexing later
+    idx_high = [int(x) for x in idx_high] #sameessary to 
     energy_low = Rad[idx_low]
     energy_high = Rad[idx_high]
     T_high = T[idx_high]
@@ -140,8 +149,8 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
     deltaE = energy_high - energy_low
     # delta_r = r_high - r_low
     # delta_r *= Rsol_to_cm # convert to CGS for the gradient
-    dist *= Rsol_to_cm
-    grad_E = deltaE / dist
+    grad_r *= Rsol_to_cm
+    grad_E = deltaE * grad_r
     
     return grad_E, energy_high, T_high, den_high
 
