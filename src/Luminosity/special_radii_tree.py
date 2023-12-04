@@ -67,13 +67,10 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
     # global hot_counter, nothing_counter, cold_counter, normal_counter
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):        
-        # nothing_counter += 1
         return 0
     
     # Stream material, is opaque
     elif T < np.exp(8.666):
-        
-        # cold_counter += 1
         return 100
     
     # Too hot: Kramers' law for absorption (planck)
@@ -90,18 +87,14 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
         oppi = kplanck + kscattering
         tau_high = oppi * r_dlogr
         
-        # hot_counter += tau_high
         return tau_high 
-        #return tau_high, tau_high
     
     else:
         # Lookup table
         k = opacity(T, rho,'red', ln = False)
         kappar =  k * r_dlogr
 
-        # normal_counter += kappar
         return kappar
-        #return kappar, 0 
 
 def calc_photosphere(T, rho, radius, branch_indexes):
     '''
@@ -133,7 +126,6 @@ def calc_photosphere(T, rho, radius, branch_indexes):
     '''
     threshold = 2/3
     kappa = 0
-    # kappa_hot = 0 ####
     kappas = []
     cumulative_kappas = []
     i = -1 # Initialize reverse loop
@@ -142,7 +134,6 @@ def calc_photosphere(T, rho, radius, branch_indexes):
         r_dlogr = radius[i] * dlogr #to integrate in log space
         new_kappa = get_kappa(T[i], rho[i], r_dlogr)
         kappa += new_kappa
-        # kappa_hot += new_kappa_hot ####
         kappas.append(new_kappa)
         cumulative_kappas.append(kappa)
         i -= 1
@@ -150,7 +141,6 @@ def calc_photosphere(T, rho, radius, branch_indexes):
     photo =  radius[i] #i it's negative
     index_ph = i + len(T) 
     branch_index_ph = branch_indexes[i]
-    # print('hot count?', kappa_hot/cumulative_kappas[-1]) ####
 
     return kappas, cumulative_kappas, photo, index_ph, branch_index_ph
 

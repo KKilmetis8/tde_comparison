@@ -125,7 +125,9 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
     idx_low = np.zeros(len(tree_index_photo))
     idx_high = np.zeros(len(tree_index_photo))
     grad_r = np.zeros(len(tree_index_photo))
-    
+    grad_xyz = []
+    magnitude = np.zeros(len(tree_index_photo))
+   
     # Find inner and outer neighbours
     for i in range(len(x_low)):
         _, idx_l = sim_tree.query([x_low[i], y_low[i], z_low[i]])
@@ -135,17 +137,17 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
         xyz_low = np.array([X[idx_l], Y[idx_l], Z[idx_l]])
         xyz_high = np.array([X[idx_h], Y[idx_h], Z[idx_h]])
         diff = 1 / np.subtract(xyz_high, xyz_low)
+        diff = diff / Rsol_to_cm # convert to CGS
         rhat = [np.sin(theta_obs[i]) * np.cos(phi_obs[i]),
                 np.sin(theta_obs[i]) * np.sin(phi_obs[i]),
                 np.cos(theta_obs[i])
                 ]
         grad_r[i] = np.dot(diff, rhat) # Project
-        # dist[i] = math.dist(xyz_high, xyz_low)
-
+        magnitude[i] = np.linalg.norm(diff)
     
     # store data of neighbours
     idx_low = [int(x) for x in idx_low] #necavoid dumb stuff with indexing later
-    idx_high = [int(x) for x in idx_high] #sameessary to 
+    idx_high = [int(x) for x in idx_high] #same 
     energy_low = Rad[idx_low]
     energy_high = Rad[idx_high]
     T_high = T[idx_high]
@@ -153,12 +155,13 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
 
     # compute the gradient 
     deltaE = energy_high - energy_low
-    # delta_r = r_high - r_low
-    # delta_r *= Rsol_to_cm # convert to CGS for the gradient
-    grad_r *= Rsol_to_cm
-    grad_E = deltaE * grad_r
+
+    #grad_xyz = grad_xyz / Rsol_to_cm
+    grad_Er = deltaE * grad_r
+    magnitude *= deltaE
+    print(magnitude)
     
-    return grad_E, energy_high, T_high, den_high
+    return grad_Er, magnitude, energy_high, T_high, den_high
 
 # def find_neighbours(rays_T, rays_den, rays, radii, rays_index_photo, dist_neigh):
 #     """
@@ -227,7 +230,7 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
 #     return grad_E, energy_high, T_high, den_high
 
     
-def flux_calculator(grad_E, selected_energy, 
+def flux_calculator(grad_E, magnitude, selected_energy, 
                     selected_temperature, selected_density):
     """
     Get the flux for every observer.
@@ -290,7 +293,7 @@ def flux_calculator(grad_E, selected_energy,
             k_ross = opacity(Temperature, Density, 'rosseland', ln = False)
         
         # Calc R, eq. 28
-        R_kr = np.abs(grad_E[i]) /  (k_ross * Energy)
+        R_kr = magnitude[i] /  (k_ross * Energy)
         invR = 1 / R_kr
         R_kr = float(R_kr) # to avoid dumb thing with tanh(R)
     
@@ -337,10 +340,10 @@ def doer_of_thing(fix, m, num = 1000):
     # Find the cell outside the photosphere and save its quantities
     # grad_E, energy_high, T_high, den_high  = find_neighbours(rays_T, rays_den, rays, radii, 
     #                                                          rays_index_photo, dist_neigh)
-    grad_E, energy_high, T_high, den_high  = find_neighbours(fix, m, tree_index_photo, dist_neigh)
+    grad_E, magnitude, energy_high, T_high, den_high  = find_neighbours(fix, m, tree_index_photo, dist_neigh)
 
     # Calculate Flux and see how it looks
-    flux = flux_calculator(grad_E, energy_high, 
+    flux = flux_calculator(grad_E, magnitude, energy_high, 
                            T_high, den_high)
 
     # Calculate luminosity 
