@@ -147,7 +147,7 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
                 np.cos(theta_obs[i])
                 ]
         grad_r[i] = np.dot(diff, rhat) # Project
-        magnitude[i] = np.linalg.norm(diff)
+        magnitude[i] = 1 / (np.linalg.norm(np.subtract(xyz_high, xyz_low)) * Rsol_to_cm) 
     
     # store data of neighbours
     idx_low = [int(x) for x in idx_low] #necavoid dumb stuff with indexing later

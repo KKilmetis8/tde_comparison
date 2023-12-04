@@ -85,6 +85,8 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
         # Scale as Kramers the last point for absorption
         kplank_0 = opacity(Tmax, rho, 'planck', ln = False)
         kplanck = kplank_0 * (T/Tmax)**(-3.5)
+        # kplanck =  3.8e22 * (1 + X) * T**(-3.5) * rho # [cm^2/g]
+        # kplanck *= rho
 
         oppi = kplanck + kscattering
         tau_high = oppi * r_dlogr
