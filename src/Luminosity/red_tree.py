@@ -58,8 +58,8 @@ def select_fix(m):
             snapshots = np.arange(844, 1008 + 1)
             days = [1.00325,1.007,1.01075,1.01425,1.018,1.02175,1.0255,1.029,1.03275,1.0365,1.04025,1.04375,1.0475,1.05125,1.055,1.0585,1.06225,1.066,1.06975,1.07325,1.077,1.08075,1.0845,1.088,1.09175,1.0955,1.09925,1.10275,1.1065,1.11025,1.114,1.1175,1.12125,1.125,1.12875,1.13225,1.136,1.13975,1.1435,1.147,1.15075,1.1545,1.15825,1.16175,1.1655,1.16925,1.173,1.1765,1.18025,1.184,1.18775,1.19125,1.195,1.19875,1.2025,1.206,1.20975,1.2135,1.21725,1.22075,1.2245,1.22825,1.232,1.2355,1.23925,1.243,1.24675,1.25025,1.254,1.25775,1.2615,1.265,1.26875,1.2725,1.27625,1.27975,1.2835,1.28725,1.291,1.2945,1.29825,1.302,1.30575,1.30925,1.313,1.31675,1.3205,1.324,1.32775,1.3315,1.33525,1.33875,1.3425,1.34625,1.35,1.3535,1.35725,1.361,1.36475,1.36825,1.372,1.37575,1.3795,1.383,1.38675,1.3905,1.39425,1.39775,1.4015,1.40525,1.409,1.4125,1.41625,1.42,1.42375,1.42725,1.431,1.43475,1.4385,1.442,1.44575,1.4495,1.45325,1.45675,1.4605,1.46425,1.468,1.4715,1.47525,1.479,1.48275,1.48625,1.49,1.49375,1.4975,1.501,1.50475,1.5085,1.51225,1.51575,1.5195,1.52325,1.527,1.5305,1.53425,1.538,1.54175,1.54525,1.549,1.55275,1.5565,1.56,1.56375,1.5675,1.57125,1.57475,1.5785,1.58225,1.586,1.5895,1.59325,1.597,1.60075,1.60425,1.608]
         else:
-            snapshots = [844, 881, 925, 950, 1008] 
-            days = [1, 1.1, 1.3, 1.4, 1.608] 
+            snapshots = [844, 881, 925, 950]# 1008] 
+            days = [1, 1.1, 1.3, 1.4]# 1.608] 
     return snapshots, days
 
 def find_neighbours(fix, m, tree_index_photo, dist_neigh):
@@ -136,8 +136,12 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
         idx_high[i] = idx_h
         xyz_low = np.array([X[idx_l], Y[idx_l], Z[idx_l]])
         xyz_high = np.array([X[idx_h], Y[idx_h], Z[idx_h]])
+        
+        # Diff is vector
         diff = 1 / np.subtract(xyz_high, xyz_low)
         diff = diff / Rsol_to_cm # convert to CGS
+        
+        # Unitary vector in the r direction, for each observer
         rhat = [np.sin(theta_obs[i]) * np.cos(phi_obs[i]),
                 np.sin(theta_obs[i]) * np.sin(phi_obs[i]),
                 np.cos(theta_obs[i])
@@ -158,76 +162,9 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
 
     #grad_xyz = grad_xyz / Rsol_to_cm
     grad_Er = deltaE * grad_r
-    magnitude *= deltaE
-    print(magnitude)
+    magnitude *= np.abs(deltaE)
     
     return grad_Er, magnitude, energy_high, T_high, den_high
-
-# def find_neighbours(rays_T, rays_den, rays, radii, rays_index_photo, dist_neigh):
-#     """
-#     For every ray, find the cells that are at +- fixed distance from photosphere.
-#     fixed distance = dimension of simulation cell at the photosphere
-
-#     Parameters
-#     ----------
-#     rays_T: n-D arrays.
-#             Temperature of every ray/cell (CGS).
-#     rays_den: n-D arrays.
-#             Density of every ray/cell (CGS).
-#     rays: n-D arrays.
-#         Energy of every ray/cell (CGS).
-#     radii: 1D array.
-#             Radius (CGS).
-#     rays_index_photo: 1D array.
-#                 Photosphere index in our rays.
-#     dist_neigh : 1D array.
-#               Distance from photosphere (CGS).
-
-#     Returns
-#     -------
-#     grad_E: array.
-#             Energy gradient for every ray at photosphere. 
-#     energy_high: array.
-#             Energy for every ray in a cell outside photosphere. 
-#     T_high: array.
-#             Temperature for every ray in a cell outside photosphere. 
-#     den_high: array.
-#             Density for every ray in a cell outside photosphere. 
-#     """
-#     # convert the elements in rays_index_photo in int
-#     rays_index_photo = rays_index_photo.astype(int) 
-#     dist_neigh_high = radii[rays_index_photo] + dist_neigh
-#     dist_neigh_low = radii[rays_index_photo] - dist_neigh
-
-#     grad_E = np.zeros(len(rays_index_photo))
-#     energy_high = np.zeros(len(rays_index_photo))
-#     T_high = np.zeros(len(rays_index_photo))
-#     den_high = np.zeros(len(rays_index_photo))
-
-#     for i in range(len(rays_index_photo)):
- 
-#         # Isolate each ray
-#         T_of_single_ray = rays_T[i]
-#         Den_of_single_ray = rays_den[i]
-#         energy_of_single_ray = rays[i]
-
-#         # Find and store the neighbour with R ~ R_{ph} + dist_neigh
-#         index_high = np.argmin((np.abs(dist_neigh_high[i] - radii)))
-#         radius_high = radii[index_high]
-#         energy_high[i] = energy_of_single_ray[index_high]
-#         T_high[i] = T_of_single_ray[index_high]
-#         den_high[i] = Den_of_single_ray[index_high]
-
-#         # Find the neighbour with R ~ R_{ph} - dist_neigh
-#         index_low = np.argmin((np.abs(dist_neigh_low[i] - radii)))
-#         radius_low = radii[index_low]
-#         energy_low = energy_of_single_ray[index_low]
-
-#         # Compute the gradient 
-#         dr = radius_high - radius_low
-#         grad_E[i] = (energy_high[i] - energy_low) / dr
-
-#     return grad_E, energy_high, T_high, den_high
 
     
 def flux_calculator(grad_E, magnitude, selected_energy, 
@@ -301,7 +238,7 @@ def flux_calculator(grad_E, magnitude, selected_energy,
         coth = 1 / np.tanh(R_kr)
         lamda = invR * (coth - invR)
         # Calc Flux, eq. 26
-        Flux = - c_cgs * grad_E[i]  * lamda / k_ross
+        Flux =  - c_cgs * grad_E[i]  * lamda / k_ross
         
         # Choose
         if Flux > max_travel:
@@ -373,7 +310,7 @@ def doer_of_thing(fix, m, num = 1000):
 ##
 if __name__ == "__main__":
     save = True
-    plot = False
+    plot = True
     m = 6 # Choose BH
     fixes, days = select_fix(m)
     lums = []

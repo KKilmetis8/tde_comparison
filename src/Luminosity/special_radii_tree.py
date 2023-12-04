@@ -77,12 +77,14 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
     elif T > np.exp(17.876):
         X = 0.7389
         Z = 0.02
-        #kplanck =  1.2e26 * Z * (1 + X) * T**(-3.5) * rho #Kramers' bound-free opacity [cm^2/g]
-        kplanck = 3.68e22 * (1-Z) * (1 + X) * T**(-3.5) * rho #Kramers' free-free opacity [cm^2/g]
-        kplanck *= rho
-
-        Tscatter = np.exp(17.87)
-        kscattering = opacity(Tscatter, rho, 'scattering', ln = False)
+        
+        # Constant value for scatter
+        Tmax = np.exp(17.87)
+        kscattering = opacity(Tmax, rho, 'scattering', ln = False)
+        
+        # Scale as Kramers the last point for absorption
+        kplank_0 = opacity(Tmax, rho, 'planck', ln = False)
+        kplanck = kplank_0 * (T/Tmax)**(-3.5)
 
         oppi = kplanck + kscattering
         tau_high = oppi * r_dlogr

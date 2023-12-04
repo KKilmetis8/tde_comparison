@@ -62,6 +62,7 @@ def ray_maker(fix, m, num = 1000):
         Den = np.load( str(m) + '/'  + fix + '/Den_' + fix + '.npy')
         Rad = np.load( str(m) + '/'  +fix + '/Rad_' + fix + '.npy')
     
+    # Move pericenter to 0
     X -= Rt
     # Convert Energy / Mass to Energy Density in CGS
     Rad *= Den 
