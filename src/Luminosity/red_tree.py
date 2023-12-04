@@ -118,11 +118,15 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
     x_high, y_high, z_high  = spherical_to_cartesian(r_high, theta_selected, phi_selected)
     idx_low = np.zeros(len(tree_index_photo))
     idx_high = np.zeros(len(tree_index_photo))
+    dist = np.zeros(len(tree_index_photo))
     for i in range(len(x_low)):
         _, idx_l = sim_tree.query([x_low[i], y_low[i], z_low[i]])
         _, idx_h = sim_tree.query([x_high[i], y_high[i], z_high[i]])
         idx_low[i] = idx_l
         idx_high[i] = idx_h
+        xyz_low = [X[idx_l], Y[idx_l], Z[idx_l]]
+        xyz_high = [X[idx_h], Y[idx_h], Z[idx_h]]
+        dist[i] = math.dist(xyz_high, xyz_low)
 
     # store data of neighbours
     idx_low = [int(x) for x in idx_low] #necessary to avoid dumb stuff with indexing later
@@ -134,9 +138,10 @@ def find_neighbours(fix, m, tree_index_photo, dist_neigh):
 
     # compute the gradient 
     deltaE = energy_high - energy_low
-    delta_r = r_high - r_low
-    delta_r *= Rsol_to_cm # convert to CGS for the gradient
-    grad_E = deltaE / delta_r
+    # delta_r = r_high - r_low
+    # delta_r *= Rsol_to_cm # convert to CGS for the gradient
+    dist *= Rsol_to_cm
+    grad_E = deltaE / dist
     
     return grad_E, energy_high, T_high, den_high
 
