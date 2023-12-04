@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['figure.figsize'] = [15 , 8]
+plt.rcParams['figure.figsize'] = [10 , 6]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
 plot_curves = True
@@ -81,8 +81,8 @@ if plot_radii_sphere:
     days = np.multiply(spec_radii[0], 40)
     photo_arit = spec_radii[1]
     photo_geom = spec_radii[2]
-    thermr_arit = spec_radii[3]
-    thermr_geom = spec_radii[4]
+    #thermr_arit = spec_radii[3]
+    #thermr_geom = spec_radii[4]
 
     #Elad plot
     plt.plot(elad_time[0], elad_amean[0], c = 'k')

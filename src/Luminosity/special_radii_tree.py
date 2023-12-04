@@ -42,8 +42,8 @@ def select_fix(m):
         snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
     if m == 6:
-        snapshots = [844, 881,] # 925, 950, 980, 1008] 
-        days = [1, 1.1,]# 1.3, 1.4, 1.5, 1.6] 
+        snapshots = [844, 881, 925, 950, 980, 1008] 
+        days = [1, 1.1, 1.3, 1.4, 1.5, 1.6] 
     return snapshots, days
 
 def get_kappa(T: float, rho: float, r_dlogr: float):
@@ -64,23 +64,23 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
     kappar: int.
             The "optical depth" of a cell.
     '''    
-    global hot_counter, nothing_counter, cold_counter, normal_counter
+    # global hot_counter, nothing_counter, cold_counter, normal_counter
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):        
-        nothing_counter += 1
+        # nothing_counter += 1
         return 0
     
     # Stream material, is opaque
     elif T < np.exp(8.666):
         
-        cold_counter += 1
+        # cold_counter += 1
         return 100
     
     # Too hot: Kramers' law for absorption (planck)
     elif T > np.exp(17.876):
         X = 0.7389
         Z = 0.02
-        # kplanck =  1.2e26 * Z * (1 + X) * T**(-3.5) * rho #Kramers' bound-free opacity [cm^2/g]
+        #kplanck =  1.2e26 * Z * (1 + X) * T**(-3.5) * rho #Kramers' bound-free opacity [cm^2/g]
         kplanck = 3.68e22 * (1-Z) * (1 + X) * T**(-3.5) * rho #Kramers' free-free opacity [cm^2/g]
         kplanck *= rho
 
@@ -90,15 +90,18 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
         oppi = kplanck + kscattering
         tau_high = oppi * r_dlogr
         
-        hot_counter += 1
+        # hot_counter += 1
         return tau_high 
+        #return tau_high, tau_high
     
     else:
         # Lookup table
         k = opacity(T, rho,'red', ln = False)
         kappar =  k * r_dlogr
-        normal_counter += 1
+
+        # normal_counter += 1
         return kappar
+        #return kappar, 0 
 
 def calc_photosphere(T, rho, radius, branch_indexes):
     '''
@@ -130,6 +133,7 @@ def calc_photosphere(T, rho, radius, branch_indexes):
     '''
     threshold = 2/3
     kappa = 0
+    # kappa_hot = 0 ####
     kappas = []
     cumulative_kappas = []
     i = -1 # Initialize reverse loop
@@ -138,6 +142,7 @@ def calc_photosphere(T, rho, radius, branch_indexes):
         r_dlogr = radius[i] * dlogr #to integrate in log space
         new_kappa = get_kappa(T[i], rho[i], r_dlogr)
         kappa += new_kappa
+        # kappa_hot += new_kappa_hot ####
         kappas.append(new_kappa)
         cumulative_kappas.append(kappa)
         i -= 1
@@ -145,6 +150,7 @@ def calc_photosphere(T, rho, radius, branch_indexes):
     photo =  radius[i] #i it's negative
     index_ph = i + len(T) 
     branch_index_ph = branch_indexes[i]
+    # print('hot count?', kappa_hot/cumulative_kappas[-1]) ####
 
     return kappas, cumulative_kappas, photo, index_ph, branch_index_ph
 
@@ -339,9 +345,9 @@ def get_thermr(rays_T, rays_den, radii, tree_indexes):
 
 if __name__ == "__main__":
     photosphere = True
-    thermalisation = False
+    thermalisation = True
     
-    plot = True
+    plot = False
     m = 6 
     loadpath = str(m) + '/'
     snapshots, days = select_fix(m)
@@ -351,7 +357,7 @@ if __name__ == "__main__":
     fix_thermr_arit = np.zeros(len(snapshots))
     fix_thermr_geom = np.zeros(len(snapshots))
 
-    for index in range(0,4):#len(snapshots)):
+    for index in range(0,len(snapshots)):
         
         # Bad code to debug
         hot_counter = 0
