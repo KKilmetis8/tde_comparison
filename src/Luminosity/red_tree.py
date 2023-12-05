@@ -52,7 +52,7 @@ def select_fix(m, check = 'fid'):
         if m == 6 and check == 'fid':
             snapshots = np.arange(844, 1008 + 1, step = 1)
         if m == 4 and check == 'fid':
-            snapshots = np.arange(100, 322 + 1)
+            snapshots = np.arange(210, 322 + 1)
         if m == 4 and check == 'S60ComptonHires':
             snapshots = np.arange(210, 271 + 1)
         days = []
