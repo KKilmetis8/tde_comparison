@@ -54,7 +54,7 @@ def select_fix(m, check = 'fid'):
         if m == 4 and check == 'fid':
             snapshots = np.arange(100, 344 + 1)
         if m == 4 and check == 'S60ComptonHiRes':
-            SNAPSHOTS = np.arange(210, 271 + 1)
+            snapshots = np.arange(210, 271 + 1)
     else:
         if m == 4:
             snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
