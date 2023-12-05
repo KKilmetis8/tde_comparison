@@ -26,7 +26,6 @@ c_cgs = 3e10 # [cm/s]
 Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**2
-en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 
 fix = 844
 m = 6
@@ -35,7 +34,7 @@ num = 1000
 def isalice():
     return alice
 
-def ray_maker(fix, m, check):
+def ray_maker(fix, m, check = '/'):
     """ Outputs are in in solar units """
     fix = str(fix)
     Mbh = 10**m 
@@ -51,7 +50,6 @@ def ray_maker(fix, m, check):
         T = np.load(pre + sim + '/snap_'  + fix + '/T_' + fix + '.npy')
         Den = np.load(pre + sim + '/snap_'  + fix + '/Den_' + fix + '.npy')
         Rad = np.load(pre + sim + '/snap_'  +fix + '/Rad_' + fix + '.npy')
-        Vol = np.load(pre + sim + '/snap_' + fix + '/Vol_' + fix + '.npy')
     else:
         # Import
         X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
@@ -64,8 +62,6 @@ def ray_maker(fix, m, check):
     # Move pericenter to 0
     X -= Rt
     # Convert Energy / Mass to Energy Density in CGS
-    Rad *= Den 
-    Rad *= en_den_converter
     Den *= den_converter 
     
     # make a tree
@@ -76,10 +72,10 @@ def ray_maker(fix, m, check):
     # Ensure that the regular grid cells are smaller than simulation cells
     x_start = -15_000 
     x_stop = 800
-    x_num = 800
-    y_start = -1000
-    y_stop = 1000
-    y_num = 500
+    x_num = 1200
+    y_start = -4000
+    y_stop = 4000
+    y_num = 1000
     z_start = -150
     z_stop = 150
     z_num = 10
@@ -109,7 +105,7 @@ if __name__ == '__main__':
     m = 6
     gridded_indexes, gridded_den, gridded_mass, x_radii, y_radii, z_radii = ray_maker(844, m, num)
 #%% Plot
-    plot = False
+    plot = True
     if plot:
         import colorcet
         fig, ax = plt.subplots(1,1)
