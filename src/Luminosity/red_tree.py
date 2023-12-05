@@ -53,6 +53,8 @@ def select_fix(m, check = 'fid'):
             snapshots = np.arange(844, 1008 + 1, step = 1)
         if m == 4 and check == 'fid':
             snapshots = np.arange(100, 344 + 1)
+        if m == 4 and check == 'S60ComptonHiRes':
+            SNAPSHOTS = np.arange(210, 271 + 1)
     else:
         if m == 4:
             snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
@@ -323,7 +325,7 @@ if __name__ == "__main__":
     save = True
     plot = False
     m = 4 # Choose BH
-    check = 'fid' # Choose check
+    check = 'S60ComptonHires' # Choose check S60ComptonHires
     sim = str(m) + '-' + check
     fixes, days = select_fix(m, check)
     lums = []
