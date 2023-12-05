@@ -43,7 +43,7 @@ else:
     if m == 6:
         fixes = ['844', '881', '925']
     if m == 4:
-        fixes = ['844', '881', '925']
+        fixes = ['177', '232', '293', '322']
 
 
 @numba.njit
@@ -59,12 +59,23 @@ def masker(arr, mask):
 
 
 # %%
+# MAIN
 colarr = []
 fixdays = []
+save = True
+plot = False
 
 for fix in fixes:
     if alice:
-        print('not yet here')
+        pre = '/home/s3745597/data1/TDE/'
+        # Import
+        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy') 
+        Y = np.load(pre + sim + '/snap_'  + fix + '/CMy_' + fix + '.npy')
+        Z = np.load(pre + sim + '/snap_'  + fix + '/CMz_' + fix + '.npy')
+        Vx = np.load(pre + sim + '/snap_'  + fix + '/Vx_' + fix + '.npy')
+        Vy = np.load(pre + sim + '/snap_'  +fix + '/Vy_' + fix + '.npy')
+        Vz = np.load(pre + sim + '/snap_'  +fix + '/Vz_' + fix + '.npy')
+        M = np.load(pre + sim + '/snap_'  + fix + '/Mass_' + fix + '.npy')
     else:
         X = np.load(str(m) + '/' + fix + '/CMx_' + fix + '.npy')
         Y = np.load(str(m) + '/' + fix + '/CMy_' + fix + '.npy')
@@ -117,13 +128,27 @@ for fix in fixes:
             sim + fix + '/snap_' + fix + '.h5'), 1)
     t_by_tfb = day  # /t_fall
     fixdays.append(t_by_tfb)
+
+    if save:
+        if alice:
+            pre = '/home/s3745597/data1/TDE/'
+            np.savetxt(pre + 'tde_comparison/data/ecc'+ str(m) + '.txt', colarr)
+        else:
+             with open('data/ecc'+ str(m) + '.txt', 'a') as file:
+                for i in range(len(colarr)):
+                    file.write('# snap' + ' '.join(map(str, fixes[i])) + '\n')
+                    file.write('# Eccentricity \n') 
+                    file.write(' '.join(map(str, colarr[i])) + '\n')
+                file.close() 
 # %% Plotting
-img = plt.pcolormesh(radii, fixdays, colarr,
-                     cmap='jet', vmin=0, vmax=1)
-# plt.xlim(radii[0]-0.8 , radii[-12])
-cb = plt.colorbar(img)
-cb.set_label('Eccentricity')
-plt.xscale('log')
-plt.ylabel('Time [t/t$_{fb}$]', fontsize=14)
-plt.xlabel(r'Radius [$R_{\odot}$]', fontsize=14)
-plt.title('Eccentricity as a function of time and radius', fontsize=17)
+if plot:
+    img = plt.pcolormesh(radii, fixdays, colarr,
+                        cmap='jet', vmin=0, vmax=1)
+    # plt.xlim(radii[0]-0.8 , radii[-12])
+    cb = plt.colorbar(img)
+    cb.set_label('Eccentricity')
+    plt.xscale('log')
+    plt.ylabel('Time [t/t$_{fb}$]', fontsize=14)
+    plt.xlabel(r'Radius [$R_{\odot}$]', fontsize=14)
+    plt.title('Eccentricity as a function of time and radius', fontsize=17)
+    plt.show()
