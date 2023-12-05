@@ -291,7 +291,8 @@ def doer_of_thing(fix, m, check, num = 1000):
     # Find the cell outside the photosphere and save its quantities
     # grad_E, energy_high, T_high, den_high  = find_neighbours(rays_T, rays_den, rays, radii, 
     #                                                          rays_index_photo, dist_neigh)
-    grad_E, magnitude, energy_high, T_high, den_high  = find_neighbours(fix, m, tree_index_photo, dist_neigh)
+    grad_E, magnitude, energy_high, T_high, den_high  = find_neighbours(fix, m, check,
+                                                                        tree_index_photo, dist_neigh)
 
     # Calculate Flux and see how it looks
     flux = flux_calculator(grad_E, magnitude, energy_high, 
