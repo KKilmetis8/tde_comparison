@@ -53,7 +53,7 @@ def select_fix(m, check = 'fid'):
             snapshots = np.arange(844, 1008 + 1, step = 1)
         if m == 4 and check == 'fid':
             snapshots = np.arange(100, 344 + 1)
-        if m == 4 and check == 'S60ComptonHiRes':
+        if m == 4 and check == 'S60ComptonHires':
             snapshots = np.arange(210, 271 + 1)
     else:
         if m == 4:
