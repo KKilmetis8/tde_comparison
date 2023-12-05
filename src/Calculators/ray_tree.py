@@ -36,22 +36,23 @@ num = 1000
 def isalice():
     return alice
 
-def ray_maker(fix, m, num = 1000):
+def ray_maker(fix, m, check, num = 1000):
     """ Outputs are in CGS with exception of ray_vol (in solar units) """
     fix = str(fix)
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
-    
+    sim = str(m) + '-' + check
+
     if alice:
         pre = '/home/s3745597/data1/TDE/'
         # Import
-        X = np.load(pre + str(m) + '/snap_'  + fix + '/CMx_' + fix + '.npy')
-        Y = np.load(pre + str(m) + '/snap_'  + fix + '/CMy_' + fix + '.npy')
-        Z = np.load(pre + str(m) + '/snap_'  + fix + '/CMz_' + fix + '.npy')
-        Vol = np.load(pre + str(m) + '/snap_'  + fix + '/Vol_' + fix + '.npy')
-        T = np.load(pre + str(m) + '/snap_'  + fix + '/T_' + fix + '.npy')
-        Den = np.load(pre + str(m) + '/snap_'  + fix + '/Den_' + fix + '.npy')
-        Rad = np.load(pre + str(m) + '/snap_'  +fix + '/Rad_' + fix + '.npy')
+        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy') - Rt
+        Y = np.load(pre + sim + '/snap_'  + fix + '/CMy_' + fix + '.npy')
+        Z = np.load(pre + sim + '/snap_'  + fix + '/CMz_' + fix + '.npy')
+        T = np.load(pre + sim + '/snap_'  + fix + '/T_' + fix + '.npy')
+        Den = np.load(pre + sim + '/snap_'  + fix + '/Den_' + fix + '.npy')
+        Rad = np.load(pre + sim + '/snap_'  +fix + '/Rad_' + fix + '.npy')
+        Vol = np.load(pre + sim + '/snap_' + fix + '/Vol_' + fix + '.npy')
     else:
         # Import
         X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
