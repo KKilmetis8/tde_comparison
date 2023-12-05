@@ -28,7 +28,6 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
-
 fix = 844
 m = 6
 num = 1000
@@ -41,12 +40,13 @@ def ray_maker(fix, m, check, num = 1000):
     fix = str(fix)
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
+    apocenter = 2 * Rt * Mbh**(1/3)
     sim = str(m) + '-' + check
 
     if alice:
         pre = '/home/s3745597/data1/TDE/'
         # Import
-        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy') - Rt
+        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy')
         Y = np.load(pre + sim + '/snap_'  + fix + '/CMy_' + fix + '.npy')
         Z = np.load(pre + sim + '/snap_'  + fix + '/CMz_' + fix + '.npy')
         T = np.load(pre + sim + '/snap_'  + fix + '/T_' + fix + '.npy')
@@ -76,8 +76,8 @@ def ray_maker(fix, m, check, num = 1000):
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = 0.01 #Rt #Solar radii
-    stop = 20_000 
+    start = 0.1 * Rt #Rt #Solar radii
+    stop = 2 * apocenter
     log_start = np.log10(start)
     log_stop = np.log10(stop)
     log_radii = np.linspace(log_start, log_stop, num) #simulator units
