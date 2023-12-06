@@ -12,9 +12,9 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 import matplotlib.pyplot as plt
 import numba
-from Calculators.THREE_tree_caster import grid_maker
+from src.Calculators.THREE_tree_caster import grid_maker
 
-alice = True 
+alice = False 
 #%% Constants & Converter
 G = 6.6743e-11 # SI
 Msol = 1.98847e30 # kg
@@ -62,13 +62,13 @@ def projector(gridded_den, gridded_mass, x_radii, y_radii, z_radii):
 if __name__ == '__main__':
     m = 4
     save = True
-    plot = False
+    plot = True
     check = 'fid'
     snapshots, days = select_fix(m)
 
     for snap in snapshots:
         _, gridded_den, gridded_mass, x_radii, y_radii, z_radii = grid_maker(snap, m, check,
-                                                                         100, 100)
+                                                                         200, 200)
         flat_den = projector(gridded_den, gridded_mass, x_radii, y_radii, z_radii)
 
         if save:
@@ -77,7 +77,7 @@ if __name__ == '__main__':
                 sim = str(m) + '-' + check
                 np.savetxt(pre + 'tde_comparison/data/denproj'+ sim + str(snap) + '.txt', flat_den)
             else:
-                np.savetxt('data/denproj'+ str(m) + '_' + + str(snap) + '.txt', flat_den) 
+                np.savetxt('data/denproj'+ str(m) + '_' + str(snap) + '.txt', flat_den) 
 
 #%% Plot
         if plot:
@@ -98,7 +98,7 @@ if __name__ == '__main__':
             ax.set_xlabel(r' X [$R_\odot$]', fontsize = 14)
             ax.set_ylabel(r' Y [R$_\odot$]', fontsize = 14)
             img = ax.pcolormesh(x_radii, y_radii, den_plot.T, cmap = 'jet',
-                                vmin = 0, vmax = 5)
+                                vmin = 0, vmax = 7)
             cb = plt.colorbar(img)
             cb.set_label(r'Density [g/cm$^2$]', fontsize = 14)
             ax.set_title('XY Projection', fontsize = 16)

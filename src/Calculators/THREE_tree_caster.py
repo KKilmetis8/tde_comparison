@@ -30,6 +30,7 @@ def grid_maker(fix, m, check , x_num, y_num, z_num = 1000):
     fix = str(fix)
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
+    apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
     sim = str(m) + '-' + check
 
     if alice:
@@ -58,12 +59,12 @@ def grid_maker(fix, m, check , x_num, y_num, z_num = 1000):
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    x_start = -15_000
-    x_stop = 140
+    x_start = -3 * apocenter
+    x_stop = 5 * Rt
     y_start = -4000
     y_stop = 4000
-    z_start = -100
-    z_stop = 100
+    z_start = -2 *Rt
+    z_stop = 2*Rt
     # r_radii = np.logspace(np.log10(x_start), np.log10(x_stop), x_num) #simulator units
     # thetas = np.logspace(np.log10(y_start), np.log10(y_stop), y_num) #simulator units
     # phis = np.logspace(np.log10(z_start), np.log10(z_stop), z_num) #simulator units
