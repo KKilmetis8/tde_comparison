@@ -27,7 +27,7 @@ Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 
 
-def grid_maker(fix, m, check , x_num, y_num, z_num = 1000):
+def grid_maker(fix, m, check , x_num, y_num, z_num = 100):
     """ Outputs are in in solar units """
     fix = str(fix)
     Mbh = 10**m 
@@ -61,9 +61,9 @@ def grid_maker(fix, m, check , x_num, y_num, z_num = 1000):
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    x_start = -2.5 * apocenter
-    x_stop = 7 * Rt
-    y_start = -2 * apocenter
+    x_start = - apocenter
+    x_stop = 10 * Rt
+    y_start = - apocenter
     y_stop = apocenter
     z_start = -2 *Rt
     z_stop = 2*Rt

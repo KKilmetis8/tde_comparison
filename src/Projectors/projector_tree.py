@@ -6,11 +6,12 @@ Project quantities.
 @author: paola
 
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
+
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 
-import sys
-sys.path.append('/Users/paolamartire/tde_comparison')
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -38,7 +39,7 @@ def select_fix(m, check = 'fid'):
         days = []
     else:
         if m == 4:
-            snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
+            snapshots = [233, 322] #, 254, 263, 277 , 293, 308, 322]
             days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
         if m == 6:
             snapshots = [844, 881, 925, 950]# 1008] 
@@ -77,8 +78,13 @@ if __name__ == '__main__':
                 pre = '/home/s3745597/data1/TDE/'
                 sim = str(m) + '-' + check
                 np.savetxt(pre + 'tde_comparison/data/denproj'+ sim + str(snap) + '.txt', flat_den)
+                np.savetxt(pre + 'tde_comparison/data/xarray'+ sim + '.txt', x_radii)
+                np.savetxt(pre + 'tde_comparison/data/yarray'+ sim + '.txt', y_radii)
+
             else:
                 np.savetxt('data/denproj'+ str(m) + '_' + str(snap) + '.txt', flat_den) 
+                np.savetxt('data/xarray'+ str(m) + '.txt', x_radii) 
+                np.savetxt('data/yarray'+ str(m) + '.txt', y_radii) 
 
 #%% Plot
         if plot:
