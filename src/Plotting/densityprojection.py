@@ -42,7 +42,7 @@ if m ==  4 and check == '-S60ComptonHires':
             1.0225, ]
 
 for snap, day in zip(snapshots, days):
-    if check == '-fid'
+    if check == '-fid':
         pre = 'data/den4-fid'
     if check == '-S60ComptonHires':
         pre = 'data/den4-chr/'

@@ -36,6 +36,14 @@ plt.plot(days6_before, lum6_before, c = 'tab:red')
 plt.plot(red6[0], red6[1], c = 'tab:red', label = '6')
 plt.plot(days4, red4, c = 'g', label = '4')
 plt.plot(days4_CHR, red4_CHR, c = 'tab:green', label = '4 - Compton HiRes')
+
+Ledd4 = 1.26e38 * 1e4
+Ledd6 = 1.26e38 * 1e6
+plt.axhline(Ledd4, c = 'k', linestyle = 'dotted')
+plt.axhline(Ledd6, c = 'k', linestyle = 'dotted')
+plt.text(0.45, Ledd4 * 1.2, 'L$_{edd}$ $10^4 M_{\odot}$', fontsize = 16)
+plt.text(0.45, Ledd6 * 1.2, 'L$_{edd}$ $10^6 M_{\odot}$', fontsize = 16)
+
 plt.yscale('log')
 plt.xlabel('Time [t/t$_{FB}$]')
 plt.ylabel('Luminosity [erg/s]')
