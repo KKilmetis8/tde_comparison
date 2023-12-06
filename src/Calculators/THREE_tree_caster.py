@@ -12,7 +12,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
-alice = False
+alice = True
 #%% Constants & Converter
 G = 6.6743e-11 # SI
 Msol = 1.98847e30 # kg
