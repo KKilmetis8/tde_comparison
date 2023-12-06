@@ -86,7 +86,7 @@ def grid_maker(fix, m, check , x_num, y_num, z_num = 1000):
                 # Store
                 gridded_indexes[i, j, k] = idx
                 gridded_den[i, j, k] = Den[idx]
-                gridded_mass[i,j, k] = Mass[idx]
+                # gridded_mass[i,j, k] = Mass[idx]
         
         # Progress Check
         progress = int(100 * i/len(x_radii))

@@ -54,7 +54,7 @@ def projector(gridded_den, gridded_mass, x_radii, y_radii, z_radii):
             mass_zsum = 0
             for k in range(len(z_radii) - 1): # NOTE SKIPPING LAST Z PLANE
                 dz = (z_radii[k+1] - z_radii[k]) * Rsol_to_cm
-                mass_zsum += gridded_mass[i,j,k]
+                # mass_zsum += gridded_mass[i,j,k]
                 flat_den[i,j] += gridded_den[i,j,k] * dz #* gridded_mass[i,j,k]
             #flat_den[i,j] = np.divide(flat_den[i,j], mass_zsum)
     return flat_den
