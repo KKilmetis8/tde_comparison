@@ -131,9 +131,8 @@ for fix in fixes:
     colarr.append(ecc_cast)
 
     if alice:
-        pre = '/home/s3745597/data1/TDE/'
         day = np.round(days_since_distruption( pre +
-            sim + fix + '/snap_' + fix + '.h5'), 1)
+            sim + '/snap_' + fix + '/snap_' + fix + '.h5'), 1)
         t_by_tfb = day / t_fall
         fixdays.append(t_by_tfb)
     else:
