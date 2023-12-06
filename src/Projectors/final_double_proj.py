@@ -23,12 +23,12 @@ def maker(m, pixel_num, fix, plane, thing):
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
     t_fall = 40 * (Mbh/1e6)**(0.5) # days EMR+20 p13
     apocenter = 2 * Rt * Mbh**(1/3)
-
-    days = np.round( days_since_distruption(fix+'/snap_'+fix+'.h5') / t_fall, 1)
-    Mass = np.load(fix + '/Mass_' + fix + '.npy')
+    pre = str(m) + '/' + fix
+    # days = np.round( days_since_distruption(pre+'/snap_'+fix+'.h5') / t_fall, 1)
+    Mass = np.load(pre + '/Mass_' + fix + '.npy')
 
     if thing == 'Den':
-        Den = np.load(fix + '/Den_' + fix + '.npy')
+        Den = np.load(pre + '/Den_' + fix + '.npy')
         # Need to convert Msol/Rsol^2 to g/cm
         Msol_to_g = 1.989e33
         Rsol_to_cm = 6.957e10
@@ -36,12 +36,12 @@ def maker(m, pixel_num, fix, plane, thing):
         Den *=  converter
     
     if thing == 'T':
-        Den = np.load(fix + '/T_' + fix + '.npy')
+        Den = np.load(pre + '/T_' + fix + '.npy')
 
     if plane == 'XY':
         # CM Position Data
-        X = np.load(fix + '/CMx_' + fix + '.npy')
-        Y = np.load(fix + '/CMy_' + fix + '.npy')
+        X = np.load(pre + '/CMx_' + fix + '.npy')
+        Y = np.load(pre + '/CMy_' + fix + '.npy')
         if m == 6:
             x_start = -apocenter
             x_stop = 0.2 * apocenter
@@ -63,8 +63,8 @@ def maker(m, pixel_num, fix, plane, thing):
             ys = np.linspace(y_start, y_stop, num = y_num)
             
     if plane == 'XZ':
-        X = np.load(fix + '/CMx_' + fix + '.npy')
-        Y = np.load(fix + '/CMz_' + fix + '.npy')
+        X = np.load(pre + '/CMx_' + fix + '.npy')
+        Y = np.load(pre + '/CMz_' + fix + '.npy')
         if m == 4:
             x_start = -apocenter
             x_stop = 250
@@ -85,8 +85,8 @@ def maker(m, pixel_num, fix, plane, thing):
             ys = np.linspace(y_start, y_stop, num = y_num)
         
     if plane == 'YZ':
-        X = np.load(fix + '/CMy_' + fix + '.npy')
-        Y = np.load(fix + '/CMz_' + fix + '.npy')
+        X = np.load(pre + '/CMy_' + fix + '.npy')
+        Y = np.load(pre + '/CMz_' + fix + '.npy')
         if m == 4:
             x_start = -300
             x_stop = 200
@@ -108,9 +108,9 @@ def maker(m, pixel_num, fix, plane, thing):
     
     # EVOKE
     if m == 6 and thing != 'T':
-        den_cast = THE_CASTER(xs, X, ys, Y, Den)
+        den_cast = THE_CASTER(xs, X, ys, Y, Den) #, weights = Mass)
     if m ==  4 or thing == 'T':
-        den_cast = THE_CASTER(xs, X, ys, Y, Den, weights = Mass, avg = True)
+        den_cast = THE_CASTER(xs, X, ys, Y, Den , weights = Mass)
     
     # Remove bullshit and fix things
     den_cast = np.nan_to_num(den_cast.T)
@@ -125,39 +125,42 @@ def maker(m, pixel_num, fix, plane, thing):
         den_cast[den_cast<1] = 0
         den_cast[den_cast>8] = 8
     
-    return xs/apocenter, ys/apocenter, den_cast, days
+    return xs/apocenter, ys/apocenter, den_cast# , days
 
 #%%
 plane = 'XY'
 thing = 'Den' # Den or T
-when = 'last' # early mid late
-if when == 'late':
-    fixes4 = ['263']
-    fixes6 = ['925']
+when = 'last' # early mid late last
 if when == 'early':
-    fixes4 = ['177']
+    fixes4 = ['172']
     fixes6 = ['683']
+    title_txt = 'Time: 0.5 t/t$_{FB}$'
 if when == 'mid':
     fixes4 = ['232']
     fixes6 = ['844']
+    title_txt = 'Time: 1 t/t$_{FB}$'
+if when == 'late':
+    fixes4 = ['282']
+    fixes6 = ['980']
+    title_txt = 'Time: 1.5 t/t$_{FB}$'
 if when == 'last':
-    fixes4 = ['263']
+    fixes4 = ['322']
     fixes6 = ['1008']
+    title_txt = 'Time: Last available t/t$_{FB}$'
 
 
 for i in range(len(fixes4)):
-    x4, y4, d4, t4 = maker(4, 500, fixes4[i], plane, thing)
-    x6, y6, d6, t6 = maker(6, 1_000, fixes6[i], plane, thing)
+    x4, y4, d4 = maker(4, 1000, fixes4[i], plane, thing)
+    # x6, y6, d6 = maker(6, 1_000, fixes6[i], plane, thing)
     # Plotting
-    fig, ax = plt.subplots(2, 1, num = 1, clear = True, tight_layout = True)
-    
+    fig, ax = plt.subplots(1, 1, num = 1, clear = True, tight_layout = True)
     # Image making
-    img1 = ax[0].pcolormesh(x6, y6, d6, cmap='cet_fire', vmin = 0, vmax = 6)
+    # img1 = ax[0].pcolormesh(x6, y6, d6, cmap='cet_fire', vmin = 0, vmax = 6)
     # plt.colorbar(img1)
-    img2 = ax[1].pcolormesh(x4, y4, d4, cmap='cet_fire', vmin = 0, vmax = 6)
+    img2 = ax.pcolormesh(x4, y4, d4, cmap='cet_fire', vmin = 0, vmax = 6)
     
     cax = fig.add_axes([1, 0.045, 0.035, 0.88])
-    fig.colorbar(img1, cax=cax)
+    fig.colorbar(img2, cax=cax)
     
     # Days text
     # txt_x = 0.86
@@ -180,32 +183,32 @@ for i in range(len(fixes4)):
     
     # Axis labels
     fig.text(0.5, -0.01, plane[0] + r' [x/R$_a$]', ha='center', fontsize = 14)
-    fig.text(-0.02, 0.5, plane[1] + r' [R$_\odot$]', va='center', rotation='vertical', fontsize = 14)
+    fig.text(-0.02, 0.5, plane[1] + r' [y/R$_a$]', va='center', rotation='vertical', fontsize = 14)
     
     cbx = 1.08
     cby = 0.35
     # Titles
     if thing == 'Den':
-        fig.suptitle(plane + ' Density Projection', fontsize = 20)
+        fig.suptitle(plane + ' Density Projection - ' + title_txt, fontsize = 20)
         fig.text(cbx, cby, r'Density $\log_{10}(\rho)$ [g/cm$^2$]', fontsize = 15,
         		    color='k', fontfamily = 'monospace', rotation = 270)
     if thing == 'T':
-        fig.suptitle(plane + ' Temperature Projection', fontsize = 20)
+        fig.suptitle(plane + ' Temperature Projection - ' + title_txt, fontsize = 20)
         fig.text(cbx, cby, r'Temperature $\log_{10}(T)$ [K]', fontsize = 15,
         		    color='k', fontfamily = 'monospace', rotation = 270)
     
     txt_x = 0.01
     txt_y = 0.9 
-    ax[0].text(txt_x, txt_y, '$10^6 M_\odot$', 
-            fontsize = 20,
-            fontfamily = 'bold',
-            color = 'white',
-            transform=ax[0].transAxes)
-    ax[1].text(txt_x, txt_y, '$10^4 M_\odot$', 
+    # ax[0].text(txt_x, txt_y, '$10^6 M_\odot$', 
+    #         fontsize = 20,
+    #         fontfamily = 'bold',
+    #         color = 'white',
+    #         transform=ax[0].transAxes)
+    ax.text(txt_x, txt_y, '$10^4 M_\odot$', 
             fontsize = 20,
             fontfamily = 'bold',
             color = 'white',
             transform=ax[1].transAxes)
-
+    
 from src.Utilities.finished import finished
 finished()
