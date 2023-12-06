@@ -38,12 +38,16 @@ apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
 if alice:
     check = ''
     sim = str(m) + '-' + check
+    if m == 6:
+        fixes = ['683', '844', '979', '1008'] #t/t_fb = 0.5, 1, 1.5, 1.6
+    if m == 4:
+        fixes = ['177', '232', '293', '322'] #t/t_fb = 0.5, 1, 1.56, 1.8
 else:
     sim = str(m) + '/'
     if m == 6:
-        fixes = ['844', '881', '925']
+        fixes = ['844', '881', '925'] 
     if m == 4:
-        fixes = ['177', '232', '293', '322']
+        fixes = ['233', '293', '322']
 
 
 @numba.njit
@@ -122,7 +126,7 @@ for fix in fixes:
     colarr.append(ecc_cast)
 
     if alice:
-        print('under construction')
+        day = []
     else:
         day = np.round(days_since_distruption(
             sim + fix + '/snap_' + fix + '.h5'), 1)
