@@ -18,7 +18,7 @@ plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [8.0, 4.0]
 
 alice = True
-method = 'caster'  # tree or caster
+method = 'tree'  # tree or caster
 m = 4
 
 # Constants

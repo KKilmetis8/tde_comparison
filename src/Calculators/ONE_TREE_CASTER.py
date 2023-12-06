@@ -21,7 +21,7 @@ import numpy as np
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
 AEK = '#F1C410'
-alice = False
+alice = True
 #%% Constants & Converter
 NSIDE = 4
 G = 6.6743e-11 # SI

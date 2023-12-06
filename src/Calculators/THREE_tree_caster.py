@@ -102,7 +102,7 @@ if __name__ == '__main__':
     check = 'fid'
     gridded_indexes, gridded_den, gridded_mass, x_radii, y_radii, z_radii = grid_maker(844, m, check, 100, 100)
 #%% Plot
-    plot = True
+    plot = False
     if plot:
         import colorcet
         fig, ax = plt.subplots(1,1)

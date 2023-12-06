@@ -63,6 +63,7 @@ def ta_calc(ecc, position, velocity):
     return ta
 
 if __name__ == '__main__':
+    plot = False
     # Load data
     fix = '820'
     X = np.load(fix + '/CMx_' + fix + '.npy')
@@ -83,10 +84,11 @@ if __name__ == '__main__':
     true_anomaly = ta_calc(e_vec, position, velocity)
     
     #%%
-    THETA = np.arctan(Y/X)
-    plt.plot(THETA[::1_000],
-             's', markersize=1, color = 'teal', label = 'polar')
-    plt.plot(true_anomaly[::1_000],
-             'o' ,markersize=1, color='orchid', label = 'from ecc')
-    plt.legend()
-    plt.grid()
+    if plot:
+        THETA = np.arctan(Y/X)
+        plt.plot(THETA[::1_000],
+                's', markersize=1, color = 'teal', label = 'polar')
+        plt.plot(true_anomaly[::1_000],
+                'o' ,markersize=1, color='orchid', label = 'from ecc')
+        plt.legend()
+        plt.grid()
