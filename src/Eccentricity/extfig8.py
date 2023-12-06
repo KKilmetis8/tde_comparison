@@ -75,6 +75,7 @@ fixdays = []
 
 for fix in fixes:
     if alice:
+        fix = str(fix)
         pre = '/home/s3745597/data1/TDE/'
         # Import
         X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy')
