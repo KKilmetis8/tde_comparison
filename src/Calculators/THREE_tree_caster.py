@@ -59,10 +59,10 @@ def grid_maker(fix, m, check , x_num, y_num, z_num = 1000):
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    x_start = -3 * apocenter
-    x_stop = 5 * Rt
-    y_start = -4000
-    y_stop = 4000
+    x_start = -2.5 * apocenter
+    x_stop = 7 * Rt
+    y_start = -2 * apocenter
+    y_stop = apocenter
     z_start = -2 *Rt
     z_stop = 2*Rt
     # r_radii = np.logspace(np.log10(x_start), np.log10(x_stop), x_num) #simulator units

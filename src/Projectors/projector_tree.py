@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt
 import numba
 from src.Calculators.THREE_tree_caster import grid_maker
 
-alice = False 
+alice = True 
 #%% Constants & Converter
 G = 6.6743e-11 # SI
 Msol = 1.98847e30 # kg
@@ -62,7 +62,7 @@ def projector(gridded_den, gridded_mass, x_radii, y_radii, z_radii):
 if __name__ == '__main__':
     m = 4
     save = True
-    plot = True
+    plot = False
     check = 'fid'
     snapshots, days = select_fix(m)
 

@@ -73,7 +73,7 @@ for fix in fixes:
     if alice:
         pre = '/home/s3745597/data1/TDE/'
         # Import
-        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy') 
+        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy')
         Y = np.load(pre + sim + '/snap_'  + fix + '/CMy_' + fix + '.npy')
         Z = np.load(pre + sim + '/snap_'  + fix + '/CMz_' + fix + '.npy')
         Vx = np.load(pre + sim + '/snap_'  + fix + '/Vx_' + fix + '.npy')
@@ -130,8 +130,8 @@ for fix in fixes:
     else:
         day = np.round(days_since_distruption(
             sim + fix + '/snap_' + fix + '.h5'), 1)
-    t_by_tfb = day  # /t_fall
-    fixdays.append(t_by_tfb)
+        t_by_tfb = day  # /t_fall
+        fixdays.append(t_by_tfb)
 
     if save:
         if alice:
