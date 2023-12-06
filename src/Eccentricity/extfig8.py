@@ -17,9 +17,9 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [8.0, 4.0]
 
-alice = False
+alice = True
 method = 'caster'  # tree or caster
-m = 6
+m = 4
 
 # Constants
 G = 6.6743e-11  # SI

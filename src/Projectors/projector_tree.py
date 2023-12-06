@@ -31,9 +31,9 @@ def select_fix(m, check = 'fid'):
         if m == 6 and check == 'fid':
             snapshots = np.arange(844, 1008 + 1, step = 1)
         if m == 4 and check == 'fid':
-            snapshots = np.arange(100, 322 + 1)
+            snapshots = [177, 178, 179, 180, 181, 231, 232, 233, 234, 235, 285, 286, 287, 288, 289, 318, 319, 320, 321, 322] #np.arange(100, 322 + 1)
         if m == 4 and check == 'S60ComptonHires':
-            snapshots = np.arange(210, 271 + 1)
+            snapshots = [210, 211, 212, 213, 214, 234, 235, 236, 237, 238, 269, 270, 271] #np.arange(210, 271 + 1)
         days = []
     else:
         if m == 4:
@@ -60,14 +60,14 @@ def projector(gridded_den, gridded_mass, x_radii, y_radii, z_radii):
     return flat_den
  
 if __name__ == '__main__':
-    m = 6
+    m = 4
     save = True
     plot = False
     check = 'fid'
     snapshots, days = select_fix(m)
 
     for snap in snapshots:
-        _, gridded_den, gridded_mass, x_radii, y_radii, z_radii = grid_maker(844, m, check,
+        _, gridded_den, gridded_mass, x_radii, y_radii, z_radii = grid_maker(snap, m, check,
                                                                          100, 100)
         flat_den = projector(gridded_den, gridded_mass, x_radii, y_radii, z_radii)
 
@@ -80,27 +80,27 @@ if __name__ == '__main__':
                 np.savetxt('data/denproj'+ str(m) + '_' + + str(snap) + '.txt', flat_den) 
 
 #%% Plot
-    if plot:
-        import colorcet
-        fig, ax = plt.subplots(1,1)
-        plt.rcParams['text.usetex'] = True
-        plt.rcParams['figure.dpi'] = 300
-        plt.rcParams['font.family'] = 'Times New Roman'
-        plt.rcParams['figure.figsize'] = [6, 4]
-        plt.rcParams['axes.facecolor']= 	'whitesmoke'
-        
-        den_plot = np.nan_to_num(flat_den, nan = -1, neginf = -1)
-        den_plot = np.log10(den_plot)
-        den_plot = np.nan_to_num(den_plot, neginf= 0)
-  
-        # ax.set_xlim(-15_000, 2000)
-        # ax.set_ylim(-4_000, 4000)
-        ax.set_xlabel(r' X [$R_\odot$]', fontsize = 14)
-        ax.set_ylabel(r' Y [R$_\odot$]', fontsize = 14)
-        img = ax.pcolormesh(x_radii, y_radii, den_plot.T, cmap = 'jet',
-                            vmin = 0, vmax = 5)
-        cb = plt.colorbar(img)
-        cb.set_label(r'Density [g/cm$^2$]', fontsize = 14)
-        ax.set_title('XY Projection', fontsize = 16)
-        plt.show()
+        if plot:
+            import colorcet
+            fig, ax = plt.subplots(1,1)
+            plt.rcParams['text.usetex'] = True
+            plt.rcParams['figure.dpi'] = 300
+            plt.rcParams['font.family'] = 'Times New Roman'
+            plt.rcParams['figure.figsize'] = [6, 4]
+            plt.rcParams['axes.facecolor']= 	'whitesmoke'
+            
+            den_plot = np.nan_to_num(flat_den, nan = -1, neginf = -1)
+            den_plot = np.log10(den_plot)
+            den_plot = np.nan_to_num(den_plot, neginf= 0)
+    
+            # ax.set_xlim(-15_000, 2000)
+            # ax.set_ylim(-4_000, 4000)
+            ax.set_xlabel(r' X [$R_\odot$]', fontsize = 14)
+            ax.set_ylabel(r' Y [R$_\odot$]', fontsize = 14)
+            img = ax.pcolormesh(x_radii, y_radii, den_plot.T, cmap = 'jet',
+                                vmin = 0, vmax = 5)
+            cb = plt.colorbar(img)
+            cb.set_label(r'Density [g/cm$^2$]', fontsize = 14)
+            ax.set_title('XY Projection', fontsize = 16)
+            plt.show()
     
