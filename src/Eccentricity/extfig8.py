@@ -10,7 +10,7 @@ alice, plot = isalice()
 
 # Choose Simulation
 save = True
-m = 6
+m = 4
 method = 'caster'
 check = 'fid'
 
@@ -22,7 +22,6 @@ from src.Eccentricity.eccentricity import e_calc
 import numba
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.colors as colors
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [8.0, 4.0]
@@ -45,8 +44,10 @@ if alice:
     sim = str(m) + '-' + check
     if m == 6:
         fixes = ['683', '844', '979', '1008'] #t/t_fb = 0.5, 1, 1.5, 1.6
-    if m == 4:
-        fixes = ['177', '232', '293', '322'] #t/t_fb = 0.5, 1, 1.56, 1.8
+    if m == 4 and check == 'fid':
+        fixes = np.arange(210, 322+1) #t/t_fb = 0.5, 1, 1.56, 1.8
+    if m == 4 and check == 'S60ComptonHires':
+        fixes = np.arange(210, 278+1)
 else:
     sim = str(m) + '/'
     if m == 6:
@@ -129,9 +130,10 @@ for fix in fixes:
     colarr.append(ecc_cast)
 
     if alice:
-        day = np.round(days_since_distruption(
+        pre = '/home/s3745597/data1/TDE/'
+        day = np.round(days_since_distruption( pre +
             sim + fix + '/snap_' + fix + '.h5'), 1)
-        t_by_tfb = day  # /t_fall
+        t_by_tfb = day / t_fall
         fixdays.append(t_by_tfb)
     else:
         day = np.round(days_since_distruption(
@@ -141,8 +143,8 @@ for fix in fixes:
 
     if save:
         if alice:
-            pre = '/home/s3745597/data1/TDE/'
             np.savetxt(pre + 'tde_comparison/data/ecc'+ str(m) + '.txt', colarr)
+            np.savetxt(pre + 'tde_comparison/data/eccdays'+ str(m) + '.txt', fixdays)
         else:
              with open('data/ecc'+ str(m) + '.txt', 'a') as file:
                 for i in range(len(colarr)):
