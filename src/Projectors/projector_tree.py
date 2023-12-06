@@ -33,9 +33,22 @@ def select_fix(m, check = 'fid'):
         if m == 6 and check == 'fid':
             snapshots = np.arange(844, 1008 + 1, step = 1)
         if m == 4 and check == 'fid':
-            snapshots = [177, 178, 179, 180, 181, 231, 232, 233, 234, 235, 285, 286, 287, 288, 289, 318, 319, 320, 321, 322] #np.arange(100, 322 + 1)
+            snapshots1 = np.arange(265, 276)
+            snapshots2 = np.arange(226, 237)
+            snapshots3 = np.arange(208, 218)
+            snapshots = np.concatenate((snapshots1, snapshots2, snapshots3))
+            # snapshots = [177, 178, 179, 180, 181, 
+            #              231, 232, 233, 234, 235, 
+            #              285, 286, 287, 288, 289, 
+            #              318, 319, 320, 321, 322] #np.arange(100, 322 + 1)
         if m == 4 and check == 'S60ComptonHires':
-            snapshots = [210, 211, 212, 213, 214, 234, 235, 236, 237, 238, 269, 270, 271] #np.arange(210, 271 + 1)
+            snapshots1 = np.arange(268, 278)
+            snapshots2 = np.arange(230, 240)
+            snapshots3 = np.arange(210, 220)
+            snapshots = np.concatenate((snapshots1, snapshots2, snapshots3))
+            # snapshots = [210, 211, 212, 213, 214, 
+            #              234, 235, 236, 237, 238,
+            #              269, 270, 271] #np.arange(210, 271 + 1)
         days = []
     else:
         if m == 4:

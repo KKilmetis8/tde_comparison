@@ -34,9 +34,18 @@ if m == 4 and check == '-fid':
             0.995, 1.005, 1.0125, 1.0225, 1.0325,
             1.495, 1.5025, 1.5125, 1.5225, 1.53,
             1.8, 1.81, 1.82, 1.8275, 1.8375]
+if m ==  4 and check == '-S60ComptonHires':
+    snapshots = [210, 211, 212, 213, 214, 
+                 234, 235, 236, 237, 238, 
+                 269, 270, 271] #np.arange(210, 271 + 1)
+    days = [0.7825, 0.79, 0.8, 0.81, 0.8175,
+            1.0225, ]
 
 for snap, day in zip(snapshots, days):
-    pre = 'data/den4-fid/'
+    if check == '-fid'
+        pre = 'data/den4-fid'
+    if check == '-S60ComptonHires':
+        pre = 'data/den4-chr/'
     data = np.loadtxt(pre + 'denproj'+ str(m) + check + str(snap) +'.txt')
     x_radii = np.loadtxt(pre + 'xarray'+ str(m) + check + '.txt') #simulator units
     y_radii = np.loadtxt(pre + 'yarray'+ str(m) + check + '.txt') #simulator units
