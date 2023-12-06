@@ -45,7 +45,7 @@ if alice:
     if m == 6:
         fixes = ['683', '844', '979', '1008'] #t/t_fb = 0.5, 1, 1.5, 1.6
     if m == 4 and check == 'fid':
-        fixes = np.arange(210, 322+1) #t/t_fb = 0.5, 1, 1.56, 1.8
+        fixes = np.arange(197, 322+1) #t/t_fb = 0.5, 1, 1.56, 1.8
     if m == 4 and check == 'S60ComptonHires':
         fixes = np.arange(210, 278+1)
 else:
@@ -120,7 +120,7 @@ for fix in fixes:
 
     # Cast down to 100 values
     radii = np.logspace(np.log10(0.4*Rt), np.log10(apocenter),
-                        num=50)  # simulator units
+                        num=100)  # simulator units
 
     if method == 'caster':
         ecc_cast = THE_SMALL_CASTER(radii, R_bound, ecc, weights=M)
@@ -143,8 +143,8 @@ for fix in fixes:
 
     if save:
         if alice:
-            np.savetxt(pre + 'tde_comparison/data/ecc'+ str(m) + '.txt', colarr)
-            np.savetxt(pre + 'tde_comparison/data/eccdays'+ str(m) + '.txt', fixdays)
+            np.savetxt(pre + 'tde_comparison/data/ecc'+ str(m) + check + '.txt', colarr)
+            np.savetxt(pre + 'tde_comparison/data/eccdays'+ str(m) + check + '.txt', fixdays)
         else:
              with open('data/ecc'+ str(m) + '.txt', 'a') as file:
                 for i in range(len(colarr)):

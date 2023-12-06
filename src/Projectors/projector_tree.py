@@ -66,7 +66,7 @@ if __name__ == '__main__':
     save = True
     plot = False
     check = 'fid'
-    snapshots, days = select_fix(m)
+    snapshots, days = select_fix(m, check)
 
     for snap in snapshots:
         _, gridded_den, gridded_mass, x_radii, y_radii, z_radii = grid_maker(snap, m, check,
