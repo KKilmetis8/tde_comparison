@@ -14,6 +14,9 @@ fixes (number of snapshots) anf thus days
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
+from src.Utilities.isalice import isalice
+alice, plot = isalice()
+
 # Vanilla Imports
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,8 +25,7 @@ from scipy.spatial import KDTree
 from datetime import datetime
 # Custom Imports
 from src.Opacity.opacity_table import opacity
-from src.Calculators.ray_tree import ray_maker, isalice
-alice = isalice()
+from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.special_radii_tree import get_photosphere
 from astropy.coordinates import spherical_to_cartesian, cartesian_to_spherical
 plt.rcParams['text.usetex'] = True
@@ -325,7 +327,6 @@ def doer_of_thing(fix, m, check, num = 1000):
 ##
 if __name__ == "__main__":
     save = True
-    plot = False
     m = 4 # Choose BH
     check = 'S60ComptonHires' # Choose check S60ComptonHires
     sim = str(m) + '-' + check

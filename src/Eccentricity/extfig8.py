@@ -5,6 +5,16 @@ Created on Tue Jan 31 18:19:32 2023
 
 @author: konstantinos
 """
+from src.Utilities.isalice import isalice
+alice, plot = isalice()
+
+# Choose Simulation
+save = True
+m = 6
+method = 'caster'
+check = 'fid'
+
+# Imports
 from src.Calculators.ONE_TREE_CASTER import BONSAI
 from src.Calculators.casters import THE_SMALL_CASTER
 from src.Extractors.time_extractor import days_since_distruption
@@ -16,10 +26,6 @@ import matplotlib.colors as colors
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [8.0, 4.0]
-
-alice = True
-method = 'tree'  # tree or caster
-m = 4
 
 # Constants
 G = 6.6743e-11  # SI
@@ -36,7 +42,6 @@ t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
 apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
 
 if alice:
-    check = ''
     sim = str(m) + '-' + check
     if m == 6:
         fixes = ['683', '844', '979', '1008'] #t/t_fb = 0.5, 1, 1.5, 1.6
@@ -66,8 +71,6 @@ def masker(arr, mask):
 # MAIN
 colarr = []
 fixdays = []
-save = True
-plot = False
 
 for fix in fixes:
     if alice:
@@ -126,7 +129,10 @@ for fix in fixes:
     colarr.append(ecc_cast)
 
     if alice:
-        day = []
+        day = np.round(days_since_distruption(
+            sim + fix + '/snap_' + fix + '.h5'), 1)
+        t_by_tfb = day  # /t_fall
+        fixdays.append(t_by_tfb)
     else:
         day = np.round(days_since_distruption(
             sim + fix + '/snap_' + fix + '.h5'), 1)

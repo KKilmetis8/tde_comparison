@@ -15,13 +15,15 @@ Created on Tue Oct 10 10:19:34 2023
 @author: paola, konstantinos
 
 """
+from src.Utilities.isalice import isalice
+alice, plot = isalice()
+
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
 AEK = '#F1C410'
-alice = True
 #%% Constants & Converter
 NSIDE = 4
 G = 6.6743e-11 # SI

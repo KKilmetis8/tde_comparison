@@ -5,14 +5,16 @@ Created on Tue Nov  7 17:55:24 2023
 
 @author: konstantinos
 """
+from src.Utilities.isalice import isalice
+alice, plot = isalice()
+
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
 import numpy as np
 import numba
 from src.Opacity.opacity_table import opacity
-from src.Calculators.raymaker_tube import ray_maker, isalice
-alice = isalice()
+from src.Calculators.raymaker_tube import ray_maker
 from src.Luminosity.special_radii_tube import get_photosphere
 
 # Setup
@@ -164,7 +166,6 @@ def red(fixes, m, prunes):
 bols, photos = red(fixes, m, prunes)
 #%% Plot & Print
 
-plot = True 
 if plot and not alice:
     import matplotlib.pyplot as plt
     plt.rcParams['text.usetex'] = True

@@ -9,10 +9,12 @@ Created on Tue Oct 10 10:19:34 2023
 """
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
+from src.Utilities.isalice import isalice
+alice, plot = isalice()
+
 import numpy as np
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
-alice = True
 #%% Constants & Converter
 G = 6.6743e-11 # SI
 Msol = 1.98847e30 # kg

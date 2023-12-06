@@ -6,6 +6,9 @@ Project quantities.
 @author: paola
 
 """
+from src.Utilities.isalice import isalice
+alice, plot = isalice()
+
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
@@ -13,8 +16,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import numba
 from src.Calculators.THREE_tree_caster import grid_maker
-
-alice = True 
 #%% Constants & Converter
 G = 6.6743e-11 # SI
 Msol = 1.98847e30 # kg

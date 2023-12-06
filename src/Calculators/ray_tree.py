@@ -15,7 +15,8 @@ import healpy as hp
 from astropy.coordinates import spherical_to_cartesian
 import matplotlib.pyplot as plt
 AEK = '#F1C410'
-alice = True
+from src.Utilities.isalice import isalice
+alice, plot = isalice()
 #%% Constants & Converter
 NSIDE = 4
 G = 6.6743e-11 # SI
