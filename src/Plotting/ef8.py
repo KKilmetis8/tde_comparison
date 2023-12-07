@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 import colorcet
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
-plt.rcParams['figure.figsize'] = [8.0, 5.0]
+plt.rcParams['figure.figsize'] = [6.0, 3.0]
 plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['axes.facecolor']='whitesmoke'
 
@@ -90,11 +90,11 @@ if kind == '64':
     # fig.suptitle('Mass Weigh Eccentricity', fontsize = 17)
 if kind == '4chr':
     pre = 'data/ef8'
-    ecc4 = np.loadtxt(pre + '/ecc4-fid.txt')
-    days4 = np.loadtxt(pre + '/eccdays4-fid.txt')
+    ecc4 = np.loadtxt(pre + '/ecc4fid.txt')
+    days4 = np.loadtxt(pre + '/eccdays4fid.txt')
     
-    ecc4chr = np.loadtxt(pre + '/ecc4-S60ComptonHires.txt')
-    days4chr = np.loadtxt(pre + '/eccdays4-S60ComptonHires.txt')
+    ecc4chr = np.loadtxt(pre + '/ecc4S60ComptonHires.txt')
+    days4chr = np.loadtxt(pre + '/eccdays4S60ComptonHires.txt')
     
     Mbh = 1e4
     t_fall = 40 * (Mbh/1e6)**(0.5) # days EMR+20 p13
@@ -139,3 +139,6 @@ if kind == '4chr':
     ax[0].set_title(r'$10^4$ Fiducial M$_\odot$ - Fiducial ')
     ax[1].set_title(r'$10^4$  M$_\odot$ - Compton HiRes')
     # fig.suptitle('Mass Weigh Eccentricity', fontsize = 17)
+    print(np.min(radii4))
+    plt.savefig('Final plot/ecc05.png')
+    plt.show()
