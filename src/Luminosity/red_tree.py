@@ -20,9 +20,8 @@ alice, plot = isalice()
 # Vanilla Imports
 import numpy as np
 import matplotlib.pyplot as plt
-import math
 from scipy.spatial import KDTree
-from datetime import datetime
+
 # Custom Imports
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
@@ -59,10 +58,10 @@ def select_fix(m, check = 'fid'):
             snapshots = np.arange(210, 271 + 1)
         days = []
     else:
-        if m == 4:
+        if m == 4 and check == 'fid':
             snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
             days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
-        if m == 6:
+        if m == 6 and check == 'fid':
             snapshots = [844, 881, 925, 950]# 1008] 
             days = [1, 1.1, 1.3, 1.4]# 1.608] 
     return snapshots, days
@@ -291,8 +290,6 @@ def doer_of_thing(fix, m, check, num = 1000):
     # dist_neigh *= Rsol_to_cm #convert in CGS
 
     # Find the cell outside the photosphere and save its quantities
-    # grad_E, energy_high, T_high, den_high  = find_neighbours(rays_T, rays_den, rays, radii, 
-    #                                                          rays_index_photo, dist_neigh)
     grad_E, magnitude, energy_high, T_high, den_high  = find_neighbours(fix, m, check,
                                                                         tree_index_photo, dist_neigh)
 
@@ -327,8 +324,8 @@ def doer_of_thing(fix, m, check, num = 1000):
 ##
 if __name__ == "__main__":
     save = True
-    m = 4 # Choose BH
-    check = 'S60ComptonHires' # Choose check S60ComptonHires
+    m = 6 # Choose BH
+    check = 'fid' # Choose check fid // S60ComptonHires
     sim = str(m) + '-' + check
     fixes, days = select_fix(m, check)
     lums = []
@@ -341,9 +338,9 @@ if __name__ == "__main__":
         if alice:
             pre = '/home/s3745597/data1/TDE/'
             np.savetxt('red_backup_save'+ sim + '.txt', lums)
-            np.savetxt(pre + 'tde_comparison/data/alicered'+ sim + '.txt', lums)
+            np.savetxt(pre + 'tde_comparison/data/alicered'+ sim + check + '.txt', lums)
         else:
-             with open('data/red/new_reddata_m'+ str(m) + '.txt', 'a') as flum:
+             with open('data/red/reddata_m'+ str(m) + check + '.txt', 'a') as flum:
                  flum.write('# t/t_fb\n') 
                  flum.write(' '.join(map(str, days)) + '\n')
                  flum.write('# Lum \n') 
