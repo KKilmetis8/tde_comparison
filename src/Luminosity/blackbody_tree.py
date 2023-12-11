@@ -23,7 +23,7 @@ from scipy.spatial import KDTree
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.special_radii_tree import get_thermr
-from astropy.coordinates import spherical_to_cartesian, cartesian_to_spherical
+from src.Calculators.select_observers import select_observer 
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
@@ -95,10 +95,23 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
     norm = luminosity_fld / L
     return norm
 
+def select_rays(wanted_theta, wanted_phi, rays_T, rays_den, rays_cumulative_taus):
+    _, _, wanted_indexes = select_observer(wanted_theta, wanted_phi)
+    rays_T_new = []
+    rays_den_new = []
+    rays_cumulative_taus_new = []
+    for idx in wanted_indexes:
+        rays_T_new.append(rays_T[idx])
+        rays_den_new.append(rays_den[idx])
+        rays_cumulative_taus_new.append(rays_cumulative_taus[idx])
+
+    return rays_T_new, rays_den_new, rays_cumulative_taus_new
+
 # MAIN
 if __name__ == "__main__":
     plot = True
     save = False
+    select = True
     
     # Choose BH 
     m = 6
@@ -111,6 +124,10 @@ if __name__ == "__main__":
     n_spacing = 100
     x_arr = log_array(n_min, n_max, n_spacing)
     
+    # Choose the observers
+    wanted_theta = 0
+    wanted_phi = 0
+
     # Save frequency range
     if save:
         with open('data/frequencies_m'+ str(m) + '.txt', 'w') as f:
@@ -134,9 +151,13 @@ if __name__ == "__main__":
         volume = np.zeros(len(radii))
         for i in range(len(radii)-1):
             dr = radii[i+1] - radii[i]
-            volume[i] = 4 * np.pi * radii[i]**2 * dr  / 192         
+            volume[i] = 4 * np.pi * radii[i]**2 * dr / 192         
 
         lum_n = np.zeros(len(x_arr))
+        if select:
+            # CHECK NORMALISATION CONSTANT IN THIS CASE (see later)
+            rays_T, rays_den, rays_cumulative_taus = select_rays(wanted_theta, wanted_phi, rays_T, 
+                                                                 rays_den, rays_cumulative_taus)
         for j in range(len(rays_T)):
             print('ray :', j)
             for i in range(len(rays_cumulative_taus[j])):        
@@ -149,9 +170,6 @@ if __name__ == "__main__":
                 rho = rays_den[j][reverse_idx] 
                 opt_depth = rays_cumulative_taus[j][i]
                 cell_vol = volume[reverse_idx]
-                # print('pure tau: ', opt_depth)
-                # print('T:', T)
-                # print('rho: ', rho)
                 
                 # Ensure we can interpolate
                 T_low = np.exp(8.666)
@@ -174,6 +192,9 @@ if __name__ == "__main__":
                     
         # Normalise with the bolometric luminosity from red curve (FLD)
         const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
+        # if select:
+        #     # NOT SURE
+        #     const_norm = const_norm * len(rays_T) / 192
         lum_tilde_n = lum_n * const_norm
         #%%
         # Find the bolometic energy (should be = to the one from FLD)
@@ -196,19 +217,20 @@ if __name__ == "__main__":
                 f.write(' '.join(map(str, lum_tilde_n)) + '\n')
                 f.close()    
         if plot:
-            plt.figure( figsize=(4,5))
-            plt.plot(n_arr, lum_tilde_n)
-            plt.xlabel(r'$log_{10}\nu$ [Hz]')
-            plt.ylabel(r'$log_{10}\tilde{L}_\nu$ [erg/sHz]')
-            plt.loglog()
-            plt.grid()
-            plt.savefig('Figs/Ltildan_m' + str(m) + '_snap' + str(fix))
+            # plt.figure( figsize=(4,5))
+            # plt.plot(n_arr, lum_tilde_n)
+            # plt.xlabel(r'$log_{10}\nu$ [Hz]')
+            # plt.ylabel(r'$log_{10}\tilde{L}_\nu$ [erg/sHz]')
+            # plt.loglog()
+            # plt.grid()
+            # plt.savefig('Figs/Ltildan_m' + str(m) + '_snap' + str(fix))
         
             fig, ax1 = plt.subplots( figsize = (6,6) )
             ax1.plot(n_arr, n_arr * lum_tilde_n)
             ax2 = ax1.twiny()
             ax1.set_xlabel(r'$log_{10}\nu$ [Hz]')
             ax1.set_ylabel(r'$log_{10}(\nu\tilde{L}_\nu)$ [erg/s]')
+            ax1.set_ylim(1e39, 2e44)
             ax1.loglog()
             ax1.grid()
             wavelength = np.divide(c, n_arr) * 1e8 # A
@@ -216,6 +238,6 @@ if __name__ == "__main__":
             ax2.invert_xaxis()
             ax2.loglog()
             ax2.set_xlabel(r'Wavelength [\AA]')
-            plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
+            # plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
             plt.show()
                         
