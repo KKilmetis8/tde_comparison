@@ -22,6 +22,7 @@ residuals = True
 plot_radii_sphere = False
 plot_fit = False
 m = 6
+check = 'fid'
 
 if plot_curves:
     # Elad Load
@@ -34,7 +35,7 @@ if plot_curves:
     # Ours Load
     # x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
     # b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
-    fld_data = np.loadtxt('data/red/new_reddata_m'+ str(m) +'.txt')
+    fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check + '.txt')
 
     # Elad Plot
     plt.plot(elad_time[0], elad_red_topolt, c = 'r')

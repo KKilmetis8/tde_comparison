@@ -101,14 +101,14 @@ def find_neighbours(fix, m, check, tree_index_photo, dist_neigh):
     if alice:
         pre = '/home/s3745597/data1/TDE/'
         # Import
-        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy') - Rt
+        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy') 
         Y = np.load(pre + sim + '/snap_'  + fix + '/CMy_' + fix + '.npy')
         Z = np.load(pre + sim + '/snap_'  + fix + '/CMz_' + fix + '.npy')
         T = np.load(pre + sim + '/snap_'  + fix + '/T_' + fix + '.npy')
         Den = np.load(pre + sim + '/snap_'  + fix + '/Den_' + fix + '.npy')
         Rad = np.load(pre + sim + '/snap_'  +fix + '/Rad_' + fix + '.npy')
     else:
-        X = np.load( str(m) + '/'  + str(fix) + '/CMx_' + str(fix) + '.npy') - Rt
+        X = np.load( str(m) + '/'  + str(fix) + '/CMx_' + str(fix) + '.npy') 
         Y = np.load( str(m) + '/'  + str(fix) + '/CMy_' + str(fix) + '.npy')
         Z = np.load( str(m) + '/'  + str(fix) + '/CMz_' + str(fix) + '.npy')
         Rad = np.load(str(m) + '/'  +str(fix) + '/Rad_' + str(fix) + '.npy')
@@ -116,6 +116,7 @@ def find_neighbours(fix, m, check, tree_index_photo, dist_neigh):
         Den = np.load( str(m) + '/'  + str(fix) + '/Den_' + str(fix) + '.npy')
 
     # convert in CGS
+    X -= Rt
     Rad *= Den 
     Rad *= en_den_converter
 
@@ -278,7 +279,7 @@ def doer_of_thing(fix, m, check, num = 1000):
     """
     Gives bolometric L 
     """
-    tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(fix, m, check, num)
+    tree_indexes, rays_T, rays_den, _, radii, rays_vol = ray_maker(fix, m, check, num)
     _, _, rays_photo, rays_index_photo, tree_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
     
     dim_ph = np.zeros(len(rays_index_photo))

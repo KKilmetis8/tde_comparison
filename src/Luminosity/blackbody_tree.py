@@ -56,10 +56,10 @@ def select_fix(m, check = 'fid'):
             snapshots = np.arange(210, 271 + 1)
         days = []
     else:
-        if m == 4:
+        if m == 4 and check == 'fid':
             snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
             days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
-        if m == 6:
+        if m == 6 and check == 'fid':
             snapshots = [844, 881, 925, 950]# 1008] 
             days = [1, 1.1, 1.3, 1.4]# 1.608] 
     return snapshots, days
@@ -98,10 +98,14 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 # MAIN
 if __name__ == "__main__":
     plot = True
-    save = True
+    save = False
     
-    # Choose BH and freq range
+    # Choose BH 
     m = 6
+    check = 'fid'
+    num = 1000
+
+    # Choose freq range
     n_min = 6e13
     n_max = 3e18
     n_spacing = 100
@@ -115,24 +119,26 @@ if __name__ == "__main__":
             f.close()
     
     # Load data for normalization
-    fld_data = np.loadtxt('data/red/reddata_m'+ str(m) +'.txt')
+    fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     n_arr = 10**x_arr
     
     #%% Get thermalisation radius
-    fixes, days, num_array = select_fix(m)
+    fixes, days = select_fix(m)
     for idx, fix in enumerate(fixes):
-        rays_T, rays_den, _, radii = ray_maker(fix, m, int(num_array[idx]))
-        rays_tau, cumulative_taus, thermr = get_thermr(rays_T, rays_den, radii)
+        tree_indexes, rays_T, rays_den, _, radii, _ = ray_maker(fix, m, check, num)
+        _, rays_cumulative_taus, _, _, _ = get_thermr(rays_T, rays_den, radii, tree_indexes)
 
         #%%   
-        dr = radii[1] - radii[0]
-        volume = 4 * np.pi * radii**2 * dr  / 192         
-        lum_n = np.zeros(len(x_arr))
+        volume = np.zeros(len(radii))
+        for i in range(len(radii)-1):
+            dr = radii[i+1] - radii[i]
+            volume[i] = 4 * np.pi * radii[i]**2 * dr  / 192         
 
-        for j in range(192):
+        lum_n = np.zeros(len(x_arr))
+        for j in range(len(rays_T)):
             print('ray :', j)
-            for i in range(len(cumulative_taus[j])):        
+            for i in range(len(rays_cumulative_taus[j])):        
                 # Temperature, Density and volume: np.array from near to the BH
                 # to far away. 
                 # Thus we will use negative index in the for loop.
@@ -140,7 +146,7 @@ if __name__ == "__main__":
                 reverse_idx = -i -1
                 T = rays_T[j][reverse_idx]
                 rho = rays_den[j][reverse_idx] 
-                opt_depth = cumulative_taus[j][i]
+                opt_depth = rays_cumulative_taus[j][i]
                 cell_vol = volume[reverse_idx]
                 # print('pure tau: ', opt_depth)
                 # print('T:', T)
@@ -153,11 +159,12 @@ if __name__ == "__main__":
                 
                 # Out of table
                 if rho < rho_low:
+                    print('rho low')
                     continue
                 
                 # Opaque
                 if T < T_low:
-                    print('low')
+                    print('T low')
                     continue         
                 
                 for i, n in enumerate(n_arr): #we need linearspace
@@ -167,7 +174,6 @@ if __name__ == "__main__":
         # Normalise with the bolometric luminosity from red curve (FLD)
         const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
         lum_tilde_n = lum_n * const_norm
-        print('Normalisation constant:',const_norm)
         #%%
         # Find the bolometic energy (should be = to the one from FLD)
         bolom_integrand =  n_arr * lum_tilde_n
@@ -210,5 +216,5 @@ if __name__ == "__main__":
             ax2.loglog()
             ax2.set_xlabel(r'Wavelength [\AA]')
             plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
-            plt.show()
+            #plt.show()
                         
