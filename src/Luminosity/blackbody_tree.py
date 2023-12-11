@@ -125,6 +125,7 @@ if __name__ == "__main__":
     
     #%% Get thermalisation radius
     fixes, days = select_fix(m)
+    fixes = [844]
     for idx, fix in enumerate(fixes):
         tree_indexes, rays_T, rays_den, _, radii, _ = ray_maker(fix, m, check, num)
         _, rays_cumulative_taus, _, _, _ = get_thermr(rays_T, rays_den, radii, tree_indexes)
@@ -216,5 +217,5 @@ if __name__ == "__main__":
             ax2.loglog()
             ax2.set_xlabel(r'Wavelength [\AA]')
             plt.savefig('Figs/n_Ltildan_m' + str(m) + '_snap' + str(fix))
-            #plt.show()
+            plt.show()
                         
