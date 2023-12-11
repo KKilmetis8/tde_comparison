@@ -111,7 +111,7 @@ def select_rays(wanted_theta, wanted_phi, rays_T, rays_den, rays_cumulative_taus
 if __name__ == "__main__":
     plot = True
     save = False
-    select = True
+    select = False
     
     # Choose BH 
     m = 6
