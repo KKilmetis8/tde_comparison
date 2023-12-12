@@ -35,6 +35,10 @@ h = 6.62607015e-27 #[gcm^2/s]
 Kb = 1.380649e-16 #[gcm^2/s^2K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 Rsol_to_cm = 6.957e10
+# rhat = [np.sin(theta_obs[i]) * np.cos(phi_obs[i]),
+#                 np.sin(theta_obs[i]) * np.sin(phi_obs[i]),
+#                 np.cos(theta_obs[i])
+#                 ]
 #%%
 ###
 # FUNCTIONS
@@ -184,7 +188,8 @@ if __name__ == "__main__":
                 # Opaque
                 if T < T_low:
                     print('T low')
-                    continue         
+                    #continue    
+                    T = np.exp(8.7)
                 
                 for i, n in enumerate(n_arr): #we need linearspace
                     lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
