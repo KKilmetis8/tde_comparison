@@ -256,7 +256,8 @@ def doer_of_thing(fix, m, check, num = 1000):
     Gives bolometric L 
     """
     tree_indexes, rays_T, rays_den, _, radii, rays_vol = ray_maker(fix, m, check, num)
-    _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'photo')
+    _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays_T, rays_den, radii, 
+                                                            tree_indexes, select = 'photo')
     
     dim_ph = np.zeros(len(rays_index_photo))
     for j in range(len(rays_index_photo)):

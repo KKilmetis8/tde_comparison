@@ -7,7 +7,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
-from Luminosity.caster_cesare.Blackbody_cesare import select_fix
+from src.Luminosity.select_path import select_snap
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.family'] = 'Times New Roman'
@@ -47,12 +47,12 @@ if __name__ == '__main__':
     plot = True
     save = True
     do = True
+    check = 'fid'
 
     # Load & Unpack
-    path = 'data/'
-    fixes, days, _ = select_fix(m)
-    x = np.loadtxt(path + 'frequencies_m' + str(m) + '.txt') # x = logν
-    data = np.loadtxt(path + 'L_tilda_spectrum_m' + str(m) + '.txt')
+    snapshots, days = select_snap(m, check)
+    x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
+    data = np.loadtxt('data/L_tilda_spectrum_m' + str(m) + '.txt')
 
     freqs = np.power(10, x)
     init_R = 1e12
@@ -88,7 +88,7 @@ if __name__ == '__main__':
             
         if save:
            with open('data/bluedata_m' + str(m) + '.txt', 'w') as f:
-                f.write('# Fitted quantities for snapshots '+ str(fixes) + '\n#Temperature \n')
+                f.write('# Fitted quantities for snapshots '+ str(snapshots) + '\n#Temperature \n')
                 f.write(' '.join(map(str, temp)) + '\n')
                 f.write('# Radius \n')
                 f.write(' '.join(map(str, radius)) + '\n')

@@ -24,6 +24,7 @@ from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.special_radii_tree import get_specialr
 from src.Calculators.select_observers import select_observer 
+from src.Luminosity.select_path import select_snap
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
@@ -49,24 +50,6 @@ def log_array(n_min, n_max, lenght):
     x_max = np.log10(n_max)
     x_arr = np.linspace(x_min, x_max , num = lenght)
     return x_arr
-
-def select_fix(m, check = 'fid'):
-    if alice:
-        if m == 6 and check == 'fid':
-            snapshots = np.arange(844, 1008 + 1, step = 1)
-        if m == 4 and check == 'fid':
-            snapshots = np.arange(210, 322 + 1)
-        if m == 4 and check == 'S60ComptonHires':
-            snapshots = np.arange(210, 271 + 1)
-        days = []
-    else:
-        if m == 4 and check == 'fid':
-            snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
-            days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
-        if m == 6 and check == 'fid':
-            snapshots = [844, 881, 925, 950]# 1008] 
-            days = [1, 1.1, 1.3, 1.4]# 1.608] 
-    return snapshots, days
 
 def planck(Temperature: float, n: float) -> float:
     """ Planck function in a cell. It needs temperature and frequency n. """
@@ -113,8 +96,8 @@ def select_rays(wanted_theta, wanted_phi, rays_T, rays_den, rays_cumulative_taus
 
 # MAIN
 if __name__ == "__main__":
-    plot = True
-    save = False
+    plot = False
+    save = True
     select = False
     
     # Choose BH 
@@ -145,10 +128,9 @@ if __name__ == "__main__":
     n_arr = 10**x_arr
     
     #%% Get thermalisation radius
-    fixes, days = select_fix(m)
-    fixes = [881]
-    for idx, fix in enumerate(fixes):
-        tree_indexes, rays_T, rays_den, _, radii, _ = ray_maker(fix, m, check, num)
+    snapshots, days = select_snap(m, check)
+    for idx, snap in enumerate(snapshots):
+        tree_indexes, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
         _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
 
         #%%   
@@ -206,19 +188,19 @@ if __name__ == "__main__":
         bolom_integrand =  n_arr * lum_tilde_n
         bolom = np.log(10) * np.trapz(bolom_integrand, x_arr)
         bolom = "{:.4e}".format(bolom) #scientific notation
-        print('Fix', fix, ', bolometric L:', bolom)
+        print('Fix', snap, ', bolometric L:', bolom)
 
         # Save data and plot
         if save:
             # Bolometric
             with open('data/L_tilda_bolom_m' + str(m) + '.txt', 'a') as fbolo:
-                fbolo.write('#snap '+ str(fix) + '\n')
+                fbolo.write('#snap '+ str(snap) + '\n')
                 fbolo.write(bolom + '\n')
                 fbolo.close()
                 
             # Spectrum
             with open('data/L_tilda_spectrum_m'+ str(m) + '.txt', 'a') as f:
-                f.write('#snap '+ str(fix) + ' L_tilde_n \n')
+                f.write('#snap '+ str(snap) + ' L_tilde_n \n')
                 f.write(' '.join(map(str, lum_tilde_n)) + '\n')
                 f.close()    
         if plot:

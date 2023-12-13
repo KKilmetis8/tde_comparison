@@ -17,9 +17,9 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['figure.figsize'] = [10 , 6]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
-plot_curves = False
+plot_curves = True
 residuals = True
-plot_radii_sphere = True
+plot_radii_sphere = False
 plot_fit = False
 m = 6
 check = 'fid'
@@ -33,18 +33,18 @@ if plot_curves:
     elad_red_topolt = np.power(10, elad_red[0])
 
     # Ours Load
-    # x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
-    # b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check + '.txt')
+    x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
+    b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
 
     # Elad Plot
     plt.plot(elad_time[0], elad_red_topolt, c = 'r')
-    # plt.plot(elad_time[0], np.power(10, elad_blue[0]), c = 'b')
+    plt.plot(elad_time[0], np.power(10, elad_blue[0]), c = 'b')
 
     # Our plot
     days = fld_data[0]
     days40 = np.multiply(days, 40)
-    # plt.plot(days40, b[len(b) - 4:], '--s', c='navy', markersize = 4, alpha = 0.8)
+    plt.plot(days40, b[len(b) - 4:], '--s', c='navy', markersize = 4, alpha = 0.8)
     plt.plot(days40, fld_data[1], '--o', c='maroon', markersize = 4, alpha = 0.8)
 
     plt.yscale('log')
