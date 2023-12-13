@@ -22,7 +22,7 @@ from scipy.spatial import KDTree
 # Chocolate Imports
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
-from src.Luminosity.special_radii_tree import get_thermr
+from src.Luminosity.special_radii_tree import get_specialr
 from src.Calculators.select_observers import select_observer 
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     x_arr = log_array(n_min, n_max, n_spacing)
     
     # Choose the observers
-    wanted_theta = 0
+    wanted_theta = np.pi/2
     wanted_phi = 0
 
     # Save frequency range
@@ -146,10 +146,10 @@ if __name__ == "__main__":
     
     #%% Get thermalisation radius
     fixes, days = select_fix(m)
-    fixes = [844]
+    fixes = [881]
     for idx, fix in enumerate(fixes):
         tree_indexes, rays_T, rays_den, _, radii, _ = ray_maker(fix, m, check, num)
-        _, rays_cumulative_taus, _, _, _ = get_thermr(rays_T, rays_den, radii, tree_indexes)
+        _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
 
         #%%   
         volume = np.zeros(len(radii))

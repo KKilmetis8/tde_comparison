@@ -78,7 +78,7 @@ def ray_maker(fix, m, check, num = 1000):
     
     # Ensure that the regular grid cells are smaller than simulation cells
     start = 0.1 * Rt #Solar radii
-    stop = 10_000 
+    stop = apocenter #apocenter for 10^6 is 20_000 
     log_start = np.log10(start)
     log_stop = np.log10(stop)
     log_radii = np.linspace(log_start, log_stop, num) #simulator units

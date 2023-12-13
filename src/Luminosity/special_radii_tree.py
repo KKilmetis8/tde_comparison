@@ -29,6 +29,7 @@ plt.rcParams['axes.facecolor'] = 'whitesmoke'
 # Custom Imports
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
+from src.Luminosity.select_path import select_snap
 
 Rsol_to_cm = 6.957e10 # [cm]
 
@@ -37,18 +38,9 @@ Rsol_to_cm = 6.957e10 # [cm]
 # FUNCTIONS
 ################
 
-def select_fix(m):
-    if m == 4:
-        snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
-        days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
-    if m == 6:
-        snapshots = [844, 881, 925, 950]#, 1008] 
-        days = [1, 1.1, 1.3, 1.4]#, 1.6] 
-    return snapshots, days
-
-def get_kappa(T: float, rho: float, r_dlogr: float):
+def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     '''
-    Calculates the integrand of eq.(8) Steinberg&Stone22.
+    Calculates the integrand of eq.(8) or (9) Steinberg&Stone22.
 
     Parameters
     ----------
@@ -62,7 +54,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
     Returns
     -------
     kappar: float.
-            The "optical depth" of a cell.
+            The optical depth of a cell.
     '''    
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):        
@@ -87,21 +79,29 @@ def get_kappa(T: float, rho: float, r_dlogr: float):
         # kplanck =  3.8e22 * (1 + X) * T**(-3.5) * rho # [cm^2/g] Kramers'law
         # kplanck *= rho
 
-        k = kplanck + kscattering
-        kappar_high = k * r_dlogr
+        if select == 'photo':
+            k = kplanck + kscattering
         
-        return kappar_high 
+        if select == 'thermr':
+            k = np.sqrt(3 * kplanck * (kplanck + kscattering)) 
+
+        kappa_high = k * r_dlogr
+        return kappa_high 
     
     else:
         # Lookup table
-        k = opacity(T, rho,'red', ln = False)
-        kappar =  k * r_dlogr
+        if select == 'photo':
+            k = opacity(T, rho,'red', ln = False)
+        if select == 'thermr':
+            k = opacity(T, rho,'effective', ln = False)
 
-        return kappar
+        kappa =  k * r_dlogr
 
-def calc_photosphere(T, rho, radius, branch_indexes):
+        return kappa
+
+def calc_specialr(T, rho, radius, branch_indexes, select):
     '''
-    Finds and saves the photosphere (CGS) for ONE  ray.
+    Finds and saves the photosphere/R_therm (CGS) for ONE  ray.
 
     Parameters
     ----------
@@ -120,14 +120,18 @@ def calc_photosphere(T, rho, radius, branch_indexes):
                 The "optical depth" of a single cell. 
     cumulative_kappas: 1D array.
                 The total "optical depth" of a single cell.
-    photo: int.
-           R_photosphere (CGS) 
-    index_ph: int
-              Photosphere index in our radius.
-    branch_index_ph: int.
-                    Photosphere index in the tree.
+    specialr: int.
+           R_photosphere/R_therm (CGS) 
+    index_specialr: int
+            photosphere/R_therm index in our radius.
+    branch_index_specialr: int.
+                    Photosphere/R_therm index in the tree.
     '''
-    threshold = 2/3
+    if select == 'photo':
+        threshold = 2/3
+    if select == 'thermr':
+        threshold = 5
+
     kappa = 0
     kappas = []
     cumulative_kappas = []
@@ -135,21 +139,21 @@ def calc_photosphere(T, rho, radius, branch_indexes):
     while kappa <= threshold and i > -len(T):
         dlogr = np.log(radius[i]) - np.log(radius[i-1]) #back to logspace
         r_dlogr = radius[i] * dlogr #to integrate in log space
-        new_kappa = get_kappa(T[i], rho[i], r_dlogr)
+        new_kappa = get_kappa(T[i], rho[i], r_dlogr, select)
         kappa += new_kappa
         kappas.append(new_kappa)
         cumulative_kappas.append(kappa)
         i -= 1
 
-    photo =  radius[i] #i it's negative
-    index_ph = i + len(T) 
-    branch_index_ph = branch_indexes[i]
+    specialr =  radius[i] #i it's negative
+    index_specialr = i + len(T) 
+    branch_index_specialr = branch_indexes[i]
 
-    return kappas, cumulative_kappas, photo, index_ph, branch_index_ph
+    return kappas, cumulative_kappas, specialr, index_specialr, branch_index_specialr
 
-def get_photosphere(rays_T, rays_den, radius, tree_indexes):
+def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
     '''
-    Finds and saves the photosphere (CGS) at every ray.
+    Finds and saves the photosphere/R_therm (CGS) at every ray.
 
     Parameters
     ----------
@@ -168,18 +172,18 @@ def get_photosphere(rays_T, rays_den, radius, tree_indexes):
                 The "optical depth" of a single cell in every ray. 
     rays_cumulative_kappas: nD array.
                 The total "optical depth" of a single cell in every ray.
-    rays_photo: 1D array.
-                R_photosphere in every ray (CGS).
-    rays_index_photo: 1D array.
-                     Photosphere index in our radius for every ray.
-    tree_index_photo: 1D array.
-                    Photosphere index in the tree for every ray.
+    rays_specialr: 1D array.
+                Photosphere/R_therm in every ray (CGS).
+    rays_index_specialr: 1D array.
+                     Photosphere/R_therm index in our radius for every ray.
+    tree_index_specialr: 1D array.
+                    Photosphere/R_therm index in the tree for every ray.
     '''
     rays_kappas = []
     rays_cumulative_kappas = []
-    rays_photo = np.zeros(len(rays_T))
-    rays_index_photo = np.zeros(len(rays_T))
-    tree_index_photo = np.zeros(len(rays_T))
+    rays_specialr = np.zeros(len(rays_T))
+    rays_index_specialr = np.zeros(len(rays_T))
+    tree_index_specialr = np.zeros(len(rays_T))
     
     for i in range(len(rays_T)):
         # Isolate each ray
@@ -187,194 +191,40 @@ def get_photosphere(rays_T, rays_den, radius, tree_indexes):
         Den_of_single_ray = rays_den[i]
         branch_indexes = tree_indexes[i]
         
-        # Get photosphere
-        kappas, cumulative_kappas, photo, index_ph, branch_index_ph  = calc_photosphere(T_of_single_ray, Den_of_single_ray, 
-                                                                       radius, branch_indexes)
+        # Get photosphere/R_therm
+        kappas, cumulative_kappas, specialr, index_ph, branch_index_ph  = calc_specialr(T_of_single_ray, Den_of_single_ray, 
+                                                                       radius, branch_indexes, select)
 
         # Store
         rays_kappas.append(kappas)
         rays_cumulative_kappas.append(cumulative_kappas)
-        rays_photo[i] = photo
-        rays_index_photo[i] = index_ph
-        tree_index_photo[i] = branch_index_ph
+        rays_specialr[i] = specialr
+        rays_index_specialr[i] = index_ph
+        tree_index_specialr[i] = branch_index_ph
 
-    return rays_kappas, rays_cumulative_kappas, rays_photo, rays_index_photo, tree_index_photo
-
-
-def optical_depth(T: float, rho: float, r_dlogr: float):
-    '''
-    Calculates the optical depth at a point.
-
-    Parameters
-    ----------
-    T: int.
-        Cell temperature (CGS).
-    rho: int.
-        Cell density (CGS).
-    r_dlogr: int.
-            Deltar to integrate in logspace (CGS).
-
-    Returns
-    -------
-    tau : float,
-        The optical depth of a cell.
-    '''    
-    # If there is nothing, the ray continues unimpeded
-    if rho < np.exp(-49.3):
-        return 0
-    
-    # Stream material, is opaque
-    if T < np.exp(8.666):
-        return 100
-    
-    # Too hot: scale as Kramers for absorption (planck)
-    if T > np.exp(17.876):
-        # X = 0.7389
-        # Z = 0.02
-        
-        # Constant value for scatter
-        Tmax = np.exp(17.87)
-        kscattering = opacity(Tmax, rho, 'scattering', ln = False)
-        
-        # Scale as Kramers the last point for absorption
-        kplank_0 = opacity(Tmax, rho, 'planck', ln = False)
-        kplanck = kplank_0 * (T/Tmax)**(-3.5)
-        # kplanck =  3.8e22 * (1 + X) * T**(-3.5) * rho # [cm^2/g] Kramers'law
-        # kplanck *= rho
-        
-        oppi = np.sqrt(3 * kplanck * (kplanck + kscattering)) 
-        tau_high = oppi * r_dlogr
-        
-        return tau_high 
-    
-    # Lookup table
-    oppi = opacity(T, rho,'effective', ln = False)
-    tau =  oppi * r_dlogr
-    
-    return tau
-
-def calc_thermr(T, rho, radius, branch_indexes, threshold = 5):
-    '''
-    Finds and saves the effective optical depth at every cell the ray passess through.
-    We use it to find the thermr of the ray.
-
-    Parameters
-    ----------
-    T: 1D arrays.
-            Temperature of every cell in a ray (CGS).
-    rho: 1D arrays.
-            Density of every cell in a ray (CGS).
-    radius: 1D array.
-            Radius (CGS).
-    branch_indexes: 1D array.
-                    Tree indexes for cells in the ray.
-    threshold : float, optional
-            The desired optical depth.
-
-    Returns
-    -------
-    taus : np.array,
-        The optical depth of a single cell.
-    cumulative_taus : np.array,
-        The total optical depth of a single cell.
-    thermr : float,
-            R_thermr (CGS).
-    index_thermr: int
-              R_therm index in our radius.
-    branch_index_thermr: int.
-                    R_therm index in the tree.
-    '''
-    tau = 0
-    taus = []
-    cumulative_taus = []
-    i = -1 # Initialize reverse loop
-    while tau < threshold and i > -len(T):
-        dlogr = np.log(radius[i]) - np.log(radius[i-1]) #back to logspace
-        r_dlogr = radius[i] * dlogr #to integrate in log space
-        new_tau = optical_depth(T[i], rho[i], r_dlogr)
-        tau += new_tau
-        taus.append(new_tau)
-        cumulative_taus.append(tau)
-        i -= 1
-    thermr =  radius[i] #i it's negative
-    index_thermr = i + len(T) 
-    branch_index_thermr = branch_indexes[i]
-
-    return taus, cumulative_taus, thermr, index_thermr, branch_index_thermr
-
-def get_thermr(rays_T, rays_den, radius, tree_indexes):
-    '''
-    Finds and saves the thermalisation radius (CGS) for every ray.
-
-    Parameters
-    ----------
-    rays_T: nD arrays.
-            Temperature of every ray/cell (CGS).
-    rays_den: nD arrays.
-            Density of every ray/cell (CGS).
-    radius: 1D array.
-            Radius (CGS).
-    tree_indexes: nD array.
-                Tree indexes for cells in the rays.
-
-    Returns
-    -------
-    rays_taus: nD array.
-                The optical depth of a single cell in every ray. 
-    rays_cumulative_taus: nD array.
-                The total optical depth of a single cell in every ray.
-    rays_thermr: 1D array.
-                R_therm in every ray (CGS).
-    rays_index_thermr: 1D array.
-                     R_therm index in our radius for every ray.
-    tree_index_thermr: 1D array.
-                    R_therm index in the tree for every ray.
-    '''
-    rays_tau = []
-    rays_cumulative_taus = []
-    rays_thermr = np.zeros(len(rays_T))
-    rays_index_thermr = np.zeros(len(rays_T))
-    tree_index_thermr = np.zeros(len(rays_T))
-
-    for i in range(len(rays_T)):
-        # Isolate each ray
-        T_of_single_ray = rays_T[i]
-        Den_of_single_ray = rays_den[i]
-        branch_indexes = tree_indexes[i]
-        
-        # Get thermr
-        taus, cumulative_taus, thermr, index_thermr, branch_index_thermr = calc_thermr(T_of_single_ray, 
-                                                                                Den_of_single_ray, radius, branch_indexes)
-        # Store
-        rays_tau.append(taus)
-        rays_cumulative_taus.append(cumulative_taus)
-        rays_thermr[i] = thermr
-        rays_index_thermr[i] = index_thermr
-        tree_index_thermr[i] = branch_index_thermr
-
-
-    return rays_tau, rays_cumulative_taus, rays_thermr, rays_index_thermr, tree_index_thermr
-
+    return rays_kappas, rays_cumulative_kappas, rays_specialr, rays_index_specialr, tree_index_specialr
 
 ################
 # MAIN
 ################
 
 if __name__ == "__main__":
-    photosphere = False
+    photosphere = True
     thermalisation = True
     plot = False
     check = 'fid'
     m = 6 
-    
-    loadpath = str(m) + '/'
-    snapshots, days = select_fix(m)
+
+    now = datetime.now()
+    now = now.strftime("%d/%m/%Y %H:%M:%S")
+    snapshots, days = select_snap(m, check)
+
     fix_photo_arit = np.zeros(len(snapshots))
     fix_photo_geom = np.zeros(len(snapshots))
     fix_thermr_arit = np.zeros(len(snapshots))
     fix_thermr_geom = np.zeros(len(snapshots))
 
-    for index in range(0,2):#len(snapshots)):        
+    for index in range(0,len(snapshots)):        
         print('Snapshot ' + str(snapshots[index]))
         tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, check)
 
@@ -392,7 +242,7 @@ if __name__ == "__main__":
         # print('ratio: ' + str(sushi_mean))
 
         if photosphere:
-            rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_photosphere(rays_T, rays_den, radii, tree_indexes)
+            rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select='photo')
             rays_photo = rays_photo/Rsol_to_cm # to solar unit to plot
 
             fix_photo_arit[index] = np.mean(rays_photo)
@@ -415,7 +265,7 @@ if __name__ == "__main__":
                 
 
         if thermalisation: 
-            rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_thermr(rays_T, rays_den, radii, tree_indexes)
+            rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select= 'thermr')
             rays_thermr = rays_thermr/Rsol_to_cm # to solar unit to plot
 
             fix_thermr_arit[index] = np.mean(rays_thermr)
@@ -439,7 +289,7 @@ if __name__ == "__main__":
 
     if photosphere:         
         with open('data/special_radii_m' + str(m) + '.txt', 'a') as file:
-            file.write('# t/t_fb \n')
+            file.write('# Run of ' + now + '\n#t/t_fb\n')
             file.write(' '.join(map(str, days)) + '\n')
             file.write('# Photosphere arithmetic mean \n')
             file.write(' '.join(map(str, fix_photo_arit)) + '\n')
@@ -449,7 +299,7 @@ if __name__ == "__main__":
             
     if thermalisation:
         with open('data/special_radii_m' + str(m) + '.txt', 'a') as file:
-            file.write('# t/t_fb \n')
+            file.write('# Run of ' + now + '\n#t/t_fb\n')
             file.write(' '.join(map(str, days)) + '\n')
             file.write('# Thermalisation radius arithmetic mean \n')
             file.write(' '.join(map(str, fix_thermr_arit)) + '\n')

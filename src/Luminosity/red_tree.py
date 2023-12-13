@@ -25,8 +25,10 @@ from scipy.spatial import KDTree
 # Custom Imports
 from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
-from src.Luminosity.special_radii_tree import get_photosphere
+from src.Luminosity.special_radii_tree import get_specialr
 from astropy.coordinates import spherical_to_cartesian, cartesian_to_spherical
+from src.Luminosity.select_path import select_prefix, select_snap
+from datetime import datetime
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
@@ -42,38 +44,20 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2)
-pre = '/home/s3745597/data1/TDE/tde_comparison'
 #%%
 ##
 # FUNCTIONS
 ##
 ###
-def select_fix(m, check = 'fid'):
-    if alice:
-        if m == 6 and check == 'fid':
-            snapshots = np.arange(844, 1008 + 1, step = 1)
-        if m == 4 and check == 'fid':
-            snapshots = np.arange(210, 322 + 1)
-        if m == 4 and check == 'S60ComptonHires':
-            snapshots = np.arange(210, 271 + 1)
-        days = []
-    else:
-        if m == 4 and check == 'fid':
-            snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
-            days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
-        if m == 6 and check == 'fid':
-            snapshots = [844, 881, 925, 950]# 1008] 
-            days = [1, 1.1, 1.3, 1.4]# 1.608] 
-    return snapshots, days
 
-def find_neighbours(fix, m, check, tree_index_photo, dist_neigh):
+def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     """
      For every ray, find the cells that are at +- fixed distance from photosphere.
      fixed distance = 2 * dimension of simulation cell at the photosphere
 
      Parameters
      ----------
-     fix: int.
+     snap: int.
            Snapshot number.
      m: int.
         Exponent of BH mass
@@ -96,25 +80,17 @@ def find_neighbours(fix, m, check, tree_index_photo, dist_neigh):
     """
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
-    fix = str(fix)
-    sim = str(m) + '-' + check
-    if alice:
-        pre = '/home/s3745597/data1/TDE/'
-        # Import
-        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy') 
-        Y = np.load(pre + sim + '/snap_'  + fix + '/CMy_' + fix + '.npy')
-        Z = np.load(pre + sim + '/snap_'  + fix + '/CMz_' + fix + '.npy')
-        T = np.load(pre + sim + '/snap_'  + fix + '/T_' + fix + '.npy')
-        Den = np.load(pre + sim + '/snap_'  + fix + '/Den_' + fix + '.npy')
-        Rad = np.load(pre + sim + '/snap_'  +fix + '/Rad_' + fix + '.npy')
-    else:
-        X = np.load( str(m) + '/'  + str(fix) + '/CMx_' + str(fix) + '.npy') 
-        Y = np.load( str(m) + '/'  + str(fix) + '/CMy_' + str(fix) + '.npy')
-        Z = np.load( str(m) + '/'  + str(fix) + '/CMz_' + str(fix) + '.npy')
-        Rad = np.load(str(m) + '/'  +str(fix) + '/Rad_' + str(fix) + '.npy')
-        T = np.load( str(m) + '/'  + str(fix) + '/T_' + str(fix) + '.npy')
-        Den = np.load( str(m) + '/'  + str(fix) + '/Den_' + str(fix) + '.npy')
-
+    pre = select_prefix(m, check)
+    snap = str(snap)
+   
+    # Import
+    X = np.load(pre + snap + '/CMx_' + snap + '.npy') 
+    Y = np.load(pre + snap + '/CMy_' + snap + '.npy')
+    Z = np.load(pre + snap + '/CMz_' + snap + '.npy')
+    T = np.load(pre + snap + '/T_' + snap + '.npy')
+    Den = np.load(pre + snap + '/Den_' + snap + '.npy')
+    Rad = np.load(pre +snap + '/Rad_' + snap + '.npy')
+    
     # convert in CGS
     X -= Rt
     Rad *= Den 
@@ -280,7 +256,7 @@ def doer_of_thing(fix, m, check, num = 1000):
     Gives bolometric L 
     """
     tree_indexes, rays_T, rays_den, _, radii, rays_vol = ray_maker(fix, m, check, num)
-    _, _, rays_photo, rays_index_photo, tree_index_photo = get_photosphere(rays_T, rays_den, radii, tree_indexes)
+    _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'photo')
     
     dim_ph = np.zeros(len(rays_index_photo))
     for j in range(len(rays_index_photo)):
@@ -327,22 +303,30 @@ if __name__ == "__main__":
     save = True
     m = 6 # Choose BH
     check = 'fid' # Choose check fid // S60ComptonHires
-    sim = str(m) + '-' + check
-    fixes, days = select_fix(m, check)
-    lums = []
-            
-    for idx in range(0,len(fixes)):
-        lum = doer_of_thing(fixes[idx], m, check)
-        lums.append(lum)
+
+    snapshots, days = select_snap(m, check)
+    now = datetime.now()
+    now = now.strftime("%d/%m/%Y %H:%M:%S")
+    lums = np.zeros(len(snapshots))
+   
+    for idx in range(0,len(snapshots)):
+        lum = doer_of_thing(snapshots[idx], m, check)
+        lums[idx] = lum
     
     if save:
         if alice:
-            pre = '/home/s3745597/data1/TDE/'
-            np.savetxt('red_backup_save'+ sim + '.txt', lums)
-            np.savetxt(pre + 'tde_comparison/data/alicered'+ sim + check + '.txt', lums)
+            pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/alicered'
+            with open(pre_saving + '_days.txt', 'a') as fdays:
+                 fdays.write('# Run of ' + now + '\n#t/t_fb\n') 
+                 fdays.write(' '.join(map(str, days)) + '\n')
+                 fdays.close()
+            with open(pre_saving + '.txt', 'a') as flum:
+                 flum.write('# Run of ' + now + 't/t_fb\n')
+                 flum.write(' '.join(map(str, lums)) + '\n')
+                 flum.close()
         else:
              with open('data/red/reddata_m'+ str(m) + check + '.txt', 'a') as flum:
-                 flum.write('# t/t_fb\n') 
+                 flum.write('# Run of ' + now + '\n#t/t_fb\n') 
                  flum.write(' '.join(map(str, days)) + '\n')
                  flum.write('# Lum \n') 
                  flum.write(' '.join(map(str, lums)) + '\n')
