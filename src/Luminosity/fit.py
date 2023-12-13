@@ -51,8 +51,8 @@ if __name__ == '__main__':
 
     # Load & Unpack
     snapshots, days = select_snap(m, check)
-    x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
-    data = np.loadtxt('data/L_tilda_spectrum_m' + str(m) + '.txt')
+    x = np.loadtxt('data/blue/frequencies_m' + str(m) + '.txt') # x = logν
+    data = np.loadtxt('data/blue/L_tilda_spectrum_m' + str(m) + '.txt')
 
     freqs = np.power(10, x)
     init_R = 1e12
@@ -87,7 +87,7 @@ if __name__ == '__main__':
             Blue[i]= b
             
         if save:
-           with open('data/bluedata_m' + str(m) + '.txt', 'w') as f:
+           with open('data/blue/bluedata_m' + str(m) + '.txt', 'w') as f:
                 f.write('# Fitted quantities for snapshots '+ str(snapshots) + '\n#Temperature \n')
                 f.write(' '.join(map(str, temp)) + '\n')
                 f.write('# Radius \n')

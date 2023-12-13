@@ -117,7 +117,7 @@ if __name__ == "__main__":
 
     # Save frequency range
     if save:
-        with open('data/frequencies_m'+ str(m) + '.txt', 'w') as f:
+        with open('data/blue/frequencies_m'+ str(m) + '.txt', 'w') as f:
             f.write('# exponents x of frequencies: n = 10^x  \n')
             f.write(' '.join(map(str, x_arr)) + '\n') 
             f.close()
@@ -193,13 +193,13 @@ if __name__ == "__main__":
         # Save data and plot
         if save:
             # Bolometric
-            with open('data/L_tilda_bolom_m' + str(m) + '.txt', 'a') as fbolo:
+            with open('data/blue/L_tilda_bolom_m' + str(m) + '.txt', 'a') as fbolo:
                 fbolo.write('#snap '+ str(snap) + '\n')
                 fbolo.write(bolom + '\n')
                 fbolo.close()
                 
             # Spectrum
-            with open('data/L_tilda_spectrum_m'+ str(m) + '.txt', 'a') as f:
+            with open('data/blue/L_tilda_spectrum_m'+ str(m) + '.txt', 'a') as f:
                 f.write('#snap '+ str(snap) + ' L_tilde_n \n')
                 f.write(' '.join(map(str, lum_tilde_n)) + '\n')
                 f.close()    

@@ -15,7 +15,7 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['figure.figsize'] = [10 , 6]
-plt.rcParams['axes.facecolor']= 	'whitesmoke'
+plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
 plot_curves = True
 residuals = True
@@ -31,6 +31,7 @@ if plot_curves:
     elad_blue = mat['L_bb']
     elad_red = mat['L_fld']
     elad_red_topolt = np.power(10, elad_red[0])
+    elad_blue_topolt = np.power(10, elad_blue[0])
 
     # Ours Load
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check + '.txt')
@@ -39,7 +40,7 @@ if plot_curves:
 
     # Elad Plot
     plt.plot(elad_time[0], elad_red_topolt, c = 'r')
-    plt.plot(elad_time[0], np.power(10, elad_blue[0]), c = 'b')
+    plt.plot(elad_time[0],elad_blue_topolt, c = 'b')
 
     # Our plot
     days = fld_data[0]
@@ -56,12 +57,15 @@ if plot_curves:
     plt.show()
 
     if residuals:
-        y_value = np.zeros(len(days40))
+        y_value_r = np.zeros(len(days40))
+        y_value_b = np.zeros(len(days40))
         for i, day in enumerate(days40):
-            y_index = np.argmin(np.abs(days40[i]-elad_time[0]))
-            y_value[i] = (elad_red_topolt[y_index] - fld_data[1][i]) / elad_red_topolt[y_index]
+            y_index = np.argmin(np.abs(days40[i] - elad_time[0]))
+            y_value_r[i] = (elad_red_topolt[y_index] - fld_data[1][i]) / elad_red_topolt[y_index]
+            y_value_b[i] = (elad_blue_topolt[y_index] - b[i]) / elad_blue_topolt[y_index]
 
-        plt.plot(days40, y_value, '--o', c='maroon', markersize = 4)
+        plt.plot(days40, y_value_r, '--o', c='maroon', markersize = 4)
+        plt.plot(days40, y_value_b, '--o', c='navy', markersize = 4)
         plt.grid()
         plt.xlim(39, 65)
         plt.xlabel('Time [days]')
