@@ -43,7 +43,6 @@ def ray_maker(fix, m, check, num = 1000):
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
     apocenter = 2 * Rt * Mbh**(1/3)
-    sim = str(m) + '-' + check
 
     # Load data
     pre = select_prefix(m, check)

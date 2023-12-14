@@ -46,21 +46,21 @@ if __name__ == '__main__':
 
     for snap in snapshots:
         _, gridded_den, gridded_mass, x_radii, y_radii, z_radii = grid_maker(snap, m, check,
-                                                                         200, 200)
+                                                                         800, 800)
         flat_den = projector(gridded_den, gridded_mass, x_radii, y_radii, z_radii)
 
         if save:
             if alice:
                 pre = '/home/s3745597/data1/TDE/'
                 sim = str(m) + '-' + check
-                np.savetxt(pre + 'tde_comparison/data/denproj'+ sim + str(snap) + '.txt', flat_den)
-                np.savetxt(pre + 'tde_comparison/data/xarray'+ sim + '.txt', x_radii)
-                np.savetxt(pre + 'tde_comparison/data/yarray'+ sim + '.txt', y_radii)
+                np.savetxt(pre + 'tde_comparison/data/denproj/denproj'+ sim + str(snap) + '.txt', flat_den)
+                np.savetxt(pre + 'tde_comparison/data/denproj/xarray'+ sim + '.txt', x_radii)
+                np.savetxt(pre + 'tde_comparison/data/denproj/yarray'+ sim + '.txt', y_radii)
 
             else:
-                np.savetxt('data/denproj'+ str(m) + '_' + str(snap) + '.txt', flat_den) 
-                np.savetxt('data/xarray'+ str(m) + '.txt', x_radii) 
-                np.savetxt('data/yarray'+ str(m) + '.txt', y_radii) 
+                np.savetxt('data/localdenproj'+ str(m) + '_' + str(snap) + '.txt', flat_den) 
+                np.savetxt('data/localxarray'+ str(m) + '.txt', x_radii) 
+                np.savetxt('data/localyarray'+ str(m) + '.txt', y_radii) 
 
 #%% Plot
         if plot:

@@ -15,13 +15,8 @@ alice, plot = isalice()
 import numpy as np
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
+from src.Luminosity.select_path import select_prefix
 #%% Constants & Converter
-G = 6.6743e-11 # SI
-Msol = 1.98847e30 # kg
-Rsol = 6.957e8 # m
-t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
-c = 3e8 * t/Rsol # simulator units. Need these for the PW potential
-c_cgs = 3e10 # [cm/s]
 Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
@@ -33,27 +28,19 @@ def grid_maker(fix, m, check , x_num, y_num, z_num = 100):
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
     apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
-    sim = str(m) + '-' + check
-
-    if alice:
-        pre = '/home/s3745597/data1/TDE/'
-        # Import
-        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy')
-        Y = np.load(pre + sim + '/snap_'  + fix + '/CMy_' + fix + '.npy')
-        Z = np.load(pre + sim + '/snap_'  + fix + '/CMz_' + fix + '.npy')
-        T = np.load(pre + sim + '/snap_'  + fix + '/T_' + fix + '.npy')
-        Den = np.load(pre + sim + '/snap_'  + fix + '/Den_' + fix + '.npy')
-        Rad = np.load(pre + sim + '/snap_'  +fix + '/Rad_' + fix + '.npy')
-    else:
-        # Import
-        X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
-        Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
-        Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
-        Mass = np.load( str(m) + '/'  + fix + '/Mass_' + fix + '.npy')
-        Den = np.load( str(m) + '/'  + fix + '/Den_' + fix + '.npy')
     
+    # Load data
+    pre = select_prefix(m, check)
+    X = np.load(pre + fix + '/CMx_' + fix + '.npy')
+    Y = np.load(pre + fix + '/CMy_' + fix + '.npy')
+    Z = np.load(pre + fix + '/CMz_' + fix + '.npy')
+    Den = np.load(pre + fix + '/Den_' + fix + '.npy')
+    # Mass = np.load(pre + fix + '/Mass_' + fix + '.npy')
+
+
     # Convert Energy / Mass to Energy Density in CGS
     Den *= den_converter 
+    # Mass *= Msol_to_g
     
     # make a tree
     sim_value = [X, Y, Z] 
@@ -63,8 +50,8 @@ def grid_maker(fix, m, check , x_num, y_num, z_num = 100):
     # Ensure that the regular grid cells are smaller than simulation cells
     x_start = - apocenter
     x_stop = 10 * Rt
-    y_start = - apocenter
-    y_stop = apocenter
+    y_start = -4000
+    y_stop = 4000
     z_start = -2 *Rt
     z_stop = 2*Rt
     # r_radii = np.logspace(np.log10(x_start), np.log10(x_stop), x_num) #simulator units
