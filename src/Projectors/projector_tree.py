@@ -12,56 +12,19 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 import numba
+from src.Luminosity.select_path import select_snap
 from src.Calculators.THREE_tree_caster import grid_maker
-#%% Constants & Converter
-G = 6.6743e-11 # SI
-Msol = 1.98847e30 # kg
-Rsol = 6.957e8 # m
-t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
-c = 3e8 * t/Rsol # simulator units. Need these for the PW potential
-c_cgs = 3e10 # [cm/s]
-Msol_to_g = 1.989e33 # [g]
-Rsol_to_cm = 6.957e10 # [cm]
-den_converter = Msol_to_g / Rsol_to_cm**2
 
-def select_fix(m, check = 'fid'):
-    if alice:
-        if m == 6 and check == 'fid':
-            snapshots = np.arange(844, 1008 + 1, step = 1)
-        if m == 4 and check == 'fid':
-            snapshots1 = np.arange(265, 276)
-            snapshots2 = np.arange(226, 237)
-            snapshots3 = np.arange(208, 218)
-            snapshots = np.concatenate((snapshots1, snapshots2, snapshots3))
-            # snapshots = [177, 178, 179, 180, 181, 
-            #              231, 232, 233, 234, 235, 
-            #              285, 286, 287, 288, 289, 
-            #              318, 319, 320, 321, 322] #np.arange(100, 322 + 1)
-        if m == 4 and check == 'S60ComptonHires':
-            snapshots1 = np.arange(268, 278)
-            snapshots2 = np.arange(230, 240)
-            snapshots3 = np.arange(210, 220)
-            snapshots = np.concatenate((snapshots1, snapshots2, snapshots3))
-            # snapshots = [210, 211, 212, 213, 214, 
-            #              234, 235, 236, 237, 238,
-            #              269, 270, 271] #np.arange(210, 271 + 1)
-        days = []
-    else:
-        if m == 4:
-            snapshots = [233, 322] #, 254, 263, 277 , 293, 308, 322]
-            days = [1]# , 1.2, 1.3, 1.4, 1.56, 1.7, 1.8] 
-        if m == 6:
-            snapshots = [844, 881, 925, 950]# 1008] 
-            days = [1, 1.1, 1.3, 1.4]# 1.608] 
-    return snapshots, days
+# Constants & Converter
+Rsol_to_cm = 6.957e10 # [cm]
 
 @numba.njit
 def projector(gridded_den, gridded_mass, x_radii, y_radii, z_radii):
-    # Make the 3D grid
+    """ Project density on XY plane. NB: to plot you have to transpose the saved data"""
+    # Make the 3D grid 
     flat_den =  np.zeros(( len(x_radii), len(y_radii) ))
     # flat_mass =  np.zeros(( len(x_radii), len(y_radii) ))
     for i in range(len(x_radii)):
@@ -75,11 +38,11 @@ def projector(gridded_den, gridded_mass, x_radii, y_radii, z_radii):
     return flat_den
  
 if __name__ == '__main__':
-    m = 4
+    m = 6
     save = True
     plot = False
     check = 'fid'
-    snapshots, days = select_fix(m, check)
+    snapshots, days = select_snap(m, check)
 
     for snap in snapshots:
         _, gridded_den, gridded_mass, x_radii, y_radii, z_radii = grid_maker(snap, m, check,

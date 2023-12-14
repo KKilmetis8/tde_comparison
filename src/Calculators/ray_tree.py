@@ -13,6 +13,7 @@ import numpy as np
 from scipy.spatial import KDTree
 import healpy as hp
 from astropy.coordinates import spherical_to_cartesian
+from src.Luminosity.select_path import select_prefix
 import matplotlib.pyplot as plt
 AEK = '#F1C410'
 from src.Utilities.isalice import isalice
@@ -44,25 +45,15 @@ def ray_maker(fix, m, check, num = 1000):
     apocenter = 2 * Rt * Mbh**(1/3)
     sim = str(m) + '-' + check
 
-    if alice:
-        pre = '/home/s3745597/data1/TDE/'
-        # Import
-        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy')
-        Y = np.load(pre + sim + '/snap_'  + fix + '/CMy_' + fix + '.npy')
-        Z = np.load(pre + sim + '/snap_'  + fix + '/CMz_' + fix + '.npy')
-        T = np.load(pre + sim + '/snap_'  + fix + '/T_' + fix + '.npy')
-        Den = np.load(pre + sim + '/snap_'  + fix + '/Den_' + fix + '.npy')
-        Rad = np.load(pre + sim + '/snap_'  +fix + '/Rad_' + fix + '.npy')
-        Vol = np.load(pre + sim + '/snap_' + fix + '/Vol_' + fix + '.npy')
-    else:
-        # Import
-        X = np.load( str(m) + '/'  + fix + '/CMx_' + fix + '.npy')
-        Y = np.load( str(m) + '/'  + fix + '/CMy_' + fix + '.npy')
-        Z = np.load( str(m) + '/'  + fix + '/CMz_' + fix + '.npy')
-        Vol = np.load( str(m) + '/'  + fix + '/Vol_' + fix + '.npy')
-        T = np.load( str(m) + '/'  + fix + '/T_' + fix + '.npy')
-        Den = np.load( str(m) + '/'  + fix + '/Den_' + fix + '.npy')
-        Rad = np.load( str(m) + '/'  +fix + '/Rad_' + fix + '.npy')
+    # Load data
+    pre = select_prefix(m, check)
+    X = np.load(pre + fix + '/CMx_' + fix + '.npy')
+    Y = np.load(pre + fix + '/CMy_' + fix + '.npy')
+    Z = np.load(pre + fix + '/CMz_' + fix + '.npy')
+    T = np.load(pre + fix + '/T_' + fix + '.npy')
+    Den = np.load(pre + fix + '/Den_' + fix + '.npy')
+    Rad = np.load(pre + fix + '/Rad_' + fix + '.npy')
+    Vol = np.load(pre + fix + '/Vol_' + fix + '.npy')
     
     # Move pericenter to 0
     X -= Rt
