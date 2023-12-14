@@ -23,30 +23,37 @@ plot_radii_sphere = False
 plot_fit = False
 m = 6
 check = 'fid'
+from_alice = True #take the values from Alice files
 
 if plot_curves:
-    # Elad Load
+    # Elad Load and convert
     mat = scipy.io.loadmat('data/elad_lum.mat')
     elad_time = mat['time']
     elad_blue = mat['L_bb']
     elad_red = mat['L_fld']
-    elad_red_topolt = np.power(10, elad_red[0])
     elad_blue_topolt = np.power(10, elad_blue[0])
+    elad_red_topolt = np.power(10, elad_red[0])
 
     # Ours Load
-    fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check + '.txt')
-    x = np.loadtxt('data/frequencies_m' + str(m) + '.txt') # x = logν
-    b = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[2]
+    if from_alice:
+        daysr = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
+        r = np.loadtxt('data/red/alicered'+ str(m) + check + '.txt')
+    else:
+        fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check + '.txt')
+        days = fld_data[0]
+        r = fld_data[1]
 
+    daysb = np.loadtxt('data/blue/bluedata_m'+ str(m) + '.txt')[0]
+    b = np.loadtxt('data/blue/bluedata_m'+ str(m) + '.txt')[3]
     # Elad Plot
     plt.plot(elad_time[0], elad_red_topolt, c = 'r')
     plt.plot(elad_time[0],elad_blue_topolt, c = 'b')
 
     # Our plot
-    days = fld_data[0]
-    days40 = np.multiply(days, 40)
-    plt.plot(days40, b[len(b) - 4:], '--s', c='navy', markersize = 4, alpha = 0.8)
-    plt.plot(days40, fld_data[1], '--o', c='maroon', markersize = 4, alpha = 0.8)
+    days40r = np.multiply(daysr, 40)
+    days40b = np.multiply(daysb, 40)
+    plt.plot(days40b, b, '--s', c='navy', markersize = 4, alpha = 0.8)
+    plt.plot(days40r, r, '--', c='maroon', markersize = 4, alpha = 0.8)
 
     plt.yscale('log')
     plt.grid()
@@ -57,15 +64,17 @@ if plot_curves:
     plt.show()
 
     if residuals:
-        y_value_r = np.zeros(len(days40))
-        y_value_b = np.zeros(len(days40))
-        for i, day in enumerate(days40):
-            y_index = np.argmin(np.abs(days40[i] - elad_time[0]))
-            y_value_r[i] = (elad_red_topolt[y_index] - fld_data[1][i]) / elad_red_topolt[y_index]
-            y_value_b[i] = (elad_blue_topolt[y_index] - b[i]) / elad_blue_topolt[y_index]
+        y_value_r = np.zeros(len(days40r))
+        y_value_b = np.zeros(len(days40b))
+        for i, day in enumerate(days40r):
+            y_index_r = np.argmin(np.abs(days40r[i] - elad_time[0]))
+            y_value_r[i] = (elad_red_topolt[y_index_r] - r[i]) / elad_red_topolt[y_index_r]
+        for i, day in enumerate(days40b):
+            y_index_b = np.argmin(np.abs(days40b[i] - elad_time[0]))
+            y_value_b[i] = (elad_blue_topolt[y_index_b] - b[i]) / elad_blue_topolt[y_index_b]
 
-        plt.plot(days40, y_value_r, '--o', c='maroon', markersize = 4)
-        plt.plot(days40, y_value_b, '--o', c='navy', markersize = 4)
+        plt.plot(days40r, y_value_r, c='maroon', markersize = 4)
+        plt.plot(days40b, y_value_b, c='navy', markersize = 4)
         plt.grid()
         plt.xlim(39, 65)
         plt.xlabel('Time [days]')

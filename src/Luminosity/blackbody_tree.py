@@ -25,6 +25,7 @@ from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.special_radii_tree import get_specialr
 from src.Calculators.select_observers import select_observer 
 from src.Luminosity.select_path import select_snap
+from datetime import datetime
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
@@ -105,30 +106,47 @@ if __name__ == "__main__":
     check = 'fid'
     num = 1000
 
+    # Choose the observers
+    wanted_theta = np.pi/2
+    wanted_phi = 0
+
     # Choose freq range
     n_min = 6e13
     n_max = 3e18
     n_spacing = 100
     x_arr = log_array(n_min, n_max, n_spacing)
     
-    # Choose the observers
-    wanted_theta = np.pi/2
-    wanted_phi = 0
-
     # Save frequency range
     if save:
         with open('data/blue/frequencies_m'+ str(m) + '.txt', 'w') as f:
             f.write('# exponents x of frequencies: n = 10^x  \n')
             f.write(' '.join(map(str, x_arr)) + '\n') 
             f.close()
+            
     
+    now = datetime.now()
+    now = now.strftime("%d/%m/%Y %H:%M:%S")
     # Load data for normalization
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     n_arr = 10**x_arr
+
+    snapshots, days = select_snap(m, check)
+    # Save days
+    if save:
+        if alice:
+            pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/aliceblue'+ str(m) + check
+            with open(pre_saving + '_days.txt', 'a') as fdays:
+                fdays.write('# Run of ' + now + '\n#t/t_fb\n') 
+                fdays.write(' '.join(map(str, days)) + '\n')
+                fdays.close()
+        else:
+            with open('data/blue/blue_m'+ str(m) + check + '_days.txt', 'a') as flum:
+                flum.write('# Run of ' + now + '\n#t/t_fb\n') 
+                flum.write(' '.join(map(str, days)) + '\n')
+                flum.close() 
     
     #%% Get thermalisation radius
-    snapshots, days = select_snap(m, check)
     for idx, snap in enumerate(snapshots):
         tree_indexes, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
         _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
