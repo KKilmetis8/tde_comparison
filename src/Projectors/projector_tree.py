@@ -40,7 +40,6 @@ def projector(gridded_den, gridded_mass, x_radii, y_radii, z_radii):
 if __name__ == '__main__':
     m = 6
     save = True
-    plot = False
     check = 'fid'
     snapshots, days = select_snap(m, check)
 
@@ -53,9 +52,9 @@ if __name__ == '__main__':
             if alice:
                 pre = '/home/s3745597/data1/TDE/'
                 sim = str(m) + '-' + check
-                np.savetxt(pre + 'tde_comparison/data/denproj/denproj'+ sim + str(snap) + '.txt', flat_den)
-                np.savetxt(pre + 'tde_comparison/data/denproj/xarray'+ sim + '.txt', x_radii)
-                np.savetxt(pre + 'tde_comparison/data/denproj/yarray'+ sim + '.txt', y_radii)
+                np.savetxt(pre + 'tde_comparison/data/denproj/' + str(m) + '/denproj' + sim + str(snap) + '.txt', flat_den)
+                np.savetxt(pre + 'tde_comparison/data/denproj/' + str(m) + '/xarray'+ sim + '.txt', x_radii)
+                np.savetxt(pre + 'tde_comparison/data/denproj/' + str(m) + '/yarray'+ sim + '.txt', y_radii)
 
             else:
                 np.savetxt('data/localdenproj'+ str(m) + '_' + str(snap) + '.txt', flat_den) 
