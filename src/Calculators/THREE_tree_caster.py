@@ -9,6 +9,7 @@ Created on Tue Oct 10 10:19:34 2023
 """
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
+
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 

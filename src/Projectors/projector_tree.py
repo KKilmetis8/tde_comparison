@@ -51,16 +51,14 @@ if __name__ == '__main__':
         if save:
             if alice:
                 pre = '/home/s3745597/data1/TDE/'
-                sim = str(m) + '-' + check
-                np.savetxt(pre + 'tde_comparison/data/denproj/denproj' + sim + str(snap) + '.txt', flat_den)
-                np.savetxt(pre + 'tde_comparison/data/denproj/xarray'+ sim + '.txt', x_radii)
-                np.savetxt(pre + 'tde_comparison/data/denproj/yarray'+ sim + '.txt', y_radii)
-                print(str(snap))
-
+                sim = f'{m}-{check}'
+                np.savetxt(f'{pre}tde_comparison/data/denproj/denproj{sim}{snap}.txt', flat_den)
+                np.savetxt(f'{pre}tde_comparison/data/denproj/xarray{sim}.txt', x_radii)
+                np.savetxt(f'{pre}tde_comparison/data/denproj/yarray{sim}.txt', y_radii)
             else:
-                np.savetxt('data/localdenproj'+ str(m) + '_' + str(snap) + '.txt', flat_den) 
-                np.savetxt('data/localxarray'+ str(m) + '.txt', x_radii) 
-                np.savetxt('data/localyarray'+ str(m) + '.txt', y_radii) 
+                np.savetxt(f'data/localdenproj{m})_{snap}.txt', flat_den) 
+                np.savetxt(f'data/localxarray{m}.txt', x_radii) 
+                np.savetxt(f'data/localyarray{m}.txt', y_radii) 
 
 #%% Plot
         if plot:

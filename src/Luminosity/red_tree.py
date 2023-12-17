@@ -316,17 +316,17 @@ if __name__ == "__main__":
     
     if save:
         if alice:
-            pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/alicered'+ str(m) + check
-            with open(pre_saving + '_days.txt', 'a') as fdays:
+            pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/alicered{m}{check}'
+            with open(f'{pre_saving}_days.txt', 'a') as fdays:
                  fdays.write('# Run of ' + now + '\n#t/t_fb\n') 
                  fdays.write(' '.join(map(str, days)) + '\n')
                  fdays.close()
-            with open(pre_saving + '.txt', 'a') as flum:
+            with open(f'{pre_saving}.txt', 'a') as flum:
                  flum.write('# Run of ' + now + 't/t_fb\n')
                  flum.write(' '.join(map(str, lums)) + '\n')
                  flum.close()
         else:
-             with open('data/red/reddata_m'+ str(m) + check + '.txt', 'a') as flum:
+             with open(f'data/red/reddata_m{m}{check}.txt', 'a') as flum:
                  flum.write('# Run of ' + now + '\n#t/t_fb\n') 
                  flum.write(' '.join(map(str, days)) + '\n')
                  flum.write('# Lum \n') 
@@ -347,6 +347,6 @@ if __name__ == "__main__":
             plt.title('FLD for $10^4 \quad M_\odot$')
             plt.ylim(1e39,1e42)
         plt.grid()
-        #plt.savefig('Final plot/ourred' + str(m) + '.png')
+        #plt.savefig(f'Final plot/ourred{m}.png')
         plt.show()
 

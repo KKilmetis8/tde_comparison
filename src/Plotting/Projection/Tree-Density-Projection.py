@@ -61,5 +61,5 @@ for snap, day in zip(snapshots, days):
             fontweight = 'bold', 
             fontname = 'Consolas',
             fontsize = 12)
-    plt.savefig('Figs/denproj/' + str(m) + '/denproj' + sim + str(snap) + '.png')
+    plt.savefig(f'Figs/denproj/{m}/denproj{sim}{snap}.png')
     # plt.show()
