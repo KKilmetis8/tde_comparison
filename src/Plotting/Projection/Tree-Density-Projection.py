@@ -19,21 +19,25 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['figure.figsize'] = [6, 4]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
-m = 6
+# Choose simulation
+m = 4
+check = 'fid'
+
 Mbh = 10**m 
 Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
 apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
-check = 'fid'
 t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
 
-snapshots, days = select_snap(m, check)
+#snapshots, days = select_snap(m, check)
+snapshots = np.arange(210, 322 + 1)
+days = np.loadtxt('data/red/alicered4fid_days.txt')
 
 for snap, day in zip(snapshots, days):
-    pre = 'data/denproj/' 
+    pre = 'data/denproj/' + str(m)
     sim = str(m) + '-' + check 
-    data = np.loadtxt(pre + 'denproj' + sim + str(snap) + '.txt')
-    x_radii = np.loadtxt(pre + 'xarray' + sim + '.txt') #simulator units
-    y_radii = np.loadtxt(pre + 'yarray' + sim + '.txt') #simulator units
+    data = np.loadtxt(pre + '/denproj' + sim + str(snap) + '.txt')
+    x_radii = np.loadtxt(pre + '/xarray' + sim + '.txt') #simulator units
+    y_radii = np.loadtxt(pre + '/yarray' + sim + '.txt') #simulator units
 
     fig, ax = plt.subplots(1,1)
     den_plot = np.nan_to_num(data, nan = -1, neginf = -1)
@@ -52,10 +56,10 @@ for snap, day in zip(snapshots, days):
     txt_x = (x_radii[0] + 50) / apocenter
     txt_y = (y_radii[0] + 50) / apocenter
     
-    ax.text(txt_x, txt_y, 'Time: ' + str(day) +  r' [t/t$_{fb}$]',
+    ax.text(txt_x, txt_y, 'Time: ' + str(round(day,5)) +  r' [t/t$_{fb}$]',
             color='white', 
             fontweight = 'bold', 
             fontname = 'Consolas',
             fontsize = 12)
-    plt.savefig('Figs/denproj/denproj' + sim + str(snap) + '.png')
+    plt.savefig('Figs/denproj/' + str(m) + '/denproj' + sim + str(snap) + '.png')
     # plt.show()

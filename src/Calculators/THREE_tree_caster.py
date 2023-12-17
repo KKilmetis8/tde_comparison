@@ -49,9 +49,13 @@ def grid_maker(fix, m, check , x_num, y_num, z_num = 100):
     
     # Ensure that the regular grid cells are smaller than simulation cells
     x_start = - apocenter
-    x_stop = 10 * Rt
-    y_start = -4000
-    y_stop = 4000
+    x_stop = 15 * Rt
+    if m == 6:
+        y_start = -4000
+        y_stop = 4000
+    if m == 4:
+        y_start = -0.5*apocenter
+        y_stop = 0.5*apocenter
     z_start = -2 *Rt
     z_stop = 2*Rt
     # r_radii = np.logspace(np.log10(x_start), np.log10(x_stop), x_num) #simulator units
