@@ -196,7 +196,7 @@ if __name__ == "__main__":
                     lum_n[i] += lum_n_cell
                     
         # Normalise with the bolometric luminosity from red curve (FLD)
-        const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix)#[idx])
+        const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
         # if select:
         #     # NOT SURE
         #     const_norm = const_norm * len(rays_T) / 192

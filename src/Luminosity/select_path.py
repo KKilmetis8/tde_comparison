@@ -50,4 +50,11 @@ def select_snap(m, check):
 if __name__ == "__main__":
     m = 4
     check = 'fid'
+    save = True 
     snapshots, days =  select_prefix(m, check)
+
+    if alice:
+        pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/days{m}{check}'
+        with open(f'{pre_saving}.txt', 'w') as fdays:
+            fdays.write(' '.join(map(str, days)) + '\n')
+            fdays.close()
