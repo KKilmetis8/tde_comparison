@@ -51,7 +51,7 @@ if __name__ == "__main__":
     m = 4
     check = 'fid'
     save = True 
-    snapshots, days =  select_prefix(m, check)
+    snapshots, days =  select_snap(m, check)
 
     if alice:
         pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/days{m}{check}'
