@@ -31,7 +31,7 @@ def select_snap(m, check):
         if m == 6 and check == 'fid':
             snapshots = np.arange(844, 1008 + 1, step = 1)
         if m == 4 and check == 'fid':
-            snapshots = np.arange(210, 322 + 1)
+            snapshots = np.arange(110, 322 + 1) #np.arange(110, 322 + 1)
         if m == 4 and check == 'S60ComptonHires':
             snapshots = np.arange(210, 278 + 1)
     else:
@@ -46,3 +46,8 @@ def select_snap(m, check):
         t_by_tfb = day / t_fall
         days.append(t_by_tfb)
     return snapshots, days
+
+if __name__ == "__main__":
+    m = 4
+    check = 'fid'
+    snapshots, days =  select_prefix(m, check)

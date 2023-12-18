@@ -311,6 +311,7 @@ if __name__ == "__main__":
     lums = np.zeros(len(snapshots))
    
     for idx in range(0,len(snapshots)):
+        print(f'Snapshot {snapshots[idx]}')
         lum = doer_of_thing(snapshots[idx], m, check)
         lums[idx] = lum
     

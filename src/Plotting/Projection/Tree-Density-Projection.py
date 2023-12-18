@@ -29,7 +29,7 @@ apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
 t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
 
 #snapshots, days = select_snap(m, check)
-snapshots = np.arange(210, 322 + 1)
+snapshots = np.arange(100, 322 + 1)
 days = np.loadtxt('data/red/alicered4fid_days.txt')
 
 for snap, day in zip(snapshots, days):
