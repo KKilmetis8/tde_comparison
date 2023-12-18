@@ -30,7 +30,7 @@ t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
 
 #snapshots, days = select_snap(m, check)
 snapshots = np.arange(100, 322 + 1)
-days = np.loadtxt('data/red/alicered4fid_days.txt')
+days = np.loadtxt('data/denproj/days4fid.txt')
 
 for snap, day in zip(snapshots, days):
     pre = 'data/denproj/' + str(m)

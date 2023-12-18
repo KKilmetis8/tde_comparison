@@ -99,7 +99,7 @@ def select_rays(wanted_theta, wanted_phi, rays_T, rays_den, rays_cumulative_taus
 if __name__ == "__main__":
     plot = True
     save = True
-    select = False
+    select = True
     
     # Choose BH 
     m = 6
@@ -107,8 +107,8 @@ if __name__ == "__main__":
     num = 1000
 
     # Choose the observers
-    wanted_theta = np.pi/2
-    wanted_phi = 0
+    wanted_theta = 0
+    wanted_phi = np.pi/2
 
     # Choose freq range
     n_min = 6e13
@@ -117,7 +117,7 @@ if __name__ == "__main__":
     x_arr = log_array(n_min, n_max, n_spacing)
     
     # Save frequency range
-    if save:
+    if np.logical_and(save == True, select == False):
         with open('data/blue/frequencies_m'+ str(m) + '.txt', 'w') as f:
             f.write('# exponents x of frequencies: n = 10^x  \n')
             f.write(' '.join(map(str, x_arr)) + '\n') 
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
     snapshots, days = select_snap(m, check)
     # Save days
-    if save:
+    if np.logical_and(save == True, select == False):   
         if alice:
             pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/aliceblue'+ str(m) + check
             with open(pre_saving + '_days.txt', 'a') as fdays:
@@ -147,7 +147,8 @@ if __name__ == "__main__":
                 flum.close() 
     
     #%% Get thermalisation radius
-    for idx, snap in enumerate(snapshots):
+    for idx in range(1,2):#len(snapshots):
+        snap = snapshots[idx]
         tree_indexes, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
         _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
 
@@ -210,17 +211,23 @@ if __name__ == "__main__":
 
         # Save data and plot
         if save:
+            if select:
+                with open(f'data/blue/nLn_single_m{m}.txt', 'a') as fselect:
+                    fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
+                    fselect.write(' '.join(map(str, n_arr * lum_tilde_n)) + '\n')
+                    fselect.close()
+            else:
             # Bolometric
-            with open(f'data/blue/L_tilda_bolom_m{m}.txt', 'a') as fbolo:
-                fbolo.write('#snap '+ str(snap) + '\n')
-                fbolo.write(bolom + '\n')
-                fbolo.close()
-                
-            # Spectrum
-            with open(f'data/blue/L_tilda_spectrum_m{m}.txt', 'a') as f:
-                f.write('#snap '+ str(snap) + ' L_tilde_n \n')
-                f.write(' '.join(map(str, lum_tilde_n)) + '\n')
-                f.close()    
+                with open(f'data/blue/L_tilda_bolom_m{m}.txt', 'a') as fbolo:
+                    fbolo.write('#snap '+ str(snap) + '\n')
+                    fbolo.write(bolom + '\n')
+                    fbolo.close()
+                    
+                # Spectrum
+                with open(f'data/blue/L_tilda_spectrum_m{m}.txt', 'a') as f:
+                    f.write('#snap '+ str(snap) + ' L_tilde_n \n')
+                    f.write(' '.join(map(str, lum_tilde_n)) + '\n')
+                    f.close()    
         if plot:
             # plt.figure( figsize=(4,5))
             # plt.plot(n_arr, lum_tilde_n)
@@ -243,6 +250,6 @@ if __name__ == "__main__":
             ax2.invert_xaxis()
             ax2.loglog()
             ax2.set_xlabel(r'Wavelength [\AA]')
-            plt.savefig(f'Figs/n_Ltildan_m{m}_snap{snap}')
+            # plt.savefig(f'Figs/n_Ltildan_m{m}_snap{snap}')
             plt.show()
                         
