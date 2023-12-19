@@ -108,7 +108,7 @@ if __name__ == "__main__":
 
     # Choose the observers
     wanted_theta = 0
-    wanted_phi = np.pi/2
+    wanted_phi = 0
 
     # Choose freq range
     n_min = 2.08e13
