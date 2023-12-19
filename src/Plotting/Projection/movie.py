@@ -12,17 +12,17 @@ import glob
 import os
 
 # Choose simlation
-m = 4
+m = 6
 check = 'fid'
 if m == 6:
     start = 844
-    digit = 4
+    digit = '04'
 if m == 4:
-    start = 210
+    start = 130
     digit = 3
 
 path = f'Figs/denproj/{m}/denproj{m}-{check}'
-output_path = f'Figs/denproj/movie{m}.mp4'
+output_path = f'Final_plot/movie{m}.mp4'
 
 ffmpeg_command = f'ffmpeg -y -start_number {start} -i {path}%{digit}d.png -c:v libx264 -pix_fmt yuv420p -r 100 {output_path}'
 subprocess.run(ffmpeg_command, shell=True)

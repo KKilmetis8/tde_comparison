@@ -16,11 +16,11 @@ import colorcet
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['figure.figsize'] = [6, 4]
+plt.rcParams['figure.figsize'] = [10, 4]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
 # Choose simulation
-m = 4
+m = 6
 check = 'fid'
 
 Mbh = 10**m 
@@ -29,11 +29,11 @@ apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
 t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
 
 #snapshots, days = select_snap(m, check)
-snapshots = np.arange(110, 322 + 1)
-days = np.loadtxt('data/denproj/days4fid.txt')
+snapshots = np.arange(844, 1008 + 1)
+days = np.loadtxt('data/red/alicered6fid_days.txt')
 
 for snap, day in zip(snapshots, days):
-    pre = f'data/denproj/{m}/{m}-{check}'
+    pre = f'data/denproj/{m}'#/{m}-{check}'
     sim = f'{m}-{check}'
     data = np.loadtxt(f'{pre}/denproj{sim}{snap}.txt')
     x_radii = np.loadtxt(pre + '/xarray' + sim + '.txt') #simulator units
@@ -61,5 +61,5 @@ for snap, day in zip(snapshots, days):
             fontweight = 'bold', 
             fontname = 'Consolas',
             fontsize = 12)
-    plt.savefig(f'Figs/denproj/{m}/denproj{sim}{snap}.png')
+    plt.savefig(f'Figs/denproj/{m}/denproj{sim}0{snap}.png')
     # plt.show()
