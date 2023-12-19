@@ -111,18 +111,17 @@ if __name__ == "__main__":
     wanted_phi = np.pi/2
 
     # Choose freq range
-    n_min = 6e13
-    n_max = 3e18
+    n_min = 2.08e13
+    n_max = 6.25e23
     n_spacing = 100
     x_arr = log_array(n_min, n_max, n_spacing)
     
     # Save frequency range
-    if np.logical_and(save == True, select == False):
+    if save:
         with open('data/blue/frequencies_m'+ str(m) + '.txt', 'w') as f:
             f.write('# exponents x of frequencies: n = 10^x  \n')
             f.write(' '.join(map(str, x_arr)) + '\n') 
             f.close()
-            
     
     now = datetime.now()
     now = now.strftime("%d/%m/%Y %H:%M:%S")
@@ -149,20 +148,34 @@ if __name__ == "__main__":
     #%% Get thermalisation radius
     for idx in range(1,2):#len(snapshots):
         snap = snapshots[idx]
-        tree_indexes, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
+        tree_indexes, observers, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
+        if select:
+            _, _, wanted_index = select_observer(wanted_theta, wanted_phi, observers)
+            x_selected = np.sin(observers[wanted_index][0]) * np.cos(observers[wanted_index][1])
+            y_selected = np.sin(observers[wanted_index][0]) * np.sin(observers[wanted_index][1])
+            z_selected = np.cos(observers[wanted_index][0])
+            xyz_selected = [x_selected, y_selected, z_selected]
+            cross_dot = np.zeros(len(observers))
+            for iobs in range(len(observers)):
+                x = np.sin(observers[iobs][0]) * np.cos(observers[iobs][1])
+                y = np.sin(observers[iobs][0]) * np.sin(observers[iobs][1])
+                z = np.cos(observers[iobs][0])
+                xyz = [x,y,z]
+                cross_dot[iobs] = np.dot(xyz_selected, xyz)
+                if cross_dot[iobs] < 0:
+                    cross_dot[iobs] = 0
+                cross_dot /= 192
+
         _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
 
         #%%   
         volume = np.zeros(len(radii))
-        for i in range(len(radii)-1):
+        for i in range(len(radii)-1): 
             dr = radii[i+1] - radii[i]
             volume[i] = 4 * np.pi * radii[i]**2 * dr / 192         
 
         lum_n = np.zeros(len(x_arr))
-        if select:
-            # CHECK NORMALISATION CONSTANT IN THIS CASE (see later)
-            rays_T, rays_den, rays_cumulative_taus = select_rays(wanted_theta, wanted_phi, rays_T, 
-                                                                 rays_den, rays_cumulative_taus)
+
         for j in range(len(rays_T)):
             print('ray :', j)
             for i in range(len(rays_cumulative_taus[j])):        
@@ -194,27 +207,28 @@ if __name__ == "__main__":
                 
                 for i, n in enumerate(n_arr): #we need linearspace
                     lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
+                    if select:
+                        lum_n_cell *= cross_dot[j]
                     lum_n[i] += lum_n_cell
-                    
+        if select:
+            const_norm = 1/192
+            lum_tilde_n = lum_n * const_norm
+        else:           
         # Normalise with the bolometric luminosity from red curve (FLD)
-        const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
-        # if select:
-        #     # NOT SURE
-        #     const_norm = const_norm * len(rays_T) / 192
-        lum_tilde_n = lum_n * const_norm
-        #%%
-        # Find the bolometic energy (should be = to the one from FLD)
-        bolom_integrand =  n_arr * lum_tilde_n
-        bolom = np.log(10) * np.trapz(bolom_integrand, x_arr)
-        bolom = "{:.4e}".format(bolom) #scientific notation
-        print('Fix', snap, ', bolometric L:', bolom)
+            const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
+            lum_tilde_n = lum_n * const_norm
+            # Find the bolometic energy (should be = to the one from FLD)
+            bolom_integrand =  n_arr * lum_tilde_n
+            bolom = np.log(10) * np.trapz(bolom_integrand, x_arr)
+            bolom = "{:.4e}".format(bolom) #scientific notation
+            print('Fix', snap, ', bolometric L:', bolom)
 
         # Save data and plot
         if save:
             if select:
                 with open(f'data/blue/nLn_single_m{m}.txt', 'a') as fselect:
                     fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
-                    fselect.write(' '.join(map(str, n_arr * lum_tilde_n)) + '\n')
+                    fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
                     fselect.close()
             else:
             # Bolometric

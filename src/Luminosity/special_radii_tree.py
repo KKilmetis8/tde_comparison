@@ -227,7 +227,7 @@ if __name__ == "__main__":
 
     for index in range(0,len(snapshots)):        
         print('Snapshot ' + str(snapshots[index]))
-        tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, check)
+        tree_indexes, _, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, check)
 
         # dim_ph = np.zeros(len(rays_index_photo))
         # sushi = np.zeros(192)

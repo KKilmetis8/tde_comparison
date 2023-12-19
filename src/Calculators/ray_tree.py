@@ -148,13 +148,13 @@ def ray_maker(fix, m, check, num = 1000):
     # Convert to CGS
     radii *= Rsol_to_cm
     
-    return tree_indexes, rays_T, rays_den, rays, radii, rays_vol
+    return tree_indexes, observers, rays_T, rays_den, rays, radii, rays_vol
 
  
 if __name__ == '__main__':
     m = 6
     num = 1000
-    tree_indexes, rays_T, rays_den, rays, radii, rays_vol = ray_maker(844, m, num)
+    tree_indexes, _, rays_T, rays_den, rays, radii, rays_vol = ray_maker(844, m, num)
 #%% Plot
     plot = False
     if plot:

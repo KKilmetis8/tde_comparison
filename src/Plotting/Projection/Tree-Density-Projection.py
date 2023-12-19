@@ -29,13 +29,13 @@ apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
 t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
 
 #snapshots, days = select_snap(m, check)
-snapshots = np.arange(100, 322 + 1)
+snapshots = np.arange(110, 322 + 1)
 days = np.loadtxt('data/denproj/days4fid.txt')
 
 for snap, day in zip(snapshots, days):
-    pre = 'data/denproj/' + str(m)
-    sim = str(m) + '-' + check 
-    data = np.loadtxt(pre + '/denproj' + sim + str(snap) + '.txt')
+    pre = f'data/denproj/{m}/{m}-{check}'
+    sim = f'{m}-{check}'
+    data = np.loadtxt(f'{pre}/denproj{sim}{snap}.txt')
     x_radii = np.loadtxt(pre + '/xarray' + sim + '.txt') #simulator units
     y_radii = np.loadtxt(pre + '/yarray' + sim + '.txt') #simulator units
 

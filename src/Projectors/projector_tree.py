@@ -39,8 +39,8 @@ def projector(gridded_den, gridded_mass, x_radii, y_radii, z_radii):
  
 if __name__ == '__main__':
     m = 4
-    save = True
-    check = 'S60ComptonHires'
+    save = True 
+    check = 'fid'
     snapshots, days = select_snap(m, check)
 
     for snap in snapshots:
