@@ -8,13 +8,11 @@ import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
 import numpy as np
-import healpy as hp
 import matplotlib.pyplot as plt
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
 NSIDE = 4
-
 
 def select_observer(wanted_theta, wanted_phi, observers):
     """ Gives thetas, phis from helpix and 
@@ -22,7 +20,7 @@ def select_observer(wanted_theta, wanted_phi, observers):
     thetas = np.zeros(192)
     phis = np.zeros(192)
     for iobs in range(len(observers)): 
-        thetas[iobs] = observers[iobs][0]
+        thetas[iobs] = observers[iobs][0] + np.pi/2 # Enforce theta in 0 to pi for converting in blue
         phis[iobs] =  observers[iobs][1]
     dist = np.zeros(192)
     for i in range(192):

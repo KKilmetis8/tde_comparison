@@ -37,10 +37,7 @@ h = 6.62607015e-27 #[gcm^2/s]
 Kb = 1.380649e-16 #[gcm^2/s^2K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 Rsol_to_cm = 6.957e10
-# rhat = [np.sin(theta_obs[i]) * np.cos(phi_obs[i]),
-#                 np.sin(theta_obs[i]) * np.sin(phi_obs[i]),
-#                 np.cos(theta_obs[i])
-#                 ]
+
 #%%
 ###
 # FUNCTIONS
@@ -107,12 +104,12 @@ if __name__ == "__main__":
     num = 1000
 
     # Choose the observers
-    wanted_theta = 0
-    wanted_phi = 0
+    wanted_theta = np.pi
+    wanted_phi = np.pi
 
     # Choose freq range
     n_min = 2.08e13
-    n_max = 6.25e23
+    n_max = 2e18 #6.25e23
     n_spacing = 100
     x_arr = log_array(n_min, n_max, n_spacing)
     
@@ -133,10 +130,13 @@ if __name__ == "__main__":
     tree_indexes, observers, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
 
     _, _, wanted_index = select_observer(wanted_theta, wanted_phi, observers)
+    print('index ',wanted_index)
     x_selected = np.sin(observers[wanted_index][0]) * np.cos(observers[wanted_index][1])
     y_selected = np.sin(observers[wanted_index][0]) * np.sin(observers[wanted_index][1])
     z_selected = np.cos(observers[wanted_index][0])
+
     xyz_selected = [x_selected, y_selected, z_selected]
+    print(xyz_selected)
     cross_dot = np.zeros(len(observers))
     for iobs in range(len(observers)):
         x = np.sin(observers[iobs][0]) * np.cos(observers[iobs][1])
@@ -144,8 +144,11 @@ if __name__ == "__main__":
         z = np.cos(observers[iobs][0])
         xyz = [x,y,z]
         cross_dot[iobs] = np.dot(xyz_selected, xyz)
+        zero_count = 0
         if cross_dot[iobs] < 0:
             cross_dot[iobs] = 0
+    
+    print('crossdot', cross_dot)
 
     _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
 

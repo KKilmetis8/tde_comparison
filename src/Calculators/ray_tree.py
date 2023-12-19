@@ -81,7 +81,7 @@ def ray_maker(fix, m, check, num = 1000):
     for i in range(0,192):
         thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
         thetas[i] -= np.pi/2 # Enforce theta in -pi/2 to pi/2 for astropy
-        phis[i] -= np.pi # Enforce theta in -pi to pi for astropy
+        #phis[i] -= np.pi # Enforce theta in -pi to pi for astropy
         observers.append( (thetas[i], phis[i]) )
     
     # Reshape
@@ -89,6 +89,7 @@ def ray_maker(fix, m, check, num = 1000):
     many_phis = np.repeat(phis, len(radii))
     many_radii = list(radii)
     many_radii *= 192 # num of observers 
+
     our_x, our_y, our_z = spherical_to_cartesian(many_radii, many_thetas, many_phis)
     #%% Plot
     # ax = plt.figure().add_subplot(projection='3d')
