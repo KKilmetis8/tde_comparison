@@ -92,6 +92,13 @@ def select_rays(wanted_theta, wanted_phi, rays_T, rays_den, rays_cumulative_taus
 
     return rays_T_new, rays_den_new, rays_cumulative_taus_new
 
+def find_sph_coord(theta,phi):
+    x = np.sin(np.pi-theta) * np.cos(phi) #because theta starts from the z axis: we're flipped
+    y = np.sin(np.pi-theta) * np.sin(phi)
+    z = np.cos(np.pi-theta)
+    xyz = [x, y, z]
+    return xyz
+
 # MAIN
 if __name__ == "__main__":
     plot = True
@@ -103,13 +110,13 @@ if __name__ == "__main__":
     check = 'fid'
     num = 1000
 
-    # Choose the observers
-    wanted_theta = np.pi
-    wanted_phi = np.pi
+    # Choose the observers: theta in [0, pi], phi in [0,2pi]
+    wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
+    wanted_phis = [0, np.pi/2, np.pi, 3*np.pi/2, 0, 0]
 
     # Choose freq range
     n_min = 2.08e13
-    n_max = 2e18 #6.25e23
+    n_max = 6.25e23
     n_spacing = 100
     x_arr = log_array(n_min, n_max, n_spacing)
     
@@ -128,96 +135,98 @@ if __name__ == "__main__":
     
     #%% Get thermalisation radius
     tree_indexes, observers, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
+    thetas = np.zeros(192)
+    phis = np.zeros(192) 
+    for iobs in range(len(observers)): 
+        thetas[iobs] = observers[iobs][0]
+        phis[iobs] =  observers[iobs][1]
 
-    _, _, wanted_index = select_observer(wanted_theta, wanted_phi, observers)
-    print('index ',wanted_index)
-    x_selected = np.sin(observers[wanted_index][0]) * np.cos(observers[wanted_index][1])
-    y_selected = np.sin(observers[wanted_index][0]) * np.sin(observers[wanted_index][1])
-    z_selected = np.cos(observers[wanted_index][0])
+    for idx in range(len(wanted_thetas)):
+        wanted_theta = wanted_thetas[idx]
+        wanted_phi = wanted_phis[idx]
+        wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
+        print('index ',wanted_index)
 
-    xyz_selected = [x_selected, y_selected, z_selected]
-    print(xyz_selected)
-    cross_dot = np.zeros(len(observers))
-    for iobs in range(len(observers)):
-        x = np.sin(observers[iobs][0]) * np.cos(observers[iobs][1])
-        y = np.sin(observers[iobs][0]) * np.sin(observers[iobs][1])
-        z = np.cos(observers[iobs][0])
-        xyz = [x,y,z]
-        cross_dot[iobs] = np.dot(xyz_selected, xyz)
+        xyz_selected = find_sph_coord(thetas[wanted_index], phis[wanted_index])
+
+        cross_dot = np.zeros(len(observers))
         zero_count = 0
-        if cross_dot[iobs] < 0:
-            cross_dot[iobs] = 0
-    
-    print('crossdot', cross_dot)
+        for iobs in range(len(observers)):
+            xyz = find_sph_coord(thetas[iobs], phis[iobs])
+            cross_dot[iobs] = np.dot(xyz_selected, xyz)
+            if cross_dot[iobs] < 0:
+                cross_dot[iobs] = 0
+                zero_count += 1
+        print('cross dot 0: ', zero_count)
 
-    _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
+        _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
 
-    #%%   
-    volume = np.zeros(len(radii))
-    for i in range(len(radii)-1): 
-        dr = radii[i+1] - radii[i]
-        volume[i] = 4 * np.pi * radii[i]**2 * dr / 192         
+        #%%   
+        volume = np.zeros(len(radii))
+        for i in range(len(radii)-1): 
+            dr = radii[i+1] - radii[i]
+            volume[i] = 4 * np.pi * radii[i]**2 * dr / 192         
 
-    lum_n = np.zeros(len(x_arr))
+        lum_n = np.zeros(len(x_arr))
 
-    for j in range(len(rays_T)):
-        print('ray :', j)
-        for i in range(len(rays_cumulative_taus[j])):        
-            # Temperature, Density and volume: np.array from near to the BH
-            # to far away. 
-            # Thus we will use negative index in the for loop.
-            # tau: np.array from outside to inside.
-            reverse_idx = -i -1
-            T = rays_T[j][reverse_idx]
-            rho = rays_den[j][reverse_idx] 
-            opt_depth = rays_cumulative_taus[j][i]
-            cell_vol = volume[reverse_idx]
-            
-            # Ensure we can interpolate
-            T_low = np.exp(8.666)
-            T_high = np.exp(17.87)
-            rho_low = np.exp(-49.2)
-            
-            # Out of table
-            if rho < rho_low:
-                print('rho low')
-                continue
-            
-            # Opaque
-            if T < T_low:
-                print('T low')
-                #continue    
-                T = np.exp(8.7)
-            
-            for i, n in enumerate(n_arr): #we need linearspace
-                lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
-                lum_n_cell *= cross_dot[j]
-                lum_n[i] += lum_n_cell
+        for j in range(len(rays_T)):
+            print('ray :', j)
+            for i in range(len(rays_cumulative_taus[j])):        
+                # Temperature, Density and volume: np.array from near to the BH
+                # to far away. 
+                # Thus we will use negative index in the for loop.
+                # tau: np.array from outside to inside.
+                reverse_idx = -i -1
+                T = rays_T[j][reverse_idx]
+                rho = rays_den[j][reverse_idx] 
+                opt_depth = rays_cumulative_taus[j][i]
+                cell_vol = volume[reverse_idx]
+                
+                # Ensure we can interpolate
+                T_low = np.exp(8.666)
+                T_high = np.exp(17.87)
+                rho_low = np.exp(-49.2)
+                
+                # Out of table
+                if rho < rho_low:
+                    print('rho low')
+                    continue
+                
+                # Opaque
+                if T < T_low:
+                    print('T low')
+                    #continue    
+                    T = np.exp(8.7)
+                
+                for i, n in enumerate(n_arr): #we need linearspace
+                    lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
+                    lum_n_cell *= cross_dot[j]
+                    lum_n[i] += lum_n_cell
 
-    const_norm = 1/192
-    lum_tilde_n = lum_n * const_norm
+        const_norm = 4/192
+        lum_tilde_n = lum_n * const_norm
 
-    # Save data and plot
-    if save:
-        with open(f'data/blue/nLn_single_m{m}.txt', 'a') as fselect:
-            fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
-            fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
-            fselect.close()
-  
-    if plot:
-        fig, ax1 = plt.subplots( figsize = (6,6) )
-        ax1.plot(n_arr, n_arr * lum_tilde_n)
-        ax2 = ax1.twiny()
-        ax1.set_xlabel(r'$log_{10}\nu$ [Hz]')
-        ax1.set_ylabel(r'$log_{10}(\nu\tilde{L}_\nu)$ [erg/s]')
-        ax1.set_ylim(1e39, 2e44)
-        ax1.loglog()
-        ax1.grid()
-        wavelength = np.divide(c, n_arr) * 1e8 # A
-        ax2.plot(wavelength, n_arr * lum_tilde_n)
-        ax2.invert_xaxis()
-        ax2.loglog()
-        ax2.set_xlabel(r'Wavelength [\AA]')
-        # plt.savefig(f'Figs/n_Ltildan_m{m}_snap{snap}')
-        plt.show()
-                    
+        # Save data and plot
+        if save:
+            with open(f'data/blue/nLn_single_m{m}.txt', 'a') as fselect:
+                fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
+                fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
+                fselect.close()
+
+        # if plot:
+        #     fig, ax1 = plt.subplots( figsize = (6,6) )
+        #     ax1.plot(n_arr, n_arr * lum_tilde_n)
+        #     ax2 = ax1.twiny()
+        #     ax1.set_xlabel(r'$log_{10}\nu$ [Hz]')
+        #     ax1.set_ylabel(r'$log_{10}(\nu\tilde{L}_\nu)$ [erg/s]')
+        #     ax1.set_ylim(1e39, 2e44)
+        #     ax1.loglog()
+        #     ax1.grid()
+        #     wavelength = np.divide(c, n_arr) * 1e8 # A
+        #     ax2.plot(wavelength, n_arr * lum_tilde_n)
+        #     ax2.invert_xaxis()
+        #     ax2.loglog()
+        #     ax2.set_xlabel(r'Wavelength [\AA]')
+            # plt.savefig(f'Figs/n_Ltildan_m{m}_snap{snap}')
+            # plt.show()
+                        

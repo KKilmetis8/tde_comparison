@@ -76,21 +76,21 @@ def ray_maker(fix, m, check, num = 1000):
     
     # Find observers with Healpix
     thetas = np.zeros(192)
-    phis = np.zeros(192)
+    phis = np.zeros(192) 
     observers = []
     for i in range(0,192):
-        thetas[i], phis[i] = hp.pix2ang(NSIDE, i)
-        thetas[i] -= np.pi/2 # Enforce theta in -pi/2 to pi/2 for astropy
+        thetas[i], phis[i] = hp.pix2ang(NSIDE, i) # theta in [0,pi], phi in [0,2pi]
         #phis[i] -= np.pi # Enforce theta in -pi to pi for astropy
         observers.append( (thetas[i], phis[i]) )
     
+    thetas_astro = thetas - np.pi/2 # Enforce theta in -pi/2 to pi/2 for astropy
     # Reshape
-    many_thetas = np.repeat(thetas, len(radii))
+    many_thetas = np.repeat(thetas_astro, len(radii))
     many_phis = np.repeat(phis, len(radii))
     many_radii = list(radii)
     many_radii *= 192 # num of observers 
-
     our_x, our_y, our_z = spherical_to_cartesian(many_radii, many_thetas, many_phis)
+
     #%% Plot
     # ax = plt.figure().add_subplot(projection='3d')
     # radii = np.array(radii)

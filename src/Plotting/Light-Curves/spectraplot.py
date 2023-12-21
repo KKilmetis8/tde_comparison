@@ -8,32 +8,58 @@ import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
 m = 6
-c = 2.99792458e10 #[cm/s]
 snap = 881
+axis = 'temp'
+
+c = 2.99792458e10 #[cm/s]
+h = 6.62607015e-27 #[gcm^2/s]
+Kb = 1.380649e-16 #[gcm^2/s^2K]
+
+def temperature(n):
+        return n * h / Kb
+
+def wavelength(n):
+        # in angststrom 
+        return c *1e8 / n 
 
 nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}.txt')
 x_array = np.loadtxt(f'data/blue/spectrafreq_m{m}.txt')
 n_array = np.power(10, x_array)
 n_start = 1e13
 n_end = 1e18
-wavelength = np.divide(c, n_array) * 1e8 # A
+lamda = wavelength(n_array)
+
+if axis == 'freq':
+        x_axis = n_array
+        x_start = n_start
+        x_end = n_end
+        label = r'$log_{10}\nu$ [Hz]'
+if axis == 'temp':
+        x_axis = temperature(n_array)
+        label = r'$log_{10}$T [K]'
+        x_start = temperature(n_start)
+        x_end = temperature(n_end)
 
 fig, ax1 = plt.subplots( figsize = (6,6) )
-ax1.plot(n_array, n_array * nL_tilde_n[1], c = 'r', label = r'$-\vec{x}$')
-ax1.plot(n_array, n_array * nL_tilde_n[0], linestyle = 'dashed', c = 'b', label = r'$\vec{x}$')
-ax1.plot(n_array, n_array * nL_tilde_n[2], c = 'magenta', label = r'$\vec{z}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[0], c = 'b', label = r'$\vec{x}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[1], c = 'r', label = r'$-\vec{x}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[2], c = 'k', label = r'$\vec{y}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[3], c = 'lime', label = r'$-\vec{y}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[4], c = 'magenta', label = r'$\vec{z}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[5], c = 'aqua', label = r'$-\vec{z}$')
 ax2 = ax1.twiny()
-ax1.set_xlabel(r'$log_{10}\nu$ [Hz]')
+ax1.set_xlabel(f'{label}')
 ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]')
 ax1.set_ylim(1e39, 2e42)
-ax1.set_xlim(n_start,n_end)
+ax1.set_xlim(x_start,x_end)
+ax2.set_xlim(wavelength(n_start),wavelength(n_end))
 ax1.loglog()
 ax1.grid()
-#ax2.plot(wavelength, n_array * nL_tilde_n[0])
+ax2.plot(wavelength(n_array), n_array * nL_tilde_n[0], c = 'b')
 ax2.set_xlim(c/n_end *1e8, c/n_start * 1e8)
 ax2.invert_xaxis()
 ax2.loglog()
-ax2.set_xlabel(r'Wavelength [\AA]')
+ax2.set_xlabel(r'$log_{10}\lambda [\AA]$')
 ax1.legend()
 plt.savefig(f'Figs/singlespectra{snap}')
 plt.show()
