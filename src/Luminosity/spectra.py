@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Oct 9 2023
+Created on December 2023
 
-@author: konstantinos, paola 
+@author: paola 
 
 Calculate the luminosity that we will use in the blue (BB) curve as sum of multiple BB.
 
@@ -17,7 +17,6 @@ alice, plot = isalice()
 # Vanilla imports
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial import KDTree
 
 # Chocolate Imports
 from src.Opacity.opacity_table import opacity
