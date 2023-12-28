@@ -43,8 +43,8 @@ if plot_curves:
         days = fld_data[0]
         r = fld_data[1]
 
-    daysb = np.loadtxt('data/blue/bluedata_m'+ str(m) + '.txt')[0]
-    b = np.loadtxt('data/blue/bluedata_m'+ str(m) + '.txt')[3]
+    daysb = np.loadtxt(f'data/blue/blue_m{m}{check}_days.txt')
+    b = np.loadtxt('data/blue/bluedata_m'+ str(m) + '.txt')[2]
     # Elad Plot
     plt.plot(elad_time[0], elad_red_topolt, c = 'r')
     plt.plot(elad_time[0],elad_blue_topolt, c = 'b')
@@ -60,7 +60,7 @@ if plot_curves:
     plt.xlim(39, 65)
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
-    plt.savefig('Final plot/Elad_comparison.png')
+    plt.savefig('Final_plot/Elad_comparison.png')
     plt.show()
 
     if residuals:
@@ -79,7 +79,7 @@ if plot_curves:
         plt.xlim(39, 65)
         plt.xlabel('Time [days]')
         plt.ylabel(r'$1 - L/L^{Elad}$')
-        plt.savefig('Final plot/residuals.png')
+        plt.savefig('Final_plot/residuals.png')
         plt.show()
 
 if plot_radii_sphere:
@@ -113,7 +113,7 @@ if plot_radii_sphere:
     plt.grid()
     plt.yscale('log')
     plt.legend(fontsize = 7)
-    plt.savefig('Final plot/radii_comparison.png')
+    plt.savefig('Final_plot/radii_comparison.png')
     plt.show()
 
 if plot_fit:
@@ -133,5 +133,5 @@ if plot_fit:
     ax2.set(xlabel = 'Times [days]', ylabel = r'$\log_{10}$ Radius [cm]')
     ax2.set_yscale('log')
     plt.subplots_adjust(wspace=0.6)
-    plt.savefig('Final plot/fitted_quantities.png')
+    plt.savefig('Final_plot/fitted_quantities.png')
     plt.show()

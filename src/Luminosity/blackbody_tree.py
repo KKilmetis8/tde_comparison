@@ -99,7 +99,7 @@ def select_rays(wanted_theta, wanted_phi, rays_T, rays_den, rays_cumulative_taus
 if __name__ == "__main__":
     plot = True
     save = True
-    select = True
+    select = False
     
     # Choose BH 
     m = 6
@@ -146,25 +146,9 @@ if __name__ == "__main__":
                 flum.close() 
     
     #%% Get thermalisation radius
-    for idx in range(1,2):#len(snapshots):
+    for idx in range(len(snapshots)):
         snap = snapshots[idx]
         tree_indexes, observers, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
-        if select:
-            _, _, wanted_index = select_observer(wanted_theta, wanted_phi, observers)
-            x_selected = np.sin(observers[wanted_index][0]) * np.cos(observers[wanted_index][1])
-            y_selected = np.sin(observers[wanted_index][0]) * np.sin(observers[wanted_index][1])
-            z_selected = np.cos(observers[wanted_index][0])
-            xyz_selected = [x_selected, y_selected, z_selected]
-            cross_dot = np.zeros(len(observers))
-            for iobs in range(len(observers)):
-                x = np.sin(observers[iobs][0]) * np.cos(observers[iobs][1])
-                y = np.sin(observers[iobs][0]) * np.sin(observers[iobs][1])
-                z = np.cos(observers[iobs][0])
-                xyz = [x,y,z]
-                cross_dot[iobs] = np.dot(xyz_selected, xyz)
-                if cross_dot[iobs] < 0:
-                    cross_dot[iobs] = 0
-                cross_dot /= 192
 
         _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
 
@@ -207,41 +191,30 @@ if __name__ == "__main__":
                 
                 for i, n in enumerate(n_arr): #we need linearspace
                     lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
-                    if select:
-                        lum_n_cell *= cross_dot[j]
                     lum_n[i] += lum_n_cell
-        if select:
-            const_norm = 1/192
-            lum_tilde_n = lum_n * const_norm
-        else:           
+          
         # Normalise with the bolometric luminosity from red curve (FLD)
-            const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
-            lum_tilde_n = lum_n * const_norm
-            # Find the bolometic energy (should be = to the one from FLD)
-            bolom_integrand =  n_arr * lum_tilde_n
-            bolom = np.log(10) * np.trapz(bolom_integrand, x_arr)
-            bolom = "{:.4e}".format(bolom) #scientific notation
-            print('Fix', snap, ', bolometric L:', bolom)
+        const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx])
+        lum_tilde_n = lum_n * const_norm
+        # Find the bolometic energy (should be = to the one from FLD)
+        bolom_integrand =  n_arr * lum_tilde_n
+        bolom = np.log(10) * np.trapz(bolom_integrand, x_arr)
+        bolom = "{:.4e}".format(bolom) #scientific notation
+        print('Fix', snap, ', bolometric L:', bolom)
 
         # Save data and plot
         if save:
-            if select:
-                with open(f'data/blue/nLn_single_m{m}.txt', 'a') as fselect:
-                    fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
-                    fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
-                    fselect.close()
-            else:
             # Bolometric
-                with open(f'data/blue/L_tilda_bolom_m{m}.txt', 'a') as fbolo:
-                    fbolo.write('#snap '+ str(snap) + '\n')
-                    fbolo.write(bolom + '\n')
-                    fbolo.close()
-                    
-                # Spectrum
-                with open(f'data/blue/L_tilda_spectrum_m{m}.txt', 'a') as f:
-                    f.write('#snap '+ str(snap) + ' L_tilde_n \n')
-                    f.write(' '.join(map(str, lum_tilde_n)) + '\n')
-                    f.close()    
+            with open(f'data/blue/L_tilda_bolom_m{m}.txt', 'a') as fbolo:
+                fbolo.write('#snap '+ str(snap) + '\n')
+                fbolo.write(bolom + '\n')
+                fbolo.close()
+                
+            # Spectrum
+            with open(f'data/blue/L_tilda_spectrum_m{m}.txt', 'a') as f:
+                f.write('#snap '+ str(snap) + ' L_tilde_n \n')
+                f.write(' '.join(map(str, lum_tilde_n)) + '\n')
+                f.close()    
         if plot:
             # plt.figure( figsize=(4,5))
             # plt.plot(n_arr, lum_tilde_n)
@@ -264,6 +237,6 @@ if __name__ == "__main__":
             ax2.invert_xaxis()
             ax2.loglog()
             ax2.set_xlabel(r'Wavelength [\AA]')
-            # plt.savefig(f'Figs/n_Ltildan_m{m}_snap{snap}')
-            plt.show()
+            plt.savefig(f'Figs/n_Ltildan_m{m}_snap{snap}')
+            #plt.show()
                         

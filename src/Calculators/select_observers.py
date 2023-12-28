@@ -26,12 +26,16 @@ def find_sph_coord(theta,phi):
     #xyz = [x, y, z]
     return x,y,z
 
-def select_observer(wanted_theta, wanted_phi, thetas, phis):
+def select_observer(wanted_theta, wanted_phi, observers):
     """ Gives thetas, phis from helpix and 
     the index of the points closer to the one given by (wanted_theta, wanted_phi)"""
-
     dist = np.zeros(192)
-    for i in range(192):
+    thetas = np.zeros(192)
+    phis = np.zeros(192)
+
+    for i in range(len(observers)): 
+        thetas[i] = observers[i][0]
+        phis[i] =  observers[i][1]
         delta_theta = wanted_theta -  thetas[i]
         delta_phi = wanted_phi -  phis[i]
         # Haversine formula
@@ -109,7 +113,7 @@ if __name__ == '__main__':
     for idx in range(len(wanted_thetas)):
         wanted_theta = wanted_thetas[idx]
         wanted_phi = wanted_phis[idx]
-        wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
+        wanted_index = select_observer(wanted_theta, wanted_phi, observers)
         x_selected[idx], y_selected[idx], z_selected[idx] = find_sph_coord(thetas[wanted_index], phis[wanted_index])
 
     print('X:' , x_selected)

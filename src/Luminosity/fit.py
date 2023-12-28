@@ -69,7 +69,7 @@ if __name__ == '__main__':
         Blue = np.zeros(len(data))
         
         # NOTE: last 4 because we save on top all the time and should fix that
-        for i in range(len(data) - 4, len(data)):
+        for i in range(len(data)):#(len(data) - 4, len(data)):
             Lums = data[i] 
             # print(Lums)
             Lums_fit = Lums[freq_min_idx:freq_max_idx]
@@ -97,14 +97,16 @@ if __name__ == '__main__':
                 f.close()
                 
     if plot:
-        fig, axs = plt.subplots(2,2, tight_layout = True)
+        fig, axs = plt.subplots(2,3, tight_layout = True)
         axs2 = []
         for i in range(2):
-            for j in range(2):
+            for j in range(3):
                 axs2.append(axs[i,j])
               
         for i, ax in enumerate(axs2):
-            Lums = data[i + len(data) - 4] # NOTE: last 4 because we save on top all the time and should fix that
+            if i == 5:
+                break
+            Lums = data[i] #data[i + len(data) - 4] # NOTE: last 4 because we save on top all the time and should fix that
             Lums_fit = Lums[freq_min_idx:freq_max_idx]
             fit = curve_fit(tofit, fit_freqs, Lums_fit, p0 = (init_R, init_T))
             
@@ -127,5 +129,5 @@ if __name__ == '__main__':
             ax.legend(fontsize = 4)
             ax.set_ylim(1e17,1e30)
         if save: 
-            plt.savefig('Final plot/Fit_m' + str(m) + '.png')
+            plt.savefig('Final_plot/Fit_m' + str(m) + '.png')
         plt.show()
