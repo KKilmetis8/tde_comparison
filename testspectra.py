@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Oct 9 2023
+Test if the bolometric luminosity from the single observers gives you the same value as red
 
-@author: , paola 
-
+@author: paola 
 
 """
 import sys
@@ -23,7 +22,8 @@ plt.rcParams['figure.figsize'] = [5 , 4]
 pre = '/home/s3745597/data1/TDE/tde_comparison'
 
 m = 6
-nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}.txt')
+snap = 881
+nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
 x_array = np.loadtxt(f'data/blue/spectrafreq_m{m}.txt')
 n_array = np.power(10, x_array)
 

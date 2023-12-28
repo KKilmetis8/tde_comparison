@@ -79,24 +79,33 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
     norm = luminosity_fld / L
     return norm
 
-def select_rays(wanted_theta, wanted_phi, rays_T, rays_den, rays_cumulative_taus):
-    _, _, wanted_indexes = select_observer(wanted_theta, wanted_phi)
-    rays_T_new = []
-    rays_den_new = []
-    rays_cumulative_taus_new = []
-    for idx in wanted_indexes:
-        rays_T_new.append(rays_T[idx])
-        rays_den_new.append(rays_den[idx])
-        rays_cumulative_taus_new.append(rays_cumulative_taus[idx])
+# def select_rays(wanted_theta, wanted_phi, rays_T, rays_den, rays_cumulative_taus):
+#     _, _, wanted_indexes = select_observer(wanted_theta, wanted_phi)
+#     rays_T_new = []
+#     rays_den_new = []
+#     rays_cumulative_taus_new = []
+#     for idx in wanted_indexes:
+#         rays_T_new.append(rays_T[idx])
+#         rays_den_new.append(rays_den[idx])
+#         rays_cumulative_taus_new.append(rays_cumulative_taus[idx])
 
-    return rays_T_new, rays_den_new, rays_cumulative_taus_new
+#     return rays_T_new, rays_den_new, rays_cumulative_taus_new
 
 def find_sph_coord(theta,phi):
-    x = np.sin(np.pi-theta) * np.cos(phi) #because theta starts from the z axis: we're flipped
+    x = np.sin(np.pi-theta) * np.cos(phi) #because theta should start from the z axis: we're flipped
     y = np.sin(np.pi-theta) * np.sin(phi)
     z = np.cos(np.pi-theta)
     xyz = [x, y, z]
     return xyz
+
+def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
+    """ Given the array of luminosity L_x computed over n_array = 10^{x_array} (!!!), 
+    find the normalisation constant for L_tilde_n from FLD model. """  
+    xLx =  10**(x_array) * L_x
+    L = np.trapz(xLx, x_array) 
+    L *= np.log(10)
+    norm = luminosity_fld / L
+    return norm
 
 # MAIN
 if __name__ == "__main__":
@@ -111,7 +120,7 @@ if __name__ == "__main__":
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
     wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
-    wanted_phis = [0, np.pi/2, np.pi, 3*np.pi/2, 0, 0]
+    wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
 
     # Choose freq range
     n_min = 2.08e13
@@ -148,13 +157,14 @@ if __name__ == "__main__":
 
         xyz_selected = find_sph_coord(thetas[wanted_index], phis[wanted_index])
 
-        cross_dot = np.zeros(len(observers))
+        dot_product = np.zeros(len(observers))
         zero_count = 0
         for iobs in range(len(observers)):
             xyz = find_sph_coord(thetas[iobs], phis[iobs])
-            cross_dot[iobs] = np.dot(xyz_selected, xyz)
-            if cross_dot[iobs] < 0:
-                cross_dot[iobs] = 0
+            dot_product[iobs] = np.dot(xyz_selected, xyz)
+        # set the negative dot product to 0
+            if dot_product[iobs] < 0:
+                dot_product[iobs] = 0
                 zero_count += 1
         print('cross dot 0: ', zero_count)
 
@@ -168,6 +178,7 @@ if __name__ == "__main__":
 
         lum_n = np.zeros(len(x_arr))
 
+        count_high = 0
         for j in range(len(rays_T)):
             print('ray :', j)
             for i in range(len(rays_cumulative_taus[j])):        
@@ -196,18 +207,24 @@ if __name__ == "__main__":
                     print('T low')
                     #continue    
                     T = np.exp(8.7)
-                
+
                 for i, n in enumerate(n_arr): #we need linearspace
                     lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
-                    lum_n_cell *= cross_dot[j]
+                    lum_n_cell *= dot_product[j]
                     lum_n[i] += lum_n_cell
 
-        const_norm = 4/192
+        const_norm_avg = 4/192
+        lum_tilde_n = lum_n * const_norm_avg
+
+        const_red = 3.82263e43
+        # Normalise with the bolometric luminosity from red curve (FLD)
+        const_norm = normalisation(lum_n, x_arr, const_red)
         lum_tilde_n = lum_n * const_norm
+    
 
         # Save data and plot
         if save:
-            with open(f'data/blue/nLn_single_m{m}.txt', 'a') as fselect:
+            with open(f'data/blue/nLn_single_m{m}_{snap}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
                 fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
                 fselect.close()
