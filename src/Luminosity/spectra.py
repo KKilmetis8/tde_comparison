@@ -109,7 +109,6 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 
 # MAIN
 if __name__ == "__main__":
-    plot = True
     save = True
     snap = 881
 
@@ -119,8 +118,8 @@ if __name__ == "__main__":
     num = 1000
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
-    wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
-    wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
+    # wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
+    # wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
 
     # Choose freq range
     n_min = 2.08e13
@@ -130,16 +129,23 @@ if __name__ == "__main__":
     
     # Save frequency range
     if save:
-        with open('data/blue/spectrafreq_m'+ str(m) + '.txt', 'w') as f:
-            f.write('# exponents x of frequencies: n = 10^x  \n')
-            f.write(' '.join(map(str, x_arr)) + '\n') 
-            f.close()
+        if alice:
+            pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
+            with open(f'{pre_saving}spectrafreq_m{m}.txt', 'w') as f:
+                f.write('# exponents x of frequencies: n = 10^x  \n')
+                f.write(' '.join(map(str, x_arr)) + '\n') 
+                f.close()
+        else:
+            with open('data/blue/spectrafreq_m'+ str(m) + '.txt', 'w') as f:
+                f.write('# exponents x of frequencies: n = 10^x  \n')
+                f.write(' '.join(map(str, x_arr)) + '\n') 
+                f.close()
     
     now = datetime.now()
     now = now.strftime("%d/%m/%Y %H:%M:%S")
     n_arr = 10**x_arr
 
-    snapshots, days = select_snap(m, check)
+    # snapshots, days = select_snap(m, check)
     
     #%% Get thermalisation radius
     tree_indexes, observers, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
@@ -149,11 +155,14 @@ if __name__ == "__main__":
         thetas[iobs] = observers[iobs][0]
         phis[iobs] =  observers[iobs][1]
 
+    wanted_thetas = thetas 
+    wanted_phis = phis
+
     for idx in range(len(wanted_thetas)):
         wanted_theta = wanted_thetas[idx]
         wanted_phi = wanted_phis[idx]
         wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
-        print('index ',wanted_index)
+        # print('index ',wanted_index)
 
         xyz_selected = find_sph_coord(thetas[wanted_index], phis[wanted_index])
 
@@ -166,7 +175,7 @@ if __name__ == "__main__":
             if dot_product[iobs] < 0:
                 dot_product[iobs] = 0
                 zero_count += 1
-        print('cross dot 0: ', zero_count)
+        # print('cross dot 0: ', zero_count)
 
         _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
 
@@ -181,37 +190,40 @@ if __name__ == "__main__":
         count_high = 0
         for j in range(len(rays_T)):
             print('ray :', j)
-            for i in range(len(rays_cumulative_taus[j])):        
-                # Temperature, Density and volume: np.array from near to the BH
-                # to far away. 
-                # Thus we will use negative index in the for loop.
-                # tau: np.array from outside to inside.
-                reverse_idx = -i -1
-                T = rays_T[j][reverse_idx]
-                rho = rays_den[j][reverse_idx] 
-                opt_depth = rays_cumulative_taus[j][i]
-                cell_vol = volume[reverse_idx]
-                
-                # Ensure we can interpolate
-                T_low = np.exp(8.666)
-                T_high = np.exp(17.87)
-                rho_low = np.exp(-49.2)
-                
-                # Out of table
-                if rho < rho_low:
-                    print('rho low')
-                    continue
-                
-                # Opaque
-                if T < T_low:
-                    print('T low')
-                    #continue    
-                    T = np.exp(8.7)
+            if dot_product[j] == 0:
+                continue
+            else:
+                for i in range(len(rays_cumulative_taus[j])):        
+                    # Temperature, Density and volume: np.array from near to the BH
+                    # to far away. 
+                    # Thus we will use negative index in the for loop.
+                    # tau: np.array from outside to inside.
+                    reverse_idx = -i -1
+                    T = rays_T[j][reverse_idx]
+                    rho = rays_den[j][reverse_idx] 
+                    opt_depth = rays_cumulative_taus[j][i]
+                    cell_vol = volume[reverse_idx]
+                    
+                    # Ensure we can interpolate
+                    T_low = np.exp(8.666)
+                    T_high = np.exp(17.87)
+                    rho_low = np.exp(-49.2)
+                    
+                    # Out of table
+                    if rho < rho_low:
+                        print('rho low')
+                        continue
+                    
+                    # Opaque
+                    if T < T_low:
+                        print('T low')
+                        #continue    
+                        T = np.exp(8.7)
 
-                for i, n in enumerate(n_arr): #we need linearspace
-                    lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
-                    lum_n_cell *= dot_product[j]
-                    lum_n[i] += lum_n_cell
+                    for i, n in enumerate(n_arr): #we need linearspace
+                        lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
+                        lum_n_cell *= dot_product[j]
+                        lum_n[i] += lum_n_cell
 
         const_norm_avg = 4/192
         lum_tilde_n = lum_n * const_norm_avg
@@ -224,25 +236,16 @@ if __name__ == "__main__":
 
         # Save data and plot
         if save:
-            with open(f'data/blue/nLn_single_m{m}_{snap}.txt', 'a') as fselect:
-                fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
-                fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
-                fselect.close()
+            if alice:
+                pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
+                with open(f'{pre_saving}nLn_single_m{m}_{snap}_all.txt', 'a') as fselect:
+                        fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
+                        fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
+                        fselect.close()
+            else:
+                with open(f'data/blue/nLn_single_m{m}_{snap}_all.txt', 'a') as fselect:
+                    fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
+                    fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
+                    fselect.close()
 
-        # if plot:
-        #     fig, ax1 = plt.subplots( figsize = (6,6) )
-        #     ax1.plot(n_arr, n_arr * lum_tilde_n)
-        #     ax2 = ax1.twiny()
-        #     ax1.set_xlabel(r'$log_{10}\nu$ [Hz]')
-        #     ax1.set_ylabel(r'$log_{10}(\nu\tilde{L}_\nu)$ [erg/s]')
-        #     ax1.set_ylim(1e39, 2e44)
-        #     ax1.loglog()
-        #     ax1.grid()
-        #     wavelength = np.divide(c, n_arr) * 1e8 # A
-        #     ax2.plot(wavelength, n_arr * lum_tilde_n)
-        #     ax2.invert_xaxis()
-        #     ax2.loglog()
-        #     ax2.set_xlabel(r'Wavelength [\AA]')
-            # plt.savefig(f'Figs/n_Ltildan_m{m}_snap{snap}')
-            # plt.show()
-                        
+    
