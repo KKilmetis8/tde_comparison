@@ -90,8 +90,11 @@ if plot_radii_sphere:
     elad_gmean = mat['g_mean']
 
     # Our load 
-    spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '.txt') 
-    days = np.multiply(spec_radii[0], 40)
+    # spec_radii = np.loadtxt('data/local_special_radii_m'+ str(m) + '.txt') 
+    # days = np.multiply(spec_radii[0], 40)
+    days = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
+    days *= 40
+    spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '.txt') #from ALICE
     photo_arit = spec_radii[1]
     photo_geom = spec_radii[2]
     thermr_arit = spec_radii[3]
@@ -102,10 +105,10 @@ if plot_radii_sphere:
     plt.plot(elad_time[0], elad_gmean[0], c = 'magenta')
 
     # Our plot
-    plt.plot(days, photo_arit, '--o', color = 'black', label = 'Photosphere radius, arithmetic mean')
-    plt.plot(days, photo_geom, '--o', color = 'magenta', label = 'Photosphere radius, geometric mean')
-    plt.plot(days, thermr_arit, '--o', color = 'b', label = 'Thermalization radius, arithmetic mean')
-    plt.plot(days, thermr_geom, '--o', color = 'r', label = 'Thermalization radius, geometric mean')
+    plt.plot(days, photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
+    plt.plot(days, photo_geom, '--', color = 'magenta', label = 'Photosphere radius, geometric mean')
+    plt.plot(days, thermr_arit, '--', color = 'b', label = 'Thermalization radius, arithmetic mean')
+    plt.plot(days, thermr_geom, '--', color = 'r', label = 'Thermalization radius, geometric mean')
     plt.xlabel('Time (days)')
     plt.xlim(40,65)
     #plt.ylim(10,1e4)

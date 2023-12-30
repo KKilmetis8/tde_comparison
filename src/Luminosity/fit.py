@@ -55,8 +55,8 @@ if __name__ == '__main__':
     data = np.loadtxt('data/blue/L_tilda_spectrum_m' + str(m) + '.txt')
 
     freqs = np.power(10, x)
-    init_R = 1e12
-    init_T = 3e7
+    init_R = 5e14
+    init_T = 2e4
     
     freq_min_idx = np.argmin( np.abs(freqs - freq_min))
     freq_max_idx = np.argmin( np.abs(freqs - freq_max))

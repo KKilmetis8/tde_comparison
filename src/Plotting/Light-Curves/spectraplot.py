@@ -40,7 +40,7 @@ if axis == 'temp':
         x_start = temperature(n_start)
         x_end = temperature(n_end)
 
-fig, ax1 = plt.subplots( figsize = (6,6) )
+fig, ax1 = plt.subplots( figsize = (6,6) ) 
 for i in range(1,len(nL_tilde_n), 15):
         ax1.plot(x_axis, n_array * nL_tilde_n[i], label = f'observer {i}')#, c = 'b', label = r'$\vec{x}$')
 # ax1.plot(x_axis, n_array * nL_tilde_n[1], c = 'r', label = r'$-\vec{x}$')
