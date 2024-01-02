@@ -213,7 +213,7 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
 if __name__ == "__main__":
     photosphere = False
     thermalisation = True
-    plot = True
+    plot = False
     check = 'fid'
     m = 6 
 
