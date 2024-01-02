@@ -132,7 +132,7 @@ def calc_specialr(T, rho, radius, branch_indexes, select):
     if select == 'photo':
         threshold = 2/3
     if select == 'thermr':
-        threshold = 5
+        threshold = 1
 
     kappa = 0
     kappas = []
