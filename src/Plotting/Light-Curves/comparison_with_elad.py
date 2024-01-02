@@ -96,6 +96,9 @@ if plot_radii_sphere:
     days = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
     days *= 40
     spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '.txt') #from ALICE
+    test = np.loadtxt('data/test.txt') #from ALICE 
+    dtest = test[0]*40
+    rtest = test[-1]
     photo_arit = spec_radii[1]
     photo_geom = spec_radii[2]
     thermr_arit = spec_radii[3]
@@ -112,14 +115,15 @@ if plot_radii_sphere:
     plt.plot(days, photo_geom, '--', color = 'magenta', label = 'Photosphere radius, geometric mean')
     plt.plot(days, thermr_arit, '--', color = 'b', label = 'Thermalization radius, arithmetic mean')
     plt.plot(days, thermr_geom, '--', color = 'r', label = 'Thermalization radius, geometric mean')
+    plt.scatter(dtest, rtest, color = 'r', label = 'test')
     plt.xlabel('Time (days)')
     plt.xlim(40,65)
-    #plt.ylim(10,1e4)
+    plt.ylim(10,1e4)
     plt.ylabel(r'Average radius [$R_\odot$]')
     plt.grid()
     plt.yscale('log')
     plt.legend(fontsize = 7)
-    plt.savefig('Final_plot/radii_comparison.png')
+    #plt.savefig('Final_plot/radii_comparison.png')
     plt.show()
 
 if plot_fit:

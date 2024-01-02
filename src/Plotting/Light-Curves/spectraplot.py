@@ -22,7 +22,7 @@ def wavelength(n):
         # in angststrom 
         return c *1e8 / n 
 
-nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}_all.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/ntest.txt')
 x_array = np.loadtxt(f'data/blue/spectrafreq_m{m}.txt')
 n_array = np.power(10, x_array)
 n_start = 1e13
@@ -41,13 +41,12 @@ if axis == 'temp':
         x_end = temperature(n_end)
 
 fig, ax1 = plt.subplots( figsize = (6,6) ) 
-for i in range(1,len(nL_tilde_n), 15):
-        ax1.plot(x_axis, n_array * nL_tilde_n[i], label = f'observer {i}')#, c = 'b', label = r'$\vec{x}$')
-# ax1.plot(x_axis, n_array * nL_tilde_n[1], c = 'r', label = r'$-\vec{x}$')
-# ax1.plot(x_axis, n_array * nL_tilde_n[2], c = 'k', label = r'$\vec{y}$')
-# ax1.plot(x_axis, n_array * nL_tilde_n[3], c = 'lime', label = r'$-\vec{y}$')
-# ax1.plot(x_axis, n_array * nL_tilde_n[4], c = 'magenta', label = r'$\vec{z}$')
-# ax1.plot(x_axis, n_array * nL_tilde_n[5], c = 'aqua', label = r'$-\vec{z}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[0], c = 'b', label = r'$\vec{x}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[1], c = 'r', label = r'$-\vec{x}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[2], c = 'k', label = r'$\vec{y}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[3], c = 'lime', label = r'$-\vec{y}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[4], c = 'magenta', label = r'$\vec{z}$')
+ax1.plot(x_axis, n_array * nL_tilde_n[5], c = 'aqua', label = r'$-\vec{z}$')
 ax2 = ax1.twiny()
 ax1.set_xlabel(f'{label}')
 ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]')

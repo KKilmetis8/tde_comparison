@@ -37,7 +37,7 @@ num = 1000
 def isalice():
     return alice
 
-def ray_maker(fix, m, check, num = 1000):
+def ray_maker(fix, m, check, num = 2500):
     """ Outputs are in CGS with exception of ray_vol (in solar units) """
     fix = str(fix)
     Mbh = 10**m 
@@ -72,7 +72,7 @@ def ray_maker(fix, m, check, num = 1000):
     log_start = np.log10(start)
     log_stop = np.log10(stop)
     log_radii = np.linspace(log_start, log_stop, num) #simulator units
-    radii = 10**log_radii
+    radii = np.linspace(start, stop, num) #10**log_radii
     
     # Find observers with Healpix
     thetas = np.zeros(192)

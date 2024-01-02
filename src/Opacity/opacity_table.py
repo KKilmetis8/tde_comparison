@@ -83,7 +83,7 @@ def opacity(T, rho, kind, ln = True) -> float:
         k_a = np.exp(absorption)
         k_s = np.exp(scattering)
         
-        # Rybicky & Lightman eq. 1.98 NO USE STEINGERG & STONE (9)
+        # STEINBERG & STONE (9) (Rybicky & Lightman eq. 1.98)
         opacity = np.sqrt(3 * k_a * (k_a + k_s)) 
         return opacity
     

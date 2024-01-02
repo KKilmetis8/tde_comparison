@@ -232,11 +232,9 @@ if __name__ == "__main__":
             const_norm_avg = 4/192
             lum_tilde_n = lum_n * const_norm_avg
 
-
             # Normalise with the bolometric luminosity from red curve (FLD)
             const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx_sn])
             lum_tilde_n = lum_n * const_norm
-        
 
             # Save data and plot
             if save:
@@ -247,9 +245,7 @@ if __name__ == "__main__":
                             fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
                             fselect.close()
                 else:
-                    with open(f'data/blue/nLn_single_m{m}_{snap}_all.txt', 'a') as fselect:
+                    with open(f'data/blue/nLn_single_m{m}_{snap}.txt', 'a') as fselect:
                         fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
                         fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
                         fselect.close()
-
-        

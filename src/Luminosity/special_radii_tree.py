@@ -9,7 +9,7 @@ NOTES FOR OTHERS:
 - things from snapshots are in solar and code units (mass in M_sol, 
   length in R_sol, time s.t. G=1), we have to convert them in CGS 
 
-- change m, fixes, loadpath
+- change m
 """
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
@@ -18,7 +18,6 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 import healpy as hp
 from scipy.stats import gmean
-import h5py
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -52,10 +51,12 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
         Cell density (CGS).
     r_dlogr: int.
             Deltar to integrate in logspace (CGS).
+    select: str.
+            Choose if you want photosphere o Rtherm.
 
     Returns
     -------
-    kappar: float.
+    kappa: float.
             The optical depth of a cell.
     '''    
     # If there is nothing, the ray continues unimpeded
@@ -115,6 +116,8 @@ def calc_specialr(T, rho, radius, branch_indexes, select):
             Radius (CGS).
     branch_indexes: 1D array.
                     Tree indexes for cells in the ray.
+    select: str.
+            Choose if you want photosphere o Rtherm.
 
     Returns
     -------
@@ -132,15 +135,15 @@ def calc_specialr(T, rho, radius, branch_indexes, select):
     if select == 'photo':
         threshold = 2/3
     if select == 'thermr':
-        threshold = 1
+        threshold = 5
 
     kappa = 0
     kappas = []
     cumulative_kappas = []
     i = -1 # Initialize reverse loop
     while kappa <= threshold and i > -len(T):
-        dlogr = np.log(radius[i]) - np.log(radius[i-1]) #back to logspace
-        r_dlogr = radius[i] * dlogr #to integrate in log space
+        dlogr = np.log(radius[i]) - np.log(radius[i-1]) #back to logspace (ln NOT log10)
+        r_dlogr = radius[i] * dlogr #to integrate in ln space
         new_kappa = get_kappa(T[i], rho[i], r_dlogr, select)
         kappa += new_kappa
         kappas.append(new_kappa)
@@ -167,6 +170,8 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
             Radius (CGS).
     tree_indexes: nD array.
                 Tree indexes for cells in the rays.
+    select: str.
+        Choose if you want photosphere o Rtherm.
 
     Returns
     -------
@@ -211,7 +216,7 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
 ################
 
 if __name__ == "__main__":
-    photosphere = False
+    photosphere = True
     thermalisation = True
     plot = False
     check = 'fid'
@@ -276,7 +281,7 @@ if __name__ == "__main__":
                 plt.show()  
 
     if photosphere:         
-        with open(f'data/special_radii_m{m}.txt', 'a') as file:
+        with open(f'data/TESTspecial_radii_m{m}.txt', 'a') as file:
             file.write('# Run of ' + now + '\n#t/t_fb\n')
             file.write(' '.join(map(str, days)) + '\n')
             file.write('# Photosphere arithmetic mean \n')
