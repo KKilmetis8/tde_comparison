@@ -18,6 +18,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 import healpy as hp
 from scipy.stats import gmean
+import h5py
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -210,9 +211,9 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
 ################
 
 if __name__ == "__main__":
-    photosphere = True
+    photosphere = False
     thermalisation = True
-    plot = False
+    plot = True
     check = 'fid'
     m = 6 
 
@@ -225,22 +226,9 @@ if __name__ == "__main__":
     fix_thermr_arit = np.zeros(len(snapshots))
     fix_thermr_geom = np.zeros(len(snapshots))
 
-    for index in range(0,len(snapshots)):        
+    for index in range(1,2):#(0,len(snapshots)):        
         print('Snapshot ' + str(snapshots[index]))
         tree_indexes, _, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, check)
-
-        # dim_ph = np.zeros(len(rays_index_photo))
-        # sushi = np.zeros(192)
-        # for j in range(len(rays_index_photo)):
-        #     find_index_cell = int(rays_index_photo[j])
-        #     vol_ph = rays_vol[j][find_index_cell]
-        #     dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
-        #     dim_grid = (radii[find_index_cell+1]-radii[find_index_cell])/Rsol_to_cm #in solar units
-        #     sushi[j] = dim_ph[j] / dim_grid
-        #     print('Simulation cell R: ' + str(dim_ph[j]))
-        #     print('Our grid: ' + str(dim_grid))
-        # sushi_mean = np.mean(sushi)
-        # print('ratio: ' + str(sushi_mean))
 
         if photosphere:
             rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select='photo')
@@ -285,8 +273,7 @@ if __name__ == "__main__":
                 plt.grid()
                 plt.legend()
                 plt.savefig('therm_obs' + str(snapshots[index]) + '.png')
-                plt.show()   
-
+                plt.show()  
 
     if photosphere:         
         with open(f'data/special_radii_m{m}.txt', 'a') as file:

@@ -23,7 +23,7 @@ from src.Opacity.opacity_table import opacity
 from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.special_radii_tree import get_specialr
 from src.Calculators.select_observers import select_observer 
-from src.Luminosity.select_path import select_snap
+from src.Luminosity.select_path import select_prefix, select_snap
 from datetime import datetime
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -115,6 +115,9 @@ if __name__ == "__main__":
     m = 6
     check = 'fid'
     num = 1000
+    Mbh = 10**m
+    Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
+    pre = select_prefix(m, check)
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
     wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
@@ -152,9 +155,26 @@ if __name__ == "__main__":
         snap = snapshots[idx_sn]
         print(f'Snap{snap}')
 
-        # Get thermalisation radius
+        # Getobservers
         tree_indexes, observers, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
-        _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
+   
+        # Import
+        X = np.load(f'{pre}{snap}/CMx_' + snap + '.npy') 
+        Y = np.load(f'{pre}{snap}/CMy_' + snap + '.npy')
+        Z = np.load(f'{pre}{snap}/CMz_' + snap + '.npy')
+        
+        # Change origin
+        X -= Rt
+
+        # Build a matrix observer x cell_radius with coordinates of the tree
+        tree = []
+        for idx_branch in range(len(tree_indexes)):
+            branch = []
+            for idx_leaf in range(len(tree_indexes[idx_branch])):
+                xyz_leaf = [X[idx_leaf], Y[idx_leaf], Z[idx_leaf]]
+                branch.append(xyz_leaf)
+            tree.append(branch)
+        print(f'matrix: {np.shape(tree)}')
 
         thetas = np.zeros(192)
         phis = np.zeros(192) 
@@ -162,6 +182,9 @@ if __name__ == "__main__":
             thetas[iobs] = observers[iobs][0]
             phis[iobs] =  observers[iobs][1]
 
+        # Get thermalisation radius
+        _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
+        
         # select the observer
         for idx in range(len(wanted_thetas)):
             wanted_theta = wanted_thetas[idx]

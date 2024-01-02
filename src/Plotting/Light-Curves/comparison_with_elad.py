@@ -17,9 +17,9 @@ plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['figure.figsize'] = [10 , 6]
 plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
-plot_curves = True
+plot_curves = False
 residuals = True
-plot_radii_sphere = False
+plot_radii_sphere = True
 plot_fit = False
 m = 6
 check = 'fid'
@@ -85,9 +85,10 @@ if plot_curves:
 if plot_radii_sphere:
     # Elad load 
     mat = scipy.io.loadmat('data/elad_radii.mat')
+    rtherm =  np.loadtxt('data/elad_rtherm.txt')
     elad_time = mat['x']
-    elad_amean = mat['a_mean']
-    elad_gmean = mat['g_mean']
+    elad_amean_ph = mat['a_mean']
+    elad_gmean_ph = mat['g_mean']
 
     # Our load 
     # spec_radii = np.loadtxt('data/local_special_radii_m'+ str(m) + '.txt') 
@@ -101,8 +102,10 @@ if plot_radii_sphere:
     thermr_geom = spec_radii[4]
 
     #Elad plot
-    plt.plot(elad_time[0], elad_amean[0], c = 'k')
-    plt.plot(elad_time[0], elad_gmean[0], c = 'magenta')
+    plt.plot(elad_time[0], elad_amean_ph[0], c = 'k')
+    plt.plot(elad_time[0], elad_gmean_ph[0], c = 'magenta')
+    plt.plot(days, rtherm[0], c = 'b')
+    plt.plot(days,rtherm[1], c = 'r')
 
     # Our plot
     plt.plot(days, photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
