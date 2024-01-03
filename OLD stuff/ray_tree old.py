@@ -12,6 +12,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 from scipy.spatial import KDTree
 import healpy as hp
+from astropy.coordinates import spherical_to_cartesian
 from src.Luminosity.select_path import select_prefix
 import matplotlib.pyplot as plt
 AEK = '#F1C410'
@@ -35,12 +36,6 @@ num = 1000
 
 def isalice():
     return alice
-
-def find_sph_coord(r, theta,phi):
-    x = r * np.sin(np.pi-theta) * np.cos(phi) #because theta should start from the z axis: we're flipped
-    y = r * np.sin(np.pi-theta) * np.sin(phi)
-    z = r * np.cos(np.pi-theta)
-    return [x,y,z]
 
 def ray_maker(fix, m, check, num = 1000):
     """ Outputs are in CGS with exception of ray_vol (in solar units) """
@@ -88,27 +83,13 @@ def ray_maker(fix, m, check, num = 1000):
         #phis[i] -= np.pi # Enforce theta in -pi to pi for astropy
         observers.append( (thetas[i], phis[i]) )
     
-    tree_indexes = np.zeros((len(observers), len(radii)))
-    rays_T = np.zeros((len(observers), len(radii)))
-    rays_den = np.zeros((len(observers), len(radii)))
-    rays = np.zeros((len(observers), len(radii)))
-    rays_vol = np.zeros((len(observers), len(radii)))
-    for j in range(len(observers)):
-        for k, radius in enumerate(radii):
-            queried_value = find_sph_coord(radius, thetas[j], phis[j])
-            _, idx = sim_tree.query(queried_value)
-
-            # Store
-            tree_indexes[j][k] = idx 
-            rays_T[j][k] = T[idx] 
-            rays_den[j][k] = Den[idx] 
-            rays[j][k] = Rad[idx] 
-            rays_vol[j][k] = Vol[idx] # not in CGS
-
-    # Remove Bullshit
-    rays = np.nan_to_num(rays, neginf = 0)
-    rays_den = np.nan_to_num(rays_den, neginf = 0)
-    rays_T = np.nan_to_num(rays_T, neginf = 0)
+    thetas_astro = thetas - np.pi/2 # Enforce theta in -pi/2 to pi/2 for astropy
+    # Reshape
+    many_thetas = np.repeat(thetas_astro, len(radii))
+    many_phis = np.repeat(phis, len(radii))
+    many_radii = list(radii)
+    many_radii *= 192 # num of observers 
+    our_x, our_y, our_z = spherical_to_cartesian(many_radii, many_thetas, many_phis)
 
     #%% Plot
     # ax = plt.figure().add_subplot(projection='3d')
@@ -126,6 +107,44 @@ def ray_maker(fix, m, check, num = 1000):
     # ax.set_ylim(-10_000, 10_000)
     # ax.set_zlim(-10_000, 10_000)
     
+    #%% Find the neighbour to the cell of our grid and keep its values
+    tree_indexes = []
+    rays_T = []
+    rays_den = []
+    rays = []
+    rays_vol = []
+    for j in range(len(observers)):
+        branch_indexes = np.zeros(len(radii))
+        branch_T = np.zeros(len(radii))
+        branch_den = np.zeros(len(radii))
+        branch_energy = np.zeros(len(radii))
+        branch_vol = np.zeros(len(radii)) # not in CGS
+        
+        ray_start = j * num
+        ray_end = ray_start + num
+        for i, k in zip(range(ray_start, ray_end), range(num)):
+            # Get closest neighboor from tree
+            queried_value = [our_x[i], our_y[i], our_z[i]]
+            _, idx = sim_tree.query(queried_value)
+                                    
+            # Store
+            branch_indexes[k] = idx
+            branch_T[k] = T[idx]
+            branch_den[k] = Den[idx]
+            branch_energy[k] = Rad[idx]
+            branch_vol[k] = Vol[idx] # not in CGS 
+        
+        # Remove Bullshit
+        branch_energy = np.nan_to_num(branch_energy, neginf = 0)
+        branch_den = np.nan_to_num(branch_den, neginf = 0)
+        branch_T = np.nan_to_num(branch_T, neginf = 0)
+        
+        # Store as rays
+        tree_indexes.append(branch_indexes)
+        rays_T.append(branch_T)
+        rays_den.append(branch_den)
+        rays.append(branch_energy)
+        rays_vol.append(branch_vol) # not in CGS
         
     # Convert to CGS
     radii *= Rsol_to_cm

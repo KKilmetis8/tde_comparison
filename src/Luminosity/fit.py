@@ -26,8 +26,8 @@ h = 6.62607015e-27 # [gcm^2/s]
 Kb = 1.380649e-16 #[gcm^2/s^2K]
 sigma = 5.67037e-5
 # ztf: 3.23e14 - 6.71e14 // swift: 6.34e14 - 1.88e15
-freq_min = 1e15
-freq_max = 1e18
+freq_min = 3.23e14
+freq_max = 1.88e15
 
 
 ##

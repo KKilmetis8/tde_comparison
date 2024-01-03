@@ -79,18 +79,6 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
     norm = luminosity_fld / L
     return norm
 
-# def select_rays(wanted_theta, wanted_phi, rays_T, rays_den, rays_cumulative_taus):
-#     _, _, wanted_indexes = select_observer(wanted_theta, wanted_phi)
-#     rays_T_new = []
-#     rays_den_new = []
-#     rays_cumulative_taus_new = []
-#     for idx in wanted_indexes:
-#         rays_T_new.append(rays_T[idx])
-#         rays_den_new.append(rays_den[idx])
-#         rays_cumulative_taus_new.append(rays_cumulative_taus[idx])
-
-#     return rays_T_new, rays_den_new, rays_cumulative_taus_new
-
 def find_sph_coord(theta,phi):
     x = np.sin(np.pi-theta) * np.cos(phi) #because theta should start from the z axis: we're flipped
     y = np.sin(np.pi-theta) * np.sin(phi)
@@ -148,7 +136,7 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(1,2): #so you take 881
+    for idx_sn in range(1,2): #so you take snap 881
         snap = snapshots[idx_sn]
         print(f'Snap{snap}')
 

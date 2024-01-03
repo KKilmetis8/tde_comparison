@@ -16,7 +16,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 
 # Vanilla Imports
 import numpy as np
-import healpy as hp
+import h5py
 from scipy.stats import gmean
 
 import matplotlib.pyplot as plt
@@ -218,7 +218,8 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
 if __name__ == "__main__":
     photosphere = True
     thermalisation = True
-    plot = False
+    plot = True
+    save = True
     check = 'fid'
     m = 6 
 
@@ -231,74 +232,86 @@ if __name__ == "__main__":
     fix_thermr_arit = np.zeros(len(snapshots))
     fix_thermr_geom = np.zeros(len(snapshots))
 
-    for index in range(len(snapshots)):        
+    for index in range(0,1):#len(snapshots)):        
         print('Snapshot ' + str(snapshots[index]))
         tree_indexes, _, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, check)
 
         if photosphere:
             rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select='photo')
             rays_photo = rays_photo/Rsol_to_cm # to solar unit to plot
+            elad_photo = np.zeros(len(rays_photo))
+            with h5py.File(f'data/elad/data_{snapshots[index]}.mat', 'r') as f:
+                elad_ph = f['r_photo'][0]
+            for i in range(len(elad_photo)):
+                elad_photo[i] =  elad_ph[i]
 
             fix_photo_arit[index] = np.mean(rays_photo)
             fix_photo_geom[index] = gmean(rays_photo)
 
             if plot:
                 fig, ax = plt.subplots(figsize = (8,6))
-                img = ax.scatter(np.arange(192), rays_photo, c = 'k', s = 15)
+                ax.scatter(np.arange(192), rays_photo, c = 'k', s = 15, label = 'us')
+                ax.scatter(np.arange(192), elad_photo, c = 'b', s = 15, label = 'SteinbergStone')
+                plt.axhline(np.mean(elad_photo), c = 'r')#, label = r'$\bar{R}_{ph}$ arit mean') #Elad
+                plt.axhline(gmean(elad_photo), c = 'green')#, label = r'$\bar{R}_{ph}$ geom mean') #Elad
                 plt.axhline(np.mean(rays_photo), c = 'r', linestyle = '--', label = r'$\bar{R}_{ph}$ arit mean')
-                plt.axhline(gmean(rays_photo), c = 'b', linestyle = '--', label = r'$\bar{R}_{ph}$ geom mean')
-                # plt.axhline(800, c = 'r', label = r'$\bar{R}_{ph}$ arit mean') #Elad
-                # plt.axhline(50, c = 'b', label = r'$\bar{R}_{ph}$ geom mean') #Elad
+                plt.axhline(gmean(rays_photo), c = 'limegreen', linestyle = '--', label = r'$\bar{R}_{ph}$ geom mean')
                 plt.xlabel('Observers')
                 plt.ylabel('$\log_{10} R_{ph} [R_\odot]$')
                 plt.yscale('log')
                 plt.grid()
                 plt.legend()
-                plt.savefig('photo_obs' + str(snapshots[index]) + '.png')
+                #plt.savefig('Figs/photo_obs' + str(snapshots[index]) + '.png')
                 plt.show()  
-                
 
         if thermalisation: 
             rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select= 'thermr')
             rays_thermr = rays_thermr/Rsol_to_cm # to solar unit to plot
+            rtherm = np.zeros(len(rays_thermr))
+            with h5py.File(f'data/elad/data_{snapshots[index]}.mat', 'r') as f:
+                elad_rtherm = f['r_therm'][0]
+            for i in range(len(rtherm)):
+                rtherm[i] =  elad_rtherm[i]
 
             fix_thermr_arit[index] = np.mean(rays_thermr)
             fix_thermr_geom[index] = gmean(rays_thermr)
             
             if plot: 
                 fig, ax = plt.subplots(figsize = (8,6))
-                img = ax.scatter(np.arange(192), rays_thermr, c = 'k', s = 15)
+                ax.scatter(np.arange(192), rays_thermr, c = 'k', s = 15, label = 'our')
+                ax.scatter(np.arange(192), rtherm, c = 'b', s = 15, label = 'SteinbergStone')
                 plt.axhline(np.mean(rays_thermr), c = 'r', linestyle = '--', label = r'$\bar{R}_{ph}$ arit mean')
-                plt.axhline(gmean(rays_thermr), c = 'b', linestyle = '--', label = r'$\bar{R}_{ph}$ geom mean')
-                # plt.axhline(800, c = 'r', label = r'$\bar{R}_{ph}$ arit mean') #Elad
-                # plt.axhline(50, c = 'b', label = r'$\bar{R}_{ph}$ geom mean') #Elad
+                plt.axhline(gmean(rays_thermr), c = 'green', linestyle = '--', label = r'$\bar{R}_{ph}$ geom mean')
+                plt.axhline(np.mean(rtherm), c = 'r')#, label = r'$\bar{R}_{ph}$ arit mean') #Elad
+                plt.axhline(gmean(rtherm), c = 'green')#, label = r'$\bar{R}_{ph}$ geom mean') #Elad
                 plt.xlabel('Observers')
                 plt.ylabel('$\log_{10} R_{therm} [R_\odot]$')
                 plt.yscale('log')
                 plt.grid()
-                plt.legend()
-                plt.savefig('therm_obs' + str(snapshots[index]) + '.png')
+                plt.legend(fontsize = 8)
+                plt.savefig('Figs/therm_obs' + str(snapshots[index]) + '.png')
                 plt.show()  
 
-    if photosphere:         
-        with open(f'data/TESTspecial_radii_m{m}.txt', 'a') as file:
-            file.write('# Run of ' + now + '\n#t/t_fb\n')
-            file.write(' '.join(map(str, days)) + '\n')
-            file.write('# Photosphere arithmetic mean \n')
-            file.write(' '.join(map(str, fix_photo_arit)) + '\n')
-            file.write('# Photosphere geometric mean \n')
-            file.write(' '.join(map(str, fix_photo_geom)) + '\n')
-            file.close()
-            
-    if thermalisation:
-        with open(f'data/special_radii_m{m}.txt', 'a') as file:
-            file.write('# Run of ' + now + '\n#t/t_fb\n')
-            file.write(' '.join(map(str, days)) + '\n')
-            file.write('# Thermalisation radius arithmetic mean \n')
-            file.write(' '.join(map(str, fix_thermr_arit)) + '\n')
-            file.write('# Thermalisation radius geometric mean \n')
-            file.write(' '.join(map(str, fix_thermr_geom)) + '\n')
-            file.close()
+    if save: 
+        if photosphere:         
+            with open(f'data/special_radii_m{m}.txt', 'a') as file:
+                file.write('# Run of ' + now + '\n#t/t_fb\n')
+                file.write(' '.join(map(str, days)) + '\n')
+                file.write('# Photosphere arithmetic mean \n')
+                file.write(' '.join(map(str, fix_photo_arit)) + '\n')
+                file.write('# Photosphere geometric mean \n')
+                file.write(' '.join(map(str, fix_photo_geom)) + '\n')
+                file.close()
+                
+        if thermalisation:
+            with open(f'data/special_radii_m{m}.txt', 'a') as file:
+                file.write('# Run of ' + now + '\n#t/t_fb\n')
+                file.write(' '.join(map(str, days)) + '\n')
+                file.write('# Thermalisation radius arithmetic mean \n')
+                file.write(' '.join(map(str, fix_thermr_arit)) + '\n')
+                file.write('# Thermalisation radius geometric mean \n')
+                file.write(' '.join(map(str, fix_thermr_geom)) + '\n')
+                file.close()
 
 
 

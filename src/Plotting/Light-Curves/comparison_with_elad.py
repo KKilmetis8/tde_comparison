@@ -96,7 +96,7 @@ if plot_radii_sphere:
     days = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
     days *= 40
     spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '.txt') #from ALICE
-    test = np.loadtxt('data/test.txt') #from ALICE 
+    test = np.loadtxt('data/TESTspecial_radii_m'+ str(m) + '.txt') #from ALICE 
     dtest = test[0]*40
     rtest = test[-1]
     photo_arit = spec_radii[1]
@@ -111,11 +111,11 @@ if plot_radii_sphere:
     plt.plot(days,rtherm[1], c = 'r')
 
     # Our plot
-    plt.plot(days, photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
-    plt.plot(days, photo_geom, '--', color = 'magenta', label = 'Photosphere radius, geometric mean')
+    plt.plot(elad_time[0][23:], photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
+    plt.plot(elad_time[0][23:], photo_geom, '--', color = 'violet', label = 'Photosphere radius, geometric mean')
     plt.plot(days, thermr_arit, '--', color = 'b', label = 'Thermalization radius, arithmetic mean')
     plt.plot(days, thermr_geom, '--', color = 'r', label = 'Thermalization radius, geometric mean')
-    plt.scatter(dtest, rtest, color = 'r', label = 'test')
+    # plt.plot(dtest, rtest, color = 'k', label = 'test')
     plt.xlabel('Time (days)')
     plt.xlim(40,65)
     plt.ylim(10,1e4)
@@ -123,7 +123,7 @@ if plot_radii_sphere:
     plt.grid()
     plt.yscale('log')
     plt.legend(fontsize = 7)
-    #plt.savefig('Final_plot/radii_comparison.png')
+    plt.savefig('Final_plot/radii_comparison.png')
     plt.show()
 
 if plot_fit:
