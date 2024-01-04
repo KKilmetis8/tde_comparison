@@ -48,9 +48,15 @@ L *= np.log(10)
 L /= len(nL_tilde_n)
 print(L)
 
-with open(f'data/test.txt', 'a') as file:  
-    file.write(' '.join(map(str, nL_tilde_n_new)) + '\n')
-    file.close()
+# with open(f'data/test.txt', 'a') as file:  
+#     file.write(' '.join(map(str, nL_tilde_n_new)) + '\n')
+#     file.close()
 
-with h5py.File(f'data/elad/data_881.mat', 'r') as f:
-    print(f.keys())
+# with h5py.File(f'data/elad/data_881.mat', 'r') as f:
+#     print(f.keys())
+
+a = [2, 4, 8]
+i = 0
+while a[i]>0 and a[i]<5:
+    print(a[i])
+    i += 1 

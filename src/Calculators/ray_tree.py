@@ -42,8 +42,11 @@ def find_sph_coord(r, theta,phi):
     z = r * np.cos(np.pi-theta)
     return [x,y,z]
 
-def ray_maker(fix, m, check, num = 1000):
-    """ Outputs are in CGS with exception of ray_vol (in solar units) """
+def ray_maker(fix, m, check, num = 1001): 
+    """ 
+    Num is 1001 because for blue we then delete the last cell.
+    Outputs are in CGS with exception of ray_vol (in solar units).
+    """
     fix = str(fix)
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1

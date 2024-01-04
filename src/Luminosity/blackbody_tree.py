@@ -99,7 +99,6 @@ def select_rays(wanted_theta, wanted_phi, rays_T, rays_den, rays_cumulative_taus
 if __name__ == "__main__":
     plot = True
     save = True
-    select = False
     
     # Choose BH 
     m = 6
@@ -172,22 +171,7 @@ if __name__ == "__main__":
                 rho = rays_den[j][reverse_idx] 
                 opt_depth = rays_cumulative_taus[j][i]
                 cell_vol = volume[reverse_idx]
-                
-                # Ensure we can interpolate
-                T_low = np.exp(8.666)
-                T_high = np.exp(17.87)
-                rho_low = np.exp(-49.2)
-                
-                # Out of table
-                if rho < rho_low:
-                    print('rho low')
-                    continue
-                
-                # Opaque
-                if T < T_low:
-                    print('T low')
-                    #continue    
-                    T = np.exp(8.7)
+            
                 
                 for i, n in enumerate(n_arr): #we need linearspace
                     lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)

@@ -28,7 +28,6 @@ from datetime import datetime
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
-pre = '/home/s3745597/data1/TDE/tde_comparison'
 
 # Constants
 c = 2.99792458e10 #[cm/s]
@@ -62,8 +61,8 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, 
     if Temperature > T_high:
         Tmax = np.exp(17.87)
         # Scale as Kramers the last point 
-        kplank_0 = opacity(Tmax, rho, 'planck', ln = False)
-        k_planck = kplank_0 * (T/Tmax)**(-3.5)
+        kplank_0 = opacity(Tmax, Density, 'planck', ln = False)
+        k_planck = kplank_0 * (Temperature/Tmax)**(-3.5)
     else:
         k_planck = opacity(Temperature, Density, 'planck', ln = False)
 
@@ -95,6 +94,45 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
     norm = luminosity_fld / L
     return norm
 
+def spectrum(xyz_selected, thetas, phis, rays_T, rays_den, rays_cumulative_taus, volume, bol_fld):
+    dot_product = np.zeros(len(thetas))
+    zero_count = 0
+    for iobs in range(len(thetas)):
+        xyz = find_sph_coord(thetas[iobs], phis[iobs])
+        dot_product[iobs] = np.dot(xyz_selected, xyz)
+    # set the negative dot product to 0
+        if dot_product[iobs] < 0:
+            dot_product[iobs] = 0
+            zero_count += 1
+    # print('cross dot 0: ', zero_count)
+    dot_product *= 4/192 # normalisation from Elad
+
+    lum_n = np.zeros(len(x_arr))
+
+    for j in range(len(thetas)):
+        print('ray :', j)
+
+        for i in range(len(rays_cumulative_taus[j])):        
+            # Temperature, Density and volume: np.array from near to the BH to far away. 
+            # Thus we will use negative index in the for loop.
+            # tau: np.array from outside to inside.
+            reverse_idx = -i -1
+            T = rays_T[j][reverse_idx]
+            rho = rays_den[j][reverse_idx] 
+            opt_depth = rays_cumulative_taus[j][i]
+            cell_vol = volume[reverse_idx] #rays_vol[j][reverse_idx] * Rsol_to_cm**3 
+
+            for i_freq, n in enumerate(n_arr): #we need linearspace
+                lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
+                lum_n_cell *= dot_product[j]
+                lum_n[i_freq] += lum_n_cell
+
+    # Normalise with the bolometric luminosity from red curve (FLD)
+    const_norm = normalisation(lum_n, x_arr, bol_fld)
+    lum_tilde_n = lum_n * const_norm
+
+    return lum_tilde_n
+
 # MAIN
 if __name__ == "__main__":
     save = True
@@ -103,16 +141,18 @@ if __name__ == "__main__":
     m = 6
     check = 'fid'
     num = 1000
+    snapshots, days = select_snap(m, check)
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
-    wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
-    wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
+    # wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
+    # wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
 
     # Choose freq range
     n_min = 2.08e13
     n_max = 6.25e23
-    n_spacing = 100
+    n_spacing = 100 # Elad used 1000, but no difference
     x_arr = log_array(n_min, n_max, n_spacing)
+    n_arr = 10**x_arr
     
     # Save frequency range
     if save:
@@ -130,27 +170,38 @@ if __name__ == "__main__":
     
     now = datetime.now()
     now = now.strftime("%d/%m/%Y %H:%M:%S")
-    n_arr = 10**x_arr
 
-    snapshots, days = select_snap(m, check)
+    # Load data for normalsation 
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(1,2): #so you take snap 881
+    for idx_sn in range(0,1): #so you take snap 881
         snap = snapshots[idx_sn]
-        print(f'Snap{snap}')
+        bol_fld = 4.6809232785802375e+42 #luminosity_fld_fix[idx_sn]
+        print(f'Snap {snap}')
 
-        # Get thermalisation radius
-        tree_indexes, observers, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
-        _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
-
+        # Find observers 
+        tree_indexes, observers, rays_T, rays_den, _, radii, rays_vol = ray_maker(snap, m, check, num)
+        # Find voulume of cells
+        # Radii has num+1 cell just to compute the volume for num cell. Then we delete the last radius cell
+        volume = np.zeros(len(radii)-1)
+        for i in range(len(volume)): 
+            dr = radii[i+1] - radii[i]
+            volume[i] = 4 * np.pi * radii[i]**2 * dr / 192  
         thetas = np.zeros(192)
         phis = np.zeros(192) 
         for iobs in range(len(observers)): 
             thetas[iobs] = observers[iobs][0]
             phis[iobs] =  observers[iobs][1]
 
-        # select the observer
+        wanted_thetas = thetas 
+        wanted_phis = phis 
+        
+        radii = np.delete(radii, -1)
+        # Get thermalisation radius
+        _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
+
+        # Select the observer for single spectra
         for idx in range(len(wanted_thetas)):
             wanted_theta = wanted_thetas[idx]
             wanted_phi = wanted_phis[idx]
@@ -159,71 +210,8 @@ if __name__ == "__main__":
 
             xyz_selected = find_sph_coord(thetas[wanted_index], phis[wanted_index])
 
-            dot_product = np.zeros(len(observers))
-            zero_count = 0
-            for iobs in range(len(observers)):
-                xyz = find_sph_coord(thetas[iobs], phis[iobs])
-                dot_product[iobs] = np.dot(xyz_selected, xyz)
-            # set the negative dot product to 0
-                if dot_product[iobs] < 0:
-                    dot_product[iobs] = 0
-                    zero_count += 1
-            # print('cross dot 0: ', zero_count)
-
-
-            #%%   
-            volume = np.zeros(len(radii))
-            for i in range(len(radii)-1): 
-                dr = radii[i+1] - radii[i]
-                volume[i] = 4 * np.pi * radii[i]**2 * dr / 192         
-
-            lum_n = np.zeros(len(x_arr))
-
-            count_high = 0
-            for j in range(len(rays_T)):
-                print('ray :', j)
-                if dot_product[j] == 0:
-                    continue
-                else:
-                    for i in range(len(rays_cumulative_taus[j])):        
-                        # Temperature, Density and volume: np.array from near to the BH
-                        # to far away. 
-                        # Thus we will use negative index in the for loop.
-                        # tau: np.array from outside to inside.
-                        reverse_idx = -i -1
-                        T = rays_T[j][reverse_idx]
-                        rho = rays_den[j][reverse_idx] 
-                        opt_depth = rays_cumulative_taus[j][i]
-                        cell_vol = volume[reverse_idx]
-                        
-                        # Ensure we can interpolate
-                        T_low = np.exp(8.666)
-                        T_high = np.exp(17.87)
-                        rho_low = np.exp(-49.2)
-                        
-                        # Out of table
-                        if rho < rho_low:
-                            print('rho low')
-                            continue
-                        
-                        # Opaque
-                        if T < T_low:
-                            print('T low')
-                            #continue    
-                            T = np.exp(8.7)
-
-                        for i, n in enumerate(n_arr): #we need linearspace
-                            lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
-                            lum_n_cell *= dot_product[j]
-                            lum_n[i] += lum_n_cell
-
-            const_norm_avg = 4/192
-            lum_tilde_n = lum_n * const_norm_avg
-
-            # Normalise with the bolometric luminosity from red curve (FLD)
-            const_norm = normalisation(lum_n, x_arr, luminosity_fld_fix[idx_sn])
-            lum_tilde_n = lum_n * const_norm
-
+            lum_tilde_n = spectrum(xyz_selected, thetas, phis, rays_T, rays_den, rays_cumulative_taus, volume, bol_fld)
+        
             # Save data and plot
             if save:
                 if alice:

@@ -65,6 +65,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     
     # Stream material, is opaque
     elif T < np.exp(8.666):
+        print('T low')
         return 100
     
     # Too hot: scale as Kramers for absorption (planck)
@@ -89,6 +90,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
             k = np.sqrt(3 * kplanck * (kplanck + kscattering)) 
 
         kappa_high = k * r_dlogr
+
         return kappa_high 
     
     else:
@@ -104,7 +106,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
 
 def calc_specialr(T, rho, radius, branch_indexes, select):
     '''
-    Finds and saves the photosphere/R_therm (CGS) for ONE  ray.
+    Finds and saves the photosphere or R_therm (CGS) for ONE  ray.
 
     Parameters
     ----------
