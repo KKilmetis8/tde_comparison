@@ -99,7 +99,7 @@ def ray_maker(fix, m, check, num = 1001):
     rays_vol = np.zeros((len(observers), len(radii)-1))
     for j in range(len(observers)):
         for k in range(len(radii)-1):
-            radius = radii(k)
+            radius = radii[k]
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
             _, idx = sim_tree.query(queried_value)
 
