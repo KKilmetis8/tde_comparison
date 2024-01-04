@@ -91,13 +91,15 @@ def ray_maker(fix, m, check, num = 1001):
         #phis[i] -= np.pi # Enforce theta in -pi to pi for astropy
         observers.append( (thetas[i], phis[i]) )
     
-    tree_indexes = np.zeros((len(observers), len(radii)))
-    rays_T = np.zeros((len(observers), len(radii)))
-    rays_den = np.zeros((len(observers), len(radii)))
-    rays = np.zeros((len(observers), len(radii)))
-    rays_vol = np.zeros((len(observers), len(radii)))
+    tree_indexes = np.zeros((len(observers), len(radii)-1))
+    # you take len(radii)-1 beacause in blue you will delete the last cell of radii
+    rays_T = np.zeros((len(observers), len(radii)-1))
+    rays_den = np.zeros((len(observers), len(radii)-1))
+    rays = np.zeros((len(observers), len(radii)-1))
+    rays_vol = np.zeros((len(observers), len(radii)-1))
     for j in range(len(observers)):
-        for k, radius in enumerate(radii):
+        for k in range(len(radii)-1):
+            radius = radii(k)
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
             _, idx = sim_tree.query(queried_value)
 
@@ -128,7 +130,6 @@ def ray_maker(fix, m, check, num = 1001):
     # ax.set_xlim(-10_000, 10_000)
     # ax.set_ylim(-10_000, 10_000)
     # ax.set_zlim(-10_000, 10_000)
-    
         
     # Convert to CGS
     radii *= Rsol_to_cm

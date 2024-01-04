@@ -188,11 +188,8 @@ if __name__ == "__main__":
         for i in range(len(volume)): 
             dr = radii[i+1] - radii[i]
             volume[i] = 4 * np.pi * radii[i]**2 * dr / 192  
-        tree_indexes = np.delete(tree_indexes, -1)
-        rays_T = np.delete(rays_T, -1)
-        rays_den = np.delete(rays_den, -1)
+
         radii = np.delete(radii, -1)
-        rays_vol = np.delete(rays_vol, -1)
 
         thetas = np.zeros(192)
         phis = np.zeros(192) 
