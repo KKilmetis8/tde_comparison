@@ -144,8 +144,8 @@ if __name__ == "__main__":
     snapshots, days = select_snap(m, check)
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
-    wanted_thetas = [np.pi/2, np.pi/2, np.pi/2]#, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
-    wanted_phis = [0, np.pi, np.pi/2]#, 3*np.pi/2, 0, 0]
+    wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
+    wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
 
     # Choose freq range
     n_min = 2.08e13
