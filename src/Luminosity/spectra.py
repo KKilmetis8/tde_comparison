@@ -144,8 +144,8 @@ if __name__ == "__main__":
     snapshots, days = select_snap(m, check)
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
-    # wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
-    # wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
+    wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
+    wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
 
     # Choose freq range
     n_min = 2.08e13
@@ -175,7 +175,7 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(0,1): #so you take snap 881
+    for idx_sn in range(len(snapshots)-1, len(snapshots)): #so you take snap 881
         snap = snapshots[idx_sn]
         bol_fld = 4.6809232785802375e+42 #luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')
@@ -196,9 +196,6 @@ if __name__ == "__main__":
         for iobs in range(len(observers)): 
             thetas[iobs] = observers[iobs][0]
             phis[iobs] =  observers[iobs][1]
-
-        wanted_thetas = thetas 
-        wanted_phis = phis 
 
         # Get thermalisation radius
         _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
