@@ -177,7 +177,7 @@ if __name__ == "__main__":
     
     for idx_sn in range(len(snapshots)-1, len(snapshots)): #so you take snap 881
         snap = snapshots[idx_sn]
-        bol_fld = 4.6809232785802375e+42 #luminosity_fld_fix[idx_sn]
+        bol_fld = 1.6339520760162161e+44 #luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')
 
         # Find observers 
