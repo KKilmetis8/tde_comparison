@@ -27,7 +27,7 @@ from_alice = True #take the values from Alice files
 
 if plot_curves:
     # Elad Load and convert
-    mat = scipy.io.loadmat('data/elad_lum.mat')
+    mat = scipy.io.loadmat('data/elad_lum.mat') 
     elad_time = mat['time']
     elad_blue = mat['L_bb']
     elad_red = mat['L_fld']
@@ -84,38 +84,38 @@ if plot_curves:
 
 if plot_radii_sphere:
     # Elad load 
-    mat = scipy.io.loadmat('data/elad_radii.mat')
+    # mat = scipy.io.loadmat('data/elad_radii.mat')
+    # elad_time = mat['x']
+    # elad_amean_ph = mat['a_mean']
+    # elad_gmean_ph = mat['g_mean']
     rtherm =  np.loadtxt('data/elad_rtherm.txt')
-    elad_time = mat['x']
-    elad_amean_ph = mat['a_mean']
-    elad_gmean_ph = mat['g_mean']
+    photo =  np.loadtxt('data/elad_photo.txt') ##
 
     # Our load 
     # spec_radii = np.loadtxt('data/local_special_radii_m'+ str(m) + '.txt') 
     # days = np.multiply(spec_radii[0], 40)
     days = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
     days *= 40
+
     spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '.txt') #from ALICE
-    test = np.loadtxt('data/TESTspecial_radii_m'+ str(m) + '.txt') #from ALICE 
-    dtest = test[0]*40
-    rtest = test[-1]
     photo_arit = spec_radii[1]
     photo_geom = spec_radii[2]
     thermr_arit = spec_radii[3]
     thermr_geom = spec_radii[4]
 
     #Elad plot
-    plt.plot(elad_time[0], elad_amean_ph[0], c = 'k')
-    plt.plot(elad_time[0], elad_gmean_ph[0], c = 'magenta')
+    # plt.plot(elad_time[0], elad_amean_ph[0], c = 'k')
+    # plt.plot(elad_time[0], elad_gmean_ph[0], c = 'magenta')
+    plt.plot(days, photo[0], c = 'k')
+    plt.plot(days, photo[1], c = 'magenta')
     plt.plot(days, rtherm[0], c = 'b')
     plt.plot(days,rtherm[1], c = 'r')
 
     # Our plot
-    plt.plot(elad_time[0][23:], photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
-    plt.plot(elad_time[0][23:], photo_geom, '--', color = 'violet', label = 'Photosphere radius, geometric mean')
+    plt.plot(days, photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
+    plt.plot(days, photo_geom, '--', color = 'violet', label = 'Photosphere radius, geometric mean')
     plt.plot(days, thermr_arit, '--', color = 'b', label = 'Thermalization radius, arithmetic mean')
     plt.plot(days, thermr_geom, '--', color = 'r', label = 'Thermalization radius, geometric mean')
-    # plt.plot(dtest, rtest, color = 'k', label = 'test')
     plt.xlabel('Time (days)')
     plt.xlim(40,65)
     plt.ylim(10,1e4)
@@ -125,6 +125,21 @@ if plot_radii_sphere:
     plt.legend(fontsize = 7)
     plt.savefig('Final_plot/radii_comparison.png')
     plt.show()
+
+    if residuals:
+        elad_ph = photo[1]
+        elad_th = rtherm[1]
+        y_value_ph = (photo_geom - elad_ph) / elad_ph
+        y_value_th = (thermr_geom - elad_th) / elad_th
+
+        plt.plot(days, y_value_ph, c = 'magenta', markersize = 4)
+        plt.plot(days, y_value_th, c = 'r', markersize = 4)
+        plt.grid()
+        plt.xlim(39, 65)
+        plt.xlabel('Time [days]')
+        plt.ylabel(r'$1 - R/R^{Elad}$')
+        plt.savefig('Final_plot/residuals_radii.png')
+        plt.show()
 
 if plot_fit:
     Rsol_to_cm = 6.957e10

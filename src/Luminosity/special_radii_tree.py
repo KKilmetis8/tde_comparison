@@ -60,7 +60,8 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
             The optical depth of a cell.
     '''    
     # If there is nothing, the ray continues unimpeded
-    if rho < np.exp(-49.3):        
+    if rho < np.exp(-49.3):
+        print('rho low')        
         return 0
     
     # Stream material, is opaque
@@ -70,6 +71,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     
     # Too hot: scale as Kramers for absorption (planck)
     elif T > np.exp(17.876):
+        # print('T high')
         # X = 0.7389
         # Z = 0.02
         
@@ -151,7 +153,7 @@ def calc_specialr(T, rho, radius, branch_indexes, select):
         kappas.append(new_kappa)
         cumulative_kappas.append(kappa)
         i -= 1
-
+        
     specialr =  radius[i] #i it's negative
     index_specialr = i + len(T) 
     branch_index_specialr = branch_indexes[i]
@@ -194,7 +196,8 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
     rays_index_specialr = np.zeros(len(rays_T))
     tree_index_specialr = np.zeros(len(rays_T))
     
-    for i in range(len(rays_T)):
+    for i in range(len(rays_T)):#95,96)(73,74):#:
+
         # Isolate each ray
         T_of_single_ray = rays_T[i]
         Den_of_single_ray = rays_den[i]
@@ -203,7 +206,6 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
         # Get photosphere/R_therm
         kappas, cumulative_kappas, specialr, index_ph, branch_index_ph  = calc_specialr(T_of_single_ray, Den_of_single_ray, 
                                                                        radius, branch_indexes, select)
-
         # Store
         rays_kappas.append(kappas)
         rays_cumulative_kappas.append(cumulative_kappas)
@@ -220,10 +222,11 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
 if __name__ == "__main__":
     photosphere = True
     thermalisation = True
-    plot = True
+    plot = False
     save = True
     check = 'fid'
     m = 6 
+    num = 5000
 
     now = datetime.now()
     now = now.strftime("%d/%m/%Y %H:%M:%S")
@@ -236,7 +239,7 @@ if __name__ == "__main__":
 
     for index in range(0,1):#len(snapshots)):        
         print('Snapshot ' + str(snapshots[index]))
-        tree_indexes, _, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, check)
+        tree_indexes, _, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, check, num)
 
         if photosphere:
             rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select='photo')
@@ -296,7 +299,7 @@ if __name__ == "__main__":
 
     if save: 
         if photosphere:         
-            with open(f'data/special_radii_m{m}.txt', 'a') as file:
+            with open(f'data/special_radii_m{m}_num{num}.txt', 'a') as file:
                 file.write('# Run of ' + now + '\n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Photosphere arithmetic mean \n')
@@ -306,7 +309,7 @@ if __name__ == "__main__":
                 file.close()
                 
         if thermalisation:
-            with open(f'data/special_radii_m{m}.txt', 'a') as file:
+            with open(f'data/special_radii_m{m}_num{num}.txt', 'a') as file:
                 file.write('# Run of ' + now + '\n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Thermalisation radius arithmetic mean \n')

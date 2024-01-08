@@ -16,6 +16,7 @@ alice, plot = isalice()
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
+from scipy.stats import gmean
 
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -43,20 +44,22 @@ n_array = np.power(10, x_array)
 
 # print(Ltot)
 
-L = np.trapz(n_array * nL_tilde_n_new, x_array) 
-L *= np.log(10)
-L /= len(nL_tilde_n)
-print(L)
+# L = np.trapz(n_array * nL_tilde_n_new, x_array) 
+# L *= np.log(10)
+# L /= len(nL_tilde_n)
+# print(L)
 
-# with open(f'data/test.txt', 'a') as file:  
-#     file.write(' '.join(map(str, nL_tilde_n_new)) + '\n')
-#     file.close()
+snapshots = np.arange(844,1008+1)
+amean_rtherm = np.zeros(len(snapshots))
+gmean_rtherm = np.zeros(len(snapshots))
+for idx_sn, snap in enumerate(snapshots):
+    with h5py.File(f'data/elad/data_{snap}.mat', 'r') as f:
+        rtherm = f['r_photo'][0]
+    amean_rtherm[idx_sn] = np.mean(rtherm)
+    gmean_rtherm[idx_sn] = gmean(rtherm)
+with open(f'data/elad_photo.txt', 'a') as file:  
+    file.write(' '.join(map(str, amean_rtherm)) + '\n')
+    file.write(' '.join(map(str, gmean_rtherm)) + '\n')
+    file.close()
 
-# with h5py.File(f'data/elad/data_881.mat', 'r') as f:
-#     print(f.keys())
 
-a = [2, 4, 8]
-i = 0
-while a[i]>0 and a[i]<5:
-    print(a[i])
-    i += 1 

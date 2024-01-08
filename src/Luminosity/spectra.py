@@ -50,7 +50,7 @@ def log_array(n_min, n_max, lenght):
 def planck(Temperature: float, n: float) -> float:
     """ Planck function in a cell. It needs temperature and frequency n. """
     const = 2*h/c**2
-    fun = const * n**3 / (np.exp(h*n/(Kb*Temperature))-1)
+    fun = const * n**3 / (np.exp(min(300,h*n/(Kb*Temperature))) - 1) #min to avoid overflow
 
     return fun
 
@@ -140,12 +140,12 @@ if __name__ == "__main__":
     # Choose BH 
     m = 6
     check = 'fid'
-    num = 1000
+    num = 5000
     snapshots, days = select_snap(m, check)
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
-    wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
-    wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
+    wanted_thetas = [np.pi/2]#, np.pi/2, np.pi/2]#, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
+    wanted_phis = [0]#, np.pi, np.pi/2]#, 3*np.pi/2, 0, 0]
 
     # Choose freq range
     n_min = 2.08e13
@@ -175,9 +175,9 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(len(snapshots)-1, len(snapshots)): #so you take snap 881
+    for idx_sn in range(1,2): #so you take snap 881
         snap = snapshots[idx_sn]
-        bol_fld = 1.6339520760162161e+44 #luminosity_fld_fix[idx_sn]
+        bol_fld = luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')
 
         # Find observers 
@@ -220,7 +220,7 @@ if __name__ == "__main__":
                             fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
                             fselect.close()
                 else:
-                    with open(f'data/blue/nLn_single_m{m}_{snap}.txt', 'a') as fselect:
+                    with open(f'data/blue/TESTnLn_single_m{m}_{snap}.txt', 'a') as fselect:
                         fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
                         fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
                         fselect.close()

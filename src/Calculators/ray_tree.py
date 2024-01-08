@@ -42,7 +42,7 @@ def find_sph_coord(r, theta,phi):
     z = r * np.cos(np.pi-theta)
     return [x,y,z]
 
-def ray_maker(fix, m, check, num = 1001): 
+def ray_maker(fix, m, check, num): 
     """ 
     Num is 1001 because for blue we then delete the last cell.
     Outputs are in CGS with exception of ray_vol (in solar units).
@@ -75,7 +75,7 @@ def ray_maker(fix, m, check, num = 1001):
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = 0.1 * Rt #Solar radii
+    start = 10 #0.1 * Rt #Solar radii
     stop = apocenter #apocenter for 10^6 is 20_000 
     log_start = np.log10(start)
     log_stop = np.log10(stop)
