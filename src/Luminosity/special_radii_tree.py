@@ -244,16 +244,17 @@ if __name__ == "__main__":
         if photosphere:
             rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select='photo')
             rays_photo = rays_photo/Rsol_to_cm # to solar unit to plot
-            elad_photo = np.zeros(len(rays_photo))
-            with h5py.File(f'data/elad/data_{snapshots[index]}.mat', 'r') as f:
-                elad_ph = f['r_photo'][0]
-            for i in range(len(elad_photo)):
-                elad_photo[i] =  elad_ph[i]
 
             fix_photo_arit[index] = np.mean(rays_photo)
             fix_photo_geom[index] = gmean(rays_photo)
 
             if plot:
+                elad_photo = np.zeros(len(rays_photo))
+                with h5py.File(f'data/elad/data_{snapshots[index]}.mat', 'r') as f:
+                    elad_ph = f['r_photo'][0]
+                for i in range(len(elad_photo)):
+                    elad_photo[i] =  elad_ph[i]
+                    
                 fig, ax = plt.subplots(figsize = (8,6))
                 ax.scatter(np.arange(192), rays_photo, c = 'k', s = 15, label = 'us')
                 ax.scatter(np.arange(192), elad_photo, c = 'b', s = 15, label = 'SteinbergStone')
