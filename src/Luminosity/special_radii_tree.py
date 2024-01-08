@@ -237,7 +237,7 @@ if __name__ == "__main__":
     fix_thermr_arit = np.zeros(len(snapshots))
     fix_thermr_geom = np.zeros(len(snapshots))
 
-    for index in range(0,1):#len(snapshots)):        
+    for index in range(len(snapshots)):        
         print('Snapshot ' + str(snapshots[index]))
         tree_indexes, _, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, check, num)
 
@@ -254,7 +254,7 @@ if __name__ == "__main__":
                     elad_ph = f['r_photo'][0]
                 for i in range(len(elad_photo)):
                     elad_photo[i] =  elad_ph[i]
-                    
+
                 fig, ax = plt.subplots(figsize = (8,6))
                 ax.scatter(np.arange(192), rays_photo, c = 'k', s = 15, label = 'us')
                 ax.scatter(np.arange(192), elad_photo, c = 'b', s = 15, label = 'SteinbergStone')
@@ -273,16 +273,17 @@ if __name__ == "__main__":
         if thermalisation: 
             rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select= 'thermr')
             rays_thermr = rays_thermr/Rsol_to_cm # to solar unit to plot
-            rtherm = np.zeros(len(rays_thermr))
-            with h5py.File(f'data/elad/data_{snapshots[index]}.mat', 'r') as f:
-                elad_rtherm = f['r_therm'][0]
-            for i in range(len(rtherm)):
-                rtherm[i] =  elad_rtherm[i]
 
             fix_thermr_arit[index] = np.mean(rays_thermr)
             fix_thermr_geom[index] = gmean(rays_thermr)
             
             if plot: 
+                rtherm = np.zeros(len(rays_thermr))
+                with h5py.File(f'data/elad/data_{snapshots[index]}.mat', 'r') as f:
+                    elad_rtherm = f['r_therm'][0]
+                for i in range(len(rtherm)):
+                    rtherm[i] =  elad_rtherm[i]
+                    
                 fig, ax = plt.subplots(figsize = (8,6))
                 ax.scatter(np.arange(192), rays_thermr, c = 'k', s = 15, label = 'our')
                 ax.scatter(np.arange(192), rtherm, c = 'b', s = 15, label = 'SteinbergStone')
