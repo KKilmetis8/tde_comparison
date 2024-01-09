@@ -226,7 +226,7 @@ if __name__ == "__main__":
     save = True
     check = 'fid'
     m = 6 
-    num = 5000
+    num = 1000
 
     now = datetime.now()
     now = now.strftime("%d/%m/%Y %H:%M:%S")
@@ -283,7 +283,7 @@ if __name__ == "__main__":
                     elad_rtherm = f['r_therm'][0]
                 for i in range(len(rtherm)):
                     rtherm[i] =  elad_rtherm[i]
-                    
+
                 fig, ax = plt.subplots(figsize = (8,6))
                 ax.scatter(np.arange(192), rays_thermr, c = 'k', s = 15, label = 'our')
                 ax.scatter(np.arange(192), rtherm, c = 'b', s = 15, label = 'SteinbergStone')

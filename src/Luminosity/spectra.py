@@ -110,6 +110,9 @@ def spectrum(xyz_selected, thetas, phis, rays_T, rays_den, rays_cumulative_taus,
     lum_n = np.zeros(len(x_arr))
 
     for j in range(len(thetas)):
+        if dot_product[j]==0:
+            continue
+
         print('ray :', j)
 
         for i in range(len(rays_cumulative_taus[j])):        
@@ -140,7 +143,7 @@ if __name__ == "__main__":
     # Choose BH 
     m = 6
     check = 'fid'
-    num = 5000
+    num = 1000
     snapshots, days = select_snap(m, check)
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
@@ -215,12 +218,12 @@ if __name__ == "__main__":
             if save:
                 if alice:
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
-                    with open(f'{pre_saving}nLn_single_m{m}_{snap}_all.txt', 'a') as fselect:
-                            fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
+                    with open(f'{pre_saving}nLn_single_m{m}_{snap}.txt', 'a') as fselect:
+                            fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                             fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
                             fselect.close()
                 else:
                     with open(f'data/blue/TESTnLn_single_m{m}_{snap}.txt', 'a') as fselect:
-                        fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) \n')
+                        fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                         fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
                         fselect.close()

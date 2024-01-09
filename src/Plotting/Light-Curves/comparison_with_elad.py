@@ -60,6 +60,7 @@ if plot_curves:
     plt.xlim(39, 65)
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
+    plt.title('Bolometric luminosity')
     plt.savefig('Final_plot/Elad_comparison.png')
     plt.show()
 
@@ -79,6 +80,7 @@ if plot_curves:
         plt.xlim(39, 65)
         plt.xlabel('Time [days]')
         plt.ylabel(r'$1 - L/L^{Elad}$')
+        plt.title('Bolometric luminosity: residuals')
         plt.savefig('Final_plot/residuals.png')
         plt.show()
 
@@ -88,16 +90,16 @@ if plot_radii_sphere:
     # elad_time = mat['x']
     # elad_amean_ph = mat['a_mean']
     # elad_gmean_ph = mat['g_mean']
-    rtherm =  np.loadtxt('data/elad_rtherm.txt')
-    photo =  np.loadtxt('data/elad_photo.txt') ##
+    elad = np.loadtxt('data/elad_rspecial.txt')
+    elad_photo_arit =  elad[0]
+    elad_photo_geom =  elad[1]
+    elad_therm_arit =  elad[2]
+    elad_therm_geom = elad[3]
 
     # Our load 
-    # spec_radii = np.loadtxt('data/local_special_radii_m'+ str(m) + '.txt') 
-    # days = np.multiply(spec_radii[0], 40)
-    days = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
-    days *= 40
-
     spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '.txt') #from ALICE
+    days = spec_radii[0]
+    days *= 40
     photo_arit = spec_radii[1]
     photo_geom = spec_radii[2]
     thermr_arit = spec_radii[3]
@@ -106,10 +108,10 @@ if plot_radii_sphere:
     #Elad plot
     # plt.plot(elad_time[0], elad_amean_ph[0], c = 'k')
     # plt.plot(elad_time[0], elad_gmean_ph[0], c = 'magenta')
-    plt.plot(days, photo[0], c = 'k')
-    plt.plot(days, photo[1], c = 'magenta')
-    plt.plot(days, rtherm[0], c = 'b')
-    plt.plot(days,rtherm[1], c = 'r')
+    plt.plot(days, elad_photo_arit, c = 'k')
+    plt.plot(days, elad_photo_geom, c = 'magenta')
+    plt.plot(days, elad_therm_arit, c = 'b')
+    plt.plot(days, elad_therm_geom, c = 'r')
 
     # Our plot
     plt.plot(days, photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
@@ -123,21 +125,22 @@ if plot_radii_sphere:
     plt.grid()
     plt.yscale('log')
     plt.legend(fontsize = 7)
+    plt.title(r'$R_{ph}$ and $R_{therm}$')
     plt.savefig('Final_plot/radii_comparison.png')
     plt.show()
 
     if residuals:
-        elad_ph = photo[1]
-        elad_th = rtherm[1]
-        y_value_ph = (photo_geom - elad_ph) / elad_ph
-        y_value_th = (thermr_geom - elad_th) / elad_th
+        y_value_ph = (photo_geom - elad_photo_geom) / elad_photo_geom
+        y_value_th = (thermr_geom - elad_therm_geom) / elad_therm_geom
 
-        plt.plot(days, y_value_ph, c = 'magenta', markersize = 4)
-        plt.plot(days, y_value_th, c = 'r', markersize = 4)
+        plt.plot(days, y_value_ph, c = 'magenta', markersize = 4, label = r'R$_{ph}$')
+        plt.plot(days, y_value_th, c = 'r', markersize = 4, label = r'R$_{therm}$')
         plt.grid()
         plt.xlim(39, 65)
         plt.xlabel('Time [days]')
         plt.ylabel(r'$1 - R/R^{Elad}$')
+        plt.legend(fontsize = 7)
+        plt.title(r'$R_{ph}$ and $R_{therm}$: residuals')
         plt.savefig('Final_plot/residuals_radii.png')
         plt.show()
 

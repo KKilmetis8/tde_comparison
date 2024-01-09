@@ -75,7 +75,7 @@ def ray_maker(fix, m, check, num):
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = 10 #0.1 * Rt #Solar radii
+    start = 10 # 0.1 * Rt  #Solar radii 
     stop = apocenter #apocenter for 10^6 is 20_000 
     log_start = np.log10(start)
     log_stop = np.log10(stop)
