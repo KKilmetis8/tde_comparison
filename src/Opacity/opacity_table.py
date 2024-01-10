@@ -99,8 +99,7 @@ def opacity(T, rho, kind, ln = True) -> float:
         return opacity
     
     else:
-        print('Invalid opacity type. Try: scattering/ rosseland / planck / effective.')
-        return 1
+        print('Invalid opacity type. Try: scattering/ rosseland / planck / effective / red.')
     
     opacity = np.exp(ln_opacity)
     

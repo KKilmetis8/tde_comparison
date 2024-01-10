@@ -19,7 +19,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # Chocolate Imports
-from src.Opacity.opacity_table import opacity
+#from src.Opacity.opacity_table import opacity
+from src.Opacity.old_opacity import old_opacity #TEST OLD OPACITY
 from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.special_radii_tree import get_specialr
 from src.Calculators.select_observers import select_observer 
@@ -57,14 +58,15 @@ def planck(Temperature: float, n: float) -> float:
 def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, n: float):
     """ Luminosity in a cell: L_n = \epsilon e^(-\tau) B_n / B 
     where  B = \sigma T^4/\pi"""
-    T_high = np.exp(17.87)
-    if Temperature > T_high:
-        Tmax = np.exp(17.87)
+    Tmax = np.power(10,8) #np.exp(17.87) #TEST OLD OPACITY
+    if Temperature > Tmax:
         # Scale as Kramers the last point 
-        kplank_0 = opacity(Tmax, Density, 'planck', ln = False)
-        k_planck = kplank_0 * (Temperature/Tmax)**(-3.5)
+        # kplanck_0 = opacity(Tmax, Density, 'planck', ln = False)
+        kplanck_0 = old_opacity(Tmax, Density, 'planck') #TEST OLD OPACITY
+        k_planck = kplanck_0 * (Temperature/Tmax)**(-3.5)
     else:
-        k_planck = opacity(Temperature, Density, 'planck', ln = False)
+        # k_planck = opacity(Temperature, Density, 'planck', ln = False)
+        k_planck = old_opacity(Temperature, Density, 'planck') #TEST OLD OPACITY
 
     L = 4  * np.pi * k_planck * volume * np.exp(-tau) * planck(Temperature, n)
     return L
@@ -94,7 +96,7 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
     norm = luminosity_fld / L
     return norm
 
-def spectrum(xyz_selected, thetas, phis, rays_T, rays_den, rays_cumulative_taus, volume, bol_fld):
+def spectrum(xyz_selected, thetas, phis, rays_T, rays_den, rays_cumulative_taus, rays_vol, bol_fld):
     dot_product = np.zeros(len(thetas))
     zero_count = 0
     for iobs in range(len(thetas)):
@@ -123,7 +125,7 @@ def spectrum(xyz_selected, thetas, phis, rays_T, rays_den, rays_cumulative_taus,
             T = rays_T[j][reverse_idx]
             rho = rays_den[j][reverse_idx] 
             opt_depth = rays_cumulative_taus[j][i]
-            cell_vol = volume[reverse_idx] #rays_vol[j][reverse_idx] * Rsol_to_cm**3 
+            cell_vol = rays_vol[j][reverse_idx] * Rsol_to_cm**3 #volume[reverse_idx] #
 
             for i_freq, n in enumerate(n_arr): #we need linearspace
                 lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
@@ -147,8 +149,8 @@ if __name__ == "__main__":
     snapshots, days = select_snap(m, check)
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
-    wanted_thetas = [np.pi/2]#, np.pi/2, np.pi/2]#, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
-    wanted_phis = [0]#, np.pi, np.pi/2]#, 3*np.pi/2, 0, 0]
+    wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
+    wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
 
     # Choose freq range
     n_min = 2.08e13
@@ -212,7 +214,7 @@ if __name__ == "__main__":
 
             xyz_selected = find_sph_coord(thetas[wanted_index], phis[wanted_index])
 
-            lum_tilde_n = spectrum(xyz_selected, thetas, phis, rays_T, rays_den, rays_cumulative_taus, volume, bol_fld)
+            lum_tilde_n = spectrum(xyz_selected, thetas, phis, rays_T, rays_den, rays_cumulative_taus, rays_vol, bol_fld)
         
             # Save data and plot
             if save:
@@ -223,7 +225,7 @@ if __name__ == "__main__":
                             fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
                             fselect.close()
                 else:
-                    with open(f'data/blue/TESTnLn_single_m{m}_{snap}.txt', 'a') as fselect:
+                    with open(f'data/blue/TESTopac_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
                         fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                         fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
                         fselect.close()

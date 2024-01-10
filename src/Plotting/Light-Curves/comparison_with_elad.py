@@ -23,7 +23,6 @@ plot_radii_sphere = True
 plot_fit = False
 m = 6
 check = 'fid'
-from_alice = True #take the values from Alice files
 
 if plot_curves:
     # Elad Load and convert
@@ -35,16 +34,11 @@ if plot_curves:
     elad_red_topolt = np.power(10, elad_red[0])
 
     # Ours Load
-    if from_alice:
-        daysr = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
-        r = np.loadtxt('data/red/alicered'+ str(m) + check + '.txt')
-    else:
-        fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check + '.txt')
-        days = fld_data[0]
-        r = fld_data[1]
-
+    daysr = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
+    r = np.loadtxt('data/red/alicered'+ str(m) + check + '.txt')
     daysb = np.loadtxt(f'data/blue/blue_m{m}{check}_days.txt')
     b = np.loadtxt('data/blue/bluedata_m'+ str(m) + '.txt')[2]
+
     # Elad Plot
     plt.plot(elad_time[0], elad_red_topolt, c = 'r')
     plt.plot(elad_time[0],elad_blue_topolt, c = 'b')
@@ -144,22 +138,22 @@ if plot_radii_sphere:
         plt.savefig('Final_plot/residuals_radii.png')
         plt.show()
 
-if plot_fit:
-    Rsol_to_cm = 6.957e10
-    days = np.loadtxt('data/reddata_m'+ str(m) +'.txt')[0]
-    days = np.multiply(days, 40)
-    temp = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[0]
-    radius= np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[1] 
-    radius = np.multiply(radius, Rsol_to_cm)
+# if plot_fit:
+#     Rsol_to_cm = 6.957e10
+#     days = np.loadtxt('data/reddata_m'+ str(m) +'.txt')[0]
+#     days = np.multiply(days, 40)
+#     temp = np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[0]
+#     radius= np.loadtxt('data/bluedata_m'+ str(m) + '.txt')[1] 
+#     radius = np.multiply(radius, Rsol_to_cm)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    fig.suptitle('Fits')
-    ax1.plot(days, temp, '-o')    
-    ax1.set(xlabel = 'Times [days]', ylabel = 'Temperature [K]')
-    ax1.ticklabel_format(axis='y', style='sci', scilimits=(4,5))
-    ax2.plot(days, radius, '-o')
-    ax2.set(xlabel = 'Times [days]', ylabel = r'$\log_{10}$ Radius [cm]')
-    ax2.set_yscale('log')
-    plt.subplots_adjust(wspace=0.6)
-    plt.savefig('Final_plot/fitted_quantities.png')
-    plt.show()
+#     fig, (ax1, ax2) = plt.subplots(1, 2)
+#     fig.suptitle('Fits')
+#     ax1.plot(days, temp, '-o')    
+#     ax1.set(xlabel = 'Times [days]', ylabel = 'Temperature [K]')
+#     ax1.ticklabel_format(axis='y', style='sci', scilimits=(4,5))
+#     ax2.plot(days, radius, '-o')
+#     ax2.set(xlabel = 'Times [days]', ylabel = r'$\log_{10}$ Radius [cm]')
+#     ax2.set_yscale('log')
+#     plt.subplots_adjust(wspace=0.6)
+#     plt.savefig('Final_plot/fitted_quantities.png')
+#     plt.show()

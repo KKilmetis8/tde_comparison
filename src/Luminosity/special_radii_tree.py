@@ -29,6 +29,7 @@ plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
 # Custom Imports
 from src.Opacity.opacity_table import opacity
+from src.Opacity.old_opacity import old_opacity #TEST OLD OPACITY
 from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.select_path import select_snap
 
@@ -59,6 +60,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     kappa: float.
             The optical depth of a cell.
     '''    
+    Tmax = np.power(10,8) #np.exp(17.87) #TEST OLD OPACITY
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):
         print('rho low')        
@@ -70,17 +72,17 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
         return 100
     
     # Too hot: scale as Kramers for absorption (planck)
-    elif T > np.exp(17.876):
+    elif T > Tmax:
         # print('T high')
         # X = 0.7389
         # Z = 0.02
         
         # Constant value for scatter
-        Tmax = np.exp(17.87)
-        kscattering = opacity(Tmax, rho, 'scattering', ln = False)
+        kscattering = old_opacity(Tmax, rho, 'scattering') #TEST OLD OPACITY 
         
         # Scale as Kramers the last point for absorption
-        kplank_0 = opacity(Tmax, rho, 'planck', ln = False)
+        # kplank_0 = opacity(Tmax, rho, 'planck', ln = False)
+        kplank_0 = old_opacity(Tmax, rho, 'planck') #TEST OLD OPACITY
         kplanck = kplank_0 * (T/Tmax)**(-3.5)
         # kplanck =  3.8e22 * (1 + X) * T**(-3.5) * rho # [cm^2/g] Kramers'law
         # kplanck *= rho
@@ -98,9 +100,12 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     else:
         # Lookup table
         if select == 'photo':
-            k = opacity(T, rho,'red', ln = False)
+            # k = opacity(T, rho,'red', ln = False)
+            k = old_opacity(T, rho, 'red') #TEST OLD OPACITY
+
         if select == 'thermr':
-            k = opacity(T, rho,'effective', ln = False)
+            # k = opacity(T, rho,'effective', ln = False)
+            k = old_opacity(T, rho, 'effective') #TEST OLD OPACITY
 
         kappa =  k * r_dlogr
 
@@ -196,7 +201,7 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
     rays_index_specialr = np.zeros(len(rays_T))
     tree_index_specialr = np.zeros(len(rays_T))
     
-    for i in range(len(rays_T)):#95,96)(73,74):#:
+    for i in range(len(rays_T)):
 
         # Isolate each ray
         T_of_single_ray = rays_T[i]
