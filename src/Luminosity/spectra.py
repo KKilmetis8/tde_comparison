@@ -188,8 +188,8 @@ if __name__ == "__main__":
         # Radii has num+1 cell just to compute the volume for num cell. Then we delete the last radius cell
         volume = np.zeros(len(radii)-1)
         for i in range(len(volume)): 
-            dr = radii[i+1] - radii[i] #2*(radii[2]-radii[1]) / (radii[2] + radii[1])
-            volume[i] = 4 * np.pi * radii[i]**2 * dr / 192  #4 * np.pi * radii[i]**3 * dr / 192   
+            dr = radii[i+1] - radii[i]  #2*(radii[2]-radii[1]) / (radii[2] + radii[1])
+            volume[i] =  4 * np.pi * radii[i]**2 * dr / 192 #4 * np.pi * radii[i]**3 * dr / 192  
 
         radii = np.delete(radii, -1)
 
@@ -227,12 +227,10 @@ if __name__ == "__main__":
             if save:
                 if alice:
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
-                    with open(f'{pre_saving}nLn_single_m{m}_{snap}.txt', 'a') as fselect:
-                            fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
-                            fselect.write(' '.join(map(str, lum_n_selected)) + '\n')
-                            fselect.close()
                 else:
-                    with open(f'data/blue/TESTnorm_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
-                        fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
-                        fselect.write(' '.join(map(str, lum_n_selected)) + '\n')
-                        fselect.close()
+                    pre_saving = 'data/blue/'
+            with open(f'{pre_saving}TESTvolElad_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
+                fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
+                fselect.write(' '.join(map(str, lum_n_selected)) + '\n')
+                fselect.close()
+               

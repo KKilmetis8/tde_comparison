@@ -14,8 +14,10 @@ import matplotlib.pyplot as plt
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['figure.figsize'] = [10 , 6]
+plt.rcParams['figure.figsize'] = [10 , 8]
 plt.rcParams['axes.facecolor'] = 'whitesmoke'
+plt.rcParams['xtick.labelsize'] = 15
+plt.rcParams['ytick.labelsize'] = 15
 
 plot_curves = False
 residuals = False
@@ -51,7 +53,7 @@ if plot_curves:
 
     plt.yscale('log')
     plt.grid()
-    plt.xlim(39, 65)
+    plt.xlim(39, 64)
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
     plt.title('Bolometric luminosity')
@@ -91,9 +93,9 @@ if plot_radii_sphere:
     elad_therm_geom = elad[3]
 
     # Our load 
-    test = np.loadtxt('data/TESTop_special_radii_m'+ str(m) + '_num1000.txt') #from ALICE
-    daystest = test[0] * 40
-    spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '.txt') #from ALICE
+    # test = np.loadtxt('data/oldopacity_special_radii_m'+ str(m) + '_num1000.txt') #from ALICE
+    # daystest = test[0] * 40
+    spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '_oldopacity.txt') #from ALICE
     days = spec_radii[0]
     days *= 40
     photo_arit = spec_radii[1]
@@ -102,30 +104,25 @@ if plot_radii_sphere:
     thermr_geom = spec_radii[4]
 
     #Elad plot
-    # plt.plot(elad_time[0], elad_amean_ph[0], c = 'k')
-    # plt.plot(elad_time[0], elad_gmean_ph[0], c = 'magenta')
-    # plt.plot(days, elad_photo_arit, c = 'k')
+    plt.plot(days, elad_photo_arit, c = 'k')
     plt.plot(days, elad_photo_geom, c = 'magenta')
-    # plt.plot(days, elad_therm_arit, c = 'b')
+    plt.plot(days, elad_therm_arit, c = 'b')
     plt.plot(days, elad_therm_geom, c = 'r')
 
     # Our plot
-    plt.plot(daystest, test[2], '--o', c = 'hotpink', label = r'$R_{ph}$ old opacity')
-    plt.plot(daystest, test[4], '--o', c = 'orange', label = r'$R_{therm}$ old opacity $\tau$=5')
-    plt.plot(daystest, test[6], '--o', c = 'red', label = r'$R_{therm}$ old opacity $\tau$=1')
-    # plt.plot(days, photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
+    plt.plot(days, photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
     plt.plot(days, photo_geom, '--', color = 'violet', label = 'Photosphere radius, geometric mean')
-    # plt.plot(days, thermr_arit, '--', color = 'b', label = 'Thermalization radius, arithmetic mean')
-    plt.plot(days, thermr_geom, '--', color = 'r', label = 'Thermalization radius, geometric mean')
-    plt.xlabel('Time (days)')
-    plt.xlim(40,65)
-    #plt.ylim(10,1e4)
-    plt.ylabel(r'Average radius [$R_\odot$]')
-    plt.grid()
+    plt.plot(days, thermr_arit, '--', color = 'b', label = 'Thermalization radius, arithmetic mean')
+    plt.plot(days, thermr_geom, '--', color = 'tomato', label = 'Thermalization radius, geometric mean')
+    plt.xlim(40,64)
+    plt.ylim(10,1e4)
     plt.yscale('log')
-    plt.legend(fontsize = 7)
-    plt.title(r'$R_{ph}$ and $R_{therm}$')
-    plt.savefig('Final_plot/thermradii_comparison.png')
+    plt.xlabel('Time (days)', fontsize = 18)
+    plt.ylabel(r'Average radius [$R_\odot$]', fontsize = 18)
+    plt.grid()
+    plt.legend(fontsize = 8)
+    plt.title(r'$R_{ph} (\tau=2/3)$ and $R_{therm} (\tau=1)$')
+    plt.savefig('Final_plot/fig9.png')
     plt.show()
 
     if residuals:
@@ -138,7 +135,7 @@ if plot_radii_sphere:
         plt.xlim(39, 65)
         plt.xlabel('Time [days]')
         plt.ylabel(r'$1 - R/R^{Elad}$')
-        plt.legend(fontsize = 7)
+        plt.legend(fontsize = 9)
         plt.title(r'$R_{ph}$ and $R_{therm}$: residuals')
         plt.savefig('Final_plot/residuals_radii.png')
         plt.show()

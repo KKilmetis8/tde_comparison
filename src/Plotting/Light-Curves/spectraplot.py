@@ -33,7 +33,7 @@ lamda = wavelength(n_array)
 
 # y axis 
 #nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
-nL_tilde_n = np.loadtxt(f'data/blue/TESTnorm_nLn_single_m{m}_{snap}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/TESTobserv_nLn_single_m{m}_{snap}.txt')
 
 if axis == 'freq':
         x_axis = n_array
@@ -47,11 +47,6 @@ if axis == 'temp':
         x_end = T_end
 
 fig, ax1 = plt.subplots( figsize = (8,6) ) 
-#ax1.plot(x_axis, n_array * test[0], c = 'b', linestyle= '--', label = r'N$_{cell}$ 200')
-# ax1.plot(x_axis, n_array * test[1], c = 'orange', label = r'N$_{cell}$ 800')
-# ax1.plot(x_axis, n_array * test[2], c = 'k', linestyle= '--', label = r'N$_{cell}$ 1000')
-# ax1.plot(x_axis, n_array * test[3], c = 'r', label = r'N$_{cell}$ 5000')
-# ax1.plot(x_axis, n_array * test[4], c = 'limegreen', linestyle= '--', label = r'N$_{cell}$ 7000')
 ax1.plot(x_axis, n_array * nL_tilde_n[0], c = 'b',  label = r'$\vec{x}$')
 ax1.plot(x_axis, n_array * nL_tilde_n[1], c = 'r', label = r'$-\vec{x}$')
 ax1.plot(x_axis, n_array * nL_tilde_n[2], c = 'k', label = r'$\vec{y}$')
@@ -66,14 +61,14 @@ ax1.set_xlim(x_start,x_end)
 ax2.set_xlim(wavelength(n_start),wavelength(n_end))
 ax1.loglog()
 ax1.grid()
-ax2.plot(wavelength(n_array), n_array * nL_tilde_n[0], c = 'b')
+ax2.plot(wavelength(n_array), n_array * nL_tilde_n[0],  c = 'b')
 ax2.set_xlim(c/n_end *1e8, c/n_start * 1e8)
 ax2.invert_xaxis()
 ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$')
 ax1.legend()
-ax1.set_title(r'Spectrum with new normalisation')
-plt.savefig(f'Figs/testnorm_spectra{snap}')
+ax1.set_title(r'Spectrum $\vec{x}$')
+plt.savefig(f'Figs/test_spectra{snap}')
 plt.show()
 
 
