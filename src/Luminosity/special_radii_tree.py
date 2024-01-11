@@ -33,7 +33,7 @@ from src.Opacity.old_opacity import old_opacity #TEST OLD OPACITY
 from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.select_path import select_snap
 
-Rsol_to_cm = 6.957e10 # [cm]
+Rsol_to_cm = 7e10 #6.957e10 # [cm]
 
 
 ################
@@ -111,7 +111,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
 
         return kappa
 
-def calc_specialr(T, rho, radius, branch_indexes, select):
+def calc_specialr(T, rho, radius, branch_indexes, select, thermplot = False):
     '''
     Finds and saves the photosphere or R_therm (CGS) for ONE  ray.
 
@@ -145,6 +145,9 @@ def calc_specialr(T, rho, radius, branch_indexes, select):
         threshold = 2/3
     if select == 'thermr':
         threshold = 5
+        if thermplot: 
+            # to have the plot of extended figure 9 from Steinberg&Stone22
+            threshold = 1
 
     kappa = 0
     kappas = []
@@ -276,7 +279,7 @@ if __name__ == "__main__":
                 plt.show()  
 
         if thermalisation: 
-            rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select= 'thermr')
+            rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select= 'thermr', thermplot = True)
             rays_thermr = rays_thermr/Rsol_to_cm # to solar unit to plot
 
             fix_thermr_arit[index] = np.mean(rays_thermr)
@@ -306,7 +309,7 @@ if __name__ == "__main__":
 
     if save: 
         if photosphere:         
-            with open(f'data/special_radii_m{m}_num{num}.txt', 'a') as file:
+            with open(f'data/special_radii_m{m}_oldopacity.txt', 'a') as file:
                 file.write('# Run of ' + now + '\n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Photosphere arithmetic mean \n')
@@ -316,7 +319,7 @@ if __name__ == "__main__":
                 file.close()
                 
         if thermalisation:
-            with open(f'data/special_radii_m{m}_num{num}.txt', 'a') as file:
+            with open(f'data/special_radii_m{m}_oldopacity.txt', 'a') as file:
                 file.write('# Run of ' + now + '\n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Thermalisation radius arithmetic mean \n')

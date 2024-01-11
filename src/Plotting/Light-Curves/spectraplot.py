@@ -1,8 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as plt
-plt.rcParams['text.usetex'] = True
-plt.rcParams['figure.dpi'] = 300
-plt.rcParams['figure.figsize'] = [10 , 4]
 
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
@@ -18,6 +15,9 @@ Kb = 1.380649e-16 #[gcm^2/s^2K]
 def temperature(n):
         return n * h / Kb
 
+def frequencies(T):
+        return T * Kb / h
+
 def wavelength(n):
         # in angststrom 
         return c *1e8 / n 
@@ -25,14 +25,15 @@ def wavelength(n):
 # x axis 
 x_array = np.loadtxt(f'data/blue/spectrafreq_m{m}.txt')
 n_array = np.power(10, x_array)
-n_start = 1e13
-n_end = 1e18
+T_start = 1e3
+T_end = 1e8
+n_start = frequencies(T_start)
+n_end = frequencies(T_end)
 lamda = wavelength(n_array)
 
 # y axis 
 #nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
-nL_tilde_n = np.loadtxt(f'data/blue/TESTopac_nLn_single_m{m}_{snap}.txt')
-
+nL_tilde_n = np.loadtxt(f'data/blue/TESTnorm_nLn_single_m{m}_{snap}.txt')
 
 if axis == 'freq':
         x_axis = n_array
@@ -42,10 +43,10 @@ if axis == 'freq':
 if axis == 'temp':
         x_axis = temperature(n_array)
         label = r'$log_{10}$T [K]'
-        x_start = temperature(n_start)
-        x_end = temperature(n_end)
+        x_start = T_start
+        x_end = T_end
 
-fig, ax1 = plt.subplots( figsize = (6,6) ) 
+fig, ax1 = plt.subplots( figsize = (8,6) ) 
 #ax1.plot(x_axis, n_array * test[0], c = 'b', linestyle= '--', label = r'N$_{cell}$ 200')
 # ax1.plot(x_axis, n_array * test[1], c = 'orange', label = r'N$_{cell}$ 800')
 # ax1.plot(x_axis, n_array * test[2], c = 'k', linestyle= '--', label = r'N$_{cell}$ 1000')
@@ -60,19 +61,19 @@ ax1.plot(x_axis, n_array * nL_tilde_n[5], c = 'aqua', label = r'$-\vec{z}$')
 ax2 = ax1.twiny()
 ax1.set_xlabel(f'{label}')
 ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]')
-ax1.set_ylim(1e39, 1e44)
+ax1.set_ylim(2e39, 1e44)
 ax1.set_xlim(x_start,x_end)
 ax2.set_xlim(wavelength(n_start),wavelength(n_end))
 ax1.loglog()
 ax1.grid()
-ax2.plot(wavelength(n_array), n_array * nL_tilde_n[0], linestyle= '--', c = 'b')
+ax2.plot(wavelength(n_array), n_array * nL_tilde_n[0], c = 'b')
 ax2.set_xlim(c/n_end *1e8, c/n_start * 1e8)
 ax2.invert_xaxis()
 ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$')
-#ax1.legend()
-ax1.set_title(r'Spectrum using different N$_{cell}$')
-plt.savefig(f'Figs/testOPspectra{snap}')
+ax1.legend()
+ax1.set_title(r'Spectrum with new normalisation')
+plt.savefig(f'Figs/testnorm_spectra{snap}')
 plt.show()
 
 

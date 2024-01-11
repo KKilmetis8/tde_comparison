@@ -96,25 +96,10 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
     norm = luminosity_fld / L
     return norm
 
-def spectrum(xyz_selected, thetas, phis, rays_T, rays_den, rays_cumulative_taus, rays_vol, bol_fld):
-    dot_product = np.zeros(len(thetas))
-    zero_count = 0
-    for iobs in range(len(thetas)):
-        xyz = find_sph_coord(thetas[iobs], phis[iobs])
-        dot_product[iobs] = np.dot(xyz_selected, xyz)
-    # set the negative dot product to 0
-        if dot_product[iobs] < 0:
-            dot_product[iobs] = 0
-            zero_count += 1
-    # print('cross dot 0: ', zero_count)
-    dot_product *= 4/192 # normalisation from Elad
+def spectrum(rays_T, rays_den, rays_cumulative_taus, volume, bol_fld):
+    lum_n = np.zeros((len(rays_T), len(x_arr)))
 
-    lum_n = np.zeros(len(x_arr))
-
-    for j in range(len(thetas)):
-        if dot_product[j]==0:
-            continue
-
+    for j in range(len(rays_T)):
         print('ray :', j)
 
         for i in range(len(rays_cumulative_taus[j])):        
@@ -125,18 +110,30 @@ def spectrum(xyz_selected, thetas, phis, rays_T, rays_den, rays_cumulative_taus,
             T = rays_T[j][reverse_idx]
             rho = rays_den[j][reverse_idx] 
             opt_depth = rays_cumulative_taus[j][i]
-            cell_vol = rays_vol[j][reverse_idx] * Rsol_to_cm**3 #volume[reverse_idx] #
+            cell_vol = volume[reverse_idx] #rays_vol[j][reverse_idx] * Rsol_to_cm**3  if you use simulation volume
 
             for i_freq, n in enumerate(n_arr): #we need linearspace
                 lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
-                lum_n_cell *= dot_product[j]
-                lum_n[i_freq] += lum_n_cell
+                #lum_n_cell *= dot_product[j]
+                lum_n[j][i_freq] += lum_n_cell
 
-    # Normalise with the bolometric luminosity from red curve (FLD)
-    const_norm = normalisation(lum_n, x_arr, bol_fld)
-    lum_tilde_n = lum_n * const_norm
+        # Normalise with the spectra of every observer with red curve (FLD)
+        const_norm = normalisation(lum_n[j], x_arr, bol_fld)
+        lum_n[j] = lum_n[j] * const_norm
 
-    return lum_tilde_n
+    return lum_n
+
+def dot_prod(xyz_selected, thetas, phis):
+    dot_product = np.zeros(len(thetas))
+    for iobs in range(len(thetas)):
+        xyz = find_sph_coord(thetas[iobs], phis[iobs])
+        dot_product[iobs] = np.dot(xyz_selected, xyz)
+        # set the negative dot product to 0
+        if dot_product[iobs] < 0:
+            dot_product[iobs] = 0
+
+    dot_product *= 4/192 # normalisation from Elad
+    return dot_product
 
 # MAIN
 if __name__ == "__main__":
@@ -191,8 +188,8 @@ if __name__ == "__main__":
         # Radii has num+1 cell just to compute the volume for num cell. Then we delete the last radius cell
         volume = np.zeros(len(radii)-1)
         for i in range(len(volume)): 
-            dr = radii[i+1] - radii[i]
-            volume[i] = 4 * np.pi * radii[i]**2 * dr / 192  
+            dr = radii[i+1] - radii[i] #2*(radii[2]-radii[1]) / (radii[2] + radii[1])
+            volume[i] = 4 * np.pi * radii[i]**2 * dr / 192  #4 * np.pi * radii[i]**3 * dr / 192   
 
         radii = np.delete(radii, -1)
 
@@ -204,28 +201,38 @@ if __name__ == "__main__":
 
         # Get thermalisation radius
         _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
+        # Compute specific luminosity of every observers
+        lum_n = spectrum(rays_T, rays_den, rays_cumulative_taus, volume, bol_fld)
 
-        # Select the observer for single spectra
+        # Select the observer for single spectrum and compute the dot product
         for idx in range(len(wanted_thetas)):
+            print('NEXT observer')
             wanted_theta = wanted_thetas[idx]
             wanted_phi = wanted_phis[idx]
             wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
             # print('index ',wanted_index)
 
             xyz_selected = find_sph_coord(thetas[wanted_index], phis[wanted_index])
+            dot_product = dot_prod(xyz_selected, thetas, phis)
 
-            lum_tilde_n = spectrum(xyz_selected, thetas, phis, rays_T, rays_den, rays_cumulative_taus, rays_vol, bol_fld)
-        
+            lum_n_selected = np.zeros(len(x_arr))
+            for j in range(len(lum_n)):
+                if dot_product[j] == 0:
+                    continue
+                for i in range(len(x_arr)):
+                    lum_n_single = lum_n[j][i] * dot_product[j]
+                    lum_n_selected[i] += lum_n_single
+
             # Save data and plot
             if save:
                 if alice:
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                     with open(f'{pre_saving}nLn_single_m{m}_{snap}.txt', 'a') as fselect:
                             fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
-                            fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
+                            fselect.write(' '.join(map(str, lum_n_selected)) + '\n')
                             fselect.close()
                 else:
-                    with open(f'data/blue/TESTopac_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
+                    with open(f'data/blue/TESTnorm_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
                         fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
-                        fselect.write(' '.join(map(str, lum_tilde_n)) + '\n')
+                        fselect.write(' '.join(map(str, lum_n_selected)) + '\n')
                         fselect.close()

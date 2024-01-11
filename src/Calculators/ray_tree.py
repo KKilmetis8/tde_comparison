@@ -20,18 +20,15 @@ alice, plot = isalice()
 #%% Constants & Converter
 NSIDE = 4
 G = 6.6743e-11 # SI
-Msol = 1.98847e30 # kg
-Rsol = 6.957e8 # m
+Msol = 2e30 #1.98847e30 # kg
+Rsol = 7e8 #6.957e8 # m
 t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
 c = 3e8 * t/Rsol # simulator units. Need these for the PW potential
 c_cgs = 3e10 # [cm/s]
-Msol_to_g = 1.989e33 # [g]
-Rsol_to_cm = 6.957e10 # [cm]
+Msol_to_g = 2e33 #1.989e33 # [g]
+Rsol_to_cm = 7e10 #6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
-fix = 844
-m = 6
-num = 1000
 
 def isalice():
     return alice

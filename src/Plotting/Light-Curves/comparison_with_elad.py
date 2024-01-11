@@ -18,7 +18,7 @@ plt.rcParams['figure.figsize'] = [10 , 6]
 plt.rcParams['axes.facecolor'] = 'whitesmoke'
 
 plot_curves = False
-residuals = True
+residuals = False
 plot_radii_sphere = True
 plot_fit = False
 m = 6
@@ -91,6 +91,8 @@ if plot_radii_sphere:
     elad_therm_geom = elad[3]
 
     # Our load 
+    test = np.loadtxt('data/TESTop_special_radii_m'+ str(m) + '_num1000.txt') #from ALICE
+    daystest = test[0] * 40
     spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '.txt') #from ALICE
     days = spec_radii[0]
     days *= 40
@@ -102,25 +104,28 @@ if plot_radii_sphere:
     #Elad plot
     # plt.plot(elad_time[0], elad_amean_ph[0], c = 'k')
     # plt.plot(elad_time[0], elad_gmean_ph[0], c = 'magenta')
-    plt.plot(days, elad_photo_arit, c = 'k')
+    # plt.plot(days, elad_photo_arit, c = 'k')
     plt.plot(days, elad_photo_geom, c = 'magenta')
-    plt.plot(days, elad_therm_arit, c = 'b')
+    # plt.plot(days, elad_therm_arit, c = 'b')
     plt.plot(days, elad_therm_geom, c = 'r')
 
     # Our plot
-    plt.plot(days, photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
+    plt.plot(daystest, test[2], '--o', c = 'hotpink', label = r'$R_{ph}$ old opacity')
+    plt.plot(daystest, test[4], '--o', c = 'orange', label = r'$R_{therm}$ old opacity $\tau$=5')
+    plt.plot(daystest, test[6], '--o', c = 'red', label = r'$R_{therm}$ old opacity $\tau$=1')
+    # plt.plot(days, photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
     plt.plot(days, photo_geom, '--', color = 'violet', label = 'Photosphere radius, geometric mean')
-    plt.plot(days, thermr_arit, '--', color = 'b', label = 'Thermalization radius, arithmetic mean')
+    # plt.plot(days, thermr_arit, '--', color = 'b', label = 'Thermalization radius, arithmetic mean')
     plt.plot(days, thermr_geom, '--', color = 'r', label = 'Thermalization radius, geometric mean')
     plt.xlabel('Time (days)')
     plt.xlim(40,65)
-    plt.ylim(10,1e4)
+    #plt.ylim(10,1e4)
     plt.ylabel(r'Average radius [$R_\odot$]')
     plt.grid()
     plt.yscale('log')
     plt.legend(fontsize = 7)
     plt.title(r'$R_{ph}$ and $R_{therm}$')
-    plt.savefig('Final_plot/radii_comparison.png')
+    plt.savefig('Final_plot/thermradii_comparison.png')
     plt.show()
 
     if residuals:
