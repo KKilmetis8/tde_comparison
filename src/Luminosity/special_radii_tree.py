@@ -93,7 +93,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
         if select == 'photo':
             k = kplanck + kscattering
         
-        if select == 'thermr':
+        if select == 'thermr' or select == 'thermr_plot':
             k = np.sqrt(3 * kplanck * (kplanck + kscattering)) 
 
         kappa_high = k * r_dlogr
@@ -106,7 +106,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
             # k = opacity(T, rho,'red', ln = False)
             k = old_opacity(T, rho, 'red') #TEST OLD OPACITY
 
-        if select == 'thermr':
+        if select == 'thermr' or select == 'thermr_plot':
             # k = opacity(T, rho,'effective', ln = False)
             k = old_opacity(T, rho, 'effective') #TEST OLD OPACITY
 
@@ -315,7 +315,7 @@ if __name__ == "__main__":
             pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
         else:
             pre_saving = 'data/'
-            
+
         if photosphere:         
             with open(f'{pre_saving}special_radii_m{m}_oldopacity.txt', 'a') as file:
                 file.write('# Run of ' + now + '\n#t/t_fb\n')
