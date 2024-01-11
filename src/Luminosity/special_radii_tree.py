@@ -14,6 +14,9 @@ NOTES FOR OTHERS:
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
+from src.Utilities.isalice import isalice
+alice, plot = isalice()
+
 # Vanilla Imports
 import numpy as np
 import h5py
@@ -111,7 +114,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
 
         return kappa
 
-def calc_specialr(T, rho, radius, branch_indexes, select, thermplot = False):
+def calc_specialr(T, rho, radius, branch_indexes, select):
     '''
     Finds and saves the photosphere or R_therm (CGS) for ONE  ray.
 
@@ -145,9 +148,9 @@ def calc_specialr(T, rho, radius, branch_indexes, select, thermplot = False):
         threshold = 2/3
     if select == 'thermr':
         threshold = 5
-        if thermplot: 
-            # to have the plot of extended figure 9 from Steinberg&Stone22
-            threshold = 1
+    if select == 'thermr_plot': 
+        # to have the plot of extended figure 9 from Steinberg&Stone22
+        threshold = 1
 
     kappa = 0
     kappas = []
@@ -279,7 +282,7 @@ if __name__ == "__main__":
                 plt.show()  
 
         if thermalisation: 
-            rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select= 'thermr', thermplot = True)
+            rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select= 'thermr_plot')
             rays_thermr = rays_thermr/Rsol_to_cm # to solar unit to plot
 
             fix_thermr_arit[index] = np.mean(rays_thermr)
@@ -308,8 +311,13 @@ if __name__ == "__main__":
                 plt.show()  
 
     if save: 
+        if alice:
+            pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
+        else:
+            pre_saving = 'data/'
+            
         if photosphere:         
-            with open(f'data/special_radii_m{m}_oldopacity.txt', 'a') as file:
+            with open(f'{pre_saving}special_radii_m{m}_oldopacity.txt', 'a') as file:
                 file.write('# Run of ' + now + '\n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Photosphere arithmetic mean \n')
