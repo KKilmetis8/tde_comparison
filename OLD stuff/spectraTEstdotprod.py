@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 
 # Chocolate Imports
 #from src.Opacity.opacity_table import opacity
-from src.Opacity.old_opacity import old_opacity #TEST OLD OPACITY
+from Opacity.cloudy_opacity import old_opacity #TEST OLD OPACITY
 from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.special_radii_tree import get_specialr
 from src.Calculators.select_observers import select_observer 

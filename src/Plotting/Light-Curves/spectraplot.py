@@ -5,7 +5,7 @@ import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
 m = 6
-snap = 881
+snap = 1008
 axis = 'temp'
 
 c = 2.99792458e10 #[cm/s]
@@ -33,7 +33,7 @@ lamda = wavelength(n_array)
 
 # y axis 
 #nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
-nL_tilde_n = np.loadtxt(f'data/blue/TESTobserv_nLn_single_m{m}_{snap}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/cloudy_nLn_single_m{m}_{snap}.txt')
 
 if axis == 'freq':
         x_axis = n_array
@@ -68,7 +68,7 @@ ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$')
 ax1.legend()
 ax1.set_title(r'Spectrum $\vec{x}$')
-plt.savefig(f'Figs/test_spectra{snap}')
+plt.savefig(f'Figs/spectra{snap}')
 plt.show()
 
 

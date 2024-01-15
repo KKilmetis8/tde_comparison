@@ -16,7 +16,6 @@ alice, plot = isalice()
 
 # Vanilla imports
 import numpy as np
-import matplotlib.pyplot as plt
 
 c = 3e10 #[cm/s]
 alpha = 7.5657e-15 # radiation density [erg/cm^3K^4]
