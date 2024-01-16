@@ -1,11 +1,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
+plt.rcParams['text.usetex'] = True
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['figure.figsize'] = [5 , 4]
 
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
 m = 6
-snap = 881
+snap = 1008
 axis = 'temp'
 
 c = 2.99792458e10 #[cm/s]
@@ -56,16 +59,16 @@ ax1.plot(x_axis, n_array * nL_tilde_n[5], c = 'aqua', label = r'$-\vec{z}$')
 ax2 = ax1.twiny()
 ax1.set_xlabel(f'{label}', fontsize = 16)
 ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]', fontsize = 16)
-ax1.set_ylim(2e39, 1e44)
+ax1.set_ylim(2e39, 1.3e44)
 ax1.set_xlim(x_start,x_end)
-ax2.set_xlim(wavelength(n_start),wavelength(n_end))
+ax2.set_xlim(wavelength(n_start), wavelength(n_end))
 ax1.loglog()
 ax1.grid()
 ax2.plot(wavelength(n_array), n_array * nL_tilde_n[0],  c = 'b')
 ax2.set_xlim(c/n_end *1e8, c/n_start * 1e8)
 ax2.invert_xaxis()
 ax2.loglog()
-ax2.set_xlabel(r'$log_{10}\lambda [\AA]$')
+ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)
 ax1.legend()
 #ax1.set_title('Spectra')
 plt.savefig(f'Figs/TESTcooling_spectra{snap}')
