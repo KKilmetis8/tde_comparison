@@ -5,7 +5,7 @@ import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
 m = 6
-snap = 1008
+snap = 881
 axis = 'temp'
 
 c = 2.99792458e10 #[cm/s]
@@ -33,7 +33,7 @@ lamda = wavelength(n_array)
 
 # y axis 
 #nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
-nL_tilde_n = np.loadtxt(f'data/blue/cloudy_nLn_single_m{m}_{snap}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/TESTcooling_nLn_single_m{m}_{snap}.txt')
 
 if axis == 'freq':
         x_axis = n_array
@@ -54,8 +54,8 @@ ax1.plot(x_axis, n_array * nL_tilde_n[3], c = 'lime', label = r'$-\vec{y}$')
 ax1.plot(x_axis, n_array * nL_tilde_n[4], c = 'magenta', label = r'$\vec{z}$')
 ax1.plot(x_axis, n_array * nL_tilde_n[5], c = 'aqua', label = r'$-\vec{z}$')
 ax2 = ax1.twiny()
-ax1.set_xlabel(f'{label}')
-ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]')
+ax1.set_xlabel(f'{label}', fontsize = 16)
+ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]', fontsize = 16)
 ax1.set_ylim(2e39, 1e44)
 ax1.set_xlim(x_start,x_end)
 ax2.set_xlim(wavelength(n_start),wavelength(n_end))
@@ -67,8 +67,8 @@ ax2.invert_xaxis()
 ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$')
 ax1.legend()
-ax1.set_title(r'Spectrum $\vec{x}$')
-plt.savefig(f'Figs/spectra{snap}')
+#ax1.set_title('Spectra')
+plt.savefig(f'Figs/TESTcooling_spectra{snap}')
 plt.show()
 
 

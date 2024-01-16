@@ -108,7 +108,7 @@ if __name__ == '__main__':
     axs[1].title.set_text('LTE')
 
     plt.suptitle(r'Opacity using $\rho$,T from tables')
-    plt.savefig('Figs/opacitytables.png')
+    # plt.savefig('Figs/opacitytables.png')
 
     plt.figure()
     img3 = plt.pcolormesh(logrho, logT, diff, cmap = 'cet_coolwarm', vmin = -6, vmax = 4)

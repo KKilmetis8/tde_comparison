@@ -20,9 +20,10 @@ import matplotlib.pyplot as plt
 
 # Chocolate Imports
 #from src.Opacity.opacity_table import opacity
-from src.Opacity.cloudy_opacity import old_opacity #TEST OLD OPACITY
+from src.Opacity.cloudy_opacity import old_opacity 
 from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.special_radii_tree_cloudy import get_specialr
+from src.Luminosity.emissivity import find_threshold_temp
 from src.Calculators.select_observers import select_observer 
 from src.Luminosity.select_path import select_snap
 from datetime import datetime
@@ -51,22 +52,20 @@ def log_array(n_min, n_max, lenght):
 def planck(Temperature: float, n: float) -> float:
     """ Planck function in a cell. It needs temperature and frequency n. """
     const = 2*h/c**2
-    fun = const * n**3 / (np.exp(min(300,h*n/(Kb*Temperature))) - 1) #min to avoid overflow
+    fun = const * n**3 / (np.exp(min(300,h*n/(Kb*Temperature))) - 1) #take min to avoid overflow
 
     return fun
 
 def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, n: float):
     """ Luminosity in a cell: L_n = \epsilon e^(-\tau) B_n / B 
     where  B = \sigma T^4/\pi"""
-    Tmax = np.power(10,8) #np.exp(17.87) #TEST OLD OPACITY
+    Tmax = np.power(10,8) 
     if Temperature > Tmax:
         # Scale as Kramers the last point 
-        # kplanck_0 = opacity(Tmax, Density, 'planck', ln = False)
-        kplanck_0 = old_opacity(Tmax, Density, 'planck') #TEST OLD OPACITY
+        kplanck_0 = old_opacity(Tmax, Density, 'planck') 
         k_planck = kplanck_0 * (Temperature/Tmax)**(-3.5)
     else:
-        # k_planck = opacity(Temperature, Density, 'planck', ln = False)
-        k_planck = old_opacity(Temperature, Density, 'planck') #TEST OLD OPACITY
+        k_planck = old_opacity(Temperature, Density, 'planck') 
 
     L = 4  * np.pi * k_planck * volume * np.exp(-tau) * planck(Temperature, n)
     return L
@@ -96,18 +95,33 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
     norm = luminosity_fld / L
     return norm
 
-def spectrum(rays_T, rays_den, rays_cumulative_taus, volume, bol_fld):
+def find_lowerT(energy_density):
+    """ Find temperature from flux."""
+    T = (energy_density / alpha)**(1/4)
+    return T
+
+def spectrum(rays_T, rays_den, rays, rays_photo, rays_index_photo, rays_cumulative_taus, threshold_temp, volume, bol_fld):
     lum_n = np.zeros((len(rays_T), len(x_arr)))
 
     for j in range(len(rays_T)):
         print('ray :', j)
 
+        ind_photo = int(rays_index_photo[j])
+        r_ph = rays_photo[j]
+        energy_density = rays[j][ind_photo]
+        lum = energy_density * c * r_ph**2
+        threshold = threshold_temp[j]
         for i in range(len(rays_cumulative_taus[j])):        
             # Temperature, Density and volume: np.array from near to the BH to far away. 
             # Thus we will use negative index in the for loop.
             # tau: np.array from outside to inside.
             reverse_idx = -i -1
             T = rays_T[j][reverse_idx]
+            if (3 * lum > threshold):
+                #print('here')
+                if T > 1e6:
+                    #print('T high in spectrum', j)
+                    T = find_lowerT(energy_density)
             rho = rays_den[j][reverse_idx] 
             opt_depth = rays_cumulative_taus[j][i]
             cell_vol = volume[reverse_idx] #rays_vol[j][reverse_idx] * Rsol_to_cm**3  if you use simulation volume
@@ -134,6 +148,7 @@ def dot_prod(xyz_selected, thetas, phis):
 
     dot_product *= 4/192 # normalisation from Elad
     return dot_product
+
 
 # MAIN
 if __name__ == "__main__":
@@ -182,14 +197,15 @@ if __name__ == "__main__":
         bol_fld = luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')
 
-        # Find observers 
-        tree_indexes, observers, rays_T, rays_den, _, radii, rays_vol = ray_maker(snap, m, check, num)
+        # Find observers.     
+        # rays is Er of Elad 
+        tree_indexes, observers, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snap, m, check, num)
         # Find voulume of cells
         # Radii has num+1 cell just to compute the volume for num cell. Then we delete the last radius cell
         volume = np.zeros(len(radii)-1)
         for i in range(len(volume)): 
-            dr = radii[i+1] - radii[i]  #2*(radii[2]-radii[1]) / (radii[2] + radii[1])
-            volume[i] =  4 * np.pi * radii[i]**2 * dr / 192 #4 * np.pi * radii[i]**3 * dr / 192  
+            dr = 2*(radii[2]-radii[1]) / (radii[2] + radii[1]) #radii[i+1] - radii[i]  
+            volume[i] =  4 * np.pi * radii[i]**3 * dr #/ 192  #4 * np.pi * radii[i]**2 * dr / 192 #
 
         radii = np.delete(radii, -1)
 
@@ -201,12 +217,14 @@ if __name__ == "__main__":
 
         # Get thermalisation radius
         _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
+        _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'photo')
+        threshold_temp = find_threshold_temp(rays_T, rays_den, rays_cumulative_taus, radii)
+        
         # Compute specific luminosity of every observers
-        lum_n = spectrum(rays_T, rays_den, rays_cumulative_taus, volume, bol_fld)
+        lum_n = spectrum(rays_T, rays_den, rays, rays_photo, rays_index_photo, rays_cumulative_taus, threshold_temp, volume, bol_fld)
 
         # Select the observer for single spectrum and compute the dot product
         for idx in range(len(wanted_thetas)):
-            print('NEXT observer')
             wanted_theta = wanted_thetas[idx]
             wanted_phi = wanted_phis[idx]
             wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
@@ -229,7 +247,7 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}cloudy_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
+            with open(f'{pre_saving}TESTcooling_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                 fselect.write(' '.join(map(str, lum_n_selected)) + '\n')
                 fselect.close()
