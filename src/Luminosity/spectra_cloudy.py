@@ -183,7 +183,7 @@ if __name__ == "__main__":
         print(f'Snap {snap}')
 
         # Find observers 
-        tree_indexes, observers, rays_T, rays_den, _, radii, rays_vol = ray_maker(snap, m, check, num)
+        tree_indexes, observers, rays_T, rays_den, _, radii, rays_vol, rays_v = ray_maker(snap, m, check, num)
         # Find voulume of cells
         # Radii has num+1 cell just to compute the volume for num cell. Then we delete the last radius cell
         volume = np.zeros(len(radii)-1)

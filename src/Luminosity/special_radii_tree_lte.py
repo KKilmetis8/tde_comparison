@@ -245,7 +245,7 @@ if __name__ == "__main__":
 
     for index in range(len(snapshots)):        
         print('Snapshot ' + str(snapshots[index]))
-        tree_indexes, _, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snapshots[index], m, check, num)
+        tree_indexes, _, rays_T, rays_den, rays, radii, rays_vol, _ = ray_maker(snapshots[index], m, check, num)
 
         if photosphere:
             rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select='photo')

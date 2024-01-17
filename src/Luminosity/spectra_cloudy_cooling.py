@@ -17,13 +17,12 @@ alice, plot = isalice()
 # Vanilla imports
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.optimize import fsolve
 
 # Chocolate Imports
-#from src.Opacity.opacity_table import opacity
 from src.Opacity.cloudy_opacity import old_opacity 
 from src.Calculators.ray_tree import ray_maker
 from src.Luminosity.special_radii_tree_cloudy import get_specialr
-from src.Luminosity.emissivity import find_threshold_temp
 from src.Calculators.select_observers import select_observer 
 from src.Luminosity.select_path import select_snap
 from datetime import datetime
@@ -36,6 +35,8 @@ c = 2.99792458e10 #[cm/s]
 h = 6.62607015e-27 #[gcm^2/s]
 Kb = 1.380649e-16 #[gcm^2/s^2K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
+sigma_T = 6.6524e-25 #[cm^2] thomson cross section
+gamma = 5/3
 Rsol_to_cm = 6.957e10
 
 #%%
@@ -100,29 +101,41 @@ def find_lowerT(energy_density):
     T = (energy_density / alpha)**(1/4)
     return T
 
-def spectrum(rays_T, rays_den, rays, rays_photo, rays_index_photo, rays_cumulative_taus, threshold_temp, volume, bol_fld):
+def spectrum(rays_T, rays_den, rays, rays_ie, rays_cumulative_taus, rays_v, radii, volume, bol_fld):
     lum_n = np.zeros((len(rays_T), len(x_arr)))
 
     for j in range(len(rays_T)):
         print('ray :', j)
 
-        ind_photo = int(rays_index_photo[j])
-        r_ph = rays_photo[j]
-        energy_density = rays[j][ind_photo]
-        lum = energy_density * c * r_ph**2
-        threshold = threshold_temp[j]
         for i in range(len(rays_cumulative_taus[j])):        
             # Temperature, Density and volume: np.array from near to the BH to far away. 
             # Thus we will use negative index in the for loop.
             # tau: np.array from outside to inside.
             reverse_idx = -i -1
+            energy_density = rays[j][reverse_idx]
+            Tr = find_lowerT(energy_density)
             T = rays_T[j][reverse_idx]
-            if (3 * lum > threshold):
-                #print('here')
-                if T > 1e6:
-                    #print('T high in spectrum', j)
-                    T = find_lowerT(energy_density)
             rho = rays_den[j][reverse_idx] 
+            cv_ratio =  alpha * Tr**4 / (7.6e8 * T * rho)
+            vcompton = rays_v[j][reverse_idx]
+            r = radii[reverse_idx]
+            compton_cooling = 0.075 * cv_ratio * r * 0.34 * rho * 4 * T * Kb / (8.2e-7 * vcompton**2)
+            # cooling = 4/3 * sigma_T * c * energy_density *(v/c)**2 * gamma**2
+            print(compton_cooling)
+            int_energy_density = rays_ie[j][reverse_idx]
+            cv_temp = int_energy_density / T
+            total_E = int_energy_density + alpha * Tr**4
+
+            if (compton_cooling > 1):
+                print('here')
+
+                def function_forT(x):
+                    to_solve = cv_temp * rho * x + alpha * x**4 - total_E
+                    return to_solve
+                
+                new_T = fsolve(function_forT, Tr)
+                T = new_T
+
             opt_depth = rays_cumulative_taus[j][i]
             cell_vol = volume[reverse_idx] #rays_vol[j][reverse_idx] * Rsol_to_cm**3  if you use simulation volume
 
@@ -199,7 +212,7 @@ if __name__ == "__main__":
 
         # Find observers.     
         # rays is Er of Elad 
-        tree_indexes, observers, rays_T, rays_den, rays, radii, rays_vol = ray_maker(snap, m, check, num)
+        tree_indexes, observers, rays_T, rays_den, rays, rays_ie, radii, rays_vol, rays_v = ray_maker(snap, m, check, num)
         # Find voulume of cells
         # Radii has num+1 cell just to compute the volume for num cell. Then we delete the last radius cell
         volume = np.zeros(len(radii)-1)
@@ -217,11 +230,9 @@ if __name__ == "__main__":
 
         # Get thermalisation radius
         _, rays_cumulative_taus, _, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
-        _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'photo')
-        threshold_temp = find_threshold_temp(rays_T, rays_den, rays_cumulative_taus, radii)
         
         # Compute specific luminosity of every observers
-        lum_n = spectrum(rays_T, rays_den, rays, rays_photo, rays_index_photo, rays_cumulative_taus, threshold_temp, volume, bol_fld)
+        lum_n = spectrum(rays_T, rays_den, rays, rays_ie, rays_cumulative_taus, rays_v, radii, volume, bol_fld)
 
         # Select the observer for single spectrum and compute the dot product
         for idx in range(len(wanted_thetas)):

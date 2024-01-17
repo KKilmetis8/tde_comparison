@@ -23,7 +23,7 @@ G = 6.6743e-11 # SI
 Msol = 2e30 #1.98847e30 # kg
 Rsol = 7e8 #6.957e8 # m
 t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
-c = 3e8 * t/Rsol # simulator units. Need these for the PW potential
+#c = 3e8 * t/Rsol # simulator units. Need these for the PW potential
 c_cgs = 3e10 # [cm/s]
 Msol_to_g = 2e33 #1.989e33 # [g]
 Rsol_to_cm = 7e10 #6.957e10 # [cm]
@@ -54,9 +54,13 @@ def ray_maker(fix, m, check, num):
     X = np.load(pre + fix + '/CMx_' + fix + '.npy')
     Y = np.load(pre + fix + '/CMy_' + fix + '.npy')
     Z = np.load(pre + fix + '/CMz_' + fix + '.npy')
+    VX = np.load(pre + fix + '/Vx_' + fix + '.npy')
+    VY = np.load(pre + fix + '/Vy_' + fix + '.npy')
+    VZ = np.load(pre + fix + '/Vz_' + fix + '.npy')
     T = np.load(pre + fix + '/T_' + fix + '.npy')
     Den = np.load(pre + fix + '/Den_' + fix + '.npy')
     Rad = np.load(pre + fix + '/Rad_' + fix + '.npy')
+    IE = np.load(pre + fix + '/IE_' + fix + '.npy')
     Vol = np.load(pre + fix + '/Vol_' + fix + '.npy')
     
     # Move pericenter to 0
@@ -64,6 +68,8 @@ def ray_maker(fix, m, check, num):
     # Convert Energy / Mass to Energy Density in CGS
     Rad *= Den 
     Rad *= en_den_converter
+    IE *= Den 
+    IE *= en_den_converter
     Den *= den_converter 
     
     # make a tree
@@ -93,7 +99,9 @@ def ray_maker(fix, m, check, num):
     rays_T = np.zeros((len(observers), len(radii)-1))
     rays_den = np.zeros((len(observers), len(radii)-1))
     rays = np.zeros((len(observers), len(radii)-1))
+    rays_ie = np.zeros((len(observers), len(radii)-1))
     rays_vol = np.zeros((len(observers), len(radii)-1))
+    rays_v = np.zeros((len(observers), len(radii)-1))
     for j in range(len(observers)):
         for k in range(len(radii)-1):
             radius = radii[k]
@@ -105,10 +113,15 @@ def ray_maker(fix, m, check, num):
             rays_T[j][k] = T[idx] 
             rays_den[j][k] = Den[idx] 
             rays[j][k] = Rad[idx] 
+            rays_ie[j][k] = IE[idx] 
             rays_vol[j][k] = Vol[idx] # not in CGS
-
+            vel = np.sqrt(VX[idx]**2 + VY[idx]**2 + VZ[idx]**2)
+            vel *= Rsol_to_cm / t #convert in CGS
+            rays_v[j][k] = vel
+    
     # Remove Bullshit
     rays = np.nan_to_num(rays, neginf = 0)
+    rays_ie = np.nan_to_num(rays, neginf = 0)
     rays_den = np.nan_to_num(rays_den, neginf = 0)
     rays_T = np.nan_to_num(rays_T, neginf = 0)
 
@@ -131,13 +144,13 @@ def ray_maker(fix, m, check, num):
     # Convert to CGS
     radii *= Rsol_to_cm
     
-    return tree_indexes, observers, rays_T, rays_den, rays, radii, rays_vol
+    return tree_indexes, observers, rays_T, rays_den, rays, rays_ie, radii, rays_vol, rays_v
 
  
 if __name__ == '__main__':
     m = 6
     num = 1000
-    tree_indexes, _, rays_T, rays_den, rays, radii, rays_vol = ray_maker(844, m, num)
+    tree_indexes, observers, rays_T, rays_den, rays, rays_ie, radii, rays_vol, rays_v = ray_maker(844, m, num)
 #%% Plot
     plot = False
     if plot:
