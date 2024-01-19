@@ -33,7 +33,7 @@ plt.rcParams['figure.figsize'] = [5 , 4]
 # Constants
 c = 2.99792458e10 #[cm/s]
 h = 6.62607015e-27 #[gcm^2/s]
-Kb = 1.380649e-16 #[gcm^2/s^2K]
+Kb = 1.380649e-16 #[erg/K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 sigma_T = 6.6524e-25 #[cm^2] thomson cross section
 gamma = 5/3
@@ -72,6 +72,20 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, 
     L = 4  * np.pi * k_planck * volume * np.exp(-tau) * planck(Temperature, n)
     return L
 
+# def luminosity_n(Temperature: float, Density: float, tau: float, radii: float, dr, n: float):
+#     """ Luminosity in a cell trying to use Elad dr: L_n = \epsilon e^(-\tau) B_n / B 
+#     where  B = \sigma T^4/\pi"""
+#     Tmax = np.power(10,8) 
+#     if Temperature > Tmax:
+#         # Scale as Kramers the last point 
+#         kplanck_0 = old_opacity(Tmax, Density, 'planck') 
+#         k_planck = kplanck_0 * (Temperature/Tmax)**(-3.5)
+#     else:
+#         k_planck = old_opacity(Temperature, Density, 'planck') 
+
+#     L = 4  * np.pi * k_planck * radii**3 * dr * np.exp(-tau) * planck(Temperature, n)
+#     return L
+
 def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
     """ Given the array of luminosity L_x computed over n_array = 10^{x_array} (!!!), 
     find the normalisation constant for L_tilde_n from FLD model. """  
@@ -104,28 +118,27 @@ def find_lowerT(energy_density):
 
 def spectrum(rays_T, rays_den, rays, rays_ie, rays_cumulative_taus, rays_v, radii, volume, bol_fld):
     lum_n = np.zeros((len(rays_T), len(x_arr)))
+    #dr = 2* (radii[2]-radii[1]) / (radii[2]+radii[1])
 
     for j in range(len(rays_T)):
         print('ray :', j)
-
+        
         for i in range(len(rays_cumulative_taus[j])):        
             # Temperature, Density and volume: np.array from near to the BH to far away. 
             # Thus we will use negative index in the for loop.
             # tau: np.array from outside to inside.
             reverse_idx = -i -1
-            energy_density = rays[j][reverse_idx]
-            Tr = find_lowerT(energy_density)
+            rad_energy_density = rays[j][reverse_idx]
+            Tr = find_lowerT(rad_energy_density)
             T = rays_T[j][reverse_idx]
             rho = rays_den[j][reverse_idx] 
 
-            cv_ratio =  alpha * Tr**4 / (7.6e8 * T * rho)
+            cv_ratio =  rad_energy_density / (7.6e8 * T * rho)
             vcompton = rays_v[j][reverse_idx]
             r = radii[reverse_idx]
-            compton_cooling = 0.075 * cv_ratio * r * 0.34 * rho * 4 * T * Kb / (8.2e-7 * vcompton)
-            # cooling = 4/3 * sigma_T * c * energy_density *(v/c)**2 * gamma**2
-            # print(compton_cooling)
-            # compton_cooling *= Msol_to_g * Rsol_to_cm**(-9/4)
+            compton_cooling = (0.075 * r / vcompton) * cv_ratio * 0.34 * rho * c * (4 * T * Kb /8.2e-7)
             int_energy_density = rays_ie[j][reverse_idx]
+
             cv_temp = int_energy_density / T
             total_E = int_energy_density + alpha * Tr**4
 
@@ -133,7 +146,7 @@ def spectrum(rays_T, rays_den, rays, rays_ie, rays_cumulative_taus, rays_v, radi
                 print('here')
 
                 def function_forT(x):
-                    to_solve = cv_temp * rho * x + alpha * x**4 - total_E
+                    to_solve = cv_temp * x + alpha * x**4 - total_E # Elad has *rho
                     return to_solve
                 
                 new_T = fsolve(function_forT, Tr)
@@ -144,6 +157,7 @@ def spectrum(rays_T, rays_den, rays, rays_ie, rays_cumulative_taus, rays_v, radi
 
             for i_freq, n in enumerate(n_arr): #we need linearspace
                 lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
+                # lum_n_cell = luminosity_n(T, rho, opt_depth, r, dr, n)
                 #lum_n_cell *= dot_product[j]
                 lum_n[j][i_freq] += lum_n_cell
 
