@@ -124,7 +124,7 @@ def spectrum(rays_T, rays_den, rays, rays_ie, rays_cumulative_taus, rays_v, radi
             compton_cooling = 0.075 * cv_ratio * r * 0.34 * rho * 4 * T * Kb / (8.2e-7 * vcompton)
             # cooling = 4/3 * sigma_T * c * energy_density *(v/c)**2 * gamma**2
             # print(compton_cooling)
-            compton_cooling *= Msol_to_g * Rsol_to_cm**(-9/4)
+            # compton_cooling *= Msol_to_g * Rsol_to_cm**(-9/4)
             int_energy_density = rays_ie[j][reverse_idx]
             cv_temp = int_energy_density / T
             total_E = int_energy_density + alpha * Tr**4
