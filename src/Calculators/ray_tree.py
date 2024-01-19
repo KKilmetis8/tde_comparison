@@ -160,7 +160,7 @@ if __name__ == '__main__':
         plt.rcParams['figure.dpi'] = 300
         plt.rcParams['font.family'] = 'Times New Roman'
         plt.rcParams['figure.figsize'] = [6, 4]
-        plt.rcParams['axes.facecolor']= 	'whitesmoke'
+        plt.rcParams['axes.facecolor']= 'whitesmoke'
         
         den_plot = np.log10(rays_den)
         den_plot = np.nan_to_num(den_plot, neginf= -19)

@@ -37,6 +37,7 @@ Kb = 1.380649e-16 #[gcm^2/s^2K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 sigma_T = 6.6524e-25 #[cm^2] thomson cross section
 gamma = 5/3
+Msol_to_g = 2e33 #1.989e33 # [g]
 Rsol_to_cm = 6.957e10
 
 #%%
@@ -116,12 +117,14 @@ def spectrum(rays_T, rays_den, rays, rays_ie, rays_cumulative_taus, rays_v, radi
             Tr = find_lowerT(energy_density)
             T = rays_T[j][reverse_idx]
             rho = rays_den[j][reverse_idx] 
+
             cv_ratio =  alpha * Tr**4 / (7.6e8 * T * rho)
             vcompton = rays_v[j][reverse_idx]
             r = radii[reverse_idx]
-            compton_cooling = 0.075 * cv_ratio * r * 0.34 * rho * 4 * T * Kb / (8.2e-7 * vcompton**2)
+            compton_cooling = 0.075 * cv_ratio * r * 0.34 * rho * 4 * T * Kb / (8.2e-7 * vcompton)
             # cooling = 4/3 * sigma_T * c * energy_density *(v/c)**2 * gamma**2
-            print(compton_cooling)
+            # print(compton_cooling)
+            compton_cooling *= Msol_to_g * Rsol_to_cm**(-9/4)
             int_energy_density = rays_ie[j][reverse_idx]
             cv_temp = int_energy_density / T
             total_E = int_energy_density + alpha * Tr**4

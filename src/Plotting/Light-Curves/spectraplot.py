@@ -8,7 +8,7 @@ import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
 m = 6
-snap = 1008
+snap = 881
 axis = 'temp'
 
 c = 2.99792458e10 #[cm/s]
