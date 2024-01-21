@@ -3,12 +3,14 @@ import matplotlib.pyplot as plt
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
+plt.rc('xtick', labelsize = 15) 
+plt.rc('ytick', labelsize = 15) 
 
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
 m = 6
-snap = 881
+snap = 882
 axis = 'temp'
 
 c = 2.99792458e10 #[cm/s]
@@ -49,7 +51,9 @@ if axis == 'temp':
         x_start = T_start
         x_end = T_end
 
-fig, ax1 = plt.subplots( figsize = (8,6) ) 
+fig, ax1 = plt.subplots( figsize = (9,6) ) 
+# for i in range(0,192,25):
+#       ax1.plot(x_axis, n_array * nL_tilde_n[i])  
 ax1.plot(x_axis, n_array * nL_tilde_n[0], c = 'b',  label = r'$\vec{x}$')
 ax1.plot(x_axis, n_array * nL_tilde_n[1], c = 'r', label = r'$-\vec{x}$')
 ax1.plot(x_axis, n_array * nL_tilde_n[2], c = 'k', label = r'$\vec{y}$')

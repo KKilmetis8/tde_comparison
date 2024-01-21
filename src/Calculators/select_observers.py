@@ -11,6 +11,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 
 from src.Calculators.ray_tree import ray_maker
 import healpy as hp
+import colorcet
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -43,7 +44,11 @@ def select_observer(wanted_theta, wanted_phi, thetas, phis):
     return index
 
 if __name__ == '__main__':
-    _, observers, _, _, _, _, _ = ray_maker(844, 6, 'fid')
+    m = 6
+    snap = 844
+    check = 'fid'
+    _, observers, _, _, _, _, _, _, _ = ray_maker(snap, m, check, 500)
+    plot = '2dim'
 
     # Observers from ray_maker: theta in [0,pi], phi in [0,2pi]
     thetas = np.zeros(192)
@@ -56,88 +61,145 @@ if __name__ == '__main__':
         phis[iobs] =  observers[iobs][1]
         x_healpix[iobs], y_healpix[iobs], z_healpix[iobs] = find_sph_coord(thetas[iobs], phis[iobs])
     
-    # Observer you would like to see
-    wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
-    wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
-    x_wanted = np.zeros(len(wanted_thetas))
-    y_wanted = np.zeros(len(wanted_thetas))
-    z_wanted = np.zeros(len(wanted_thetas)) 
-    for i in range(len(wanted_thetas)):
-        x_wanted[i], y_wanted[i], z_wanted[i] = find_sph_coord(wanted_thetas[i], wanted_phis[i])
 
-    # Plot the ones chosen 
-    fig = plt.figure()
-    ax = fig.add_subplot(projection = '3d')
-    # Create a sphere
-    r = 0.5
-    phi_sph, theta_sph = np.mgrid[0.0:np.pi:100j, 0.0:2.0*np.pi:100j]
-    x = r*np.sin(phi_sph)*np.cos(theta_sph)
-    y = r*np.sin(phi_sph)*np.sin(theta_sph)
-    z = r*np.cos(phi_sph)
-    ax.plot_surface(x, y, z, color='orange', alpha = 0.5)
+    if plot == '3dim':
+        # Observer you would like to see
+        wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
+        wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
+        x_wanted = np.zeros(len(wanted_thetas))
+        y_wanted = np.zeros(len(wanted_thetas))
+        z_wanted = np.zeros(len(wanted_thetas)) 
+        for i in range(len(wanted_thetas)):
+            x_wanted[i], y_wanted[i], z_wanted[i] = find_sph_coord(wanted_thetas[i], wanted_phis[i])
+        
+        # Plot the ones chosen 
+        fig = plt.figure()
+        ax = fig.add_subplot(projection = '3d')
+        # Create a sphere
+        r = 0.5
+        phi_sph, theta_sph = np.mgrid[0.0:np.pi:100j, 0.0:2.0*np.pi:100j]
+        x = r*np.sin(phi_sph)*np.cos(theta_sph)
+        y = r*np.sin(phi_sph)*np.sin(theta_sph)
+        z = r*np.cos(phi_sph)
+        ax.plot_surface(x, y, z, color='orange', alpha = 0.5)
 
-    #Set arrow for axis
-    xar = np.zeros(len(x_wanted))
-    yar = np.zeros(len(x_wanted))
-    zar = np.zeros(len(x_wanted))
-    # ax.quiver(xar,yar,zar, dx, dy, dz, arrow_length_ratio=0.1, color = 'k')
-    col = ['b', 'r', 'k', 'lime', 'magenta', 'aqua']
-    ax.quiver(xar, yar, zar, x_wanted, y_wanted, z_wanted, arrow_length_ratio=0.1, color = 'k')
+        #Set arrow for axis
+        xar = np.zeros(len(x_wanted))
+        yar = np.zeros(len(x_wanted))
+        zar = np.zeros(len(x_wanted))
+        # ax.quiver(xar,yar,zar, dx, dy, dz, arrow_length_ratio=0.1, color = 'k')
+        col = ['b', 'r', 'k', 'lime', 'magenta', 'aqua']
+        ax.quiver(xar, yar, zar, x_wanted, y_wanted, z_wanted, arrow_length_ratio=0.1, color = 'k')
 
-    ax.scatter(x_wanted,y_wanted,z_wanted, color = col, s=20)
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    plt.tight_layout()
-    plt.savefig('Final_plot/observerspectra.png')
-    plt.title('Real')
+        ax.scatter(x_wanted,y_wanted,z_wanted, color = col, s=20)
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        plt.tight_layout()
+        plt.savefig('Final_plot/observerspectra.png')
+        plt.title('Real')
 
-    # Plot healpix with axis 
-    fig = plt.figure()
-    ax = fig.add_subplot(projection = '3d')
-    ax.scatter(x_healpix, y_healpix, z_healpix, color = 'b', s=10)
-    ax.quiver(xar, yar, zar, x_wanted, y_wanted, z_wanted, arrow_length_ratio=0.1, color = 'k')
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    
-    # Observers from healpix nearest to the ones you want
-    x_selected = np.zeros(len(wanted_thetas))
-    y_selected = np.zeros(len(wanted_thetas))
-    z_selected = np.zeros(len(wanted_thetas))
-    for idx in range(len(wanted_thetas)):
-        wanted_theta = wanted_thetas[idx]
-        wanted_phi = wanted_phis[idx]
-        wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
-        x_selected[idx], y_selected[idx], z_selected[idx] = find_sph_coord(thetas[wanted_index], phis[wanted_index])
+        # Plot healpix with axis 
+        fig = plt.figure()
+        ax = fig.add_subplot(projection = '3d')
+        ax.scatter(x_healpix, y_healpix, z_healpix, color = 'b', s=10)
+        ax.quiver(xar, yar, zar, x_wanted, y_wanted, z_wanted, arrow_length_ratio=0.1, color = 'k')
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        
+        # Observers from healpix nearest to the ones you want
+        x_selected = np.zeros(len(wanted_thetas))
+        y_selected = np.zeros(len(wanted_thetas))
+        z_selected = np.zeros(len(wanted_thetas))
+        for idx in range(len(wanted_thetas)):
+            wanted_theta = wanted_thetas[idx]
+            wanted_phi = wanted_phis[idx]
+            wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
+            x_selected[idx], y_selected[idx], z_selected[idx] = find_sph_coord(thetas[wanted_index], phis[wanted_index])
 
-    print('X:' , x_selected)
-    print('Y:' , y_selected)
-    print('Z:' , z_selected)
+        print('X:' , x_selected)
+        print('Y:' , y_selected)
+        print('Z:' , z_selected)
 
-    fig = plt.figure()
-    ax = fig.add_subplot(projection = '3d')
-    # Create a sphere
-    r = 0.5
-    phi_sph, theta_sph = np.mgrid[0.0:np.pi:100j, 0.0:2.0*np.pi:100j]
-    x = r*np.sin(phi_sph)*np.cos(theta_sph)
-    y = r*np.sin(phi_sph)*np.sin(theta_sph)
-    z = r*np.cos(phi_sph)
-    ax.plot_surface(x, y, z, color='orange', alpha = 0.5)
+        fig = plt.figure()
+        ax = fig.add_subplot(projection = '3d')
+        # Create a sphere
+        r = 0.5
+        phi_sph, theta_sph = np.mgrid[0.0:np.pi:100j, 0.0:2.0*np.pi:100j]
+        x = r*np.sin(phi_sph)*np.cos(theta_sph)
+        y = r*np.sin(phi_sph)*np.sin(theta_sph)
+        z = r*np.cos(phi_sph)
+        ax.plot_surface(x, y, z, color='orange', alpha = 0.5)
 
-    #Set arrow for axis
-    xar = np.zeros(len(x_wanted))
-    yar = np.zeros(len(x_wanted))
-    zar = np.zeros(len(x_wanted))
-    # ax.quiver(xar,yar,zar, dx, dy, dz, arrow_length_ratio=0.1, color = 'k')
-    col = ['b', 'r', 'k', 'lime', 'magenta', 'aqua']
-    ax.quiver(xar, yar, zar, x_wanted, y_wanted, z_wanted, arrow_length_ratio=0.1, color = 'k')
+        #Set arrow for axis
+        xar = np.zeros(len(x_wanted))
+        yar = np.zeros(len(x_wanted))
+        zar = np.zeros(len(x_wanted))
+        # ax.quiver(xar,yar,zar, dx, dy, dz, arrow_length_ratio=0.1, color = 'k')
+        col = ['b', 'r', 'k', 'lime', 'magenta', 'aqua']
+        ax.quiver(xar, yar, zar, x_wanted, y_wanted, z_wanted, arrow_length_ratio=0.1, color = 'k')
 
-    ax.scatter(x_selected,y_selected,z_selected, color = col, s=20)
-    ax.set_xlabel('X')
-    ax.set_ylabel('Y')
-    ax.set_zlabel('Z')
-    plt.tight_layout()
-    plt.savefig('Final_plot/observerspectra_healp.png')
-    plt.title('Simulation')
-    plt.show()
+        ax.scatter(x_selected,y_selected,z_selected, color = col, s=20)
+        ax.set_xlabel('X')
+        ax.set_ylabel('Y')
+        ax.set_zlabel('Z')
+        plt.tight_layout()
+        plt.savefig('Final_plot/observerspectra_healp.png')
+        plt.title('Simulation')
+
+    if plot == '2dim':
+        Mbh = 10**m 
+        Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
+        apocenter = 2 * Rt * Mbh**(1/3) 
+        pre = f'data/denproj/{m}'#/{m}-{check}'
+        sim = f'{m}-{check}'
+        data = np.loadtxt(f'{pre}/denproj{sim}{snap}.txt')
+        x_radii = np.loadtxt(pre + '/xarray' + sim + '.txt') #simulator units
+        y_radii = np.loadtxt(pre + '/yarray' + sim + '.txt') #simulator units
+
+        # Observer you would like to see
+        wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2] # x, -x, y, -y, z, -z
+        wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2]
+        x_wanted = np.zeros(len(wanted_thetas))
+        y_wanted = np.zeros(len(wanted_thetas))
+        z_wanted = np.zeros(len(wanted_thetas)) 
+        for i in range(len(wanted_thetas)):
+            x_wanted[i], y_wanted[i], z_wanted[i] = find_sph_coord(wanted_thetas[i], wanted_phis[i])
+            # Need the following for plotting
+            # if y_wanted[i] > 0.2:
+            #     y_wanted[i] = 0.15
+            # if y_wanted[i] < -0.2:
+            #     y_wanted[i] = -0.15
+            # if x_wanted[i] > 0.5:
+            #     x_wanted[i] = max(x_radii)/apocenter -0.005
+            # if x_wanted[i] < -0.5:
+            #     x_wanted[i] = -0.95
+        col = ['b', 'r', 'k', 'lime']
+
+        # Observers from healpix nearest to the ones you want
+        x_selected = np.zeros(len(wanted_thetas))
+        y_selected = np.zeros(len(wanted_thetas))
+        z_selected = np.zeros(len(wanted_thetas))
+        for idx in range(len(wanted_thetas)):
+            wanted_theta = wanted_thetas[idx]
+            wanted_phi = wanted_phis[idx]
+            wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
+            x_selected[idx], y_selected[idx], z_selected[idx] = find_sph_coord(thetas[wanted_index], phis[wanted_index])
+
+        fig, ax = plt.subplots(1,1)
+        den_plot = np.nan_to_num(data, nan = -1, neginf = -1)
+        den_plot = np.log10(den_plot)
+        den_plot = np.nan_to_num(den_plot, neginf= 0)
+
+        ax.set_xlabel(r' X [$x/R_a$]', fontsize = 14)
+        ax.set_ylabel(r' Y [$y/R_a$]', fontsize = 14)
+        img = ax.pcolormesh(x_radii/apocenter, y_radii/apocenter, den_plot.T, 
+                            cmap = 'cet_fire', alpha = 0.8,
+                            vmin = 0, vmax = 6)
+        ax.scatter(x_wanted, y_wanted, c = col, marker = 'X')
+        ax.scatter(x_selected, y_selected, c = col)
+        ax.scatter(x_healpix[88:103], y_healpix[88:103], s = 8)
+        plt.savefig('Final_plot/observers_inproj.png')
+
+        plt.show()

@@ -69,7 +69,6 @@ def old_opacity(T, rho, kind) -> float:
     return kapparho
 
 if __name__ == '__main__':
-    from src.Calculators.ray_tree import ray_maker
     from src.Opacity.opacity_table import opacity 
     import colorcet
 
@@ -101,14 +100,14 @@ if __name__ == '__main__':
     axs[0].title.set_text('CLOUDY')
 
     img1 = axs[1].pcolormesh(logrho, logT, kappa_lte, cmap = 'cet_rainbow', vmin = -20, vmax = 15)
-    cbar1 = plt.colorbar(img1)
+    # cbar1 = plt.colorbar(img1)
     axs[1].set_xlabel(r'$\log_{10}\rho [g/cm^3]$', fontsize = 15)
     #axs[1].set_ylabel(r'$\log_{10}$T [K]', fontsize = 16)
-    cbar1.set_label(r'$\log_{10}\kappa [1/cm]$', fontsize = 15)
+    # cbar1.set_label(r'$\log_{10}\kappa [1/cm]$', fontsize = 15)
     axs[1].title.set_text('LTE')
 
     plt.suptitle(r'Opacity using $\rho$,T from tables')
-    # plt.savefig('Figs/opacitytables.png')
+    plt.savefig('Figs/opacitytables.png')
 
     plt.figure()
     img3 = plt.pcolormesh(logrho, logT, diff, cmap = 'cet_coolwarm', vmin = -6, vmax = 4)

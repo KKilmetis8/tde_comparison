@@ -69,22 +69,8 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, 
     else:
         k_planck = old_opacity(Temperature, Density, 'planck') 
 
-    L = 4  * np.pi * k_planck * volume * np.exp(-tau) * planck(Temperature, n)
+    L = 4  * np.pi * k_planck * volume * np.exp(-min(30,tau)) * planck(Temperature, n)
     return L
-
-# def luminosity_n(Temperature: float, Density: float, tau: float, radii: float, dr, n: float):
-#     """ Luminosity in a cell trying to use Elad dr: L_n = \epsilon e^(-\tau) B_n / B 
-#     where  B = \sigma T^4/\pi"""
-#     Tmax = np.power(10,8) 
-#     if Temperature > Tmax:
-#         # Scale as Kramers the last point 
-#         kplanck_0 = old_opacity(Tmax, Density, 'planck') 
-#         k_planck = kplanck_0 * (Temperature/Tmax)**(-3.5)
-#     else:
-#         k_planck = old_opacity(Temperature, Density, 'planck') 
-
-#     L = 4  * np.pi * k_planck * radii**3 * dr * np.exp(-tau) * planck(Temperature, n)
-#     return L
 
 def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
     """ Given the array of luminosity L_x computed over n_array = 10^{x_array} (!!!), 
@@ -153,11 +139,10 @@ def spectrum(rays_T, rays_den, rays, rays_ie, rays_cumulative_taus, rays_v, radi
                 T = new_T
 
             opt_depth = rays_cumulative_taus[j][i]
-            cell_vol = volume[reverse_idx] #rays_vol[j][reverse_idx] * Rsol_to_cm**3  if you use simulation volume
+            cell_vol = volume[reverse_idx] 
 
             for i_freq, n in enumerate(n_arr): #we need linearspace
                 lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
-                # lum_n_cell = luminosity_n(T, rho, opt_depth, r, dr, n)
                 #lum_n_cell *= dot_product[j]
                 lum_n[j][i_freq] += lum_n_cell
 
@@ -222,7 +207,7 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(1,2): #so you take snap 881
+    for idx_sn in range(len(snapshots)-1, len(snapshots)): # so you take snap 881 1008: (len(snapshots)-1, len(snapshots))
         snap = snapshots[idx_sn]
         bol_fld = luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')
@@ -234,8 +219,8 @@ if __name__ == "__main__":
         # Radii has num+1 cell just to compute the volume for num cell. Then we delete the last radius cell
         volume = np.zeros(len(radii)-1)
         for i in range(len(volume)): 
-            dr = 2*(radii[2]-radii[1]) / (radii[2] + radii[1]) #radii[i+1] - radii[i]  
-            volume[i] =  4 * np.pi * radii[i]**3 * dr #/ 192  #4 * np.pi * radii[i]**2 * dr / 192 #
+            dr = radii[i+1] - radii[i]  #2*(radii[2]-radii[1]) / (radii[2] + radii[1])  
+            volume[i] =  4 * np.pi * radii[i]**2 * dr / 192 #4 * np.pi * radii[i]**3 * dr #/ 192  
 
         radii = np.delete(radii, -1)
 

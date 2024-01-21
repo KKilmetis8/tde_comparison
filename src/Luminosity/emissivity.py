@@ -23,7 +23,7 @@ from src.Opacity.cloudy_opacity import old_opacity
 c = 2.99792458e10 #[cm/s]
 h = 6.62607015e-27 #[gcm^2/s]
 Kb = 1.380649e-16 #[gcm^2/s^2K]
-alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
+alpha = 7.5646e-15# radiation density [erg/cm^3K^4]
 Rsol_to_cm = 6.957e10
 
 def emissivity(Temperature: float, Density: float, tau: float, radius: float, dr: float):
