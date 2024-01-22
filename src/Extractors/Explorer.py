@@ -8,7 +8,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 import h5py
 from datetime import datetime
-snapshot881 = "6/881/snap_881.h5"
+snapshot881 = "6/882/snap_882.h5"
 # f = h5py.File(snapshot881, "r")
 #%% Explores the structure of the hdf5
 
@@ -27,7 +27,7 @@ def h5print(filename):
         print(filename)
         # h5printR(h, '  ')
         a = h['Box']
-        print(a[5]/1.4)
+        print(a[0])
         
 h5print(snapshot881)
 

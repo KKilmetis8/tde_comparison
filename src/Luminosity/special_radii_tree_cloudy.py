@@ -65,7 +65,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     Tmax = np.power(10,8) #np.exp(17.87) #TEST OLD OPACITY
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):
-        print('rho low')        
+        #print('rho low')        
         return 0
     
     # Stream material, is opaque
