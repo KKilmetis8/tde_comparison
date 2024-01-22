@@ -38,7 +38,7 @@ lamda = wavelength(n_array)
 
 # y axis 
 #nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
-nL_tilde_n = np.loadtxt(f'data/blue/TESTcooling_nLn_single_m{m}_{snap}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/TESTPERICcooling_nLn_single_m{m}_{snap}.txt')
 
 if axis == 'freq':
         x_axis = n_array
@@ -75,7 +75,7 @@ ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)
 ax1.legend()
 #ax1.set_title('Spectra')
-plt.savefig(f'Figs/TESTcooling_spectra{snap}')
+plt.savefig(f'Figs/TESTPERIcooling_spectra{snap}')
 plt.show()
 
 

@@ -25,18 +25,22 @@ with h5py.File(f'data/elad/data_{snap}.mat', 'r') as f:
     amean_rtherm = np.mean(rtherm)
     gmean_rtherm = gmean(rtherm)
 
-rtherm /= amean_rtherm
+# rtherm /= amean_rtherm
 
-tree_indexes, observers, rays_T, rays_den, _, radii, _ = ray_maker(snap, m, check, num)
+tree_indexes, observers, rays_T, rays_den, rays, rays_ie, radii, rays_vol, rays_v = ray_maker(snap, m, check, num)
 _, rays_cumulative_taus, specialr, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select = 'thermr')
-our_mean = np.mean(specialr)
-our_rtherm = specialr / our_mean
+#our_mean = np.mean(specialr)
+#our_rtherm = specialr / our_mean
+to_plot = specialr/(6.957e10*rtherm)
+print(to_plot)
 
 plt.figure()
-plt.scatter(np.arange(192), rtherm, c = 'k', s = 10, label = 'Elad')
-plt.scatter(np.arange(192), our_rtherm, c = 'b', s = 8, label = 'us')
+plt.scatter(np.arange(192), to_plot, c = 'k', s = 10, label = 'Elad')
+#plt.scatter(np.arange(192), our_rtherm, c = 'b', s = 8, label = 'us')
 plt.xlabel('Observers')
-plt.ylabel(r'$R_{therm}/\bar{R}_{therm}$')
-plt.ylim(0,10)
-plt.legend()
+plt.ylabel(r'$R_{us}/R_{Elad}$')
+#plt.ylim(0,10)
+#plt.legend()
+plt.yscale('log')
+plt.savefig('radii.png')
 plt.show()

@@ -207,7 +207,7 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(len(snapshots)-1, len(snapshots)): # so you take snap 881 1008: (len(snapshots)-1, len(snapshots))
+    for idx_sn in range(1,2):#len(snapshots)-1, len(snapshots)): # so you take snap 881 1008: (len(snapshots)-1, len(snapshots))
         snap = snapshots[idx_sn]
         bol_fld = luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')
@@ -260,7 +260,7 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}TESTcooling_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
+            with open(f'{pre_saving}TESTPERICcooling_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                 fselect.write(' '.join(map(str, lum_n_selected)) + '\n')
                 fselect.close()
