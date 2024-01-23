@@ -35,9 +35,9 @@ def isalice():
     return alice
 
 def find_sph_coord(r, theta,phi):
-    x = r * np.sin(np.pi-theta) * np.cos(phi) #because theta should start from the z axis: we're flipped
-    y = r * np.sin(np.pi-theta) * np.sin(phi)
-    z = r * np.cos(np.pi-theta)
+    x = r * np.sin(theta) * np.cos(phi) #because theta should start from the z axis: we're flipped
+    y = r * np.sin(theta) * np.sin(phi)
+    z = r * np.cos(theta)
     return [x,y,z]
 
 def ray_maker(fix, m, check, thetas, phis, stops, num): 
@@ -111,7 +111,7 @@ def ray_maker(fix, m, check, thetas, phis, stops, num):
         for k in range(len(radii)-1):
             radius = radii[k]
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
-            queried_value[0] -= Rt
+            queried_value[0] += Rt
             _, idx = sim_tree.query(queried_value)
 
             # Store
@@ -121,7 +121,7 @@ def ray_maker(fix, m, check, thetas, phis, stops, num):
             rays[j][k] = Rad[idx] 
             rays_ie[j][k] = IE[idx] 
             rays_vol[j][k] = Vol[idx] # not in CGS
-            vel = np.sqrt(VX[idx]**2 + VY[idx]**2 + VZ[idx]**2)
+            vel = VX[idx]**2 + VY[idx]**2 + VZ[idx]**2 #np.sqrt(VX[idx]**2 + VY[idx]**2 + VZ[idx]**2)
             vel *= Rsol_to_cm / t #convert in CGS
             rays_v[j][k] = vel
 

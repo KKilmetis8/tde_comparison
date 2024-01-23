@@ -95,7 +95,8 @@ if plot_radii_sphere:
     # Our load 
     # test = np.loadtxt('data/oldopacity_special_radii_m'+ str(m) + '_num1000.txt') #from ALICE
     # daystest = test[0] * 40
-    spec_radii = np.loadtxt('data/special_radii_m'+ str(m) + '_oldopacity.txt') #from ALICE
+    spec_radii = np.loadtxt('data/TESTspecial_radii_m'+ str(m) + '_oldopacity.txt') #from ALICE
+    daysEl = np.loadtxt('data/special_radii_m'+ str(m) + '_oldopacity.txt')[0] #from ALICE
     days = spec_radii[0]
     days *= 40
     photo_arit = spec_radii[1]
@@ -104,16 +105,16 @@ if plot_radii_sphere:
     thermr_geom = spec_radii[4]
 
     #Elad plot
-    plt.plot(days, elad_photo_arit, c = 'k')
-    plt.plot(days, elad_photo_geom, c = 'magenta')
-    plt.plot(days, elad_therm_arit, c = 'b')
-    plt.plot(days, elad_therm_geom, c = 'r')
+    plt.plot(daysEl*40, elad_photo_arit, c = 'k', label = 'Photosphere radius, arithmetic mean')
+    plt.plot(daysEl*40, elad_photo_geom, c = 'magenta', label = 'Photosphere radius, geometric mean')
+    plt.plot(daysEl*40, elad_therm_arit, c = 'b', label = 'Thermalization radius, arithmetic mean')
+    plt.plot(daysEl*40, elad_therm_geom, c = 'r', label = 'Thermalization radius, geometric mean')
 
     # Our plot
-    plt.plot(days, photo_arit, '--', color = 'black', label = 'Photosphere radius, arithmetic mean')
-    plt.plot(days, photo_geom, '--', color = 'violet', label = 'Photosphere radius, geometric mean')
-    plt.plot(days, thermr_arit, '--', color = 'b', label = 'Thermalization radius, arithmetic mean')
-    plt.plot(days, thermr_geom, '--', color = 'tomato', label = 'Thermalization radius, geometric mean')
+    plt.scatter(days, photo_arit, color = 'black')#, label = 'Photosphere radius, arithmetic mean')
+    plt.scatter(days, photo_geom, color = 'violet')#, label = 'Photosphere radius, geometric mean')
+    plt.scatter(days, thermr_arit, color = 'b')#, label = 'Thermalization radius, arithmetic mean')
+    plt.scatter(days, thermr_geom, color = 'tomato')#, label = 'Thermalization radius, geometric mean')
     plt.xlim(40,64)
     plt.ylim(10,1e4)
     plt.yscale('log')

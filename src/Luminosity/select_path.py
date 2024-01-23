@@ -38,7 +38,7 @@ def select_snap(m, check):
         if m == 4 and check == 'fid':
             snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         if m == 6 and check == 'fid':
-            snapshots = [844, 882, 925, 950, 1008] 
+            snapshots = [844, 882, 925, 950]#, 1008] 
     for snap in snapshots:
         snap = str(snap) 
         day = np.round(days_since_distruption( pre +

@@ -62,14 +62,15 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     kappa: float.
             The optical depth of a cell.
     '''    
-    Tmax = np.power(10,8) #np.exp(17.87) #TEST OLD OPACITY
+    Tmax = 1e13 # #np.exp(17.87) #TEST OLD OPACITY
+    Tmin = 316 #np.power(10)
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):
         #print('rho low')        
         return 0
     
     # Stream material, is opaque
-    elif T < np.exp(8.666):
+    elif T < Tmin:
         print('T low')
         return 100
     

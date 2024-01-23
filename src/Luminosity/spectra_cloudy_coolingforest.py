@@ -125,7 +125,7 @@ def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus,
             print('here')
 
             def function_forT(x):
-                to_solve = cv_temp * x + alpha * x**4 - total_E # Elad has *rho
+                to_solve = cv_temp * rho * x + alpha * x**4 - total_E # Elad has *rho
                 return to_solve
             
             new_T = fsolve(function_forT, Tr)
@@ -145,16 +145,23 @@ def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus,
 
     return lum_n
 
-def dot_prod(xyz_selected, thetas, phis):
-    dot_product = np.zeros(len(thetas))
-    for iobs in range(len(thetas)):
-        xyz = find_sph_coord(1,thetas[iobs], phis[iobs])
-        dot_product[iobs] = np.dot(xyz_selected, xyz)
-        # set the negative dot product to 0
-        if dot_product[iobs] < 0:
-            dot_product[iobs] = 0
+# def dot_prod(xyz_selected, thetas, phis):
+#     dot_product = np.zeros(len(thetas))
+#     for iobs in range(len(thetas)):
+#         xyz = find_sph_coord(1,thetas[iobs], phis[iobs])
+#         dot_product[iobs] = np.dot(xyz_selected, xyz)
+#         # set the negative dot product to 0
+#         if dot_product[iobs] < 0:
+#             dot_product[iobs] = 0
 
-    dot_product *= 4/192 # normalisation from Elad
+#     dot_product *= 4/192 # normalisation from Elad
+#     return dot_product
+
+def dot_prod(xyz_grid):
+    dot_product = np.dot(xyz_grid, np.transpose(xyz_grid))
+    dot_product[dot_product < 0] = 0
+    dot_product = dot_product * 4 / 192
+
     return dot_product
 
 
@@ -200,7 +207,7 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(1,2): #len(snapshots)-1, len(snapshots)): # so you take snap 881 1008: (len(snapshots)-1, len(snapshots))
+    for idx_sn in range(1,2): 
         snap = snapshots[idx_sn]
         bol_fld = luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')
@@ -219,12 +226,14 @@ if __name__ == "__main__":
         phis = np.zeros(192) 
         observers = []
         stops = np.zeros(192) 
+        xyz_grid = []
         for iobs in range(0,192):
             theta, phi = hp.pix2ang(NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
             thetas[iobs] = theta
             phis[iobs] = phi
             observers.append( (theta, phi) )
             xyz = find_sph_coord(1, theta, phi)
+            xyz_grid.append(xyz)
 
             mu_x = xyz[0]
             mu_y = xyz[1]
@@ -266,8 +275,8 @@ if __name__ == "__main__":
 
             volume = np.zeros(len(radius)-1)
             for i in range(len(volume)): 
-                dr = radius[i+1] - radius[i]  #2*(radius[2]-radius[1]) / (radius[2] + radius[1])  
-                volume[i] =  4 * np.pi * radius[i]**2 * dr / 192 #4 * np.pi * radius[i]**3 * dr #/ 192  
+                dr = 2*(radius[2]-radius[1]) / (radius[2] + radius[1]) #radius[i+1] - radius[i]  
+                volume[i] =  4 * np.pi * radius[i]**3 * dr #4 * np.pi * radius[i]**2 * dr / 192  
 
             radius = np.delete(radius, -1)
 
@@ -279,7 +288,10 @@ if __name__ == "__main__":
 
             lum_n.append(lum_n_ray)
 
-        print('hi')
+        dot_product = dot_prod(xyz_grid) #dot_prod(xyz_selected, thetas, phis)
+
+        lum_n_selected = np.dot(dot_product, lum_n)
+
         # Select the observer for single spectrum and compute the dot product
         for idx in range(len(wanted_thetas)):
             wanted_theta = wanted_thetas[idx]
@@ -287,16 +299,16 @@ if __name__ == "__main__":
             wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
             # print('index ',wanted_index)
 
-            xyz_selected = find_sph_coord(1, thetas[wanted_index], phis[wanted_index])
-            dot_product = dot_prod(xyz_selected, thetas, phis)
+            # xyz_selected = find_sph_coord(1, thetas[wanted_index], phis[wanted_index])
+            # dot_product = dot_prod(xyz_selected, thetas, phis)
 
-            lum_n_selected = np.zeros(len(x_arr))
-            for j in range(len(lum_n)):
-                if dot_product[j] == 0:
-                    continue
-                for i in range(len(x_arr)):
-                    lum_n_single = lum_n[j][i] * dot_product[j]
-                    lum_n_selected[i] += lum_n_single
+            #lum_n_selected = np.zeros(len(x_arr))
+            # for j in range(len(lum_n)):
+            #     if dot_product[j] == 0:
+            #         continue
+            #     for i in range(len(x_arr)):
+            #         lum_n_single = lum_n[j][i] * dot_product[j]
+            #         lum_n_selected[i] += lum_n_single
 
             # Save data and plot
             if save:
@@ -306,6 +318,6 @@ if __name__ == "__main__":
                     pre_saving = 'data/blue/'
             with open(f'{pre_saving}TESTbox_cooling_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
-                fselect.write(' '.join(map(str, lum_n_selected)) + '\n')
+                fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
                 fselect.close()
                
