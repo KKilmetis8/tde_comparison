@@ -24,7 +24,7 @@ import healpy as hp
 
 # Chocolate Imports
 from src.Opacity.cloudy_opacity import old_opacity 
-from src.Calculators.ray_forest import find_sph_coord, ray_maker
+from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
 from src.Luminosity.special_radii_tree_cloudy import calc_specialr
 from src.Calculators.select_observers import select_observer 
 from src.Luminosity.select_path import select_snap
@@ -256,7 +256,7 @@ if __name__ == "__main__":
             stops[iobs] = rmax
 
         # rays is Er of Elad 
-        tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, _, rays_v = ray_maker(snap, m, check, thetas, phis, stops, num)
+        tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, _, rays_v = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
 
         lum_n = []
 

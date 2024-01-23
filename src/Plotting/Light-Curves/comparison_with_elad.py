@@ -95,7 +95,7 @@ if plot_radii_sphere:
     # Our load 
     # test = np.loadtxt('data/oldopacity_special_radii_m'+ str(m) + '_num1000.txt') #from ALICE
     # daystest = test[0] * 40
-    spec_radii = np.loadtxt('data/TESTspecial_radii_m'+ str(m) + '_oldopacity.txt') #from ALICE
+    spec_radii = np.loadtxt('data/TESTspecial_radii_m'+ str(m) + '_box.txt') #from ALICE
     daysEl = np.loadtxt('data/special_radii_m'+ str(m) + '_oldopacity.txt')[0] #from ALICE
     days = spec_radii[0]
     days *= 40
@@ -110,11 +110,16 @@ if plot_radii_sphere:
     plt.plot(daysEl*40, elad_therm_arit, c = 'b', label = 'Thermalization radius, arithmetic mean')
     plt.plot(daysEl*40, elad_therm_geom, c = 'r', label = 'Thermalization radius, geometric mean')
 
-    # Our plot
-    plt.scatter(days, photo_arit, color = 'black')#, label = 'Photosphere radius, arithmetic mean')
+    # Our plot with boxes
+    plt.scatter(days, photo_arit, color = 'black', label = 'boxes')#, label = 'Photosphere radius, arithmetic mean')
     plt.scatter(days, photo_geom, color = 'violet')#, label = 'Photosphere radius, geometric mean')
     plt.scatter(days, thermr_arit, color = 'b')#, label = 'Thermalization radius, arithmetic mean')
     plt.scatter(days, thermr_geom, color = 'tomato')#, label = 'Thermalization radius, geometric mean')
+    # without boxes
+    plt.scatter(days, spec_radii[5], color = 'black', marker = 'x', label = 'NO boxes')#, label = 'Photosphere radius, arithmetic mean')
+    plt.scatter(days, spec_radii[6], color = 'violet', marker = 'x')#, label = 'Photosphere radius, geometric mean')
+    plt.scatter(days, spec_radii[7], color = 'b', marker = 'x')#, label = 'Thermalization radius, arithmetic mean')
+    plt.scatter(days, spec_radii[8], color = 'tomato', marker = 'x')
     plt.xlim(40,64)
     plt.ylim(10,1e4)
     plt.yscale('log')

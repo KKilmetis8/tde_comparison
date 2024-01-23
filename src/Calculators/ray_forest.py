@@ -40,7 +40,7 @@ def find_sph_coord(r, theta,phi):
     z = r * np.cos(theta)
     return [x,y,z]
 
-def ray_maker(fix, m, check, thetas, phis, stops, num): 
+def ray_maker_forest(fix, m, check, thetas, phis, stops, num): 
     """ 
     Num is 1001 because for blue we then delete the last cell.
     Outputs are in CGS with exception of ray_vol (in solar units).
@@ -66,7 +66,7 @@ def ray_maker(fix, m, check, thetas, phis, stops, num):
     Tcool_min = np.loadtxt('src/Opacity/Tcool_ext.txt')[0]
     
     # Move pericenter to 0
-    # X -= Rt
+    X -= Rt
     # Convert Energy / Mass to Energy Density in CGS
     Rad *= Den 
     Rad *= en_den_converter
@@ -111,7 +111,7 @@ def ray_maker(fix, m, check, thetas, phis, stops, num):
         for k in range(len(radii)-1):
             radius = radii[k]
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
-            queried_value[0] += Rt
+            #queried_value[0] += Rt
             _, idx = sim_tree.query(queried_value)
 
             # Store
@@ -201,7 +201,7 @@ if __name__ == '__main__':
         stops[iobs] = rmax
     print(np.max(stops))
 
-    tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, rays_vol, rays_v = ray_maker(snap, m, check, thetas, phis, stops, num)
+    tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, rays_vol, rays_v = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
     #print(rays_radii[100]-rays_radii[1])
 
     import colorcet
