@@ -35,7 +35,7 @@ def isalice():
     return alice
 
 def find_sph_coord(r, theta,phi):
-    x = r * np.sin(np.pi-theta) * np.cos(phi)-100 #because theta should start from the z axis: we're flipped
+    x = r * np.sin(np.pi-theta) * np.cos(phi) #because theta should start from the z axis: we're flipped
     y = r * np.sin(np.pi-theta) * np.sin(phi)
     z = r * np.cos(np.pi-theta)
     return [x,y,z]
@@ -63,9 +63,10 @@ def ray_maker(fix, m, check, thetas, phis, stops, num):
     Rad = np.load(pre + fix + '/Rad_' + fix + '.npy')
     IE = np.load(pre + fix + '/IE_' + fix + '.npy')
     Vol = np.load(pre + fix + '/Vol_' + fix + '.npy')
+    Tcool_min = np.loadtxt('src/Opacity/Tcool_ext.txt')[0]
     
     # Move pericenter to 0
-    X -= Rt
+    # X -= Rt
     # Convert Energy / Mass to Energy Density in CGS
     Rad *= Den 
     Rad *= en_den_converter
@@ -110,11 +111,12 @@ def ray_maker(fix, m, check, thetas, phis, stops, num):
         for k in range(len(radii)-1):
             radius = radii[k]
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
+            queried_value[0] -= Rt
             _, idx = sim_tree.query(queried_value)
 
             # Store
             tree_indexes[j][k] = idx 
-            rays_T[j][k] = T[idx] 
+            rays_T[j][k] = max(T[idx], Tcool_min)
             rays_den[j][k] = Den[idx] 
             rays[j][k] = Rad[idx] 
             rays_ie[j][k] = IE[idx] 
@@ -148,7 +150,7 @@ def ray_maker(fix, m, check, thetas, phis, stops, num):
     # ax.set_xlim(-10_000, 10_000)
     # ax.set_ylim(-10_000, 10_000)
     # ax.set_zlim(-10_000, 10_000)
-    
+
     return tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, rays_vol, rays_v
 
  
@@ -173,12 +175,11 @@ if __name__ == '__main__':
     observers = []
     stops = np.zeros(192) 
     for iobs in range(0,192):
-        theta, phi = hp.pix2ang(4, i) # theta in [0,pi], phi in [0,2pi]
+        theta, phi = hp.pix2ang(4, iobs) # theta in [0,pi], phi in [0,2pi]
         thetas[iobs] = theta
         phis[iobs] = phi
         observers.append( (theta, phi) )
         xyz = find_sph_coord(1, theta, phi)
-
         mu_x = xyz[0]
         mu_y = xyz[1]
         mu_z = xyz[2]
@@ -198,9 +199,10 @@ if __name__ == '__main__':
             rmax = min(rmax, box[5] / mu_z)
 
         stops[iobs] = rmax
+    print(np.max(stops))
 
     tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, rays_vol, rays_v = ray_maker(snap, m, check, thetas, phis, stops, num)
-    print(rays_den[100]-rays_den[1])
+    #print(rays_radii[100]-rays_radii[1])
 
     import colorcet
     fig, ax = plt.subplots(1,1)
@@ -210,22 +212,26 @@ if __name__ == '__main__':
     plt.rcParams['figure.figsize'] = [6, 4]
     plt.rcParams['axes.facecolor']= 'whitesmoke'
     
-    den_plot = np.log10(rays_den)
-    den_plot = np.nan_to_num(den_plot, neginf= -19)
+    T_plot = np.log10(rays_T)
+    T_plot = np.nan_to_num(T_plot, neginf= -19)
     radii_toplot = []
     for j in range(len(rays_radii)):
         radius = np.delete(rays_radii[j], -1)
         radius /= Rsol_to_cm
         radii_toplot.append(radius)
 
-    #den_plot = np.reshape(den_plot, (192, len(radii_toplot)))
-    ax.set_ylabel('Observers', fontsize = 14)
-    ax.set_xlabel(r'r [R$_\odot$]', fontsize = 14)
-    img = ax.pcolormesh(radii_toplot, range(len(rays_den)), den_plot, cmap = 'cet_fire')
-                        #vmin = -17, vmax = - 7)
-    cb = plt.colorbar(img)
-    cb.set_label(r'Density [g/cm$^3$]', fontsize = 14)
+    # ax.set_ylabel('Observers', fontsize = 14)
+    # ax.set_xlabel(r'r [R$_\odot$]', fontsize = 14)
+    # img = ax.pcolormesh(radii_toplot, range(len(rays_T)), T_plot, cmap = 'cet_fire')
+    #                     #vmin = -17, vmax = - 7)
+    # cb = plt.colorbar(img)
+    # cb.set_label(r'Density [g/cm$^3$]', fontsize = 14)
     #ax.set_title('N: ' + str(num), fontsize = 16)
 
+    # plt.show()
+    plt.plot(radii_toplot[80], rays_T[80])
+    plt.loglog()
+    plt.xlim(0.56,3e4)
+    #plt.plot(radii_toplot[20], rays_T[20])
     plt.show()
     

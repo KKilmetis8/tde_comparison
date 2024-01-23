@@ -24,7 +24,7 @@ import healpy as hp
 
 # Chocolate Imports
 from src.Opacity.cloudy_opacity import old_opacity 
-from src.Calculators.ray_forest import ray_maker
+from src.Calculators.ray_forest import find_sph_coord, ray_maker
 from src.Luminosity.special_radii_tree_cloudy import calc_specialr
 from src.Calculators.select_observers import select_observer 
 from src.Luminosity.select_path import select_snap
@@ -34,10 +34,10 @@ plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 4]
 
 # Constants
-c = 2.99792458e10 #[cm/s]
+c = 3e10 #2.99792458e10 #[cm/s]
 h = 6.62607015e-27 #[gcm^2/s]
 Kb = 1.380649e-16 #[erg/K]
-alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
+alpha = 7.5657e-15 #7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 sigma_T = 6.6524e-25 #[cm^2] thomson cross section
 gamma = 5/3
 Msol_to_g = 2e33 #1.989e33 # [g]
@@ -84,13 +84,6 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
     L *= np.log(10)
     norm = luminosity_fld / L
     return norm
-
-def find_sph_coord(theta,phi):
-    x = np.sin(np.pi-theta) * np.cos(phi) #because theta should start from the z axis: we're flipped
-    y = np.sin(np.pi-theta) * np.sin(phi)
-    z = np.cos(np.pi-theta)
-    xyz = [x, y, z]
-    return xyz
 
 def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
     """ Given the array of luminosity L_x computed over n_array = 10^{x_array} (!!!), 
@@ -155,7 +148,7 @@ def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus,
 def dot_prod(xyz_selected, thetas, phis):
     dot_product = np.zeros(len(thetas))
     for iobs in range(len(thetas)):
-        xyz = find_sph_coord(thetas[iobs], phis[iobs])
+        xyz = find_sph_coord(1,thetas[iobs], phis[iobs])
         dot_product[iobs] = np.dot(xyz_selected, xyz)
         # set the negative dot product to 0
         if dot_product[iobs] < 0:
@@ -227,11 +220,11 @@ if __name__ == "__main__":
         observers = []
         stops = np.zeros(192) 
         for iobs in range(0,192):
-            theta, phi = hp.pix2ang(NSIDE, i) # theta in [0,pi], phi in [0,2pi]
+            theta, phi = hp.pix2ang(NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
             thetas[iobs] = theta
             phis[iobs] = phi
             observers.append( (theta, phi) )
-            xyz = find_sph_coord(theta, phi)
+            xyz = find_sph_coord(1, theta, phi)
 
             mu_x = xyz[0]
             mu_y = xyz[1]
@@ -255,7 +248,6 @@ if __name__ == "__main__":
 
         # rays is Er of Elad 
         tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, _, rays_v = ray_maker(snap, m, check, thetas, phis, stops, num)
-        print(rays_den[100]-rays_den[1])
 
         lum_n = []
 
@@ -295,7 +287,7 @@ if __name__ == "__main__":
             wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
             # print('index ',wanted_index)
 
-            xyz_selected = find_sph_coord(thetas[wanted_index], phis[wanted_index])
+            xyz_selected = find_sph_coord(1, thetas[wanted_index], phis[wanted_index])
             dot_product = dot_prod(xyz_selected, thetas, phis)
 
             lum_n_selected = np.zeros(len(x_arr))

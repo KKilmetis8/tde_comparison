@@ -34,7 +34,7 @@ def isalice():
     return alice
 
 def find_sph_coord(r, theta,phi):
-    x = r * np.sin(np.pi-theta) * np.cos(phi) #because theta should start from the z axis: we're flipped
+    x = r * np.sin(np.pi-theta) * np.cos(phi)  #because theta should start from the z axis: we're flipped
     y = r * np.sin(np.pi-theta) * np.sin(phi)
     z = r * np.cos(np.pi-theta)
     return [x,y,z]
@@ -78,7 +78,7 @@ def ray_maker(fix, m, check, num):
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = 10 # 0.1 * Rt  #Solar radii 
+    start = 0.56#10 # 0.1 * Rt  #Solar radii 
     stop = apocenter #apocenter for 10^6 is 20_000 
     log_start = np.log10(start)
     log_stop = np.log10(stop)
@@ -106,6 +106,7 @@ def ray_maker(fix, m, check, num):
         for k in range(len(radii)-1):
             radius = radii[k]
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
+            queried_value[0] -= Rt
             _, idx = sim_tree.query(queried_value)
 
             # Store
@@ -150,10 +151,17 @@ def ray_maker(fix, m, check, num):
 if __name__ == '__main__':
     m = 6
     num = 1000
-    tree_indexes, observers, rays_T, rays_den, rays, rays_ie, radii, rays_vol, rays_v = ray_maker(844, m, num)
+    check = 'fid'
+    tree_indexes, observers, rays_T, rays_den, rays, rays_ie, radii, rays_vol, rays_v = ray_maker(882, m, check, num)
 #%% Plot
-    plot = False
-    if plot:
+    radii_toplot = np.delete(radii, -1) 
+    radii_toplot/= Rsol_to_cm
+    plt.plot(radii_toplot, rays_T[80])
+    plt.loglog()
+    plt.show()
+
+    plotmesh = False
+    if plotmesh:
         import colorcet
         fig, ax = plt.subplots(1,1)
         plt.rcParams['text.usetex'] = True
@@ -164,12 +172,16 @@ if __name__ == '__main__':
         
         den_plot = np.log10(rays_den)
         den_plot = np.nan_to_num(den_plot, neginf= -19)
-        den_plot = np.reshape(den_plot, (192, len(radii)))
+        den_plot = np.reshape(den_plot, (192, len(radii_toplot)))
+        T_plot = np.log10(rays_T)
+        T_plot = np.nan_to_num(T_plot, neginf= -19)
+        T_plot = np.reshape(T_plot, (192, len(radii_toplot)))
         ax.set_ylabel('Observers', fontsize = 14)
         ax.set_xlabel(r'r [R$_\odot$]', fontsize = 14)
-        img = ax.pcolormesh(radii/Rsol_to_cm, range(len(rays_den)), den_plot, cmap = 'cet_fire',
-                            vmin = -17, vmax = - 7)
+        img = ax.pcolormesh(radii_toplot, range(len(rays_den)), T_plot, cmap = 'cet_fire')
+                            #vmin = -17, vmax = - 7)
         cb = plt.colorbar(img)
-        cb.set_label(r'Density [g/cm$^3$]', fontsize = 14)
-        ax.set_title('N: ' + str(num), fontsize = 16)
+        #cb.set_label(r'Density [g/cm$^3$]', fontsize = 14)
+        #ax.set_title('N: ' + str(num), fontsize = 16)
+        plt.show()
     
