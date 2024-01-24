@@ -35,7 +35,7 @@ def isalice():
     return alice
 
 def find_sph_coord(r, theta,phi):
-    x = r * np.sin(theta) * np.cos(phi) #because theta should start from the z axis: we're flipped
+    x = r * np.sin(theta) * np.cos(phi) #should be np.pi-theta
     y = r * np.sin(theta) * np.sin(phi)
     z = r * np.cos(theta)
     return [x,y,z]
@@ -111,7 +111,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num):
         for k in range(len(radii)-1):
             radius = radii[k]
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
-            #queried_value[0] += Rt
+            #queried_value[0] += Rt if you don't do -Rt before
             _, idx = sim_tree.query(queried_value)
 
             # Store

@@ -1,5 +1,5 @@
 """
-Test the box
+Test the box computing the photosphere/Rtherm with and without dynamical radius
 
 @author: paola 
 
@@ -15,13 +15,12 @@ Rsol_to_cm = 7e10 #6.957e10 # [cm]
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
+import healpy as hp
 from scipy.stats import gmean
 from src.Luminosity.special_radii_tree_cloudy import calc_specialr, get_specialr
 from src.Luminosity.select_path import select_snap
 from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
 from src.Calculators.ray_tree import ray_maker
-import h5py
-import healpy as hp
 
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -89,6 +88,7 @@ for index in range(len(snapshots)):
 
         stops[iobs] = rmax
 
+    # Find special redii with fixed radius
     single_tree_indexes, _, single_rays_T, single_rays_den, single_rays, _, single_radii, _, _ = ray_maker(snap, m, check, num)
     _, _, single_photo, _, _ = get_specialr(single_rays_T, single_rays_den, single_radii, single_tree_indexes, select='photo')
     _, _, single_thermr, _, _ = get_specialr(single_rays_T, single_rays_den, single_radii, single_tree_indexes, select= 'thermr_plot')
@@ -98,7 +98,7 @@ for index in range(len(snapshots)):
     singlefix_thermr_arit[index] = np.mean(single_thermr)/Rsol_to_cm
     singlefix_thermr_geom[index] = gmean(single_thermr)/Rsol_to_cm
 
-    # different ray for every observer 
+    # Find special redii with dynamical radius
     tree_indexes, rays_T, rays_den, rays, _, rays_radii, _, _ = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
     rays_photo = np.zeros(192)
     rays_thermr = np.zeros(192)
@@ -113,21 +113,13 @@ for index in range(len(snapshots)):
         rays_photo[j] = photo
         rays_thermr[j] = thermr
 
-    # plt.figure()
-    # plt.scatter(range(192), rays_photo/Rsol_to_cm, c = 'r', s = 12, label = 'us')
-    # plt.scatter(range(192), Elad_photo, c = 'k', s = 8, label = 'Elad')
-    # plt.legend()
-    # plt.savefig(f'Figs/photocomp{snap}.png')
-    # plt.show()
-
     fix_photo_arit[index] = np.mean(rays_photo)/Rsol_to_cm
     fix_photo_geom[index] = gmean(rays_photo)/Rsol_to_cm
     fix_thermr_arit[index] = np.mean(rays_thermr)/Rsol_to_cm
     fix_thermr_geom[index] = gmean(rays_thermr)/Rsol_to_cm
 
-    pre_saving = 'data/'
 
-with open(f'{pre_saving}TESTspecial_radii_m{m}_box.txt', 'a') as file:
+with open(f'data/TESTspecial_radii_m{m}_box.txt', 'a') as file:
     file.write('# Using dynamical boxes' + '\n#t/t_fb\n')
     file.write(' '.join(map(str, days)) + '\n')
     file.write('# Photosphere arithmetic mean \n')

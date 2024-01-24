@@ -62,7 +62,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     kappa: float.
             The optical depth of a cell.
     '''    
-    Tmax = 1e8 #1e13 # #np.exp(17.87) #TEST OLD OPACITY
+    Tmax = 1e13 # #np.exp(17.87) #TEST OLD OPACITY
     Tmin = 316
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):
@@ -317,7 +317,7 @@ if __name__ == "__main__":
             pre_saving = 'data/'
 
         if photosphere:         
-            with open(f'{pre_saving}special_radii_m{m}_oldopacity.txt', 'a') as file:
+            with open(f'{pre_saving}TESTspecial_radii_m{m}_box.txt', 'a') as file:
                 file.write('# Run of ' + now + '\n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Photosphere arithmetic mean \n')
@@ -327,7 +327,7 @@ if __name__ == "__main__":
                 file.close()
                 
         if thermalisation:
-            with open(f'data/special_radii_m{m}_oldopacity.txt', 'a') as file:
+            with open(f'data/TESTspecial_radii_m{m}_box.txt', 'a') as file:
                 file.write('# Run of ' + now + '\n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Thermalisation radius arithmetic mean \n')
