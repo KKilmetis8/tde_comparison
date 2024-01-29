@@ -316,7 +316,7 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}TESTbox_cooling_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
+            with open(f'{pre_saving}LINEAR_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                 fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
                 fselect.close()

@@ -107,6 +107,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num):
         log_stop = np.log10(stop)
         log_radii = np.linspace(log_start, log_stop, num) #simulator units
         radii = 10**log_radii
+        #radii = np.linspace(start, stop, num) #simulator units
         
         for k in range(len(radii)-1):
             radius = radii[k]
@@ -131,7 +132,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num):
     
     # Remove Bullshit
     rays = np.nan_to_num(rays, neginf = 0)
-    rays_ie = np.nan_to_num(rays, neginf = 0)
+    rays_ie = np.nan_to_num(rays_ie, neginf = 0)
     rays_den = np.nan_to_num(rays_den, neginf = 0)
     rays_T = np.nan_to_num(rays_T, neginf = 0)
 

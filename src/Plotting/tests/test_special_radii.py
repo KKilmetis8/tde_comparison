@@ -107,6 +107,7 @@ if plot == 'spec_radii':
     plt.show() 
 
 if plot == 'profile':
+    ## color with compton_coolng, T, rad_T, optical depth
     fig, ax = plt.subplots()
     selected_indexes = [80]
     for i in selected_indexes:

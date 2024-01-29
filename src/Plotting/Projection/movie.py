@@ -11,7 +11,7 @@ import subprocess
 import glob
 import os
 
-# Choose simlation
+# Choose simulation
 m = 6
 check = 'fid'
 if m == 6:
