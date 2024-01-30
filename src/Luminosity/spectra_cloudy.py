@@ -101,59 +101,40 @@ def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus,
         Tr = find_lowerT(rad_energy_density)
         T = branch_T[reverse_idx]
         rho = branch_den[reverse_idx] 
-
-        cv_ratio =  rad_energy_density / (7.6e8 * T * rho)
-        vcompton = branch_v[reverse_idx]
-        r = radius[reverse_idx]
-        compton_cooling = (0.075 * r / vcompton) * cv_ratio * 0.34 * rho * c * (4 * T * Kb /8.2e-7)
-        compton[i] = compton_cooling
-
-
-        int_energy_density = branch_ie[reverse_idx]
-        cv_temp = int_energy_density / T
-        total_E = int_energy_density + alpha * Tr**4
-
-        if (compton_cooling > 1):
-            print('here')
-
-            def function_forT(x):
-                to_solve = cv_temp * x + alpha * x**4 - total_E # Elad has cv_temp*rho*x
-                return to_solve
-            
-            new_T = fsolve(function_forT, Tr)
-            T = new_T
-
         opt_depth = branch_cumulative_taus[i]
-        cell_vol = volume[reverse_idx] 
+        cell_vol = volume[reverse_idx]
+
+        if m == 6:
+            cv_ratio =  rad_energy_density / (7.6e8 * T * rho)
+            vcompton = branch_v[reverse_idx]
+            r = radius[reverse_idx]
+            compton_cooling = (0.075 * r / vcompton) * cv_ratio * 0.34 * rho * c * (4 * T * Kb /8.2e-7)
+            compton[i] = compton_cooling
+
+
+            int_energy_density = branch_ie[reverse_idx]
+            cv_temp = int_energy_density / T
+            total_E = int_energy_density + alpha * Tr**4
+
+            if (compton_cooling > 1):
+                print('here')
+
+                def function_forT(x):
+                    to_solve = cv_temp * x + alpha * x**4 - total_E # Elad has cv_temp*rho*x
+                    return to_solve
+                
+                new_T = fsolve(function_forT, Tr)
+                T = new_T
 
         for i_freq, n in enumerate(n_arr): #we need linearspace
             lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
-            #lum_n_cell *= dot_product[j]
             lum_n[i_freq] += lum_n_cell
 
     # Normalise with the spectra of every observer with red curve (FLD)
     const_norm = normalisation(lum_n, x_arr, bol_fld)
     lum_n = lum_n * const_norm
 
-    #save compton cooling of the branch to plot
-    # with open(f'data/blue/cptcooling_m{m}_{snap}.txt', 'a') as fcool:
-    #     fcool.write(' '.join(map(str, compton)) + '\n')
-    #     fcool.write('#\n')
-    #     fcool.close()
-
     return lum_n
-
-# def dot_prod(xyz_selected, thetas, phis):
-#     dot_product = np.zeros(len(thetas))
-#     for iobs in range(len(thetas)):
-#         xyz = find_sph_coord(1,thetas[iobs], phis[iobs])
-#         dot_product[iobs] = np.dot(xyz_selected, xyz)
-#         # set the negative dot product to 0
-#         if dot_product[iobs] < 0:
-#             dot_product[iobs] = 0
-
-#     dot_product *= 4/192 # normalisation from Elad
-#     return dot_product
 
 def dot_prod(xyz_grid):
     dot_product = np.dot(xyz_grid, np.transpose(xyz_grid))
@@ -168,8 +149,8 @@ if __name__ == "__main__":
     save = True
 
     # Choose BH 
-    m = 4
-    check = 'S60ComptonHires'
+    m = 6
+    check = 'fid'#S60ComptonHires'
     num = 1000
     snapshots, days = select_snap(m, check)
 
@@ -314,7 +295,7 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}000_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
+            with open(f'{pre_saving}000cloudy_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                 fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
                 fselect.close()

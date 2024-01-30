@@ -12,7 +12,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 m = 4
 snap = 394
 num = 1000
-opacity = 'cloudy'
+opacity = 'ltefix'
 axis = 'temp'
 
 c = 2.99792458e10 #[cm/s]
@@ -77,7 +77,7 @@ ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)
 ax1.legend()
 ax1.set_title(f'Spectra {snap} with {opacity} opacity')
-#plt.savefig(f'Figs/_spectra{snap}')
+plt.savefig(f'Figs/{opacity}_spectra{snap}.png')
 plt.show()
 
 
