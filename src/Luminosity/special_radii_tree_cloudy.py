@@ -235,8 +235,8 @@ if __name__ == "__main__":
     photosphere = True
     thermalisation = True
     save = True
-    check = 'S60ComptonHires'
-    m = 4
+    check = 'fid' #S60ComptonHires'
+    m = 6
     num = 1000
 
     now = datetime.now()

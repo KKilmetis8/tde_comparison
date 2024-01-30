@@ -95,7 +95,7 @@ if plot_radii_sphere:
     # Our load 
     # test = np.loadtxt('data/oldopacity_special_radii_m'+ str(m) + '_num1000.txt') #from ALICE
     # daystest = test[0] * 40
-    spec_radii = np.loadtxt('data/TESTspecial_radii_m'+ str(m) + '_box.txt') #from ALICE
+    spec_radii = np.loadtxt(f'data/DYNspecial_radii_m{m}_box.txt')
     daysEl = np.loadtxt('data/special_radii_m'+ str(m) + '_oldopacity.txt')[0] #from ALICE
     days = spec_radii[0]
     days *= 40
@@ -128,7 +128,7 @@ if plot_radii_sphere:
     plt.grid()
     plt.legend(fontsize = 8)
     plt.title(r'$R_{ph} (\tau=2/3)$ and $R_{therm} (\tau=1)$')
-    plt.savefig('Final_plot/fig9.png')
+    #plt.savefig('Final_plot/fig9.png')
     plt.show()
 
     if residuals:

@@ -15,7 +15,7 @@ from scipy.spatial import KDTree
 import healpy as hp
 from src.Luminosity.select_path import select_prefix
 import matplotlib.pyplot as plt
-AEK = '#F1C410'
+
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 #%% Constants & Converter
@@ -24,7 +24,6 @@ G = 6.6743e-11 # SI
 Msol = 2e30 #1.98847e30 # kg
 Rsol = 7e8 #6.957e8 # m
 t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
-#c = 3e8 * t/Rsol # simulator units. Need these for the PW potential
 c_cgs = 3e10 # [cm/s]
 Msol_to_g = 2e33 #1.989e33 # [g]
 Rsol_to_cm = 7e10 #6.957e10 # [cm]
@@ -110,7 +109,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num):
         for k in range(len(radii)-1):
             radius = radii[k]
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
-            #queried_value[0] += Rt #if you don't do -Rt before
+            queried_value[0] += Rt #if you don't do -Rt before
             _, idx = sim_tree.query(queried_value)
 
             # Store
