@@ -65,8 +65,6 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num):
     Vol = np.load(pre + fix + '/Vol_' + fix + '.npy')
     Tcool_min = np.loadtxt('src/Opacity/Tcool_ext.txt')[0]
     
-    # Move pericenter to 0
-    X -= Rt
     # Convert Energy / Mass to Energy Density in CGS
     Rad *= Den 
     Rad *= en_den_converter
@@ -112,7 +110,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num):
         for k in range(len(radii)-1):
             radius = radii[k]
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
-            #queried_value[0] += Rt if you don't do -Rt before
+            #queried_value[0] += Rt #if you don't do -Rt before
             _, idx = sim_tree.query(queried_value)
 
             # Store
@@ -122,7 +120,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num):
             rays[j][k] = Rad[idx] 
             rays_ie[j][k] = IE[idx] 
             rays_vol[j][k] = Vol[idx] # not in CGS
-            vel = VX[idx]**2 + VY[idx]**2 + VZ[idx]**2 #np.sqrt(VX[idx]**2 + VY[idx]**2 + VZ[idx]**2)
+            vel = np.sqrt(VX[idx]**2 + VY[idx]**2 + VZ[idx]**2)
             vel *= Rsol_to_cm / t #convert in CGS
             rays_v[j][k] = vel
 

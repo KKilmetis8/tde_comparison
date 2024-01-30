@@ -9,8 +9,10 @@ plt.rc('ytick', labelsize = 15)
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
-m = 6
-snap = 882
+m = 4
+snap = 394
+num = 1000
+opacity = 'cloudy'
 axis = 'temp'
 
 c = 2.99792458e10 #[cm/s]
@@ -37,8 +39,7 @@ n_end = frequencies(T_end)
 lamda = wavelength(n_array)
 
 # y axis 
-#nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
-nL_tilde_n = np.loadtxt(f'data/blue/LINEAR_nLn_single_m{m}_{snap}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/000{opacity}_nLn_single_m{m}_{snap}_{num}.txt')
 
 if axis == 'freq':
         x_axis = n_array
@@ -52,8 +53,6 @@ if axis == 'temp':
         x_end = T_end
 
 fig, ax1 = plt.subplots( figsize = (9,6) ) 
-# for i in range(0,192,25):
-#       ax1.plot(x_axis, n_array * nL_tilde_n[i])  
 ax1.plot(x_axis, n_array * nL_tilde_n[0], c = 'b',  label = r'$\vec{x}$')
 ax1.plot(x_axis, n_array * nL_tilde_n[1], c = 'r', label = r'$-\vec{x}$')
 ax1.plot(x_axis, n_array * nL_tilde_n[2], c = 'k', label = r'$\vec{y}$')
@@ -63,7 +62,10 @@ ax1.plot(x_axis, n_array * nL_tilde_n[5], c = 'aqua', label = r'$-\vec{z}$')
 ax2 = ax1.twiny()
 ax1.set_xlabel(f'{label}', fontsize = 16)
 ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]', fontsize = 16)
-ax1.set_ylim(2e39, 1.3e44)
+if m == 4:
+        ax1.set_ylim(1e36, 1e42)
+elif m == 6:
+        ax1.set_ylim(2e39, 1.3e44)
 ax1.set_xlim(x_start,x_end)
 ax2.set_xlim(wavelength(n_start), wavelength(n_end))
 ax1.loglog()
@@ -74,8 +76,8 @@ ax2.invert_xaxis()
 ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)
 ax1.legend()
-#ax1.set_title('Spectra')
-plt.savefig(f'Figs/_spectra{snap}')
+ax1.set_title(f'Spectra {snap} with {opacity} opacity')
+#plt.savefig(f'Figs/_spectra{snap}')
 plt.show()
 
 

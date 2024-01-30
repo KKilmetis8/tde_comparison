@@ -39,12 +39,10 @@ h = 6.62607015e-27 #[gcm^2/s]
 Kb = 1.380649e-16 #[erg/K]
 alpha = 7.5657e-15 #7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 sigma_T = 6.6524e-25 #[cm^2] thomson cross section
-gamma = 5/3
 Msol_to_g = 2e33 #1.989e33 # [g]
 Rsol_to_cm = 6.957e10
 NSIDE = 4
 
-#%%
 ###
 # FUNCTIONS
 ###
@@ -85,22 +83,14 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
     norm = luminosity_fld / L
     return norm
 
-def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
-    """ Given the array of luminosity L_x computed over n_array = 10^{x_array} (!!!), 
-    find the normalisation constant for L_tilde_n from FLD model. """  
-    xLx =  10**(x_array) * L_x
-    L = np.trapz(xLx, x_array) 
-    L *= np.log(10)
-    norm = luminosity_fld / L
-    return norm
-
 def find_lowerT(energy_density):
-    """ Find temperature from flux."""
+    """ Find temperature from energy density."""
     T = (energy_density / alpha)**(1/4)
     return T
 
 def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus, branch_v, radius, volume, bol_fld):
     lum_n = np.zeros(len(x_arr))
+    compton = np.zeros(len(branch_cumulative_taus))
 
     for i in range(len(branch_cumulative_taus)):        
         # Temperature, Density and volume: np.array from near to the BH to far away. 
@@ -116,6 +106,8 @@ def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus,
         vcompton = branch_v[reverse_idx]
         r = radius[reverse_idx]
         compton_cooling = (0.075 * r / vcompton) * cv_ratio * 0.34 * rho * c * (4 * T * Kb /8.2e-7)
+        compton[i] = compton_cooling
+
 
         int_energy_density = branch_ie[reverse_idx]
         cv_temp = int_energy_density / T
@@ -125,7 +117,7 @@ def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus,
             print('here')
 
             def function_forT(x):
-                to_solve = cv_temp * rho * x + alpha * x**4 - total_E # Elad has *rho
+                to_solve = cv_temp * x + alpha * x**4 - total_E # Elad has cv_temp*rho*x
                 return to_solve
             
             new_T = fsolve(function_forT, Tr)
@@ -142,6 +134,12 @@ def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus,
     # Normalise with the spectra of every observer with red curve (FLD)
     const_norm = normalisation(lum_n, x_arr, bol_fld)
     lum_n = lum_n * const_norm
+
+    #save compton cooling of the branch to plot
+    # with open(f'data/blue/cptcooling_m{m}_{snap}.txt', 'a') as fcool:
+    #     fcool.write(' '.join(map(str, compton)) + '\n')
+    #     fcool.write('#\n')
+    #     fcool.close()
 
     return lum_n
 
@@ -170,8 +168,8 @@ if __name__ == "__main__":
     save = True
 
     # Choose BH 
-    m = 6
-    check = 'fid'
+    m = 4
+    check = 'S60ComptonHires'
     num = 1000
     snapshots, days = select_snap(m, check)
 
@@ -316,7 +314,7 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}LINEAR_nLn_single_m{m}_{snap}.txt', 'a') as fselect:
+            with open(f'{pre_saving}000_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                 fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
                 fselect.close()

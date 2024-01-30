@@ -21,11 +21,13 @@ alice, plot = isalice()
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.spatial import KDTree
+import h5py
+import healpy as hp
 
 # Custom Imports
 from src.Opacity.opacity_table import opacity
-from src.Calculators.ray_tree import ray_maker
-from src.Luminosity.special_radii_tree import get_specialr
+from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
+from src.Luminosity.special_radii_tree_lte import get_specialr
 from astropy.coordinates import spherical_to_cartesian, cartesian_to_spherical
 from src.Luminosity.select_path import select_prefix, select_snap
 from datetime import datetime
@@ -44,6 +46,7 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2)
+NSIDE = 4
 #%%
 ##
 # FUNCTIONS
@@ -92,7 +95,7 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     Rad = np.load(pre +snap + '/Rad_' + snap + '.npy')
     
     # convert in CGS
-    X -= Rt
+    # X -= Rt
     Rad *= Den 
     Rad *= en_den_converter
 
@@ -117,7 +120,6 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     idx_low = np.zeros(len(tree_index_photo))
     idx_high = np.zeros(len(tree_index_photo))
     grad_r = np.zeros(len(tree_index_photo))
-    grad_xyz = []
     magnitude = np.zeros(len(tree_index_photo))
    
     # Find inner and outer neighbours
@@ -251,12 +253,13 @@ def flux_calculator(grad_E, magnitude, selected_energy,
     print('Flux: ', flux_count) 
     return f
 
-def doer_of_thing(fix, m, check, num = 1000):
+def doer_of_thing(snap, m, check, thetas, phis, stops, num):
     """
     Gives bolometric L 
     """
-    tree_indexes, _, rays_T, rays_den, _, _, radii, rays_vol, _ = ray_maker(fix, m, check, num)
-    _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays_T, rays_den, radii, 
+    tree_indexes, rays_T, rays_den, _, _, rays_radii, rays_vol, _ = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
+    
+    _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays_T, rays_den, rays_radii, 
                                                             tree_indexes, select = 'photo')
     
     dim_ph = np.zeros(len(rays_index_photo))
@@ -268,7 +271,7 @@ def doer_of_thing(fix, m, check, num = 1000):
     # dist_neigh *= Rsol_to_cm #convert in CGS
 
     # Find the cell outside the photosphere and save its quantities
-    grad_E, magnitude, energy_high, T_high, den_high  = find_neighbours(fix, m, check,
+    grad_E, magnitude, energy_high, T_high, den_high  = find_neighbours(snap, m, check,
                                                                         tree_index_photo, dist_neigh)
 
     # Calculate Flux and see how it looks
@@ -294,7 +297,7 @@ def doer_of_thing(fix, m, check, num = 1000):
 
     print('Tot zeros:', zero_count)
     print('Negative: ', neg_count)      
-    print('Fix %i' %fix, ', Lum %.3e' %lum, '\n---------' )
+    print('Snap %i' %snap, ', Lum %.3e' %lum, '\n---------' )
     return lum
 #%%
 ##
@@ -302,8 +305,9 @@ def doer_of_thing(fix, m, check, num = 1000):
 ##
 if __name__ == "__main__":
     save = True
-    m = 6 # Choose BH
-    check = 'fid' # Choose check fid // S60ComptonHires
+    m = 4 # Choose BH
+    check = 'S60ComptonHires' # Choose check fid // S60ComptonHires
+    num = 1000
 
     snapshots, days = select_snap(m, check)
     now = datetime.now()
@@ -311,8 +315,52 @@ if __name__ == "__main__":
     lums = np.zeros(len(snapshots))
    
     for idx in range(0,len(snapshots)):
-        print(f'Snapshot {snapshots[idx]}')
-        lum = doer_of_thing(snapshots[idx], m, check)
+        snap = snapshots[idx]
+        print(f'Snapshot {snap}')
+        filename = f"{m}/{snap}/snap_{snap}.h5"
+
+        box = np.zeros(6)
+        with h5py.File(filename, 'r') as fileh:
+            for i in range(len(box)):
+                box[i] = fileh['Box'][i]
+        # print('Box', box)
+
+        # Find observers with Healpix 
+        # For each of them set the upper limit for R
+        thetas = np.zeros(192)
+        phis = np.zeros(192) 
+        observers = []
+        stops = np.zeros(192) 
+        xyz_grid = []
+        for iobs in range(0,192):
+            theta, phi = hp.pix2ang(NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
+            thetas[iobs] = theta
+            phis[iobs] = phi
+            observers.append( (theta, phi) )
+            xyz = find_sph_coord(1, theta, phi)
+            xyz_grid.append(xyz)
+
+            mu_x = xyz[0]
+            mu_y = xyz[1]
+            mu_z = xyz[2]
+
+            # Box is for 
+            if(mu_x < 0):
+                rmax = box[0] / mu_x
+            else:
+                rmax = box[3] / mu_x
+            if(mu_y < 0):
+                rmax = min(rmax, box[1] / mu_y)
+            else:
+                rmax = min(rmax, box[4] / mu_y)
+            if(mu_z < 0):
+                rmax = min(rmax, box[2] / mu_z)
+            else:
+                rmax = min(rmax, box[5] / mu_z)
+
+            stops[iobs] = rmax
+
+        lum = doer_of_thing(snap, m, check, thetas, phis, stops, num)
         lums[idx] = lum
     
     if save:

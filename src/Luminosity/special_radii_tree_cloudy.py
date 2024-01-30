@@ -19,8 +19,9 @@ alice, plot = isalice()
 
 # Vanilla Imports
 import numpy as np
-import h5py
 from scipy.stats import gmean
+import h5py
+import healpy as hp
 
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
@@ -29,10 +30,11 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [5 , 3]
 plt.rcParams['axes.facecolor'] = 'whitesmoke'
+NSIDE = 4
 
 # Custom Imports
-from src.Opacity.cloudy_opacity import old_opacity #TEST OLD OPACITY
-from src.Calculators.ray_tree import ray_maker
+from src.Opacity.cloudy_opacity import old_opacity 
+from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
 from src.Luminosity.select_path import select_snap
 
 Rsol_to_cm = 7e10 #6.957e10 # [cm]
@@ -62,16 +64,16 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     kappa: float.
             The optical depth of a cell.
     '''    
-    Tmax = 1e13 # #np.exp(17.87) #TEST OLD OPACITY
+    Tmax = 1e13 
     Tmin = 316
     # If there is nothing, the ray continues unimpeded
     if rho < np.exp(-49.3):
-        #print('rho low')        
+        print('rho low')        
         return 0
     
     # Stream material, is opaque
     elif T < Tmin:
-        print('T low')
+        # print('T low')
         return 100
     
     # Too hot: scale as Kramers for absorption (planck)
@@ -81,11 +83,10 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
         # Z = 0.02
         
         # Constant value for scatter
-        kscattering = old_opacity(Tmax, rho, 'scattering') #TEST OLD OPACITY 
+        kscattering = old_opacity(Tmax, rho, 'scattering') 
         
         # Scale as Kramers the last point for absorption
-        # kplank_0 = opacity(Tmax, rho, 'planck', ln = False)
-        kplank_0 = old_opacity(Tmax, rho, 'planck') #TEST OLD OPACITY
+        kplank_0 = old_opacity(Tmax, rho, 'planck')
         kplanck = kplank_0 * (T/Tmax)**(-3.5)
         # kplanck =  3.8e22 * (1 + X) * T**(-3.5) * rho # [cm^2/g] Kramers'law
         # kplanck *= rho
@@ -103,12 +104,10 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     else:
         # Lookup table
         if select == 'photo':
-            # k = opacity(T, rho,'red', ln = False)
-            k = old_opacity(T, rho, 'red') #TEST OLD OPACITY
+            k = old_opacity(T, rho,'red')
 
         if select == 'thermr' or select == 'thermr_plot':
-            # k = opacity(T, rho,'effective', ln = False)
-            k = old_opacity(T, rho, 'effective') #TEST OLD OPACITY
+            k = old_opacity(T, rho,'effective')
 
         kappa =  k * r_dlogr
 
@@ -146,7 +145,7 @@ def calc_specialr(T, rho, radius, branch_indexes, select):
     '''
     if select == 'photo':
         threshold = 2/3
-    if select == 'thermr':
+    if select == 'thermr': 
         threshold = 5
     if select == 'thermr_plot': 
         # to have the plot of extended figure 9 from Steinberg&Stone22
@@ -171,7 +170,7 @@ def calc_specialr(T, rho, radius, branch_indexes, select):
 
     return kappas, cumulative_kappas, specialr, index_specialr, branch_index_specialr
 
-def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
+def get_specialr(rays_T, rays_den, radii, tree_indexes, select):
     '''
     Finds and saves the photosphere/R_therm (CGS) at every ray.
 
@@ -213,6 +212,7 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
         T_of_single_ray = rays_T[i]
         Den_of_single_ray = rays_den[i]
         branch_indexes = tree_indexes[i]
+        radius = radii[i]
         
         # Get photosphere/R_therm
         kappas, cumulative_kappas, specialr, index_ph, branch_index_ph  = calc_specialr(T_of_single_ray, Den_of_single_ray, 
@@ -226,6 +226,7 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
 
     return rays_kappas, rays_cumulative_kappas, rays_specialr, rays_index_specialr, tree_index_specialr
 
+
 ################
 # MAIN
 ################
@@ -233,7 +234,6 @@ def get_specialr(rays_T, rays_den, radius, tree_indexes, select):
 if __name__ == "__main__":
     photosphere = True
     thermalisation = True
-    plot = False
     save = True
     check = 'fid'
     m = 6 
@@ -248,67 +248,70 @@ if __name__ == "__main__":
     fix_thermr_arit = np.zeros(len(snapshots))
     fix_thermr_geom = np.zeros(len(snapshots))
 
-    for index in range(len(snapshots)):        
-        print('Snapshot ' + str(snapshots[index]))
-        tree_indexes, observers, rays_T, rays_den, rays, rays_ie, radii, rays_vol, _ = ray_maker(snapshots[index], m, check, num)
+    for index in range(len(snapshots)): 
+        snap = snapshots[index]       
+        print('Snapshot ' + str(snap))
+        filename = f"{m}/{snap}/snap_{snap}.h5"
+
+        box = np.zeros(6)
+        with h5py.File(filename, 'r') as fileh:
+            for i in range(len(box)):
+                box[i] = fileh['Box'][i]
+        # print('Box', box)
+
+        # Find observers with Healpix 
+        # For each of them set the upper limit for R
+        thetas = np.zeros(192)
+        phis = np.zeros(192) 
+        observers = []
+        stops = np.zeros(192) 
+        xyz_grid = []
+        for iobs in range(0,192):
+            theta, phi = hp.pix2ang(NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
+            thetas[iobs] = theta
+            phis[iobs] = phi
+            observers.append( (theta, phi) )
+            xyz = find_sph_coord(1, theta, phi)
+            xyz_grid.append(xyz)
+
+            mu_x = xyz[0]
+            mu_y = xyz[1]
+            mu_z = xyz[2]
+
+            # Box is for 
+            if(mu_x < 0):
+                rmax = box[0] / mu_x
+            else:
+                rmax = box[3] / mu_x
+            if(mu_y < 0):
+                rmax = min(rmax, box[1] / mu_y)
+            else:
+                rmax = min(rmax, box[4] / mu_y)
+            if(mu_z < 0):
+                rmax = min(rmax, box[2] / mu_z)
+            else:
+                rmax = min(rmax, box[5] / mu_z)
+
+            stops[iobs] = rmax
+
+        # rays is Er of Elad 
+        tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, _, rays_v = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
 
         if photosphere:
-            rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select='photo')
+            rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_specialr(rays_T, rays_den, rays_radii, tree_indexes, select='photo')
             rays_photo = rays_photo/Rsol_to_cm # to solar unit to plot
 
             fix_photo_arit[index] = np.mean(rays_photo)
             fix_photo_geom[index] = gmean(rays_photo)
-
-            if plot:
-                elad_photo = np.zeros(len(rays_photo))
-                with h5py.File(f'data/elad/data_{snapshots[index]}.mat', 'r') as f:
-                    elad_ph = f['r_photo'][0]
-                for i in range(len(elad_photo)):
-                    elad_photo[i] =  elad_ph[i]
-
-                fig, ax = plt.subplots(figsize = (8,6))
-                ax.scatter(np.arange(192), rays_photo, c = 'k', s = 15, label = 'us')
-                ax.scatter(np.arange(192), elad_photo, c = 'b', s = 15, label = 'SteinbergStone')
-                plt.axhline(np.mean(elad_photo), c = 'r')#, label = r'$\bar{R}_{ph}$ arit mean') #Elad
-                plt.axhline(gmean(elad_photo), c = 'green')#, label = r'$\bar{R}_{ph}$ geom mean') #Elad
-                plt.axhline(np.mean(rays_photo), c = 'r', linestyle = '--', label = r'$\bar{R}_{ph}$ arit mean')
-                plt.axhline(gmean(rays_photo), c = 'limegreen', linestyle = '--', label = r'$\bar{R}_{ph}$ geom mean')
-                plt.xlabel('Observers')
-                plt.ylabel('$\log_{10} R_{ph} [R_\odot]$')
-                plt.yscale('log')
-                plt.grid()
-                plt.legend()
-                #plt.savefig('Figs/photo_obs' + str(snapshots[index]) + '.png')
-                plt.show()  
+           
 
         if thermalisation: 
-            rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays_T, rays_den, radii, tree_indexes, select= 'thermr_plot')
+            rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays_T, rays_den, rays_radii, tree_indexes, select= 'thermr_plot')
             rays_thermr = rays_thermr/Rsol_to_cm # to solar unit to plot
 
             fix_thermr_arit[index] = np.mean(rays_thermr)
             fix_thermr_geom[index] = gmean(rays_thermr)
             
-            if plot: 
-                rtherm = np.zeros(len(rays_thermr))
-                with h5py.File(f'data/elad/data_{snapshots[index]}.mat', 'r') as f:
-                    elad_rtherm = f['r_therm'][0]
-                for i in range(len(rtherm)):
-                    rtherm[i] =  elad_rtherm[i]
-
-                fig, ax = plt.subplots(figsize = (8,6))
-                ax.scatter(np.arange(192), rays_thermr, c = 'k', s = 15, label = 'our')
-                ax.scatter(np.arange(192), rtherm, c = 'b', s = 15, label = 'SteinbergStone')
-                plt.axhline(np.mean(rays_thermr), c = 'r', linestyle = '--', label = r'$\bar{R}_{ph}$ arit mean')
-                plt.axhline(gmean(rays_thermr), c = 'green', linestyle = '--', label = r'$\bar{R}_{ph}$ geom mean')
-                plt.axhline(np.mean(rtherm), c = 'r')#, label = r'$\bar{R}_{ph}$ arit mean') #Elad
-                plt.axhline(gmean(rtherm), c = 'green')#, label = r'$\bar{R}_{ph}$ geom mean') #Elad
-                plt.xlabel('Observers')
-                plt.ylabel('$\log_{10} R_{therm} [R_\odot]$')
-                plt.yscale('log')
-                plt.grid()
-                plt.legend(fontsize = 8)
-                plt.savefig('Figs/therm_obs' + str(snapshots[index]) + '.png')
-                plt.show()  
 
     if save: 
         if alice:
@@ -317,8 +320,8 @@ if __name__ == "__main__":
             pre_saving = 'data/'
 
         if photosphere:         
-            with open(f'{pre_saving}TESTspecial_radii_m{m}_box.txt', 'a') as file:
-                file.write('# Run of ' + now + '\n#t/t_fb\n')
+            with open(f'{pre_saving}DYNspecial_radii_m{m}_box.txt', 'a') as file:
+                file.write('# Run of ' + now + ' with CLOUDY opacity \n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Photosphere arithmetic mean \n')
                 file.write(' '.join(map(str, fix_photo_arit)) + '\n')
@@ -327,8 +330,8 @@ if __name__ == "__main__":
                 file.close()
                 
         if thermalisation:
-            with open(f'data/TESTspecial_radii_m{m}_box.txt', 'a') as file:
-                file.write('# Run of ' + now + '\n#t/t_fb\n')
+            with open(f'data/DYNspecial_radii_m{m}_box.txt', 'a') as file:
+                file.write('# Run of ' + now + ' with CLOUDY opacity \n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Thermalisation radius arithmetic mean \n')
                 file.write(' '.join(map(str, fix_thermr_arit)) + '\n')
@@ -337,5 +340,3 @@ if __name__ == "__main__":
                 file.close()
 
 
-
-            

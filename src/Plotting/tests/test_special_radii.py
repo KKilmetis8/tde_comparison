@@ -14,6 +14,7 @@ import h5py
 import healpy as hp
 from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
 from src.Luminosity.special_radii_tree_cloudy import calc_specialr
+from Luminosity.spectra_cloudy import find_lowerT
 
 snap = 882
 m = 6
@@ -67,9 +68,12 @@ for iobs in range(0,192):
     stops[iobs] = rmax
 
 # Find special redii with dynamical radius
-tree_indexes, rays_T, rays_den, rays, _, rays_radii, _, _ = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
+tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, _, _ = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
 
 if plot == 'spec_radii':
+
+    ratio = False
+
     with h5py.File(f'data/elad/data_{snap}.mat', 'r') as f:
         Elad_photo = f['r_photo'][0]
         Elad_therm = f['r_therm'][0]
@@ -87,37 +91,58 @@ if plot == 'spec_radii':
         rays_photo[j] = photo/Rsol_to_cm
         rays_thermr[j] = thermr/Rsol_to_cm
 
-    fig, ax = plt.subplots(1,2, tight_layout = True)
-    ax[0].scatter(np.arange(192), Elad_photo, c = 'k', s = 5, label = 'Elad')
-    ax[0].scatter(np.arange(192), rays_photo, c = 'orange', s = 5, label = 'us')
-    ax[0].set_xlabel('Observers')
-    ax[0].set_ylabel(r'$\log_{10}R_{th} [R_\odot]$')
-    ax[0].set_yscale('log')
-    ax[0].grid()
+    plt.figure()
+    if ratio:
+        plot_ph = 1-Elad_photo/rays_photo
+        plto_th = 1-Elad_therm/rays_thermr
+        plt.plot(np.arange(192), plot_ph, c = 'k', label = r'$R_{ph}$')
+        plt.plot(np.arange(192), plto_th, c = 'orange', label = r'$R_{th}$')
+        plt.xlabel('Observers')
+        plt.ylabel(r'$1-R^E/R^{us}$')
+        #ax[0].set_yscale('log')
+        plt.grid()
+        plt.legend(fontsize = 10)
+        plt.savefig(f'Figs/ratio_comparison_special_radii{snap}.png')
 
-    ax[1].scatter(np.arange(192), Elad_therm, c = 'k', s = 5, label = 'Elad')
-    ax[1].scatter(np.arange(192), rays_thermr, c = 'orange', s = 5, label = 'us')
-    ax[1].set_xlabel('Observers')
-    ax[1].set_ylabel(r'$\log_{10}R_{th} [R_\odot]$')
-    ax[1].set_yscale('log')
-    ax[1].grid()
+    else:
+        fig, ax = plt.subplots(1,2, tight_layout = True)
+        ax[0].scatter(np.arange(88,104), Elad_photo[88:104], c = 'k', s = 5, label = 'Elad')
+        ax[0].scatter(np.arange(88,104), rays_photo[88:104], c = 'orange', s = 5, label = 'us')
+        ax[0].set_xlabel('Observers')
+        ax[0].set_ylabel(r'$\log_{10}R_{th} [R_\odot]$')
+        ax[0].set_yscale('log')
+        ax[0].grid()
 
-    plt.legend(fontsize = 10)
-    plt.savefig(f'Figs/comparison_special_radii{snap}.png')
+        ax[1].scatter(np.arange(88,104), Elad_therm[88:104], c = 'k', s = 5, label = 'Elad')
+        ax[1].scatter(np.arange(88,104), rays_thermr[88:104], c = 'orange', s = 5, label = 'us')
+        ax[1].set_xlabel('Observers')
+        ax[1].set_ylabel(r'$\log_{10}R_{th} [R_\odot]$')
+        ax[1].set_yscale('log')
+        ax[1].grid()
+
+        plt.legend(fontsize = 10)
+        plt.savefig(f'Figs/zoomcomparison_special_radii{snap}.png')
+
     plt.show() 
 
 if plot == 'profile':
-    ## color with compton_coolng, T, rad_T, optical depth
+    ## color with compton_cooling, T, rad_T, optical depth
     fig, ax = plt.subplots()
-    selected_indexes = [80]
+    selected_indexes = [90]
     for i in selected_indexes:
+        #colorimg = rays_T[i]
+        rad_en = rays[i]
+        colorimg = find_lowerT(rad_en)
+        colorimg = np.log10(colorimg)
+
         radius = np.delete(rays_radii[i],-1)/Rsol_to_cm
-        img = ax.scatter(radius, rays_den[i], c = np.log10(rays_T[i]), marker = '_', label = f'observer {i}')
+        img = ax.scatter(radius, rays_den[i], c = colorimg, marker = '_', label = f'observer {i}')
     cbar = fig.colorbar(img)
-    cbar.set_label(r'$\log_{10}T [K]$')
+    cbar.set_label(r'$\log_{10}T_r [K]$')
     ax.set_xlabel(r'$\log_{10}R [R_\odot]$')
     ax.set_ylabel(r'$\log_{10}\rho [g/cm^3]$')
     plt.xlim(10, 2*apocenter)
     plt.loglog()
-    plt.legend()
+    #plt.legend()
+    plt.savefig('Figs/profileTr.png')
     plt.show()
