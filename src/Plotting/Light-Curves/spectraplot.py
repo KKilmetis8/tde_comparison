@@ -11,7 +11,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 
 m = 4
 snap = 394
-num = 1000
+num = 5000
 opacity = 'lte'
 axis = 'temp'
 
@@ -39,7 +39,7 @@ n_end = frequencies(T_end)
 lamda = wavelength(n_array)
 
 # y axis 
-nL_tilde_n = np.loadtxt(f'data/blue/000{opacity}_nLn_single_m{m}_{snap}_{num}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/TEST{opacity}_nLn_single_m{m}_{snap}_{num}.txt')
 
 if axis == 'freq':
         x_axis = n_array
@@ -77,7 +77,7 @@ ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)
 ax1.legend()
 ax1.set_title(f'Spectra {snap} with {opacity} opacity')
-#plt.savefig(f'Figs/{opacity}_spectra{snap}.png')
+plt.savefig(f'Figs/{opacity}_spectra{snap}.png')
 plt.show()
 
 

@@ -136,7 +136,7 @@ if __name__ == "__main__":
     # Choose BH 
     m = 4
     check = 'S60ComptonHires'
-    num = 1000
+    num = 5000
     snapshots, days = select_snap(m, check)
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
@@ -182,6 +182,7 @@ if __name__ == "__main__":
         with h5py.File(filename, 'r') as fileh:
             for i in range(len(box)):
                 box[i] = fileh['Box'][i]
+
         # print('Box', box)
 
         # Find observers with Healpix 
@@ -267,7 +268,7 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}000lte_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
+            with open(f'{pre_saving}TESTlte_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                 fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
                 fselect.close()

@@ -73,8 +73,9 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     
     # Stream material, is opaque
     elif T < Tmin:
-        print('T low')
-        return 100
+        #print('T low')
+        return 0
+        #return 100
     
     # Too hot: scale as Kramers for absorption (planck)
     elif T > Tmax:
