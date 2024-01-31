@@ -22,9 +22,8 @@ from datetime import datetime
 # Chocolate Imports
 from src.Opacity.LTE_opacity import opacity
 from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
-from src.Luminosity.special_radii_tree_lte import calc_specialr
+from src.Luminosity.special_radii_tree import calc_specialr
 from src.Calculators.select_observers import select_observer 
-from src.Luminosity.select_path import select_snap
 import src.Utilities.prelude as c
 import src.Utilities.selectors as s
 
