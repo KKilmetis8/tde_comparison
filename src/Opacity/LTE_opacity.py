@@ -15,7 +15,7 @@ import matplotlib.pyplot as plt
 import src.Utilities.prelude as c
 
 # All units are ln[cgs]
-loadpath = 'src/Opacity/LTE_data'
+loadpath = 'src/Opacity/LTE_data/'
 lnT = np.loadtxt(loadpath + 'T.txt')
 lnrho = np.loadtxt(loadpath + 'hope_big_lnrho.txt')
 # lnk_ross = np.loadtxt(loadpath + 'ross.txt')

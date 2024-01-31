@@ -26,6 +26,7 @@ from src.Luminosity.special_radii_tree_lte import calc_specialr
 from src.Calculators.select_observers import select_observer 
 from src.Luminosity.select_path import select_snap
 import src.Utilities.prelude as c
+import src.Utilities.selectors as s
 
 #%%
 ###
@@ -116,8 +117,8 @@ if __name__ == "__main__":
     m = 4
     check = 'S60ComptonHires'
     num = 5000
-    snapshots, days = select_snap(m, check)
-
+    snapshots, days = s.select_snap(m, check)
+    opacity_kind = s.select_opacity(m)
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
     wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
     wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
@@ -156,46 +157,6 @@ if __name__ == "__main__":
         # Fancy f string
         filename = f"{m}/{snap}/snap_{snap}.h5"
         
-        #
-        box = np.zeros(6)
-        with h5py.File(filename, 'r') as fileh:
-            for i in range(len(box)):
-                box[i] = fileh['Box'][i]
-
-        # Find observers with Healpix 
-        # For each of them set the upper limit for R
-        thetas = np.zeros(192)
-        phis = np.zeros(192) 
-        observers = []
-        stops = np.zeros(192) 
-        xyz_grid = []
-        for iobs in range(0,192):
-            theta, phi = hp.pix2ang(c.NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
-            thetas[iobs] = theta
-            phis[iobs] = phi
-            observers.append( (theta, phi) )
-            xyz = find_sph_coord(1, theta, phi)
-            xyz_grid.append(xyz)
-
-            mu_x = xyz[0]
-            mu_y = xyz[1]
-            mu_z = xyz[2]
-
-            # Box is for 
-            if(mu_x < 0):
-                rmax = box[0] / mu_x
-            else:
-                rmax = box[3] / mu_x
-            if(mu_y < 0):
-                rmax = min(rmax, box[1] / mu_y)
-            else:
-                rmax = min(rmax, box[4] / mu_y)
-            if(mu_z < 0):
-                rmax = min(rmax, box[2] / mu_z)
-            else:
-                rmax = min(rmax, box[5] / mu_z)
-
-            stops[iobs] = rmax
 
         # rays is Er of Elad 
         tree_indexes, rays_T, rays_den, _, _, rays_radii, _, rays_v = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
