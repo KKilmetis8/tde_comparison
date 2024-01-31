@@ -8,6 +8,8 @@ Created on December 2023
 Calculate the luminosity that we will use in the blue (BB) curve as sum of multiple BB.
 
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
 
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
@@ -21,7 +23,7 @@ from datetime import datetime
 
 # Chocolate Imports
 from src.Opacity.LTE_opacity import opacity
-from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
+from src.Calculators.ray_forest import find_sph_coord, ray_finder, ray_maker_forest
 from src.Luminosity.special_radii_tree import calc_specialr
 from src.Calculators.select_observers import select_observer 
 import src.Utilities.prelude as c
@@ -115,9 +117,10 @@ if __name__ == "__main__":
     # Choose BH 
     m = 4
     check = 'S60ComptonHires'
-    num = 5000
+    num = 1000
     snapshots, days = s.select_snap(m, check)
     opacity_kind = s.select_opacity(m)
+
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
     wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
     wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
@@ -156,21 +159,21 @@ if __name__ == "__main__":
         # Fancy f string
         filename = f"{m}/{snap}/snap_{snap}.h5"
         
-
-        # rays is Er of Elad 
-        tree_indexes, rays_T, rays_den, _, _, rays_radii, _, rays_v = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
+        thetas, phis, stops, xyz_grid = ray_finder(filename)
+        rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, 
+                                opacity_kind)
 
         lum_n = []
         # Find volume of cells
         # Radii has num+1 cell just to compute the volume for num cell. Then we delete the last radius cell
-        for j in range(len(observers)):
+        for j in range(len(thetas)):
             print('ray', j)
 
-            branch_indexes = tree_indexes[j]
-            branch_T = rays_T[j]
-            branch_den = rays_den[j]
-            radius = rays_radii[j]
-            branch_v = rays_v[j]
+            branch_indexes = rays.tree_indexes[j]
+            branch_T = rays.T[j]
+            branch_den = rays.den[j]
+            radius = rays.radii[j]
+            branch_v = rays.v[j]
 
             volume = np.zeros(len(radius)-1)
             for i in range(len(volume)): 
@@ -180,7 +183,7 @@ if __name__ == "__main__":
             radius = np.delete(radius, -1)
 
             # Get thermalisation radius
-            _, branch_cumulative_taus, _, _, _ = calc_specialr(branch_T, branch_den, radius, branch_indexes, select = 'thermr')
+            _, branch_cumulative_taus, _, _, _ = calc_specialr(branch_T, branch_den, radius, branch_indexes, opacity_kind, select = 'thermr')
 
             # Compute specific luminosity of every observers
             lum_n_ray = spectrum(branch_T, branch_den, branch_cumulative_taus, branch_v, radius, volume, bol_fld)

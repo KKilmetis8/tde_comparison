@@ -11,7 +11,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 
 m = 4
 snap = 394
-num = 5000
+num = 1000
 opacity = 'lte'
 axis = 'temp'
 

@@ -162,6 +162,7 @@ def ray_finder(filename):
     thetas = np.zeros(192)
     phis = np.zeros(192) 
     observers = []
+    xyz_grid = []
     stops = np.zeros(192) 
     for iobs in range(0,192):
         theta, phi = hp.pix2ang(4, iobs) # theta in [0,pi], phi in [0,2pi]
@@ -169,6 +170,7 @@ def ray_finder(filename):
         phis[iobs] = phi
         observers.append( (theta, phi) )
         xyz = find_sph_coord(1, theta, phi) # r=1 to be on the unit sphere
+        xyz_grid.append(xyz)
         mu_x = xyz[0]
         mu_y = xyz[1]
         mu_z = xyz[2]
@@ -189,7 +191,7 @@ def ray_finder(filename):
         
         stops[iobs] = rmax
         
-    return thetas, phis, stops
+    return thetas, phis, stops, xyz_grid
  
 if __name__ == '__main__':
     m = 6
@@ -201,7 +203,7 @@ if __name__ == '__main__':
     opacity_kind = s.select_opacity(m)
         
     # Get thetas, phis and where each ray stops
-    thetas, phis, stops = ray_finder(filename)
+    thetas, phis, stops, xyz_grid = ray_finder(filename)
     rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, opacity_kind)
 
     T_plot = np.log10(rays.T)

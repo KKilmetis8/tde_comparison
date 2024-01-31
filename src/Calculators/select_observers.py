@@ -9,7 +9,6 @@ Select a spectra among the ones given by healpix
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
-from src.Calculators.ray_tree import ray_maker
 import healpy as hp
 import colorcet
 
@@ -44,6 +43,8 @@ def select_observer(wanted_theta, wanted_phi, thetas, phis):
     return index
 
 if __name__ == '__main__':
+    from src.Calculators.ray_tree import ray_maker
+
     m = 6
     snap = 844
     check = 'fid'
