@@ -12,16 +12,10 @@ NOTES FOR OTHERS
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
 import matplotlib.pyplot as plt
-plt.rcParams['text.usetex'] = True
-plt.rcParams['figure.dpi'] = 300
-plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['axes.facecolor']= 'whitesmoke'
-plt.rcParams['xtick.direction'] = 'in'
-plt.rcParams['ytick.direction'] = 'in'
-AEK = '#F1C410'
+import src.Utilities.prelude as c
 
 # All units are ln[cgs]
-loadpath = 'src/Opacity/'
+loadpath = 'src/Opacity/LTE_data'
 lnT = np.loadtxt(loadpath + 'T.txt')
 lnrho = np.loadtxt(loadpath + 'hope_big_lnrho.txt')
 # lnk_ross = np.loadtxt(loadpath + 'ross.txt')

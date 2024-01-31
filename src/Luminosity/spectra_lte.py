@@ -3,13 +3,11 @@
 """
 Created on December 2023
 
-@author: paola 
+@author: paola, Konstantinos
 
 Calculate the luminosity that we will use in the blue (BB) curve as sum of multiple BB.
 
 """
-import sys
-sys.path.append('/Users/paolamartire/tde_comparison')
 
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
@@ -19,26 +17,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 import healpy as hp
+from datetime import datetime
 
 # Chocolate Imports
-from src.Opacity.opacity_table import opacity
+from src.Opacity.LTE_opacity import opacity
 from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
 from src.Luminosity.special_radii_tree_lte import calc_specialr
 from src.Calculators.select_observers import select_observer 
 from src.Luminosity.select_path import select_snap
-from datetime import datetime
-plt.rcParams['text.usetex'] = True
-plt.rcParams['figure.dpi'] = 300
-plt.rcParams['figure.figsize'] = [5 , 4]
+import src.Utilities.prelude as c
 
-# Constants
-c = 2.99792458e10 #[cm/s]
-h = 6.62607015e-27 #[gcm^2/s]
-Kb = 1.380649e-16 #[gcm^2/s^2K]
-alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
-Rsol_to_cm = 6.957e10
-NSIDE = 4
-
+#%%
 ###
 # FUNCTIONS
 ###
@@ -51,16 +40,15 @@ def log_array(n_min, n_max, lenght):
 
 def planck(Temperature: float, n: float) -> float:
     """ Planck function in a cell. It needs temperature and frequency n. """
-    const = 2*h/c**2
-    fun = const * n**3 / (np.exp(min(300,h*n/(Kb*Temperature))) - 1) #min to avoid overflow
-
-    return fun
+    const = 2*c.h/c.c**2
+    fun = const * n**3 / (np.exp(min(300,c.h*n/(c.Kb*Temperature))) - 1) # Elad: min to avoid overflow
+    return fun                                                           # Paola: It doesn't change anything.
 
 def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, n: float):
     """ Luminosity in a cell: L_n = \epsilon e^(-\tau) B_n / B 
     where  B = \sigma T^4/\pi"""
-    Tmax = np.exp(17.87) 
-    Tmin = np.exp(8.666)
+    Tmax = np.exp(17.87) # 5.77e7 K
+    Tmin = np.exp(8.666) # 5.80e3 K
 
     if Temperature > Tmax:
         # Scale as Kramers the last point 
@@ -68,7 +56,9 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, 
         k_planck = kplanck_0 * (Temperature/Tmax)**(-3.5)
 
     elif Temperature < Tmin:
-        # DO IT BETTER
+        # NOTE: This is bad, DO IT BETTER 
+        # The reason this is bad: there is low T material outside and this extrapolation
+        # is not trustworthy so far out
         k_planck = opacity(Tmin, Density, 'planck', ln = False)
     
     else:
@@ -77,14 +67,6 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, 
     L = 4  * np.pi * k_planck * volume * np.exp(-min(30,tau)) * planck(Temperature, n)
     return L
 
-def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
-    """ Given the array of luminosity L_x computed over n_array = 10^{x_array} (!!!), 
-    find the normalisation constant for L_tilde_n from FLD model. """  
-    xLx =  10**(x_array) * L_x
-    L = np.trapz(xLx, x_array) 
-    L *= np.log(10)
-    norm = luminosity_fld / L
-    return norm
 
 def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> float:
     """ Given the array of luminosity L_x computed over n_array = 10^{x_array} (!!!), 
@@ -97,8 +79,6 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 
 def spectrum(branch_T, branch_den, branch_cumulative_taus, branch_v, radius, volume, bol_fld):
     lum_n = np.zeros(len(x_arr))
-    Tmin = np.exp(8.666)
-    countmin = 0
     for i in range(len(branch_cumulative_taus)):
         # Temperature, Density and volume: np.array from near to the BH to far away. 
         # Thus we will use negative index in the for loop.
@@ -108,8 +88,7 @@ def spectrum(branch_T, branch_den, branch_cumulative_taus, branch_v, radius, vol
         rho = branch_den[reverse_idx] 
         opt_depth = branch_cumulative_taus[i]
         cell_vol = volume[reverse_idx] 
-        if T<Tmin:
-            countmin +=1
+
 
         for i_freq, n in enumerate(n_arr): 
             lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
@@ -118,10 +97,10 @@ def spectrum(branch_T, branch_den, branch_cumulative_taus, branch_v, radius, vol
     # Normalise with the spectra of every observer with red curve (FLD)
     const_norm = normalisation(lum_n, x_arr, bol_fld)
     lum_n = lum_n * const_norm
-    print(f'lower than Tmin: {countmin}/{len(branch_cumulative_taus)}')
 
     return lum_n
 
+# Theta averaging
 def dot_prod(xyz_grid):
     dot_product = np.dot(xyz_grid, np.transpose(xyz_grid))
     dot_product[dot_product < 0] = 0
@@ -144,8 +123,8 @@ if __name__ == "__main__":
     wanted_phis = [0, np.pi, np.pi/2, 3*np.pi/2, 0, 0]
 
     # Choose freq range
-    n_min = 2.08e13
-    n_max = 6.25e23
+    n_min = 2.08e13 # [Hz]
+    n_max = 6.25e23 # [Hz]
     n_spacing = 100 # Elad used 1000, but no difference
     x_arr = log_array(n_min, n_max, n_spacing)
     n_arr = 10**x_arr
@@ -174,16 +153,14 @@ if __name__ == "__main__":
     for idx_sn in range(1,2): 
         snap = snapshots[idx_sn]
         bol_fld = luminosity_fld_fix[idx_sn]
-        print(f'Snap {snap}')
-
+        # Fancy f string
         filename = f"{m}/{snap}/snap_{snap}.h5"
-
+        
+        #
         box = np.zeros(6)
         with h5py.File(filename, 'r') as fileh:
             for i in range(len(box)):
                 box[i] = fileh['Box'][i]
-
-        # print('Box', box)
 
         # Find observers with Healpix 
         # For each of them set the upper limit for R
@@ -193,7 +170,7 @@ if __name__ == "__main__":
         stops = np.zeros(192) 
         xyz_grid = []
         for iobs in range(0,192):
-            theta, phi = hp.pix2ang(NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
+            theta, phi = hp.pix2ang(c.NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
             thetas[iobs] = theta
             phis[iobs] = phi
             observers.append( (theta, phi) )
@@ -224,7 +201,6 @@ if __name__ == "__main__":
         tree_indexes, rays_T, rays_den, _, _, rays_radii, _, rays_v = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
 
         lum_n = []
-
         # Find volume of cells
         # Radii has num+1 cell just to compute the volume for num cell. Then we delete the last radius cell
         for j in range(len(observers)):
@@ -250,9 +226,9 @@ if __name__ == "__main__":
             lum_n_ray = spectrum(branch_T, branch_den, branch_cumulative_taus, branch_v, radius, volume, bol_fld)
 
             lum_n.append(lum_n_ray)
-
+        
+        # Theta average
         dot_product = dot_prod(xyz_grid) #dot_prod(xyz_selected, thetas, phis)
-
         lum_n_selected = np.dot(dot_product, lum_n)
 
         # Select the observer for single spectrum and compute the dot product

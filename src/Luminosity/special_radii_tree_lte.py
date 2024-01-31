@@ -21,23 +21,18 @@ alice, plot = isalice()
 import numpy as np
 import h5py
 from scipy.stats import gmean
-
+import healpy as hp
 import matplotlib.pyplot as plt
 from datetime import datetime
-plt.rcParams['text.usetex'] = True
-plt.rcParams['figure.dpi'] = 300
-plt.rcParams['figure.figsize'] = [5 , 3]
-plt.rcParams['axes.facecolor'] = 'whitesmoke'
+
 
 # Custom Imports
-from src.Opacity.opacity_table import opacity
+from src.Opacity.LTE_opacity import opacity
 from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
 from src.Luminosity.select_path import select_snap
+import src.Utilities.prelude as c
 
-Rsol_to_cm = 7e10 #6.957e10 # [cm]
-NSIDE = 4
-import h5py
-import healpy as hp
+
 
 
 ################
@@ -67,11 +62,11 @@ def get_kappa(T: float, rho: float, r_dlogr: float, select: str):
     Tmax = np.exp(17.87) 
     Tmin = np.exp(8.666)
     # If there is nothing, the ray continues unimpeded
-    if rho < np.exp(-49.3):
-        print('rho low')        
+    if rho < 1e-10: # [cgs] #np.exp(-49.3):
+        # print('rho low')        
         return 0
     
-    # Stream material, is opaque
+    # Stream material, is opaque NOTE: WE WILL SEE ABOUT THIS
     elif T < Tmin:
         #print('T low')
         return 0
@@ -267,7 +262,7 @@ if __name__ == "__main__":
         stops = np.zeros(192) 
         xyz_grid = []
         for iobs in range(0,192):
-            theta, phi = hp.pix2ang(NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
+            theta, phi = hp.pix2ang(c.NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
             thetas[iobs] = theta
             phis[iobs] = phi
             observers.append( (theta, phi) )
@@ -299,14 +294,14 @@ if __name__ == "__main__":
 
         if photosphere:
             rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_specialr(rays_T, rays_den, rays_radii, tree_indexes, select='photo')
-            rays_photo = rays_photo/Rsol_to_cm # to solar unit to plot
+            rays_photo = rays_photo/c.Rsol_to_cm # to solar unit to plot
 
             fix_photo_arit[index] = np.mean(rays_photo)
             fix_photo_geom[index] = gmean(rays_photo)
 
         if thermalisation: 
             rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays_T, rays_den, rays_radii, tree_indexes, select= 'thermr_plot')
-            rays_thermr = rays_thermr/Rsol_to_cm # to solar unit to plot
+            rays_thermr = rays_thermr/c.Rsol_to_cm # to solar unit to plot
 
             fix_thermr_arit[index] = np.mean(rays_thermr)
             fix_thermr_geom[index] = gmean(rays_thermr)

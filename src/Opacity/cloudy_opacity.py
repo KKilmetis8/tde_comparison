@@ -15,7 +15,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # All units are cgs (NO log)
-loadpath = 'src/Opacity/'
+loadpath = 'src/Opacity/cloudy_data'
 Tcool = np.loadtxt(loadpath + 'Tcool_ext.txt')
 sig_abs = np.loadtxt(loadpath + 'sigma_abs.txt')
 
