@@ -97,34 +97,33 @@ def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus,
         # Thus we will use negative index in the for loop.
         # tau: np.array from outside to inside.
         reverse_idx = -i -1
-        rad_energy_density = branch_en[reverse_idx]
-        Tr = find_lowerT(rad_energy_density)
         T = branch_T[reverse_idx]
         rho = branch_den[reverse_idx] 
         opt_depth = branch_cumulative_taus[i]
         cell_vol = volume[reverse_idx]
+        rad_energy_density = branch_en[reverse_idx]
+        Tr = find_lowerT(rad_energy_density)
 
-        if m == 6:
-            cv_ratio =  rad_energy_density / (7.6e8 * T * rho)
-            vcompton = branch_v[reverse_idx]
-            r = radius[reverse_idx]
-            compton_cooling = (0.075 * r / vcompton) * cv_ratio * 0.34 * rho * c * (4 * T * Kb /8.2e-7)
-            compton[i] = compton_cooling
+        cv_ratio =  rad_energy_density / (7.6e8 * T * rho)
+        vcompton = branch_v[reverse_idx]
+        r = radius[reverse_idx]
+        compton_cooling = (0.075 * r / vcompton) * cv_ratio * 0.34 * rho * c * (4 * T * Kb /8.2e-7)
+        compton[i] = compton_cooling
 
 
-            int_energy_density = branch_ie[reverse_idx]
-            cv_temp = int_energy_density / T
-            total_E = int_energy_density + alpha * Tr**4
+        int_energy_density = branch_ie[reverse_idx]
+        cv_temp = int_energy_density / T
+        total_E = int_energy_density + alpha * Tr**4
 
-            if (compton_cooling > 1):
-                print('here')
+        if (compton_cooling > 1):
+            print('here')
 
-                def function_forT(x):
-                    to_solve = cv_temp * x + alpha * x**4 - total_E # Elad has cv_temp*rho*x
-                    return to_solve
-                
-                new_T = fsolve(function_forT, Tr)
-                T = new_T
+            def function_forT(x):
+                to_solve = cv_temp * x + alpha * x**4 - total_E # Elad has cv_temp*rho*x
+                return to_solve
+            
+            new_T = fsolve(function_forT, Tr)
+            T = new_T
 
         for i_freq, n in enumerate(n_arr): #we need linearspace
             lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
