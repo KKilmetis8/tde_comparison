@@ -25,9 +25,9 @@ import healpy as hp
 # Chocolate Imports
 from src.Opacity.cloudy_opacity import old_opacity 
 from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
-from src.Luminosity.special_radii_tree_cloudy import calc_specialr
+from src.Luminosity.special_radii_tree import calc_specialr
 from src.Calculators.select_observers import select_observer 
-from src.Luminosity.select_path import select_snap
+import src.Utilities.selectors as s
 from datetime import datetime
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -151,7 +151,9 @@ if __name__ == "__main__":
     m = 6
     check = 'fid'#S60ComptonHires'
     num = 1000
-    snapshots, days = select_snap(m, check)
+    snapshots, days = s.select_snap(m, check)
+    opacity_kind = s.select_opacity(m)
+
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
     wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
@@ -234,7 +236,7 @@ if __name__ == "__main__":
             stops[iobs] = rmax
 
         # rays is Er of Elad 
-        tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, _, rays_v = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
+        tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, _, rays_v = ray_maker_forest(snap, m, check, thetas, phis, stops, num, opacity_kind)
 
         lum_n = []
 
@@ -259,7 +261,7 @@ if __name__ == "__main__":
             radius = np.delete(radius, -1)
 
             # Get thermalisation radius
-            _, branch_cumulative_taus, _, _, _ = calc_specialr(branch_T, branch_den, radius, branch_indexes, select = 'thermr')
+            _, branch_cumulative_taus, _, _, _ = calc_specialr(branch_T, branch_den, radius, branch_indexes, opacity_kind, select = 'thermr')
 
             # Compute specific luminosity of every observers
             lum_n_ray = spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus, branch_v, radius, volume, bol_fld)

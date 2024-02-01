@@ -13,8 +13,8 @@ import matplotlib.pyplot as plt
 import h5py
 import healpy as hp
 from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
-from src.Luminosity.special_radii_tree_cloudy import calc_specialr
-from Luminosity.spectra_cloudy import find_lowerT
+from src.Luminosity.special_radii_tree import calc_specialr
+from src.Luminosity.spectra_cloudy import find_lowerT
 
 snap = 882
 m = 6
@@ -27,7 +27,7 @@ Mbh = 10**m
 Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
 apocenter = 2 * Rt * Mbh**(1/3)
 
-plot = 'profile'
+plot = 'spec_radii'
 
 box = np.zeros(6)
 
@@ -75,6 +75,7 @@ if plot == 'spec_radii':
     ratio = False
 
     with h5py.File(f'data/elad/data_{snap}.mat', 'r') as f:
+        #print(f.keys())
         Elad_photo = f['r_photo'][0]
         Elad_therm = f['r_therm'][0]
 
