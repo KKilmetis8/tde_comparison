@@ -20,33 +20,18 @@ alice, plot = isalice()
 # Vanilla Imports
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.spatial import KDTree
 import h5py
 import healpy as hp
+from scipy.spatial import KDTree
+from datetime import datetime
 
 # Custom Imports
-from src.Opacity.opacity_table import opacity
-from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
-from src.Luminosity.special_radii_tree_lte import get_specialr
+import src.Utilities.prelude as c
+import src.Utilities.selectors as s
+from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest, ray_finder
+from src.Luminosity.special_radii_tree import get_specialr
 from astropy.coordinates import spherical_to_cartesian, cartesian_to_spherical
-from src.Luminosity.select_path import select_prefix, select_snap
-from datetime import datetime
-plt.rcParams['text.usetex'] = True
-plt.rcParams['figure.dpi'] = 300
-plt.rcParams['figure.figsize'] = [5 , 4]
 
-#%% Constants & Converter
-G = 6.6743e-11 # SI
-Msol = 1.98847e30 # kg
-Rsol = 6.957e8 # m
-t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
-c = 3e8 * t/Rsol # simulator units. Need these for the PW potential
-c_cgs = 3e10 # [cm/s]
-Msol_to_g = 1.989e33 # [g]
-Rsol_to_cm = 6.957e10 # [cm]
-den_converter = Msol_to_g / Rsol_to_cm**3
-en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2)
-NSIDE = 4
 #%%
 ##
 # FUNCTIONS
@@ -64,6 +49,8 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
            Snapshot number.
      m: int.
         Exponent of BH mass
+     check: str.
+            Choose simualtion.
      tree_index_photo: 1D array.
                  Photosphere index in the tree.
      dist_neigh : 1D array.
@@ -71,8 +58,10 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
 
      Returns
      -------
-     grad_E: array.
-             Energy gradient for every ray at photosphere (CGS). 
+     grad_Er: array.
+             (Radiation) energy gradient for every ray at photosphere (CGS). 
+     magnitude: array.
+                Magnitude of grad_Er (CGS)
      energy_high: array.
              Energy for every ray in a cell outside photosphere (CGS). 
      T_high: array.
@@ -83,7 +72,7 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     """
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
-    pre = select_prefix(m, check)
+    pre = s.select_prefix(m, check)
     snap = str(snap)
    
     # Import
@@ -95,9 +84,8 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     Rad = np.load(pre +snap + '/Rad_' + snap + '.npy')
     
     # convert in CGS
-    # X -= Rt
     Rad *= Den 
-    Rad *= en_den_converter
+    Rad *= c.en_den_converter
 
     # make a tree
     sim_value = [X, Y, Z] 
@@ -114,9 +102,10 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     r_low = r_obs - dist_neigh
     r_high = r_obs + dist_neigh
 
-    # convert to cartesian and query 
+    # convert to cartesian and query: BETTER TO USE OUR FIND_SPH_COORDINATE??
     x_low, y_low, z_low  = spherical_to_cartesian(r_low, theta_obs, phi_obs)
     x_high, y_high, z_high  = spherical_to_cartesian(r_high, theta_obs, phi_obs)
+    x_high += Rt # CHECK THIS!!!!!
     idx_low = np.zeros(len(tree_index_photo))
     idx_high = np.zeros(len(tree_index_photo))
     grad_r = np.zeros(len(tree_index_photo))
@@ -133,7 +122,7 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
         
         # Diff is vector
         diff = 1 / np.subtract(xyz_high, xyz_low)
-        diff = diff / Rsol_to_cm # convert to CGS
+        diff = diff / c.Rsol_to_cm # convert to CGS
         
         # Unitary vector in the r direction, for each observer
         rhat = [np.sin(theta_obs[i]) * np.cos(phi_obs[i]),
@@ -141,7 +130,7 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
                 np.cos(theta_obs[i])
                 ]
         grad_r[i] = np.dot(diff, rhat) # Project
-        magnitude[i] = 1 / (np.linalg.norm(np.subtract(xyz_high, xyz_low)) * Rsol_to_cm) 
+        magnitude[i] = 1 / (np.linalg.norm(np.subtract(xyz_high, xyz_low)) * c.Rsol_to_cm) 
     
     # store data of neighbours
     idx_low = [int(x) for x in idx_low] #necavoid dumb stuff with indexing later
@@ -153,7 +142,6 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
 
     # compute the gradient 
     deltaE = energy_high - energy_low
-
     #grad_xyz = grad_xyz / Rsol_to_cm
     grad_Er = deltaE * grad_r
     magnitude *= np.abs(deltaE)
@@ -162,7 +150,7 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
 
     
 def flux_calculator(grad_E, magnitude, selected_energy, 
-                    selected_temperature, selected_density):
+                    selected_temperature, selected_density, opacity_kind):
     """
     Get the flux for every observer.
 
@@ -170,12 +158,16 @@ def flux_calculator(grad_E, magnitude, selected_energy,
     ----------
     grad_E: array.
             Energy gradient for every ray at photosphere. 
+    magnitude: array.
+                Magnitude of grad_Er (CGS)
     selected_energy: array.
             Energy for every ray in a cell outside photosphere. 
     selected_temperature: array.
             Temperature for every ray in a cell outside photosphere. 
     selected_density: array.
             Density for every ray in a cell outside photosphere. 
+    opacity_kind: str.
+            Choose the opacity.
         
     Returns
     -------
@@ -189,18 +181,25 @@ def flux_calculator(grad_E, magnitude, selected_energy,
     flux_zero = 0
     flux_count = 0
 
+    # Ensure we can interpolate
+    rho_low = 1e-10 #np.exp(-45)
+    if opacity_kind == 'LTE':
+        Tmax = np.exp(17.87)  # 5.77e+07 K
+        Tmin = np.exp(8.666)  # 5.8e+03 K
+        from src.Opacity.LTE_opacity import opacity
+
+    if opacity_kind == 'cloudy':
+        Tmax = 1e13 
+        Tmin = 316
+        from src.Opacity.cloudy_opacity import old_opacity as opacity
+
     for i in range(len(selected_energy)):
         Energy = selected_energy[i]
-        max_travel = np.sign(-grad_E[i]) * c_cgs * Energy 
+        max_travel = np.sign(-grad_E[i]) * c.c * Energy 
         
         Temperature = selected_temperature[i]
         Density = selected_density[i]
 
-        # Ensure we can interpolate
-        rho_low = np.exp(-45)
-        T_low = np.exp(8.77)
-        T_high = np.exp(17.876)
-        
         # If here is nothing, light continues
         if Density < rho_low:
             max_count += 1
@@ -210,13 +209,13 @@ def flux_calculator(grad_E, magnitude, selected_energy,
             continue
         
         # If stream, no light 
-        if Temperature < T_low:
+        if Temperature < Tmin:
             zero_count += 1
             f[i] = 0 
             continue
         
         # T too high => scattering
-        if Temperature > T_high:
+        if Temperature > Tmax:
             Tscatter = np.exp(17.87)
             k_ross = opacity(Tscatter, Density, 'scattering', ln = False)
         else:    
@@ -232,7 +231,7 @@ def flux_calculator(grad_E, magnitude, selected_energy,
         coth = 1 / np.tanh(R_kr)
         lamda = invR * (coth - invR)
         # Calc Flux, eq. 26
-        Flux =  - c_cgs * grad_E[i]  * lamda / k_ross
+        Flux =  - c.c * grad_E[i]  * lamda / k_ross
         
         # Choose
         if Flux > max_travel:
@@ -253,19 +252,19 @@ def flux_calculator(grad_E, magnitude, selected_energy,
     print('Flux: ', flux_count) 
     return f
 
-def doer_of_thing(snap, m, check, thetas, phis, stops, num):
+def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity):
     """
     Gives bolometric L 
     """
-    tree_indexes, rays_T, rays_den, _, _, rays_radii, rays_vol, _ = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
-    
-    _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays_T, rays_den, rays_radii, 
-                                                            tree_indexes, select = 'photo')
+    rays = ray_maker_forest(snap, m, check, thetas, phis, stops, 
+                            num, opacity_kind)    
+    _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays.T, rays.den, rays.radii, 
+                                                            rays.tree_indexes, opacity, select = 'photo')
     
     dim_ph = np.zeros(len(rays_index_photo))
     for j in range(len(rays_index_photo)):
         find_index_cell = int(rays_index_photo[j])
-        vol_ph = rays_vol[j][find_index_cell]
+        vol_ph = rays.vol[j][find_index_cell]
         dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
     dist_neigh = 2 * dim_ph
     # dist_neigh *= Rsol_to_cm #convert in CGS
@@ -306,61 +305,23 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num):
 if __name__ == "__main__":
     save = True
     m = 4 # Choose BH
-    check = 'S60ComptonHires' # Choose check fid // S60ComptonHires
+    check = 'S60ComptonHires' # Choose fid // S60ComptonHires
     num = 1000
+    opacity_kind = s.select_opacity(m)
 
-    snapshots, days = select_snap(m, check)
+    snapshots, days = s.select_snap(m, check)
     now = datetime.now()
     now = now.strftime("%d/%m/%Y %H:%M:%S")
+
     lums = np.zeros(len(snapshots))
-   
     for idx in range(0,len(snapshots)):
         snap = snapshots[idx]
         print(f'Snapshot {snap}')
         filename = f"{m}/{snap}/snap_{snap}.h5"
 
-        box = np.zeros(6)
-        with h5py.File(filename, 'r') as fileh:
-            for i in range(len(box)):
-                box[i] = fileh['Box'][i]
-        # print('Box', box)
+        thetas, phis, stops, xyz_grid = ray_finder(filename)
 
-        # Find observers with Healpix 
-        # For each of them set the upper limit for R
-        thetas = np.zeros(192)
-        phis = np.zeros(192) 
-        observers = []
-        stops = np.zeros(192) 
-        xyz_grid = []
-        for iobs in range(0,192):
-            theta, phi = hp.pix2ang(NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
-            thetas[iobs] = theta
-            phis[iobs] = phi
-            observers.append( (theta, phi) )
-            xyz = find_sph_coord(1, theta, phi)
-            xyz_grid.append(xyz)
-
-            mu_x = xyz[0]
-            mu_y = xyz[1]
-            mu_z = xyz[2]
-
-            # Box is for 
-            if(mu_x < 0):
-                rmax = box[0] / mu_x
-            else:
-                rmax = box[3] / mu_x
-            if(mu_y < 0):
-                rmax = min(rmax, box[1] / mu_y)
-            else:
-                rmax = min(rmax, box[4] / mu_y)
-            if(mu_z < 0):
-                rmax = min(rmax, box[2] / mu_z)
-            else:
-                rmax = min(rmax, box[5] / mu_z)
-
-            stops[iobs] = rmax
-
-        lum = doer_of_thing(snap, m, check, thetas, phis, stops, num)
+        lum = doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind)
         lums[idx] = lum
     
     if save:
@@ -382,20 +343,20 @@ if __name__ == "__main__":
                  flum.write(' '.join(map(str, lums)) + '\n')
                  flum.close() 
 
-    #%% Plotting
-    if plot:
-        plt.figure()
-        plt.plot(lums, '-o', color = 'maroon')
-        plt.yscale('log')
-        plt.ylabel('Bolometric Luminosity [erg/s]')
-        plt.xlabel('Days')
-        if m == 6:
-            plt.title('FLD for $10^6 \quad M_\odot$')
-            plt.ylim(1e41,1e45)
-        if m == 4:
-            plt.title('FLD for $10^4 \quad M_\odot$')
-            plt.ylim(1e39,1e42)
-        plt.grid()
-        #plt.savefig(f'Final plot/ourred{m}.png')
-        plt.show()
+    # %% Plotting
+    # if plot:
+    #     plt.figure()
+    #     plt.plot(lums, '-o', color = 'maroon')
+    #     plt.yscale('log')
+    #     plt.ylabel('Bolometric Luminosity [erg/s]')
+    #     plt.xlabel('Days')
+    #     if m == 6:
+    #         plt.title('FLD for $10^6 \quad M_\odot$')
+    #         plt.ylim(1e41,1e45)
+    #     if m == 4:
+    #         plt.title('FLD for $10^4 \quad M_\odot$')
+    #         plt.ylim(1e39,1e42)
+    #     plt.grid()
+    #     #plt.savefig(f'Final plot/ourred{m}.png')
+    #     plt.show()
 

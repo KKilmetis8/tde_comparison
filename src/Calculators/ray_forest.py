@@ -81,7 +81,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
     sim_tree = KDTree(sim_value) 
 
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = 0.56 # arbitrary choice ELAD made 1e-0.25 Solar radii # 0.1* Rt 
+    start = 0.56 # 1e-0.25 Solar radii  (arbitrary choice ELAD made)
     rays_radii = []
 
     tree_indexes = np.zeros((len(thetas), num-1))
@@ -100,10 +100,10 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
         log_radii = np.linspace(log_start, log_stop, num) #simulator units
         radii = 10**log_radii
         
-        for k in range(len(radii)-1):
+        for k in range(num-1):
             radius = radii[k]
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
-            queried_value[0] += Rt #if you don't do -Rt before
+            queried_value[0] += Rt #if you don't do -Rt before. Thus you consider the pericentre as origin
             _, idx = sim_tree.query(queried_value)
 
             # Store
@@ -117,7 +117,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
             rays_ie[j][k] = IE[idx] 
             rays_vol[j][k] = Vol[idx] # not in CGS
             vel = np.sqrt(VX[idx]**2 + VY[idx]**2 + VZ[idx]**2)
-            vel *= c.Rsol_to_cm / c.t #convert in CGS
+            vel *= c.Rsol_to_cm / c.t # convert in CGS
             rays_v[j][k] = vel
 
         # Convert to CGS
@@ -125,10 +125,10 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
         rays_radii.append(radii)
     
     # Remove Bullshit
+    rays_T = np.nan_to_num(rays_T, neginf = 0)
+    rays_den = np.nan_to_num(rays_den, neginf = 0)
     rays_rad = np.nan_to_num(rays_rad, neginf = 0)
     rays_ie = np.nan_to_num(rays_ie, neginf = 0)
-    rays_den = np.nan_to_num(rays_den, neginf = 0)
-    rays_T = np.nan_to_num(rays_T, neginf = 0)
     
     rays_local = ray_keeper(tree_indexes, rays_T, rays_den, rays_rad, rays_ie, 
                             rays_radii, rays_vol, rays_v)
@@ -152,7 +152,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
 
 
 def ray_finder(filename):
-    # get simulation box
+    # Get simulation box
     box = np.zeros(6)
     with h5py.File(filename, 'r') as fileh:
         for i in range(len(box)):
@@ -195,9 +195,9 @@ def ray_finder(filename):
  
 if __name__ == '__main__':
     m = 6
-    num = 1000
     snap = 882
     check = 'fid'
+    num = 1000
     filename = f"{m}/{snap}/snap_{snap}.h5"
     
     opacity_kind = s.select_opacity(m)
@@ -226,6 +226,5 @@ if __name__ == '__main__':
     plt.plot(radii_toplot[80], rays.T[80])
     plt.loglog()
     plt.xlim(0.56,3e4)
-    #plt.plot(radii_toplot[20], rays.T[20])
     plt.show()
     

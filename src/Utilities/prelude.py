@@ -19,7 +19,7 @@ alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 G = 6.6743e-11 # SI
 sigma_T = 6.6524e-25 #[cm^2] thomson cross section
 
-# Solar units
+# Solar to SI units
 Msol = 2e30 #1.98847e30 # kg
 Rsol = 7e8 #6.957e8 # m
 t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
