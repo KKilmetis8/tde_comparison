@@ -75,7 +75,7 @@ if plot == 'spec_radii':
     ratio = False
 
     with h5py.File(f'data/elad/data_{snap}.mat', 'r') as f:
-        #print(f.keys())
+        # print(f.keys())
         Elad_photo = f['r_photo'][0]
         Elad_therm = f['r_therm'][0]
 

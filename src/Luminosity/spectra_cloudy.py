@@ -24,7 +24,7 @@ import healpy as hp
 
 # Chocolate Imports
 from src.Opacity.cloudy_opacity import old_opacity 
-from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
+from src.Calculators.ray_forest import find_sph_coord, ray_finder, ray_maker_forest
 from src.Luminosity.special_radii_tree import calc_specialr
 from src.Calculators.select_observers import select_observer 
 import src.Utilities.selectors as s
@@ -116,8 +116,7 @@ def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus,
         total_E = int_energy_density + alpha * Tr**4
 
         if (compton_cooling > 1):
-            print('here')
-
+            # print('C cooling')
             def function_forT(x):
                 to_solve = cv_temp * x + alpha * x**4 - total_E # Elad has cv_temp*rho*x
                 return to_solve
@@ -149,7 +148,7 @@ if __name__ == "__main__":
 
     # Choose BH 
     m = 6
-    check = 'fid'#S60ComptonHires'
+    check = 'fid'
     num = 1000
     snapshots, days = s.select_snap(m, check)
     opacity_kind = s.select_opacity(m)
@@ -194,64 +193,23 @@ if __name__ == "__main__":
 
         filename = f"{m}/{snap}/snap_{snap}.h5"
 
-        box = np.zeros(6)
-        with h5py.File(filename, 'r') as fileh:
-            for i in range(len(box)):
-                box[i] = fileh['Box'][i]
-        # print('Box', box)
-
-        # Find observers with Healpix 
-        # For each of them set the upper limit for R
-        thetas = np.zeros(192)
-        phis = np.zeros(192) 
-        observers = []
-        stops = np.zeros(192) 
-        xyz_grid = []
-        for iobs in range(0,192):
-            theta, phi = hp.pix2ang(NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
-            thetas[iobs] = theta
-            phis[iobs] = phi
-            observers.append( (theta, phi) )
-            xyz = find_sph_coord(1, theta, phi)
-            xyz_grid.append(xyz)
-
-            mu_x = xyz[0]
-            mu_y = xyz[1]
-            mu_z = xyz[2]
-
-            # Box is for 
-            if(mu_x < 0):
-                rmax = box[0] / mu_x
-            else:
-                rmax = box[3] / mu_x
-            if(mu_y < 0):
-                rmax = min(rmax, box[1] / mu_y)
-            else:
-                rmax = min(rmax, box[4] / mu_y)
-            if(mu_z < 0):
-                rmax = min(rmax, box[2] / mu_z)
-            else:
-                rmax = min(rmax, box[5] / mu_z)
-
-            stops[iobs] = rmax
-
-        # rays is Er of Elad 
-        tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, _, rays_v = ray_maker_forest(snap, m, check, thetas, phis, stops, num, opacity_kind)
+        thetas, phis, stops, xyz_grid = ray_finder(filename)
+        rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, 
+                                opacity_kind)
 
         lum_n = []
-
         # Find volume of cells
         # Radii has num+1 cell just to compute the volume for num cell. Then we delete the last radius cell
-        for j in range(len(observers)):
+        for j in range(len(thetas)):
             print('ray', j)
 
-            branch_indexes = tree_indexes[j]
-            branch_T = rays_T[j]
-            branch_den = rays_den[j]
-            branch_en = rays[j]
-            branch_ie = rays_ie[j]
-            radius = rays_radii[j]
-            branch_v = rays_v[j]
+            branch_indexes = rays.tree_indexes[j]
+            branch_T = rays.T[j]
+            branch_den = rays.den[j]
+            radius = rays.radii[j]
+            branch_v = rays.v[j]
+            branch_rad = rays.rad[j]
+            branch_ie = rays.ie[j]
 
             volume = np.zeros(len(radius)-1)
             for i in range(len(volume)): 
@@ -264,9 +222,10 @@ if __name__ == "__main__":
             _, branch_cumulative_taus, _, _, _ = calc_specialr(branch_T, branch_den, radius, branch_indexes, opacity_kind, select = 'thermr')
 
             # Compute specific luminosity of every observers
-            lum_n_ray = spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus, branch_v, radius, volume, bol_fld)
+            lum_n_ray = spectrum(branch_T, branch_den, branch_rad, branch_ie, branch_cumulative_taus, branch_v, radius, volume, bol_fld)
 
             lum_n.append(lum_n_ray)
+        
 
         dot_product = dot_prod(xyz_grid) #dot_prod(xyz_selected, thetas, phis)
 
@@ -296,7 +255,7 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}000cloudy_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
+            with open(f'{pre_saving}nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                 fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
                 fselect.close()
