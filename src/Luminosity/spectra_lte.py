@@ -54,17 +54,17 @@ def luminosity_n(Temperature: float, Density: float, tau: float, volume: float, 
 
     if Temperature > Tmax:
         # Scale as Kramers the last point 
-        kplanck_0 = opacity(Tmax, Density, 'planck', ln = False)
+        kplanck_0 = opacity(Tmax, Density, 'planck')
         k_planck = kplanck_0 * (Temperature/Tmax)**(-3.5)
 
     elif Temperature < Tmin:
         # NOTE: This is bad, DO IT BETTER 
         # The reason this is bad: there is low T material outside and this extrapolation
         # is not trustworthy so far out
-        k_planck = opacity(Tmin, Density, 'planck', ln = False)
+        k_planck = opacity(Tmin, Density, 'planck')
     
     else:
-        k_planck = opacity(Temperature, Density, 'planck', ln = False)
+        k_planck = opacity(Temperature, Density, 'planck')
 
     L = 4  * np.pi * k_planck * volume * np.exp(-min(30,tau)) * planck(Temperature, n)
     return L

@@ -186,7 +186,7 @@ def flux_calculator(grad_E, magnitude, selected_energy,
     if opacity_kind == 'LTE':
         Tmax = np.exp(17.87)  # 5.77e+07 K
         Tmin = np.exp(8.666)  # 5.8e+03 K
-        from src.Opacity.LTE_opacity import opacity
+        from src.Opacity.LTE_opacity import opacity # NB: ln == False by default
 
     if opacity_kind == 'cloudy':
         Tmax = 1e13 
@@ -217,10 +217,10 @@ def flux_calculator(grad_E, magnitude, selected_energy,
         # T too high => scattering
         if Temperature > Tmax:
             Tscatter = np.exp(17.87)
-            k_ross = opacity(Tscatter, Density, 'scattering', ln = False)
+            k_ross = opacity(Tscatter, Density, 'scattering')
         else:    
             # Get Opacity, NOTE: Breaks Numba
-            k_ross = opacity(Temperature, Density, 'rosseland', ln = False)
+            k_ross = opacity(Temperature, Density, 'rosseland')
         
         # Calc R, eq. 28
         R_kr = magnitude[i] /  (k_ross * Energy)

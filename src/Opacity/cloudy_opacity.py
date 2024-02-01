@@ -69,7 +69,7 @@ def old_opacity(T, rho, kind) -> float:
     return kapparho
 
 if __name__ == '__main__':
-    from src.Opacity.opacity_table import opacity 
+    from src.Opacity.LTE_opacity import opacity 
     import colorcet
 
     lnT = np.loadtxt(loadpath + 'T.txt')
