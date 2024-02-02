@@ -39,7 +39,8 @@ n_end = frequencies(T_end)
 lamda = wavelength(n_array)
 
 # y axis 
-nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}_{num}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/staras6_nLn_single_m{m}_{snap}_{num}.txt')
+
 
 if axis == 'freq':
         x_axis = n_array
@@ -89,7 +90,7 @@ ax2.axvline(7000, c = 'gold', label = 'visible')
 ax2.text(6000, y_highlim/5, 'visible', rotation = 90, fontsize = 10)
 ax1.legend()
 ax1.set_title(f'Spectra {snap} with {opacity} opacity')
-plt.savefig(f'Figs/spectra{snap}_{num}.png')
+plt.savefig(f'Figs/star6_spectra{snap}_{num}.png')
 plt.show()
 
 
