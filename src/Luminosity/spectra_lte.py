@@ -91,7 +91,6 @@ def spectrum(branch_T, branch_den, branch_cumulative_taus, branch_v, radius, vol
         opt_depth = branch_cumulative_taus[i]
         cell_vol = volume[reverse_idx] 
 
-
         for i_freq, n in enumerate(n_arr): 
             lum_n_cell = luminosity_n(T, rho, opt_depth, cell_vol, n)
             lum_n[i_freq] += lum_n_cell
@@ -196,8 +195,8 @@ if __name__ == "__main__":
 
         # Select the observer for single spectrum and compute the dot product
         for idx in range(len(wanted_thetas)):
-            wanted_theta = wanted_thetas[idx]
-            wanted_phi = wanted_phis[idx]
+            wanted_theta = thetas[idx]
+            wanted_phi = phis[idx]
             wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
             # print('index ',wanted_index)
 

@@ -18,6 +18,7 @@ Kb = 1.380649e-16 #[gcm^2/s^2K]
 alpha = 7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
 G = 6.6743e-11 # SI
 sigma_T = 6.6524e-25 #[cm^2] thomson cross section
+sigma = 5.67037e-5
 
 # Solar to SI units
 Msol = 2e30 #1.98847e30 # kg

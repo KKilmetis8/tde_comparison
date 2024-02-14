@@ -145,6 +145,7 @@ def dot_prod(xyz_grid):
 # MAIN
 if __name__ == "__main__":
     save = True
+    all_obs = True
 
     # Choose BH 
     m = 6
@@ -186,7 +187,7 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(1,2): 
+    for idx_sn in range(len(snapshots)): 
         snap = snapshots[idx_sn]
         bol_fld = luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')
@@ -231,32 +232,47 @@ if __name__ == "__main__":
 
         lum_n_selected = np.dot(dot_product, lum_n)
 
-        # Select the observer for single spectrum and compute the dot product
-        for idx in range(len(wanted_thetas)):
-            wanted_theta = wanted_thetas[idx]
-            wanted_phi = wanted_phis[idx]
-            wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
-            # print('index ',wanted_index)
+        # save all the observers for the fit
+        if all_obs:
+            for idx in range(len(thetas)):
+                wanted_theta = thetas[idx]
+                wanted_phi = phis[idx]
+                if save:
+                    if alice:
+                        pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
+                    else:
+                        pre_saving = 'data/blue/'
+                with open(f'{pre_saving}allnLn_single_m{m}_{snap}.txt', 'a') as fselect:
+                    fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
+                    fselect.write(' '.join(map(str, lum_n_selected[idx])) + '\n')
+                    fselect.close()
+        else: 
+            # Select the observer for single spectrum and compute the dot product
+            for idx in range(len(wanted_thetas)):
+                wanted_theta = wanted_thetas[idx]
+                wanted_phi = wanted_phis[idx]
+                wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
+                # print('index ',wanted_index)
 
-            # xyz_selected = find_sph_coord(1, thetas[wanted_index], phis[wanted_index])
-            # dot_product = dot_prod(xyz_selected, thetas, phis)
+                # xyz_selected = find_sph_coord(1, thetas[wanted_index], phis[wanted_index])
+                # dot_product = dot_prod(xyz_selected, thetas, phis)
 
-            #lum_n_selected = np.zeros(len(x_arr))
-            # for j in range(len(lum_n)):
-            #     if dot_product[j] == 0:
-            #         continue
-            #     for i in range(len(x_arr)):
-            #         lum_n_single = lum_n[j][i] * dot_product[j]
-            #         lum_n_selected[i] += lum_n_single
+                #lum_n_selected = np.zeros(len(x_arr))
+                # for j in range(len(lum_n)):
+                #     if dot_product[j] == 0:
+                #         continue
+                #     for i in range(len(x_arr)):
+                #         lum_n_single = lum_n[j][i] * dot_product[j]
+                #         lum_n_selected[i] += lum_n_single
 
-            # Save data and plot
-            if save:
-                if alice:
-                    pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
-                else:
-                    pre_saving = 'data/blue/'
-            with open(f'{pre_saving}nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
-                fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
-                fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
-                fselect.close()
-               
+                # Save data and plot
+                if save:
+                    if alice:
+                        pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
+                    else:
+                        pre_saving = 'data/blue/'
+                with open(f'{pre_saving}nLn_single_m{m}_{snap}.txt', 'a') as fselect:
+                    fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
+                    fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
+                    fselect.close()
+                

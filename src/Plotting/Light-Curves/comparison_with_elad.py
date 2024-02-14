@@ -19,9 +19,9 @@ plt.rcParams['axes.facecolor'] = 'whitesmoke'
 plt.rcParams['xtick.labelsize'] = 15
 plt.rcParams['ytick.labelsize'] = 15
 
-plot_curves = False
+plot_curves = True
 residuals = False
-plot_radii_sphere = True
+plot_radii_sphere = False
 plot_fit = False
 m = 6
 check = 'fid'
@@ -38,8 +38,10 @@ if plot_curves:
     # Ours Load
     daysr = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
     r = np.loadtxt('data/red/alicered'+ str(m) + check + '.txt')
-    daysb = np.loadtxt(f'data/blue/blue_m{m}{check}_days.txt')
-    b = np.loadtxt('data/blue/bluedata_m'+ str(m) + '.txt')[2]
+    # daysb = np.loadtxt(f'data/blue/blue_m{m}{check}_days.txt')
+    datab = np.loadtxt('data/blue/blue_m'+ str(m) + '.txt')
+    daysb = datab[0]
+    b = datab[1]
 
     # Elad Plot
     plt.plot(elad_time[0], elad_red_topolt, c = 'r')
