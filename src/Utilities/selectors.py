@@ -48,7 +48,7 @@ def select_snap(m, check):
 
 # Select opacity
 def select_opacity(m):
-    if m==6:
+    if m == 6:
         return 'cloudy'
     else:
         return 'LTE'

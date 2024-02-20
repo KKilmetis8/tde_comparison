@@ -145,7 +145,7 @@ def dot_prod(xyz_grid):
 # MAIN
 if __name__ == "__main__":
     save = True
-    all_obs = True
+    all_obs = False
 
     # Choose BH 
     m = 6
@@ -187,7 +187,7 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(len(snapshots)): 
+    for idx_sn in range(1,2):#len(snapshots)): 
         snap = snapshots[idx_sn]
         bol_fld = luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')

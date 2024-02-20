@@ -16,10 +16,9 @@ import src.Utilities.selectors as s
 import src.Utilities.prelude as prel
 from src.Calculators.ray_forest import ray_finder, ray_maker_forest
 from src.Luminosity.special_radii_tree import get_specialr
-from src.Luminosity.spectra_cloudy import find_lowerT
 
-m = 6
-snap = 882
+m = 4
+snap = 322
 check = 'fid'
 num = 1000
 plot = 'spec_radii'
@@ -39,7 +38,7 @@ if plot == 'spec_radii':
     _, _, rays_photo, _, _ = get_specialr(rays.T, rays.den, rays.radii, 
                                           rays.tree_indexes, opacity_kind, select = 'photo' )
     _, _, rays_thermr, _, _ = get_specialr(rays.T, rays.den, rays.radii, 
-                                          rays.tree_indexes, opacity_kind, select = 'thermr_plot' )
+                                          rays.tree_indexes, opacity_kind, select = 'thermr_plot')
     rays_photo /= prel.Rsol_to_cm
     rays_thermr /= prel.Rsol_to_cm
 
@@ -63,9 +62,14 @@ if plot == 'spec_radii':
     plt.xlabel('Observers')
     plt.yscale('log')
     plt.ylabel(r'R $[R_\odot]$')
+    plt.axvline(88, linestyle = 'dashed', color = 'k', alpha = 0.4)
+    plt.axvspan(88,103, color = 'aliceblue', alpha = 0.7)
+    plt.axvline(103, linestyle = 'dashed', color = 'k', alpha = 0.4)
     plt.grid()
     plt.legend()
-    #plt.savefig(f'Figs/special_radii{snap}.png')
+    #plt.ylim(0,8e3)
+    # plt.title('Without mask from star')
+    plt.savefig(f'Figs/specialR_m{m}_{snap}.png')
 
     if np.logical_and(m == 6, compare == True):
         with h5py.File(f'data/elad/data_{snap}.mat', 'r') as f:
@@ -83,7 +87,7 @@ if plot == 'spec_radii':
         #ax[0].set_yscale('log')
         plt.grid()
         plt.legend(fontsize = 10)
-        plt.savefig(f'Figs/comparison_special_radii{snap}.png')
+        # plt.savefig(f'Figs/comparison_special_radii{snap}.png')
 
     plt.show() 
 

@@ -116,6 +116,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
 
             # throw fluff
             cell_star = Star[idx]
+            # cell_star = 10 # use it if you want to avoid mask to test the code
             if opacity == 'cloudy':
                 if ((1-cell_star) > 1e-3):
                     rays_den[j][k] = 0

@@ -59,16 +59,17 @@ def get_kappa(T: float, rho: float, r_dlogr: float, opacity_kind: str,
         Tmax = np.exp(17.87)  # 5.77e+07 K
         Tmin = np.exp(8.666)  # 5.8e+03 K
         from src.Opacity.LTE_opacity import opacity # NB: ln == False by default
-        # If LTE, you can have problem in interpolation for rho 
-        # If there is nothing, the ray continues unimpeded
-        if rho < np.exp(-49.3):       
-            return 0
 
     elif opacity_kind == 'cloudy':
         Tmax = 1e13 
         Tmin = 316
         from src.Opacity.cloudy_opacity import old_opacity as opacity
 
+    # If LTE, you can have problem in interpolation for rho 
+    # If there is nothing, the ray continues unimpeded
+    if np.logical_and( opacity_kind == 'LTE', rho < np.exp(-49.3)):       
+        return 0
+    
     # Stream material, is opaque NOTE: WE WILL SEE ABOUT THIS
     if T < Tmin:
         #print('T low')
