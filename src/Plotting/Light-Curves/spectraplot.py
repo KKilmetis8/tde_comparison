@@ -80,8 +80,8 @@ ax2.invert_xaxis()
 ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)
 
-ax2.axvline(100, c = 'mediumorchid')
-ax2.axvspan(100, 4000, color = 'mediumorchid', alpha = 0.4)
+ax2.axvline(120, c = 'mediumorchid')
+ax2.axvspan(120, 4000, color = 'mediumorchid', alpha = 0.4)
 ax2.text(160, y_highlim/2, 'UV', rotation = 90, fontsize = 10)
 
 ax2.axvline(4000, c = 'gold')

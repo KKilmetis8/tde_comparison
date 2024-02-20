@@ -16,7 +16,7 @@ alice, plot = isalice()
 import numpy as np
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
-from src.Luminosity.select_path import select_prefix
+from src.Utilities.selectors import select_prefix
 #%% Constants & Converter
 Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]

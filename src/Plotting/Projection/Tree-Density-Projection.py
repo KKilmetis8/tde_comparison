@@ -11,16 +11,12 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 
 import matplotlib.pyplot as plt
-from src.Luminosity.select_path import select_snap
-import colorcet
-plt.rcParams['text.usetex'] = True
-plt.rcParams['figure.dpi'] = 300
-plt.rcParams['font.family'] = 'Times New Roman'
+from src.Utilities.selectors import select_snap
+import src.Utilities.prelude
 plt.rcParams['figure.figsize'] = [10, 4]
-plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
 # Choose simulation
-m = 6
+m = 4
 check = 'fid'
 
 Mbh = 10**m 
@@ -28,12 +24,10 @@ Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
 apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
 t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
 
-#snapshots, days = select_snap(m, check)
-snapshots = np.arange(844, 1008 + 1)
-days = np.loadtxt('data/red/alicered6fid_days.txt')
+snapshots, days = select_snap(m, check)
 
 for snap, day in zip(snapshots, days):
-    pre = f'data/denproj/{m}'#/{m}-{check}'
+    pre = f'data/denproj/{m}/{m}-{check}'
     sim = f'{m}-{check}'
     data = np.loadtxt(f'{pre}/denproj{sim}{snap}.txt')
     x_radii = np.loadtxt(pre + '/xarray' + sim + '.txt') #simulator units

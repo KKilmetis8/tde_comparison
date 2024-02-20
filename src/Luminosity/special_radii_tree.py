@@ -11,6 +11,9 @@ NOTES FOR OTHERS:
 
 - change m
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
+
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 
@@ -23,7 +26,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 # Custom Imports
-from src.Calculators.ray_forest import find_sph_coord, ray_finder, ray_maker_forest
+from src.Calculators.ray_forest import ray_finder, ray_maker_forest
 import src.Utilities.prelude as c
 import src.Utilities.selectors as s
 
@@ -56,19 +59,18 @@ def get_kappa(T: float, rho: float, r_dlogr: float, opacity_kind: str,
         Tmax = np.exp(17.87)  # 5.77e+07 K
         Tmin = np.exp(8.666)  # 5.8e+03 K
         from src.Opacity.LTE_opacity import opacity # NB: ln == False by default
+        # If LTE, you can have problem in interpolation for rho 
+        # If there is nothing, the ray continues unimpeded
+        if rho < np.exp(-49.3):       
+            return 0
 
-    if opacity_kind == 'cloudy':
+    elif opacity_kind == 'cloudy':
         Tmax = 1e13 
         Tmin = 316
         from src.Opacity.cloudy_opacity import old_opacity as opacity
 
-    # If there is nothing, the ray continues unimpeded
-    if rho < 1e-10: # [cgs] #np.exp(-49.3):
-        # print('rho low')        
-        return 0
-    
     # Stream material, is opaque NOTE: WE WILL SEE ABOUT THIS
-    elif T < Tmin:
+    if T < Tmin:
         #print('T low')
         return 0
         #return 100
@@ -252,9 +254,10 @@ if __name__ == "__main__":
         print('Snapshot ' + str(snap))
         filename = f"{m}/{snap}/snap_{snap}.h5"
 
-        thetas, phis, stops = ray_finder(filename)
-        rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, 
-                                opacity_kind)
+        thetas, phis, stops, xyz_grid = ray_finder(filename)
+        rays = ray_maker_forest(snap, m, check, thetas, phis, 
+                                stops, num, opacity_kind)
+
 
         if photosphere:
             rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_specialr(rays.T, 
@@ -268,9 +271,9 @@ if __name__ == "__main__":
 
         if thermalisation: 
             rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays.T, 
-                                                                                rays.den, 
-                                                                                rays.radii, 
-                                                                                rays.tree_indexes, opacity_kind, select = 'thermr_plot' )
+                                                                            rays.den, 
+                                                                            rays.radii, 
+                                                                            rays.tree_indexes, opacity_kind, select = 'thermr_plot' )
             rays_thermr = rays_thermr/c.Rsol_to_cm # to solar unit to plot
 
             fix_thermr_arit[index] = np.mean(rays_thermr)
@@ -285,7 +288,7 @@ if __name__ == "__main__":
 
         if photosphere:         
             with open(f'{pre_saving}DYNspecial_radii_m{m}_box.txt', 'a') as file:
-                file.write('# Run of ' + now + ' with LTE opacity \n#t/t_fb\n')
+                file.write('# Run of ' + now + ' \n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Photosphere arithmetic mean \n')
                 file.write(' '.join(map(str, fix_photo_arit)) + '\n')
@@ -295,8 +298,8 @@ if __name__ == "__main__":
                 
         if thermalisation:
             with open(f'data/DYNspecial_radii_m{m}_box.txt', 'a') as file:
-                file.write('# Run of ' + now + ' with LTE opacity \n#t/t_fb\n')
-                file.write(' '.join(map(str, days)) + '\n')
+                # file.write('# Run of ' + now + ' \n#t/t_fb\n')
+                # file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Thermalisation radius arithmetic mean \n')
                 file.write(' '.join(map(str, fix_thermr_arit)) + '\n')
                 file.write('# Thermalisation radius geometric mean \n')

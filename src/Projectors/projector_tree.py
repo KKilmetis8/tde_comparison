@@ -15,7 +15,7 @@ alice, plot = isalice()
 import numpy as np
 import matplotlib.pyplot as plt
 import numba
-from src.Luminosity.select_path import select_snap
+import src.Utilities.selectors as s
 from src.Calculators.THREE_tree_caster import grid_maker
 
 # Constants & Converter
@@ -41,7 +41,7 @@ if __name__ == '__main__':
     m = 4
     save = True 
     check = 'fid' 
-    snapshots, days = select_snap(m, check)
+    snapshots, days = s.select_snap(m, check)
 
     for snap in snapshots:
         _, gridded_den, gridded_mass, x_radii, y_radii, z_radii = grid_maker(snap, m, check,
@@ -56,7 +56,7 @@ if __name__ == '__main__':
                 np.savetxt(f'{pre}tde_comparison/data/denproj/xarray{sim}.txt', x_radii)
                 np.savetxt(f'{pre}tde_comparison/data/denproj/yarray{sim}.txt', y_radii)
             else:
-                np.savetxt(f'data/localdenproj{m})_{snap}.txt', flat_den) 
+                np.savetxt(f'data/localdenproj{m}_{snap}.txt', flat_den) 
                 np.savetxt(f'data/localxarray{m}.txt', x_radii) 
                 np.savetxt(f'data/localyarray{m}.txt', y_radii) 
 

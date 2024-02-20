@@ -11,20 +11,14 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 import scipy.io
 import matplotlib.pyplot as plt
-plt.rcParams['text.usetex'] = True
-plt.rcParams['figure.dpi'] = 300
-plt.rcParams['font.family'] = 'Times New Roman'
-plt.rcParams['figure.figsize'] = [10 , 8]
-plt.rcParams['axes.facecolor'] = 'whitesmoke'
-plt.rcParams['xtick.labelsize'] = 15
-plt.rcParams['ytick.labelsize'] = 15
+import src.Utilities.prelude
 
-plot_curves = True
-residuals = False
-plot_radii_sphere = False
-plot_fit = False
 m = 6
 check = 'fid'
+plot_curves = False
+residuals = False
+plot_radii_sphere = True
+plot_fit = False
 
 if plot_curves:
     # Elad Load and convert
@@ -95,9 +89,7 @@ if plot_radii_sphere:
     elad_therm_geom = elad[3]
 
     # Our load 
-    # test = np.loadtxt('data/oldopacity_special_radii_m'+ str(m) + '_num1000.txt') #from ALICE
-    # daystest = test[0] * 40
-    spec_radii = np.loadtxt(f'data/DYNspecial_radii_m{m}_box.txt')
+    spec_radii = np.loadtxt(f'data/special_radii_m{m}_box.txt')
     daysEl = np.loadtxt('data/special_radii_m'+ str(m) + '_oldopacity.txt')[0] #from ALICE
     days = spec_radii[0]
     days *= 40
@@ -113,15 +105,15 @@ if plot_radii_sphere:
     plt.plot(daysEl*40, elad_therm_geom, c = 'r', label = 'Thermalization radius, geometric mean')
 
     # Our plot with boxes
-    plt.scatter(days, photo_arit, color = 'black', label = 'boxes')#, label = 'Photosphere radius, arithmetic mean')
+    plt.scatter(days, photo_arit, color = 'black')#, label = 'Photosphere radius, arithmetic mean')
     plt.scatter(days, photo_geom, color = 'violet')#, label = 'Photosphere radius, geometric mean')
     plt.scatter(days, thermr_arit, color = 'b')#, label = 'Thermalization radius, arithmetic mean')
     plt.scatter(days, thermr_geom, color = 'tomato')#, label = 'Thermalization radius, geometric mean')
     # without boxes
-    plt.scatter(days, spec_radii[5], color = 'black', marker = 'x', label = 'NO boxes')#, label = 'Photosphere radius, arithmetic mean')
-    plt.scatter(days, spec_radii[6], color = 'violet', marker = 'x')#, label = 'Photosphere radius, geometric mean')
-    plt.scatter(days, spec_radii[7], color = 'b', marker = 'x')#, label = 'Thermalization radius, arithmetic mean')
-    plt.scatter(days, spec_radii[8], color = 'tomato', marker = 'x')
+    # plt.scatter(days, spec_radii[5], color = 'black', marker = 'x', label = 'NO boxes')#, label = 'Photosphere radius, arithmetic mean')
+    # plt.scatter(days, spec_radii[6], color = 'violet', marker = 'x')#, label = 'Photosphere radius, geometric mean')
+    # plt.scatter(days, spec_radii[7], color = 'b', marker = 'x')#, label = 'Thermalization radius, arithmetic mean')
+    # plt.scatter(days, spec_radii[8], color = 'tomato', marker = 'x')
     plt.xlim(40,64)
     plt.ylim(10,1e4)
     plt.yscale('log')
@@ -130,7 +122,7 @@ if plot_radii_sphere:
     plt.grid()
     plt.legend(fontsize = 8)
     plt.title(r'$R_{ph} (\tau=2/3)$ and $R_{therm} (\tau=1)$')
-    #plt.savefig('Final_plot/fig9.png')
+    plt.savefig('Final_plot/fig9.png')
     plt.show()
 
     if residuals:
