@@ -23,9 +23,9 @@ import src.Utilities.selectors as s
 #%% Constants & Converter
 
 def find_sph_coord(r, theta, phi):
-    x = r * np.sin(theta) * np.cos(phi) #should be np.pi-theta
-    y = r * np.sin(theta) * np.sin(phi)
-    z = r * np.cos(theta)
+    x = r * np.sin(np.pi-theta) * np.cos(phi) #Elad has just theta
+    y = r * np.sin(np.pi-theta) * np.sin(phi)
+    z = r * np.cos(np.pi-theta)
     return [x,y,z]
 
 # This just packs rays

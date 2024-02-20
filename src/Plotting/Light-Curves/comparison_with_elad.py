@@ -15,9 +15,9 @@ import src.Utilities.prelude
 
 m = 6
 check = 'fid'
-plot_curves = False
+plot_curves = True
 residuals = False
-plot_radii_sphere = True
+plot_radii_sphere = False
 plot_fit = False
 
 if plot_curves:
@@ -30,9 +30,12 @@ if plot_curves:
     elad_red_topolt = np.power(10, elad_red[0])
 
     # Ours Load
-    daysr = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
-    r = np.loadtxt('data/red/alicered'+ str(m) + check + '.txt')
+    # daysr = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
+    # r = np.loadtxt('data/red/alicered'+ str(m) + check + '.txt')
     # daysb = np.loadtxt(f'data/blue/blue_m{m}{check}_days.txt')
+    red = np.loadtxt('data/red/reddata_m'+ str(m) + check + '.txt')
+    daysr = red[0]
+    r = red[1]
     datab = np.loadtxt('data/blue/blue_m'+ str(m) + '.txt')
     daysb = datab[0]
     b = datab[1]

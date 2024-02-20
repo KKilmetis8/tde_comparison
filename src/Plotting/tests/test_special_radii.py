@@ -17,8 +17,8 @@ import src.Utilities.prelude as prel
 from src.Calculators.ray_forest import ray_finder, ray_maker_forest
 from src.Luminosity.special_radii_tree import get_specialr
 
-m = 4
-snap = 322
+m = 6
+snap = 844
 check = 'fid'
 num = 1000
 plot = 'spec_radii'
@@ -69,7 +69,7 @@ if plot == 'spec_radii':
     plt.legend()
     #plt.ylim(0,8e3)
     # plt.title('Without mask from star')
-    plt.savefig(f'Figs/specialR_m{m}_{snap}.png')
+    # plt.savefig(f'Figs/specialR_m{m}_{snap}.png')
 
     if np.logical_and(m == 6, compare == True):
         with h5py.File(f'data/elad/data_{snap}.mat', 'r') as f:
@@ -96,19 +96,15 @@ if plot == 'profile':
     fig, ax = plt.subplots()
     selected_indexes = [90]
     for i in selected_indexes:
-        #colorimg = rays_T[i]
-        rad_en = rays[i]
-        colorimg = find_lowerT(rad_en)
-        colorimg = np.log10(colorimg)
-
-        radius = np.delete(rays_radii[i],-1)/Rsol_to_cm
-        img = ax.scatter(radius, rays_den[i], c = colorimg, marker = '_', label = f'observer {i}')
+        radius = np.delete(rays.radii[i],-1)/prel.Rsol_to_cm
+        img = ax.scatter(radius, rays.den[i], c = np.log10(rays.T[i]), s = 7, vmin = 5, vmax = 9)#label = f'observer {i}')
     cbar = fig.colorbar(img)
-    cbar.set_label(r'$\log_{10}T_r [K]$')
+    cbar.set_label(r'$\log_{10}T [K]$')
+    plt.loglog()
     ax.set_xlabel(r'$\log_{10}R [R_\odot]$')
     ax.set_ylabel(r'$\log_{10}\rho [g/cm^3]$')
     plt.xlim(10, 2*apocenter)
-    plt.loglog()
     #plt.legend()
-    plt.savefig('Figs/profileTr.png')
+    plt.savefig(f'Figs/profile{i}_{snap}.png')
+   
     plt.show()
