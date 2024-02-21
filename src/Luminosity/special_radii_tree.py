@@ -288,7 +288,7 @@ if __name__ == "__main__":
             pre_saving = 'data/'
 
         if photosphere:         
-            with open(f'{pre_saving}DYNspecial_radii_m{m}_box.txt', 'a') as file:
+            with open(f'{pre_saving}special_radii_m{m}_box.txt', 'a') as file:
                 file.write('# Run of ' + now + ' \n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Photosphere arithmetic mean \n')
@@ -298,7 +298,7 @@ if __name__ == "__main__":
                 file.close()
                 
         if thermalisation:
-            with open(f'data/DYNspecial_radii_m{m}_box.txt', 'a') as file:
+            with open(f'data/special_radii_m{m}_box.txt', 'a') as file:
                 # file.write('# Run of ' + now + ' \n#t/t_fb\n')
                 # file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Thermalisation radius arithmetic mean \n')

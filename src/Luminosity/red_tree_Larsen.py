@@ -24,13 +24,14 @@ import h5py
 import healpy as hp
 from scipy.spatial import KDTree
 from datetime import datetime
+import math
 
 # Custom Imports
 import src.Utilities.prelude as c
 import src.Utilities.selectors as s
-from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest, ray_finder
+from src.Calculators.ray_forest import ray_maker_forest, ray_finder
 from src.Luminosity.special_radii_tree import get_specialr
-from astropy.coordinates import spherical_to_cartesian, cartesian_to_spherical
+from astropy.coordinates import cartesian_to_spherical, spherical_to_cartesian
 
 #%%
 ##
@@ -38,7 +39,8 @@ from astropy.coordinates import spherical_to_cartesian, cartesian_to_spherical
 ##
 ###
 
-def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
+
+def outside_photo(snap, m, check, tree_index_photo, dist_neigh):
     """
      For every ray, find the cells that are at +- fixed distance from photosphere.
      fixed distance = 2 * dimension of simulation cell at the photosphere
@@ -80,18 +82,13 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     Y = np.load(pre + snap + '/CMy_' + snap + '.npy')
     Z = np.load(pre + snap + '/CMz_' + snap + '.npy')
     T = np.load(pre + snap + '/T_' + snap + '.npy')
-    Den = np.load(pre + snap + '/Den_' + snap + '.npy')
     Rad = np.load(pre + snap + '/Rad_' + snap + '.npy')
+    Den = np.load(pre + snap + '/Den_' + snap + '.npy')
     
     # convert in CGS
     Rad *= Den 
     Rad *= c.en_den_converter
     Den *= c.den_converter
-
-    # make a tree
-    sim_value = [X, Y, Z] 
-    sim_value = np.transpose(sim_value) # shape (number_points, 3). Need it for the tree.
-    sim_tree = KDTree(sim_value)
 
     # store data of R_{ph} (lenght in Rsol)
     tree_index_photo = [int(x) for x in tree_index_photo]
@@ -105,17 +102,24 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
 
     # convert to cartesian and query: BETTER TO USE OUR FIND_SPH_COORDINATE??
     x_low, y_low, z_low  = spherical_to_cartesian(r_low, theta_obs, phi_obs)
+    # x_low += Rt
     x_high, y_high, z_high  = spherical_to_cartesian(r_high, theta_obs, phi_obs)
-    x_high += Rt # CHECK THIS!!!!!
+    # x_high += Rt 
     idx_low = np.zeros(len(tree_index_photo))
     idx_high = np.zeros(len(tree_index_photo))
     grad_r = np.zeros(len(tree_index_photo))
     magnitude = np.zeros(len(tree_index_photo))
+
+    # make a tree with pericenter as origin
+    # X -= Rt
+    sim_value = [X, Y, Z] 
+    sim_value = np.transpose(sim_value) # shape (number_points, 3). Need it for the tree.
+    sim_tree = KDTree(sim_value)
    
     # Find inner and outer neighbours
     for i in range(len(x_low)):
-        _, idx_l = sim_tree.query([x_low[i], y_low[i], z_low[i]])
-        _, idx_h = sim_tree.query([x_high[i], y_high[i], z_high[i]])
+        _, idx_l = sim_tree.query([x_low[i]+Rt, y_low[i], z_low[i]])
+        _, idx_h = sim_tree.query([x_high[i]+Rt, y_high[i], z_high[i]])
         idx_low[i] = idx_l
         idx_high[i] = idx_h
         xyz_low = np.array([X[idx_l], Y[idx_l], Z[idx_l]])
@@ -147,41 +151,41 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     grad_Er = deltaE * grad_r
     magnitude *= np.abs(deltaE)
     
-    
     return grad_Er, magnitude, energy_high, T_high, den_high
 
     
-def flux_calculator(grad_E, magnitude, selected_energy, 
-                    selected_temperature, selected_density, opacity_kind):
+def flux_calculator(gradr_E, magnitude, outside_energy, 
+                    outside_temperature, outside_density, opacity_kind):
     """
     Get the flux for every observer.
 
-    Parameters
+    Parameters [CGS]
     ----------
-    grad_E: array.
-            Energy gradient for every ray at photosphere. 
+    gradr_E: array.
+            Radial component of the gradient of (radiation) energy density 
+            across the photosphere (for every ray). 
     magnitude: array.
-                Magnitude of grad_Er (CGS)
-    selected_energy: array.
-            Energy for every ray in a cell outside photosphere. 
-    selected_temperature: array.
-            Temperature for every ray in a cell outside photosphere. 
-    selected_density: array.
-            Density for every ray in a cell outside photosphere. 
+               Magnitude of the gradient of energy density. 
+    outside_energy: array.
+            Energy in the cell outside photosphere (for every ray). 
+    outside_temperature: array.
+            Temperature in the cell outside photosphere (for every ray). 
+    outside_density: array.
+            Density in the cell outside photosphere (for every ray). 
     opacity_kind: str.
             Choose the opacity.
         
-    Returns
+    Returns [CGS]
     -------
     f: array
         Flux at every ray.
     """
-    f = np.zeros(len(grad_E))
+    f = np.zeros(len(gradr_E))
     zero_count = 0
    
     # Ensure we can interpolate
-    rho_low = np.exp(-45)
     if opacity_kind == 'LTE':
+        rho_low = np.exp(-45)
         Tmax = np.exp(17.87)  # 5.77e+07 K
         Tmin = np.exp(8.666)  # 5.8e+03 K
         from src.Opacity.LTE_opacity import opacity # NB: ln == False by default
@@ -191,11 +195,12 @@ def flux_calculator(grad_E, magnitude, selected_energy,
         Tmin = 316
         from src.Opacity.cloudy_opacity import old_opacity as opacity
 
-    for i in range(len(selected_energy)):
-        Energy = selected_energy[i]
-        
-        Temperature = selected_temperature[i]
-        Density = selected_density[i]
+    # compute flux at every ray
+    for i in range(len(outside_energy)):
+        Energy = outside_energy[i]
+        Temperature = outside_temperature[i]
+        Density = outside_density[i]
+        mag = magnitude[i]
 
         # If here is nothing, light continues
         # if np.logical_and(m!=6, Density < rho_low):
@@ -213,66 +218,72 @@ def flux_calculator(grad_E, magnitude, selected_energy,
         
         # T too high => scattering
         if Temperature > Tmax:
-            Tscatter = Tmax
-            k_ross = opacity(Tscatter, Density, 'scattering')
+            k_ross = opacity(Tmax, Density, 'scattering')
         else:    
             # Get Opacity, NOTE: Breaks Numba
-            k_ross = opacity(Temperature, Density, 'red')
+            k_ross = opacity(Temperature, Density, 'rosseland') # CGS
         
-        # k_ross *= c.Rsol_to_cm
-        D = c.c / np.sqrt((3*k_ross)**2 + (magnitude[i]/Energy)**2)
+        # Eq.(8) Steinberg&Stone22
+        D = c.c / np.sqrt((3*k_ross)**2 + (mag/Energy)**2)
     
-        Flux =  - D * grad_E[i]
+        Flux =  - D * gradr_E[i]
         
         f[i] = Flux
-    
+
+    print('Tot zeros:', zero_count)
     return f
 
 def fld_luminosity(snap, m, check, thetas, phis, stops, num, opacity_kind):
     """
     Gives bolometric L 
     """
+    # Make rays and find the photosphere
     rays = ray_maker_forest(snap, m, check, thetas, phis, 
                             stops, num, opacity_kind)   
-    _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays.T, rays.den, rays.radii, 
-                                                            rays.tree_indexes, opacity_kind, select = 'photo')
+    _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays.T, rays.den, 
+                                                            rays.radii, rays.tree_indexes, 
+                                                            opacity_kind, select = 'photo') # CGS
     
     dim_ph = np.zeros(len(rays_index_photo))
     for j in range(len(rays_index_photo)):
         find_index_cell = int(rays_index_photo[j])
         vol_ph = rays.vol[j][find_index_cell]
-        dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
-    dist_neigh = 2 * dim_ph #solar units
+        dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) 
+    dist_neigh = 2 * dim_ph # solar units
     # dist_neigh *= Rsol_to_cm #convert in CGS
 
     # Find the cell outside the photosphere and save its quantities
-    grad_E, magnitude, energy_high, T_high, den_high  = find_neighbours(snap, m, check,
-                                                                        tree_index_photo, dist_neigh)
+    grad_E, magnitude, energy_high, T_high, den_high  = outside_photo(snap, m, check,
+                                                                    tree_index_photo, dist_neigh)
 
-    # Calculate Flux and see how it looks
+    # Calculate the flux 
     flux = flux_calculator(grad_E, magnitude, energy_high, 
                            T_high, den_high, opacity_kind)
 
     # Calculate luminosity 
     lum = np.zeros(len(flux))
-    zero_count = 0
+    nan_count = 0
     neg_count = 0
     for i in range(len(flux)):
-        lum_nodiff = 4 * np.pi * c.c * energy_high[i] * rays_photo[i]**2
-        # Turn to luminosity
+        lum_nodiff = 4 * np.pi * rays_photo[i]**2 * c.c * energy_high[i] 
+        # Discard negative fluxes
         if flux[i] < 0:
             neg_count += 1
             lum_fld = 1e100
+        elif math.isnan(flux[i]):
+            nan_count += 1
+            lum_fld = 1e100
         else:
-            lum_fld = flux[i] * 4 * np.pi * rays_photo[i]**2
+            lum_fld = 4 * np.pi * rays_photo[i]**2 * flux[i] 
 
         lum[i] = min(lum_fld, lum_nodiff)
+        
     # Average in observers
     lum = np.sum(lum)/192
 
-    print('Tot zeros:', zero_count)
-    print('Negative: ', neg_count)      
-    print('Snap %i' %snap, ', Lum %.3e' %lum, '\n---------' )
+    print('Negative:', neg_count)
+    print('Nan:', nan_count)
+    print(f'Snap {snap}, Lum %.3e' %lum, '\n---------' )
     return lum
 #%%
 ##

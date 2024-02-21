@@ -9,8 +9,8 @@ plt.rc('ytick', labelsize = 15)
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
-m = 6
-snap = 882
+m = 4
+snap = 394
 num = 1000
 opacity = 'cloudy'
 axis = 'temp'
@@ -39,7 +39,7 @@ n_end = frequencies(T_end)
 lamda = wavelength(n_array)
 
 # y axis 
-nL_tilde_n = np.loadtxt(f'data/blue/TESTnLn_single_m{m}_{snap}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
 
 
 if axis == 'freq':
@@ -90,7 +90,7 @@ ax2.axvline(7000, c = 'gold', label = 'visible')
 ax2.text(6000, y_highlim/5, 'visible', rotation = 90, fontsize = 10)
 ax1.legend()
 ax1.set_title(f'Spectra {snap} with {opacity} opacity')
-plt.savefig(f'Figs/TEST_NOstar_spectra{snap}_{num}.png')
+#plt.savefig(f'Figs/NOstar_spectra{snap}_{num}.png')
 plt.show()
 
 

@@ -23,7 +23,7 @@ from datetime import datetime
 
 # Chocolate Imports
 from src.Opacity.LTE_opacity import opacity
-from src.Calculators.ray_forest import find_sph_coord, ray_finder, ray_maker_forest
+from src.Calculators.ray_forest import ray_finder, ray_maker_forest
 from src.Luminosity.special_radii_tree import calc_specialr
 from src.Calculators.select_observers import select_observer 
 import src.Utilities.prelude as c
@@ -115,7 +115,7 @@ if __name__ == "__main__":
 
     # Choose BH 
     m = 4
-    check = 'S60ComptonHires'
+    check = 'fid'
     num = 1000
     snapshots, days = s.select_snap(m, check)
     opacity_kind = s.select_opacity(m)
@@ -206,7 +206,7 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
+            with open(f'{pre_saving}nLn_single_m{m}_{snap}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                 fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
                 fselect.close()

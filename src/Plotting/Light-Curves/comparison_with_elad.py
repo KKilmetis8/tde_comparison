@@ -42,13 +42,13 @@ if plot_curves:
 
     # Elad Plot
     plt.plot(elad_time[0], elad_red_topolt, c = 'r')
-    plt.plot(elad_time[0],elad_blue_topolt, c = 'b')
+    # plt.plot(elad_time[0],elad_blue_topolt, c = 'b')
 
     # Our plot
     days40r = np.multiply(daysr, 40)
     days40b = np.multiply(daysb, 40)
-    plt.plot(days40b, b, '--s', c='navy', markersize = 4, alpha = 0.8)
-    plt.plot(days40r, r, '--', c='maroon', markersize = 4, alpha = 0.8)
+    # plt.plot(days40b, b, '--s', c='navy', markersize = 4, alpha = 0.8)
+    plt.plot(days40r, r, '--s', c='maroon', markersize = 4, alpha = 0.8)
 
     plt.yscale('log')
     plt.grid()

@@ -7,6 +7,8 @@ Created on Tue Oct 10 10:19:34 2023
 @author: paola, konstantinos
 
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
 
 # Vanilla
 import h5py
@@ -22,10 +24,10 @@ alice, plot = isalice()
 import src.Utilities.selectors as s
 #%% Constants & Converter
 
-def find_sph_coord(r, theta, phi):
-    x = r * np.sin(np.pi-theta) * np.cos(phi) #Elad has just theta
-    y = r * np.sin(np.pi-theta) * np.sin(phi)
-    z = r * np.cos(np.pi-theta)
+def find_cart_coord(r, theta, phi):
+    x = r * np.sin(theta) * np.cos(phi) 
+    y = r * np.sin(theta) * np.sin(phi)
+    z = r * np.cos(theta)
     return [x,y,z]
 
 # This just packs rays
@@ -76,6 +78,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
     IE *= c.en_den_converter
     Den *= c.den_converter 
     
+    #X -= Rt # pericenter as origin 
     # make a tree
     sim_value = [X, Y, Z] 
     sim_value = np.transpose(sim_value) #array of dim (number_points, 3)
@@ -103,7 +106,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
         
         for k in range(num-1):
             radius = radii[k]
-            queried_value = find_sph_coord(radius, thetas[j], phis[j])
+            queried_value = find_cart_coord(radius, thetas[j], phis[j])
             queried_value[0] += Rt #if you don't do -Rt before. Thus you consider the pericentre as origin
             _, idx = sim_tree.query(queried_value)
 
@@ -184,7 +187,7 @@ def ray_finder(filename):
         thetas[iobs] = theta
         phis[iobs] = phi
         observers.append( (theta, phi) )
-        xyz = find_sph_coord(1, theta, phi) # r=1 to be on the unit sphere
+        xyz = find_cart_coord(1, theta, phi) # r=1 to be on the unit sphere
         xyz_grid.append(xyz)
         mu_x = xyz[0]
         mu_y = xyz[1]
