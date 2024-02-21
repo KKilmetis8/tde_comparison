@@ -41,7 +41,6 @@ lamda = wavelength(n_array)
 # y axis 
 nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
 
-
 if axis == 'freq':
         x_axis = n_array
         x_start = n_start

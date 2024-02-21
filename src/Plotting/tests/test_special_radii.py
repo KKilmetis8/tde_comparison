@@ -14,15 +14,16 @@ import matplotlib.pyplot as plt
 import h5py
 import src.Utilities.selectors as s
 import src.Utilities.prelude as prel
+from scipy.stats import gmean
 from src.Calculators.ray_forest import ray_finder, ray_maker_forest
 from src.Luminosity.special_radii_tree import get_specialr
 
 m = 6
-snap = 844
+snap = 882
 check = 'fid'
 num = 1000
 plot = 'spec_radii'
-compare = False
+compare = True
 
 opacity_kind = s.select_opacity(m)
 filename = f"{m}/{snap}/snap_{snap}.h5"
@@ -41,6 +42,8 @@ if plot == 'spec_radii':
                                           rays.tree_indexes, opacity_kind, select = 'thermr_plot')
     rays_photo /= prel.Rsol_to_cm
     rays_thermr /= prel.Rsol_to_cm
+    print(np.mean(rays_photo), np.mean(rays_thermr))
+    print(gmean(rays_photo), gmean(rays_thermr))
 
     # fig, ax = plt.subplots(1,2, tight_layout = True)
     # # ax[0].scatter(np.arange(192), Elad_photo, c = 'k', s = 5, label = 'Elad')
@@ -69,25 +72,27 @@ if plot == 'spec_radii':
     plt.legend()
     #plt.ylim(0,8e3)
     # plt.title('Without mask from star')
-    # plt.savefig(f'Figs/specialR_m{m}_{snap}.png')
+    plt.savefig(f'Figs/specialR_m{m}_{snap}_origin0.png')
 
     if np.logical_and(m == 6, compare == True):
         with h5py.File(f'data/elad/data_{snap}.mat', 'r') as f:
             # print(f.keys())
             Elad_photo = f['r_photo'][0]
             Elad_therm = f['r_therm'][0]
+        print(np.mean(Elad_photo), np.mean(Elad_therm))
+        print(gmean(Elad_photo), gmean(Elad_therm))
 
         plt.figure()
-        plot_ph = 1-Elad_photo/rays_photo
-        plto_th = 1-Elad_therm/rays_thermr
-        plt.plot(np.arange(192), plot_ph, c = 'k', label = r'$R_{ph}$')
-        plt.plot(np.arange(192), plto_th, c = 'orange', label = r'$R_{th}$')
+        plot_ph = Elad_photo-rays_photo
+        plto_th = Elad_therm-rays_thermr
+        plt.plot(np.arange(192), plot_ph, c = 'r', label = r'$R_{ph}$')
+        plt.plot(np.arange(192), plto_th, c = 'b', linestyle = 'dashed', label = r'$R_{th}$')
         plt.xlabel('Observers')
-        plt.ylabel(r'$1-R^E/R^{us}$')
+        plt.ylabel(r'$R^E-R^{us}$')
         #ax[0].set_yscale('log')
         plt.grid()
         plt.legend(fontsize = 10)
-        # plt.savefig(f'Figs/comparison_special_radii{snap}.png')
+        plt.savefig(f'Figs/ABScomparison_special_radii{snap}.png')
 
     plt.show() 
 

@@ -198,7 +198,7 @@ if __name__ == "__main__":
             wanted_theta = thetas[idx]
             wanted_phi = phis[idx]
             wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
-            # print('index ',wanted_index)
+            # print('index ', wanted_index)
 
             # Save data and plot
             if save:
