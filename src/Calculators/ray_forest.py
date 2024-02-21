@@ -219,7 +219,7 @@ if __name__ == '__main__':
     filename = f"{m}/{snap}/snap_{snap}.h5"
     
     opacity_kind = s.select_opacity(m)
-        
+    print(find_cart_coord(1,np.pi,np.pi))
     # Get thetas, phis and where each ray stops
     thetas, phis, stops, xyz_grid = ray_finder(filename)
     # rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, opacity_kind)
@@ -245,15 +245,25 @@ if __name__ == '__main__':
     # Compare our observers with Elad
     import scipy.io
     mat = scipy.io.loadmat('data/elad/helepix.mat')  
-    plt.scatter(mat['x'], mat['y'], c = 'b', s = 10, label = 'Elad')
-    x = np.zeros(192)
-    y = np.zeros(192)    
-    z = np.zeros(192)
+    xelad = mat['x']
+    yelad = mat['y']
+    zelad = mat['z']
+    # plt.scatter(xelad, yelad, s = 10, color = 'r', label = 'Elad')
+    img = plt.scatter(xelad[0:96], yelad[0:96], s = 10, c = np.arange(96), cmap = 'rainbow')
+    x_us = np.zeros(192)
+    y_us = np.zeros(192)    
+    z_us = np.zeros(192)
     for i in range(192):
-        x[i],y[i],z[i] = find_cart_coord(1, thetas[i], phis[i])
-    plt.scatter(x,y, s=4, c='r', label = 'us')
+        x_us[i], y_us[i], z_us[i] = find_cart_coord(1, thetas[i], phis[i])
+    # plt.scatter(x_us, y_us, s = 5, color = 'b', label = 'us')
+    #img2 = plt.scatter(x_us, y_us, s = 10, c = range(192), cmap = 'rainbow')    
+    cb = plt.colorbar(img)
+    plt.title('Elad observers')
+    plt.xlabel('X')
+    plt.ylabel('Y')
     plt.legend()
-    plt.title('Compare observers')
-    plt.savefig('Final_plot/Visualize/compareObs')
+    plt.xlim(-1,1)
+    plt.ylim(-1,1)
+    plt.savefig('Final_plot/Visualize/ELobs_first96.png')
     plt.show()
     
