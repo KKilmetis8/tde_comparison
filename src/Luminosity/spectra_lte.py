@@ -195,10 +195,10 @@ if __name__ == "__main__":
 
         # Select the observer for single spectrum and compute the dot product
         for idx in range(len(wanted_thetas)):
-            wanted_theta = thetas[idx]
-            wanted_phi = phis[idx]
+            wanted_theta = wanted_thetas[idx]
+            wanted_phi = wanted_phis[idx]
             wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
-            # print('index ', wanted_index)
+            print('index ', wanted_index)
 
             # Save data and plot
             if save:
@@ -206,8 +206,8 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}nLn_single_m{m}_{snap}.txt', 'a') as fselect:
-                fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
-                fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
-                fselect.close()
-               
+                with open(f'{pre_saving}nLn_single_m{m}_{snap}.txt', 'a') as fselect:
+                    fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
+                    fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
+                    fselect.close()
+                

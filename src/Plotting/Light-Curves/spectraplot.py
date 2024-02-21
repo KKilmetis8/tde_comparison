@@ -89,7 +89,7 @@ ax2.axvline(7000, c = 'gold', label = 'visible')
 ax2.text(6000, y_highlim/5, 'visible', rotation = 90, fontsize = 10)
 ax1.legend()
 ax1.set_title(f'Spectra {snap} with {opacity} opacity')
-#plt.savefig(f'Figs/NOstar_spectra{snap}_{num}.png')
+plt.savefig(f'Figs/TEST_spectra{snap}_{num}.png')
 plt.show()
 
 

@@ -222,15 +222,15 @@ if __name__ == '__main__':
         
     # Get thetas, phis and where each ray stops
     thetas, phis, stops, xyz_grid = ray_finder(filename)
-    rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, opacity_kind)
+    # rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, opacity_kind)
 
-    T_plot = np.log10(rays.T)
-    T_plot = np.nan_to_num(T_plot, neginf= -19)
-    radii_toplot = []
-    for j in range(len(rays.radii)):
-        radius = np.delete(rays.radii[j], -1)
-        radius /= c.Rsol_to_cm
-        radii_toplot.append(radius)
+    # T_plot = np.log10(rays.T)
+    # T_plot = np.nan_to_num(T_plot, neginf= -19)
+    # radii_toplot = []
+    # for j in range(len(rays.radii)):
+    #     radius = np.delete(rays.radii[j], -1)
+    #     radius /= c.Rsol_to_cm
+    #     radii_toplot.append(radius)
 
     # ax.set_ylabel('Observers', fontsize = 14)
     # ax.set_xlabel(r'r [R$_\odot$]', fontsize = 14)
@@ -241,8 +241,19 @@ if __name__ == '__main__':
     #ax.set_title('N: ' + str(num), fontsize = 16)
 
     # plt.show()
-    plt.plot(radii_toplot[80], rays.T[80])
-    plt.loglog()
-    plt.xlim(0.56,3e4)
+    
+    # Compare our observers with Elad
+    import scipy.io
+    mat = scipy.io.loadmat('data/elad/helepix.mat')  
+    plt.scatter(mat['x'], mat['y'], c = 'b', s = 10, label = 'Elad')
+    x = np.zeros(192)
+    y = np.zeros(192)    
+    z = np.zeros(192)
+    for i in range(192):
+        x[i],y[i],z[i] = find_cart_coord(1, thetas[i], phis[i])
+    plt.scatter(x,y, s=4, c='r', label = 'us')
+    plt.legend()
+    plt.title('Compare observers')
+    plt.savefig('Final_plot/Visualize/compareObs')
     plt.show()
     

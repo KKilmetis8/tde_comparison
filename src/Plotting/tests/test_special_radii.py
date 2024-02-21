@@ -18,11 +18,11 @@ from scipy.stats import gmean
 from src.Calculators.ray_forest import ray_finder, ray_maker_forest
 from src.Luminosity.special_radii_tree import get_specialr
 
-m = 6
-snap = 882
+m = 4
+snap = 394
 check = 'fid'
 num = 1000
-plot = 'spec_radii'
+plot = 'profile'
 compare = True
 
 opacity_kind = s.select_opacity(m)
@@ -72,15 +72,27 @@ if plot == 'spec_radii':
     plt.legend()
     #plt.ylim(0,8e3)
     # plt.title('Without mask from star')
-    plt.savefig(f'Figs/specialR_m{m}_{snap}_origin0.png')
+    plt.savefig(f'Figs/specialR_m{m}_{snap}.png')
 
     if np.logical_and(m == 6, compare == True):
         with h5py.File(f'data/elad/data_{snap}.mat', 'r') as f:
             # print(f.keys())
             Elad_photo = f['r_photo'][0]
             Elad_therm = f['r_therm'][0]
-        print(np.mean(Elad_photo), np.mean(Elad_therm))
-        print(gmean(Elad_photo), gmean(Elad_therm))
+        
+        plt.figure()
+        plt.scatter(np.arange(192), Elad_photo, c = 'r', s = 8, label = r'$R_{ph}$')
+        plt.scatter(np.arange(192), Elad_therm, c = 'b', s = 5, label = r'$R_{th}$')
+        plt.xlabel('Observers')
+        plt.yscale('log')
+        plt.ylabel(r'R $[R_\odot]$')
+        plt.axvline(88, linestyle = 'dashed', color = 'k', alpha = 0.4)
+        plt.axvspan(88,103, color = 'aliceblue', alpha = 0.7)
+        plt.axvline(103, linestyle = 'dashed', color = 'k', alpha = 0.4)
+        plt.grid()
+        plt.legend()
+        plt.title('Elad')
+        plt.savefig(f'Figs/Elad_specialR_m{m}_{snap}.png')
 
         plt.figure()
         plot_ph = Elad_photo-rays_photo
@@ -99,17 +111,19 @@ if plot == 'spec_radii':
 if plot == 'profile':
     ## color with compton_cooling, T, rad_T, optical depth
     fig, ax = plt.subplots()
-    selected_indexes = [90]
+    selected_indexes = [88, 96, 92, 100, 180, 4]
+    colors = ['b','r', 'k', 'lime', 'magenta', 'aqua']
     for i in selected_indexes:
         radius = np.delete(rays.radii[i],-1)/prel.Rsol_to_cm
-        img = ax.scatter(radius, rays.den[i], c = np.log10(rays.T[i]), s = 7, vmin = 5, vmax = 9)#label = f'observer {i}')
-    cbar = fig.colorbar(img)
-    cbar.set_label(r'$\log_{10}T [K]$')
+        ax.plot(radius, rays.den[i], c= colors[i], label = f'observer {i}')
+        #ax.plot(radius, rays.T[i], , label = f'observer {i}')
+    # cbar = fig.colorbar(img)
+    # cbar.set_label(r'$\log_{10}T [K]$')
     plt.loglog()
     ax.set_xlabel(r'$\log_{10}R [R_\odot]$')
     ax.set_ylabel(r'$\log_{10}\rho [g/cm^3]$')
     plt.xlim(10, 2*apocenter)
-    #plt.legend()
-    plt.savefig(f'Figs/profile{i}_{snap}.png')
+    plt.legend()
+    plt.savefig(f'Figs/profileden_{snap}.png')
    
     plt.show()
