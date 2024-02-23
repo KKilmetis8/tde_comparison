@@ -11,7 +11,7 @@ import numpy as np
 import h5py
 from datetime import datetime
 from src.Extractors.time_extractor import days_since_distruption
-from src.Utilities.selectors import select_snap
+import src.Utilities.selectors as s
 #%% Extractor
 
 ## File structure is
@@ -76,10 +76,11 @@ def extractor(filename):
     return T, Z
 
 #%% Doing the thing
-m = 4
-fixes = [322]#select_snap(m, 'fid')
+m = 6
+check = 'fid'
+snapshots, days = s.select_snap(m, check)
 
-for fix in fixes:
+for fix in snapshots:
     print(f'Snap: {fix}')
     snapshot = f'{m}/{fix}/snap_{fix}.h5'
     _, Z = extractor(snapshot)   
