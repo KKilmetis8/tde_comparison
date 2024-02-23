@@ -86,10 +86,10 @@ snapshots, days = s.select_snap(m, check)
 for snap in snapshots:
     print(f'Snap: {snap}')
     pre = s.select_prefix(m, check)
-    snapshot = f'{pre}{snap}/snap_{snap}.h5'
-    _, Z = extractor(snapshot)   
+    filename = f'{pre}{snap}/snap_{snap}.h5'
+    _, Z = extractor(filename)   
     # Save to another file.
-    np.save(f'{m}/{snap}/Star_{snap}', Z)
+    np.save(f'{pre}{snap}/Star_{snap}', Z)
 
 
     
