@@ -80,12 +80,13 @@ m = 6
 check = 'fid'
 snapshots, days = s.select_snap(m, check)
 
-for fix in snapshots:
-    print(f'Snap: {fix}')
-    snapshot = f'{m}/{fix}/snap_{fix}.h5'
+for snap in snapshots:
+    print(f'Snap: {snap}')
+    pre = s.select_presnap(m, check)
+    snapshot = f'{pre}{snap}/snap_{snap}.h5'
     _, Z = extractor(snapshot)   
     # Save to another file.
-    np.save(f'{m}/{fix}/Star_{fix}', Z)
+    np.save(f'{m}/{snap}/Star_{snap}', Z)
 
 
     
