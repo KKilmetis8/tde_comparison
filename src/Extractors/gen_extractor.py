@@ -82,7 +82,7 @@ snapshots, days = s.select_snap(m, check)
 
 for snap in snapshots:
     print(f'Snap: {snap}')
-    pre = s.select_presnap(m, check)
+    pre = s.select_snap(m, check)
     snapshot = f'{pre}{snap}/snap_{snap}.h5'
     _, Z = extractor(snapshot)   
     # Save to another file.
