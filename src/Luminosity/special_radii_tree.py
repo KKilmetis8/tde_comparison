@@ -253,7 +253,8 @@ if __name__ == "__main__":
     for index in range(len(snapshots)): 
         snap = snapshots[index]       
         print('Snapshot ' + str(snap))
-        filename = f"{m}/{snap}/snap_{snap}.h5"
+        pre = s.select_prefix(m, check)
+        filename = f"{pre}{snap}/snap_{snap}.h5"
 
         thetas, phis, stops, xyz_grid = ray_finder(filename)
         rays = ray_maker_forest(snap, m, check, thetas, phis, 
