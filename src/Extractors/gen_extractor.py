@@ -7,6 +7,9 @@ Created on Thu Jan 12 18:02:14 2023
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
+from src.Utilities.isalice import isalice
+alice, plot = isalice()
+
 import numpy as np
 import h5py
 from datetime import datetime
