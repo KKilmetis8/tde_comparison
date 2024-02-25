@@ -312,7 +312,7 @@ if __name__ == "__main__":
     
     if save:
         if alice:
-            pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/alicered{m}{check}'
+            pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/900alicered{m}{check}'
             with open(f'{pre_saving}Larsen_days.txt', 'a') as fdays:
                  fdays.write('# Run of ' + now + '\n#t/t_fb\n') 
                  fdays.write(' '.join(map(str, days)) + '\n')

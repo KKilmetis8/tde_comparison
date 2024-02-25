@@ -26,7 +26,7 @@ def select_snap(m, check):
     days = []
     if alice:
         if m == 6 and check == 'fid':
-            snapshots = np.arange(844, 900)#1008 + 1, step = 1)
+            snapshots = np.arange(900,1008 + 1, step = 1)
         if m == 4 and check == 'fid':
             snapshots = np.arange(110, 322 + 1) #np.arange(110, 322 + 1)
         if m == 4 and check == 'S60ComptonHires':
