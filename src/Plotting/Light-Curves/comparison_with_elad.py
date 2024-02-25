@@ -33,7 +33,7 @@ if plot_curves:
     # daysr = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
     # r = np.loadtxt('data/red/alicered'+ str(m) + check + '.txt')
     # daysb = np.loadtxt(f'data/blue/blue_m{m}{check}_days.txt')
-    red = np.loadtxt('data/red/reddata_m'+ str(m) + check + '.txt')
+    red = np.loadtxt('data/red/Larsenreddata_m'+ str(m) + check + '.txt')
     daysr = red[0]
     r = red[1]
     datab = np.loadtxt('data/blue/blue_m'+ str(m) + '.txt')
@@ -56,7 +56,7 @@ if plot_curves:
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
     plt.title('Bolometric luminosity')
-    plt.savefig('Final_plot/Elad_comparison.png')
+    #plt.savefig('Final_plot/Elad_comparison.png')
     plt.show()
 
     if residuals:

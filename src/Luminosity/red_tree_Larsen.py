@@ -1,15 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Mon Sep  4 16:42:47 2023
+Created on February 2024
 
 @author: paola 
 
-Equations refer to Krumholtz '07
+Equations refer Steinberg&Stone22
 
-NOTES FOR OTHERS:
-- make changes in variables: m (power index of the BB mass), 
-fixes (number of snapshots) anf thus days
 """
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
@@ -101,10 +98,11 @@ def outside_photo(snap, m, check, tree_index_photo, dist_neigh):
     r_high = r_obs + dist_neigh
 
     # convert to cartesian and query: BETTER TO USE OUR FIND_SPH_COORDINATE??
+    # You have to shuft to move to the pericentre 
     x_low, y_low, z_low  = spherical_to_cartesian(r_low, theta_obs, phi_obs)
-    # x_low += Rt
+    x_low += Rt
     x_high, y_high, z_high  = spherical_to_cartesian(r_high, theta_obs, phi_obs)
-    # x_high += Rt 
+    x_high += Rt 
     idx_low = np.zeros(len(tree_index_photo))
     idx_high = np.zeros(len(tree_index_photo))
     grad_r = np.zeros(len(tree_index_photo))
@@ -118,8 +116,8 @@ def outside_photo(snap, m, check, tree_index_photo, dist_neigh):
    
     # Find inner and outer neighbours
     for i in range(len(x_low)):
-        _, idx_l = sim_tree.query([x_low[i]+Rt, y_low[i], z_low[i]])
-        _, idx_h = sim_tree.query([x_high[i]+Rt, y_high[i], z_high[i]])
+        _, idx_l = sim_tree.query([x_low[i], y_low[i], z_low[i]])
+        _, idx_h = sim_tree.query([x_high[i], y_high[i], z_high[i]])
         idx_low[i] = idx_l
         idx_high[i] = idx_h
         xyz_low = np.array([X[idx_l], Y[idx_l], Z[idx_l]])
@@ -314,16 +312,16 @@ if __name__ == "__main__":
     if save:
         if alice:
             pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/alicered{m}{check}'
-            with open(f'{pre_saving}_days.txt', 'a') as fdays:
+            with open(f'{pre_saving}Larsen_days.txt', 'a') as fdays:
                  fdays.write('# Run of ' + now + '\n#t/t_fb\n') 
                  fdays.write(' '.join(map(str, days)) + '\n')
                  fdays.close()
-            with open(f'{pre_saving}.txt', 'a') as flum:
+            with open(f'{pre_saving}Larsen.txt', 'a') as flum:
                  flum.write('# Run of ' + now + 't/t_fb\n')
                  flum.write(' '.join(map(str, lums)) + '\n')
                  flum.close()
         else:
-             with open(f'data/red/reddata_m{m}{check}.txt', 'a') as flum:
+             with open(f'data/red/Larsenreddata_m{m}{check}.txt', 'a') as flum:
                  flum.write('# Run of ' + now + '\n#t/t_fb\n') 
                  flum.write(' '.join(map(str, days)) + '\n')
                  flum.write('# Lum \n') 
