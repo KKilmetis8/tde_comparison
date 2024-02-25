@@ -302,7 +302,8 @@ if __name__ == "__main__":
     for idx in range(0,len(snapshots)):
         snap = snapshots[idx]
         print(f'Snapshot {snap}')
-        filename = f"{m}/{snap}/snap_{snap}.h5"
+        pre = s.select_prefix(m, check)
+        filename = f"{pre}{snap}/snap_{snap}.h5"
 
         thetas, phis, stops, xyz_grid = ray_finder(filename)
 
