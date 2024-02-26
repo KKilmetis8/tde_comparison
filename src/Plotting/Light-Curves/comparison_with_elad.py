@@ -30,12 +30,10 @@ if plot_curves:
     elad_red_topolt = np.power(10, elad_red[0])
 
     # Ours Load
-    # daysr = np.loadtxt('data/red/alicered'+ str(m) + check + '_days.txt')
+    daysr = np.loadtxt(f'data/red/alicered{m}{check}_days.txt')
     # r = np.loadtxt('data/red/alicered'+ str(m) + check + '.txt')
     # daysb = np.loadtxt(f'data/blue/blue_m{m}{check}_days.txt')
-    red = np.loadtxt('data/red/Larsenreddata_m'+ str(m) + check + '.txt')
-    daysr = red[0]
-    r = red[1]
+    r = np.loadtxt(f'data/red/alicered{m}{check}Larsen.txt')
     datab = np.loadtxt('data/blue/blue_m'+ str(m) + '.txt')
     daysb = datab[0]
     b = datab[1]
@@ -48,11 +46,11 @@ if plot_curves:
     days40r = np.multiply(daysr, 40)
     days40b = np.multiply(daysb, 40)
     # plt.plot(days40b, b, '--s', c='navy', markersize = 4, alpha = 0.8)
-    plt.plot(days40r, r, '--s', c='maroon', markersize = 4, alpha = 0.8)
+    plt.plot(days40r, r, '--', c='maroon', markersize = 4, alpha = 0.8)
 
     plt.yscale('log')
     plt.grid()
-    plt.xlim(39, 64)
+    plt.xlim(40, 64)
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
     plt.title('Bolometric luminosity')
