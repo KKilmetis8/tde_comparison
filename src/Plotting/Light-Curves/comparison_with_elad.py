@@ -30,13 +30,13 @@ if plot_curves:
     elad_red_topolt = np.power(10, elad_red[0])
 
     # Ours Load
-    daysr = np.loadtxt(f'data/red/alicered{m}{check}_days.txt')
+    daysr = np.loadtxt(f'data/red/alicered{m}{check}Larsen_days.txt')
     # r = np.loadtxt('data/red/alicered'+ str(m) + check + '.txt')
     # daysb = np.loadtxt(f'data/blue/blue_m{m}{check}_days.txt')
     r = np.loadtxt(f'data/red/alicered{m}{check}Larsen.txt')
-    datab = np.loadtxt('data/blue/blue_m'+ str(m) + '.txt')
-    daysb = datab[0]
-    b = datab[1]
+    # datab = np.loadtxt('data/blue/blue_m'+ str(m) + '.txt')
+    # daysb = datab[0]
+    # b = datab[1]
 
     # Elad Plot
     plt.plot(elad_time[0], elad_red_topolt, c = 'r')
@@ -44,7 +44,7 @@ if plot_curves:
 
     # Our plot
     days40r = np.multiply(daysr, 40)
-    days40b = np.multiply(daysb, 40)
+    # days40b = np.multiply(daysb, 40)
     # plt.plot(days40b, b, '--s', c='navy', markersize = 4, alpha = 0.8)
     plt.plot(days40r, r, '--', c='maroon', markersize = 4, alpha = 0.8)
 
@@ -54,7 +54,7 @@ if plot_curves:
     plt.xlabel('Time [days]')
     plt.ylabel('Luminosity [erg/s]')
     plt.title('Bolometric luminosity')
-    #plt.savefig('Final_plot/Elad_comparison.png')
+    plt.savefig('Final_plot/Elad_comparison.png')
     plt.show()
 
     if residuals:
