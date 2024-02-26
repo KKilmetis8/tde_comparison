@@ -15,7 +15,56 @@ plt.rcParams['figure.figsize'] = [6.0, 3.0]
 plt.rcParams['font.family'] = 'Times New Roman'
 plt.rcParams['axes.facecolor']='whitesmoke'
 
-kind = '4chr' # or 4chr
+kind = '64' # 64 or 4chr
+if kind == '6':
+    pre = 'data/ef8'
+    ecc6 = np.load(pre + '/ecc6-fid.npy', allow_pickle=True)
+    plt.rcParams['figure.figsize'] = [3.0, 3.0]
+
+    colarr6 = []
+    days6 = []
+    Mbh = 1e6
+    t_fall = 40 * (Mbh/1e6)**(0.5) # days EMR+20 p13
+    Rt6 =  Mbh**(1/3) # Msol = 1, Rsol = 1
+    apocenter = 2 * Rt6 * Mbh**(1/3)
+    
+    radii6_start = np.log10(0.2*2*Rt6)
+    radii6_stop = np.log10(apocenter)
+    radii6 = np.logspace(radii6_start, radii6_stop, 100) / apocenter
+    
+    # Extract
+    for i in range(len(ecc6[1])):
+        colarr = np.nan_to_num(ecc6[1][i])
+        colarr6.append(colarr)
+        days6.append(ecc6[0][i]/t_fall)
+        
+        
+    ####
+    fig, ax = plt.subplots(1,1, tight_layout=True, sharey=True)
+    stop = 95
+    
+    img2 = ax.pcolormesh(radii6,days6,colarr6,
+                    cmap = 'cet_rainbow4', vmin = 0, vmax = 1)
+    
+    cax = fig.add_axes([0.99, 0.1, 0.05, 0.84])
+    fig.colorbar(img2, cax=cax)
+    # ax[1].set_xlim(4e-3, 1)
+    ax.set_ylim(0.7, days6[-1])
+    ax.set_xscale('log')    
+    # Distance text 
+    ionx = 1.15
+    iony = 0.4
+    #txt1.set_path_effects([PathEffects.withStroke(linewidth=1, foreground='k')])
+    txt1 = fig.text(ionx, iony, 'Eccentricity', fontsize = 14,
+    		    color='k', fontfamily = 'monospace', rotation = 270)
+    
+    # Axis labels
+    fig.text(0.5, -0.01, r'r/R$_a$', ha='center', fontsize = 14)
+    fig.text(-0.02, 0.5, r' Time / Fallback time $\left[ t/t_{FB} \right]$', 
+             va='center', rotation='vertical', fontsize = 14)
+    ax.tick_params(axis = 'both', which = 'both', direction='in')
+    #ax[1].tick_params(axis = 'both', which = 'both', direction='in')
+    # fig.suptitle('Mass Weigh Eccentricity', fontsize = 17)
 if kind == '64':
     pre = 'data/ef8'
     ecc4 = np.loadtxt(pre + '/ecc4-fid.txt')

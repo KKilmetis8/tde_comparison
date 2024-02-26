@@ -11,8 +11,8 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 
 m = 4
 snap = 394
-num = 1000
-opacity = 'cloudy'
+num = 5000
+opacity = 'lte'
 axis = 'temp'
 
 c = 2.99792458e10 #[cm/s]
@@ -39,7 +39,7 @@ n_end = frequencies(T_end)
 lamda = wavelength(n_array)
 
 # y axis 
-nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/TEST{opacity}_nLn_single_m{m}_{snap}_{num}.txt')
 
 if axis == 'freq':
         x_axis = n_array
@@ -63,12 +63,9 @@ ax2 = ax1.twiny()
 ax1.set_xlabel(f'{label}', fontsize = 16)
 ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]', fontsize = 16)
 if m == 4:
-        y_lowlim = 1e36
-        y_highlim = 1e42
+        ax1.set_ylim(1e36, 1e42)
 elif m == 6:
-        y_lowlim = 2e39
-        y_highlim = 1.3e44
-ax1.set_ylim(y_lowlim, y_highlim)
+        ax1.set_ylim(2e39, 1.3e44)
 ax1.set_xlim(x_start,x_end)
 ax2.set_xlim(wavelength(n_start), wavelength(n_end))
 ax1.loglog()
@@ -78,18 +75,9 @@ ax2.set_xlim(c/n_end *1e8, c/n_start * 1e8)
 ax2.invert_xaxis()
 ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)
-
-ax2.axvline(120, c = 'mediumorchid')
-ax2.axvspan(120, 4000, color = 'mediumorchid', alpha = 0.4)
-ax2.text(160, y_highlim/2, 'UV', rotation = 90, fontsize = 10)
-
-ax2.axvline(4000, c = 'gold')
-ax2.axvspan(4000, 7000, color = 'gold', alpha = 0.4)
-ax2.axvline(7000, c = 'gold', label = 'visible')
-ax2.text(6000, y_highlim/5, 'visible', rotation = 90, fontsize = 10)
 ax1.legend()
 ax1.set_title(f'Spectra {snap} with {opacity} opacity')
-plt.savefig(f'Figs/TEST_spectra{snap}_{num}.png')
+plt.savefig(f'Figs/{opacity}_spectra{snap}.png')
 plt.show()
 
 

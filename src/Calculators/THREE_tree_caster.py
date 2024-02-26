@@ -3,7 +3,7 @@
 """
 Gives ray which are logspaced. Around photosphere they sould be 1.
 Created on Tue Oct 10 10:19:34 2023
-
+Also does midplane
 @author: paola, konstantinos
 
 """
@@ -22,8 +22,7 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 
-
-def grid_maker(fix, m, check , x_num, y_num, z_num = 100):
+def grid_maker(fix, m, check, what, mass_weigh, x_num, y_num, z_num = 100):
     """ Outputs are in in solar units """
     fix = str(fix)
     Mbh = 10**m 
@@ -35,33 +34,35 @@ def grid_maker(fix, m, check , x_num, y_num, z_num = 100):
     X = np.load(pre + fix + '/CMx_' + fix + '.npy')
     Y = np.load(pre + fix + '/CMy_' + fix + '.npy')
     Z = np.load(pre + fix + '/CMz_' + fix + '.npy')
-    Den = np.load(pre + fix + '/Den_' + fix + '.npy')
-    # Mass = np.load(pre + fix + '/Mass_' + fix + '.npy')
-
-
-    # Convert Energy / Mass to Energy Density in CGS
-    Den *= den_converter 
-    # Mass *= Msol_to_g
+    if mass_weigh:
+        Mass = np.load(pre + fix + '/Mass_' + fix + '.npy')    
     
+    if what == 'density':
+        projected_quantity = np.load(pre + fix + '/Den_' + fix + '.npy')
+        projected_quantity *= den_converter 
+    elif what == 'temperature':
+        projected_quantity = np.load(pre + fix + '/T_' + fix + '.npy')
+    else:
+        raise ValueError('Hate to break it to you champ \n \
+                         but we don\'t have that quantity')
+
     # make a tree
     sim_value = [X, Y, Z] 
     sim_value = np.transpose(sim_value) #array of dim (number_points, 3)
     sim_tree = KDTree(sim_value) 
     
     # Ensure that the regular grid cells are smaller than simulation cells
-    x_start = - apocenter
-    x_stop = 15 * Rt
+    # NOTE: Shouldn't this conform to what the projector asks?
+    x_start = -40 * Rt # -apocenter
+    x_stop = 5 * Rt
     if m == 6:
-        y_start = -4000
-        y_stop = 4000
+        y_start = -10 * Rt
+        y_stop = 30 * Rt
     if m == 4:
-        y_start = -0.5*apocenter
-        y_stop = 0.5*apocenter
-    z_start = -2 *Rt
-    z_stop = 2*Rt
-    # r_radii = np.logspace(np.log10(x_start), np.log10(x_stop), x_num) #simulator units
-    # thetas = np.logspace(np.log10(y_start), np.log10(y_stop), y_num) #simulator units
-    # phis = np.logspace(np.log10(z_start), np.log10(z_stop), z_num) #simulator units
+        y_start = -10 * Rt # -0.5*apocenter
+        y_stop = 30 * Rt # 0.5*apocenter
+    z_start = -2 * Rt
+    z_stop = 2 * Rt
     
     x_radii = np.linspace(x_start, x_stop, x_num) #simulator units
     y_radii = np.linspace(y_start, y_stop, y_num) #simulator units
@@ -79,8 +80,9 @@ def grid_maker(fix, m, check , x_num, y_num, z_num = 100):
                                     
                 # Store
                 gridded_indexes[i, j, k] = idx
-                gridded_den[i, j, k] = Den[idx]
-                # gridded_mass[i,j, k] = Mass[idx]
+                gridded_den[i, j, k] = projected_quantity[idx]
+                if mass_weigh:
+                    gridded_mass[i,j, k] = Mass[idx]
         
         # Progress Check
         progress = int(100 * i/len(x_radii))
@@ -93,10 +95,14 @@ def grid_maker(fix, m, check , x_num, y_num, z_num = 100):
  
 if __name__ == '__main__':
     m = 6
+    Mbh = 10**m 
+    Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
     check = 'fid'
-    gridded_indexes, gridded_den, gridded_mass, x_radii, y_radii, z_radii = grid_maker(844, m, check, 100, 100)
+    what = 'temperature'
+    gridded_indexes, grid_den, grid_mass, xs, ys, zs = grid_maker(844, m, check, what,
+                                                                  False, 400, 400, 100)
 #%% Plot
-    plot = False
+    plot = True
     if plot:
         import colorcet
         fig, ax = plt.subplots(1,1)
@@ -105,17 +111,29 @@ if __name__ == '__main__':
         plt.rcParams['font.family'] = 'Times New Roman'
         plt.rcParams['figure.figsize'] = [6, 4]
         plt.rcParams['axes.facecolor']= 	'whitesmoke'
-        
-        den_plot = np.nan_to_num(gridded_den, nan = -1, neginf = -1)
-        den_plot = np.log10(den_plot[:,:, len(z_radii)//2])
+        # Specify
+        if what == 'density':
+            cb_text = r'Density [g/cm$^2$]'
+            vmin = 0
+            vmax = 7
+        elif what == 'temperature':
+            cb_text = r'Temperature [K]'
+            vmin = 0
+            vmax = 7
+        else:
+            raise ValueError('Hate to break it to you champ \n \
+                             but we don\'t have that quantity')
+                
+        den_plot = np.nan_to_num(grid_den, nan = -1, neginf = -1)
+        den_plot = np.log10(den_plot[:,:, len(zs)//2])
         den_plot = np.nan_to_num(den_plot, nan = 0, neginf= 0)
         print(den_plot)
         # den_plot[den_plot < 0.1] = 0
         
-        ax.set_xlabel(r' X [R$_\odot$]', fontsize = 14)
-        ax.set_ylabel(r' Y [R$_\odot$]', fontsize = 14)
-        img = ax.pcolormesh(x_radii, y_radii, den_plot.T, cmap = 'jet')
+        ax.set_xlabel(r' X/$R_T$ [R$_\odot$]', fontsize = 14)
+        ax.set_ylabel(r' Y/$R_T$ [R$_\odot$]', fontsize = 14)
+        img = ax.pcolormesh(xs/Rt, ys/Rt, den_plot.T, cmap = 'cet_fire')
         cb = plt.colorbar(img)
-        cb.set_label(r'Density [g/cm$^2$]', fontsize = 14)
+        cb.set_label(cb_text, fontsize = 14)
         ax.set_title('Midplane', fontsize = 16)
     

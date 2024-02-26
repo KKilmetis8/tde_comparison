@@ -73,7 +73,6 @@ def extractor(filename):
     Rad = []
     T = []
     P = []
-    Star = []
     
     # Iterate over ranks
     for key in keys:
@@ -101,8 +100,6 @@ def extractor(filename):
             rad_data = f[key]['Erad']  #f[key]['tracers']['ZRadEnergy'] 
             T_data = f[key]['Temperature']
             P_data = f[key]['Pressure']
-
-            star_data = f[key]['tracers']['Star'] 
             for i in range(len(x_data)):
                 X.append(x_data[i])
                 Y.append(y_data[i])
@@ -117,12 +114,11 @@ def extractor(filename):
                 Mass.append(vol_data[i] * den_data[i])
                 T.append(T_data[i])
                 P.append(P_data[i])
-                Star.append(star_data[i])
 
 
     # Close the file
     f.close()
-    return X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P, Star
+    return X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P
 #%%
 # Change the current working directory
 fixes = [394]
@@ -132,7 +128,7 @@ for fix in fixes:
     pre = '4/' + fix + '/'
     suf = '_' + fix
 
-    X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P, Star = extractor(snapshot)
+    X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P = extractor(snapshot)
     
     # Save to another file.
     np.save(pre + 'CMx' + suf, X)   
@@ -148,5 +144,4 @@ for fix in fixes:
     np.save(pre + 'Rad' + suf, Rad)
     np.save(pre + 'T' + suf, T)
     np.save(pre + 'P' + suf, P) 
-    np.save(pre + 'Star' + suf, Star) 
             

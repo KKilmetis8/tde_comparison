@@ -18,19 +18,19 @@ from src.Calculators.casters import THE_CASTER
 # from scipy import ndimage # rotates image
 
 # Choose black hole
-m = 6
+m = 4
 Mbh = 10**m
 Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
 apocenter = 2 * Rt * Mbh**(1/3)
     
 # Choose snapshot
 if m == 4:
-    fixes = ['177', '232', '263']
+    fixes = ['394'] # ['177', '232', '263']
 if m == 6:
     fixes = ['844']
 
 choice = 'XY'
-quant = 'Den' # Den or T
+quant = 'T' # Den or T
 
 def maker(fix, choice):
     pre = str(m) + '/'
@@ -45,7 +45,7 @@ def maker(fix, choice):
         Den *=  converter
     
     if quant == 'T':
-        Den = np.load(fix + '/T_' + fix + '.npy')
+        Den = np.load(pre+fix + '/T_' + fix + '.npy')
 
     if choice == 'XY':
         # CM Position Data
@@ -63,12 +63,12 @@ def maker(fix, choice):
         
         if m==4:
             x_start = -apocenter
-            x_stop = 250
-            x_num = 500 # np.abs(x_start - x_stop)
+            x_stop = apocenter
+            x_num = 1000 # np.abs(x_start - x_stop)
             xs = np.linspace(x_start, x_stop, num = x_num )
-            y_start = -500 
-            y_stop = 500
-            y_num = 500 # np.abs(y_start - y_stop)
+            y_start = -apocenter 
+            y_stop = apocenter
+            y_num = 1000 # np.abs(y_start - y_stop)
             ys = np.linspace(y_start, y_stop, num = y_num)
             
     if choice == 'XZ':
@@ -76,7 +76,7 @@ def maker(fix, choice):
         Y = np.load(fix + '/CMz_' + fix + '.npy')
         if m == 4:
             x_start = -apocenter
-            x_stop = 250
+            x_stop = 1000
             x_num = 300 # np.abs(x_start - x_stop)
             xs = np.linspace(x_start, x_stop, num = x_num )
             y_start = -300
@@ -111,7 +111,7 @@ def maker(fix, choice):
         den_cast[den_cast>5] = 5
     if quant == 'T':
         den_cast[den_cast<1] = 0
-        # den_cast[den_cast>8] = 8
+        den_cast[den_cast>10] = 10
     return den_cast, xs, ys
         
         
@@ -119,7 +119,7 @@ for fix in fixes:
     den_cast, xs, ys = maker(fix, choice)
     #%%
     fig, ax = plt.subplots()
-    img = ax.pcolormesh(xs, ys, den_cast, cmap='cet_fire', vmin = 0, vmax = 5) # vmin = 15, vmax = 25)
+    img = ax.pcolormesh(xs, ys, den_cast, cmap='cet_fire', vmin = 0, vmax = 10) # vmin = 15, vmax = 25)
     fig.colorbar(img)
     
     # ax.set_ylim(-50, 50)

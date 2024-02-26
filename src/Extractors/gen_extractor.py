@@ -7,14 +7,10 @@ Created on Thu Jan 12 18:02:14 2023
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
-from src.Utilities.isalice import isalice
-alice, plot = isalice()
-
 import numpy as np
 import h5py
 from datetime import datetime
 from src.Extractors.time_extractor import days_since_distruption
-import src.Utilities.selectors as s
 #%% Extractor
 
 ## File structure is
@@ -70,26 +66,21 @@ def extractor(filename):
                 
             # For some reason, having the collumns into variables is way faster.
             T_data = f[key]['Volume']
-            Z_data = f[key]['tracers']['Star']
+            # Z_data = f[key]['tracers']['ZRadEnergy']
             for i in range(len(T_data)):
                 T.append(T_data[i])
-                Z.append(Z_data[i])
+                # Z.append(Z_data[i])
     # Close the file
     f.close()
     return T, Z
 
 #%% Doing the thing
-m = 6
-check = 'fid'
-snapshots, days = s.select_snap(m, check)
-
-for snap in snapshots:
-    print(f'Snap: {snap}')
-    pre = s.select_prefix(m, check)
-    filename = f'{pre}{snap}/snap_{snap}.h5'
-    _, Z = extractor(filename)   
+fixes = ['980']
+for fix in fixes:
+    snapshot = '6/' + fix+'/snap_'+fix+'.h5'
+    T, _ = extractor(snapshot)   
     # Save to another file.
-    np.save(f'{pre}{snap}/Star_{snap}', Z)
+    np.save('6/' + fix + '/Vol_'+fix, T)
 
 
     

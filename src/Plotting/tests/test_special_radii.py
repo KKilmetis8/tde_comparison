@@ -1,9 +1,8 @@
 """
 Created on January 2024
 Author: Paola 
-Midplane: observers 88-103
 
-Check how behave Rph and Rth.
+Check if the raymaker with dynamical radii gives the same special radii as Elad
 
 """
 import sys
@@ -12,118 +11,138 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
-import src.Utilities.selectors as s
-import src.Utilities.prelude as prel
-from scipy.stats import gmean
-from src.Calculators.ray_forest import ray_finder, ray_maker_forest
-from src.Luminosity.special_radii_tree import get_specialr
+import healpy as hp
+from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
+from src.Luminosity.special_radii_tree_cloudy import calc_specialr
+from Luminosity.spectra_cloudy import find_lowerT
 
-m = 4
-snap = 394
+snap = 882
+m = 6
 check = 'fid'
 num = 1000
-plot = 'profile'
-compare = True
-
-opacity_kind = s.select_opacity(m)
+NSIDE = 4
 filename = f"{m}/{snap}/snap_{snap}.h5"
+Rsol_to_cm = 7e10 #6.957e10 # [cm]
 Mbh = 10**m 
 Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
 apocenter = 2 * Rt * Mbh**(1/3)
 
-thetas, phis, stops, xyz_grid = ray_finder(filename)
-rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, opacity_kind)
+plot = 'profile'
+
+box = np.zeros(6)
+
+with h5py.File(filename, 'r') as fileh:
+    for i in range(len(box)):
+        box[i] = fileh['Box'][i]
+
+# Find the limit of the box
+thetas = np.zeros(192)
+phis = np.zeros(192) 
+observers = []
+stops = np.zeros(192) 
+for iobs in range(0,192):
+    theta, phi = hp.pix2ang(NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
+    thetas[iobs] = theta
+    phis[iobs] = phi
+    observers.append( (theta, phi) )
+    xyz = find_sph_coord(1, theta, phi)
+
+    mu_x = float(xyz[0])
+    mu_y = float(xyz[1])
+    mu_z = float(xyz[2])
+
+    # Box is for 
+    if(mu_x < 0):
+        rmax = box[0] / mu_x
+    else:
+        rmax = box[3] / mu_x
+    if(mu_y < 0):
+        rmax = min(rmax, box[1] / mu_y)
+    else:
+        rmax = min(rmax, box[4] / mu_y)
+    if(mu_z < 0):
+        rmax = min(rmax, box[2] / mu_z)
+    else:
+        rmax = min(rmax, box[5] / mu_z)
+
+    stops[iobs] = rmax
+
+# Find special redii with dynamical radius
+tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, _, _ = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
 
 if plot == 'spec_radii':
-    # Plot Rph and Rth for all the observer in this snapshot
-    _, _, rays_photo, _, _ = get_specialr(rays.T, rays.den, rays.radii, 
-                                          rays.tree_indexes, opacity_kind, select = 'photo' )
-    _, _, rays_thermr, _, _ = get_specialr(rays.T, rays.den, rays.radii, 
-                                          rays.tree_indexes, opacity_kind, select = 'thermr_plot')
-    rays_photo /= prel.Rsol_to_cm
-    rays_thermr /= prel.Rsol_to_cm
-    print(np.mean(rays_photo), np.mean(rays_thermr))
-    print(gmean(rays_photo), gmean(rays_thermr))
 
-    # fig, ax = plt.subplots(1,2, tight_layout = True)
-    # # ax[0].scatter(np.arange(192), Elad_photo, c = 'k', s = 5, label = 'Elad')
-    # ax[0].scatter(np.arange(192), rays_photo, c = 'orange', s = 5)
-    # ax[0].set_xlabel('Observers')
-    # ax[0].set_yscale('log')
-    # ax[0].set_ylabel(r'$\log_{10}R_{ph} [R_\odot]$')
-    # ax[0].grid()
+    ratio = False
 
-    # #ax[1].scatter(np.arange(192), Elad_therm, c = 'k', s = 5, label = 'Elad')
-    # ax[1].scatter(np.arange(192), rays_thermr, c = 'orange', s = 5)
-    # ax[1].set_xlabel('Observers')
-    # ax[1].set_yscale('log')
-    # ax[1].set_ylabel(r'$\log_{10}R_{th} [R_\odot]$')
-    # ax[1].grid()
+    with h5py.File(f'data/elad/data_{snap}.mat', 'r') as f:
+        Elad_photo = f['r_photo'][0]
+        Elad_therm = f['r_therm'][0]
 
-    plt.scatter(np.arange(192), rays_photo, c = 'r', s = 8, label = r'$R_{ph}$')
-    plt.scatter(np.arange(192), rays_thermr, c = 'b', s = 5, label = r'$R_{th}$')
-    plt.xlabel('Observers')
-    plt.yscale('log')
-    plt.ylabel(r'R $[R_\odot]$')
-    plt.axvline(88, linestyle = 'dashed', color = 'k', alpha = 0.4)
-    plt.axvspan(88,103, color = 'aliceblue', alpha = 0.7)
-    plt.axvline(103, linestyle = 'dashed', color = 'k', alpha = 0.4)
-    plt.grid()
-    plt.legend()
-    #plt.ylim(0,8e3)
-    # plt.title('Without mask from star')
-    plt.savefig(f'Figs/specialR_m{m}_{snap}.png')
-
-    if np.logical_and(m == 6, compare == True):
-        with h5py.File(f'data/elad/data_{snap}.mat', 'r') as f:
-            # print(f.keys())
-            Elad_photo = f['r_photo'][0]
-            Elad_therm = f['r_therm'][0]
+    rays_photo = np.zeros(192)
+    rays_thermr = np.zeros(192)
+    for j in range(len(observers)):
+        branch_indexes = tree_indexes[j]
+        branch_T = rays_T[j]
+        branch_den = rays_den[j]
+        radius = rays_radii[j]
         
-        plt.figure()
-        plt.scatter(np.arange(192), Elad_photo, c = 'r', s = 8, label = r'$R_{ph}$')
-        plt.scatter(np.arange(192), Elad_therm, c = 'b', s = 5, label = r'$R_{th}$')
-        plt.xlabel('Observers')
-        plt.yscale('log')
-        plt.ylabel(r'R $[R_\odot]$')
-        plt.axvline(88, linestyle = 'dashed', color = 'k', alpha = 0.4)
-        plt.axvspan(88,103, color = 'aliceblue', alpha = 0.7)
-        plt.axvline(103, linestyle = 'dashed', color = 'k', alpha = 0.4)
-        plt.grid()
-        plt.legend()
-        plt.title('Elad')
-        plt.savefig(f'Figs/Elad_specialR_m{m}_{snap}.png')
+        _, _, photo, _, _ = calc_specialr(branch_T, branch_den, radius, branch_indexes, select = 'photo')
+        _, _, thermr, _, _ = calc_specialr(branch_T, branch_den, radius, branch_indexes, select = 'thermr_plot')
+        rays_photo[j] = photo/Rsol_to_cm
+        rays_thermr[j] = thermr/Rsol_to_cm
 
-        plt.figure()
-        plot_ph = Elad_photo-rays_photo
-        plto_th = Elad_therm-rays_thermr
-        plt.plot(np.arange(192), plot_ph, c = 'r', label = r'$R_{ph}$')
-        plt.plot(np.arange(192), plto_th, c = 'b', linestyle = 'dashed', label = r'$R_{th}$')
+    plt.figure()
+    if ratio:
+        plot_ph = 1-Elad_photo/rays_photo
+        plto_th = 1-Elad_therm/rays_thermr
+        plt.plot(np.arange(192), plot_ph, c = 'k', label = r'$R_{ph}$')
+        plt.plot(np.arange(192), plto_th, c = 'orange', label = r'$R_{th}$')
         plt.xlabel('Observers')
-        plt.ylabel(r'$R^E-R^{us}$')
+        plt.ylabel(r'$1-R^E/R^{us}$')
         #ax[0].set_yscale('log')
         plt.grid()
         plt.legend(fontsize = 10)
-        plt.savefig(f'Figs/ABScomparison_special_radii{snap}.png')
+        plt.savefig(f'Figs/ratio_comparison_special_radii{snap}.png')
+
+    else:
+        fig, ax = plt.subplots(1,2, tight_layout = True)
+        ax[0].scatter(np.arange(88,104), Elad_photo[88:104], c = 'k', s = 5, label = 'Elad')
+        ax[0].scatter(np.arange(88,104), rays_photo[88:104], c = 'orange', s = 5, label = 'us')
+        ax[0].set_xlabel('Observers')
+        ax[0].set_ylabel(r'$\log_{10}R_{th} [R_\odot]$')
+        ax[0].set_yscale('log')
+        ax[0].grid()
+
+        ax[1].scatter(np.arange(88,104), Elad_therm[88:104], c = 'k', s = 5, label = 'Elad')
+        ax[1].scatter(np.arange(88,104), rays_thermr[88:104], c = 'orange', s = 5, label = 'us')
+        ax[1].set_xlabel('Observers')
+        ax[1].set_ylabel(r'$\log_{10}R_{th} [R_\odot]$')
+        ax[1].set_yscale('log')
+        ax[1].grid()
+
+        plt.legend(fontsize = 10)
+        plt.savefig(f'Figs/zoomcomparison_special_radii{snap}.png')
 
     plt.show() 
 
 if plot == 'profile':
     ## color with compton_cooling, T, rad_T, optical depth
     fig, ax = plt.subplots()
-    selected_indexes = [88, 96, 92, 100, 180, 4]
-    colors = ['b','r', 'k', 'lime', 'magenta', 'aqua']
+    selected_indexes = [90]
     for i in selected_indexes:
-        radius = np.delete(rays.radii[i],-1)/prel.Rsol_to_cm
-        ax.plot(radius, rays.den[i], c= colors[i], label = f'observer {i}')
-        #ax.plot(radius, rays.T[i], , label = f'observer {i}')
-    # cbar = fig.colorbar(img)
-    # cbar.set_label(r'$\log_{10}T [K]$')
-    plt.loglog()
+        #colorimg = rays_T[i]
+        rad_en = rays[i]
+        colorimg = find_lowerT(rad_en)
+        colorimg = np.log10(colorimg)
+
+        radius = np.delete(rays_radii[i],-1)/Rsol_to_cm
+        img = ax.scatter(radius, rays_den[i], c = colorimg, marker = '_', label = f'observer {i}')
+    cbar = fig.colorbar(img)
+    cbar.set_label(r'$\log_{10}T_r [K]$')
     ax.set_xlabel(r'$\log_{10}R [R_\odot]$')
     ax.set_ylabel(r'$\log_{10}\rho [g/cm^3]$')
     plt.xlim(10, 2*apocenter)
-    plt.legend()
-    plt.savefig(f'Figs/profileden_{snap}.png')
-   
+    plt.loglog()
+    #plt.legend()
+    plt.savefig('Figs/profileTr.png')
     plt.show()

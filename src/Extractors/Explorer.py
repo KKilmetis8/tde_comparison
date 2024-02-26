@@ -25,9 +25,9 @@ def h5printR(item, leading = ''):
 def h5print(filename):
     with h5py.File(filename, 'r') as h:
         print(filename)
-        h5printR(h, '  ')
-        # a = h['Box']
-        # print(a[0])
+        # h5printR(h, '  ')
+        a = h['Box']
+        print(a[0])
         
 h5print(snapshot881)
 

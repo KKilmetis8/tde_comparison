@@ -11,9 +11,6 @@ NOTES FOR OTHERS:
 
 - change m
 """
-import sys
-sys.path.append('/Users/paolamartire/tde_comparison')
-
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 
@@ -26,7 +23,7 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 
 # Custom Imports
-from src.Calculators.ray_forest import ray_finder, ray_maker_forest
+from src.Calculators.ray_forest import find_sph_coord, ray_finder, ray_maker_forest
 import src.Utilities.prelude as c
 import src.Utilities.selectors as s
 
@@ -58,20 +55,20 @@ def get_kappa(T: float, rho: float, r_dlogr: float, opacity_kind: str,
     if opacity_kind == 'LTE':
         Tmax = np.exp(17.87)  # 5.77e+07 K
         Tmin = np.exp(8.666)  # 5.8e+03 K
-        from src.Opacity.LTE_opacity import opacity # NB: ln == False by default
+        from src.Opacity.LTE_opacity import opacity
 
-    elif opacity_kind == 'cloudy':
+    if opacity_kind == 'cloudy':
         Tmax = 1e13 
         Tmin = 316
         from src.Opacity.cloudy_opacity import old_opacity as opacity
 
-    # If LTE, you can have problem in interpolation for rho 
     # If there is nothing, the ray continues unimpeded
-    if np.logical_and( opacity_kind == 'LTE', rho < np.exp(-49.3)):       
+    if rho < 1e-10: # [cgs] #np.exp(-49.3):
+        # print('rho low')        
         return 0
     
     # Stream material, is opaque NOTE: WE WILL SEE ABOUT THIS
-    if T < Tmin:
+    elif T < Tmin:
         #print('T low')
         return 0
         #return 100
@@ -83,10 +80,10 @@ def get_kappa(T: float, rho: float, r_dlogr: float, opacity_kind: str,
         # Z = 0.02
         
         # Constant value for scatter
-        kscattering = opacity(Tmax, rho, 'scattering') 
+        kscattering = opacity(Tmax, rho, 'scattering', ln = False) 
         
         # Scale as Kramers the last point for absorption
-        kplank_0 = opacity(Tmax, rho, 'planck')
+        kplank_0 = opacity(Tmax, rho, 'planck', ln = False)
         kplanck = kplank_0 * (T/Tmax)**(-3.5)
         # kplanck =  3.8e22 * (1 + X) * T**(-3.5) * rho # [cm^2/g] Kramers'law
         # kplanck *= rho
@@ -104,10 +101,10 @@ def get_kappa(T: float, rho: float, r_dlogr: float, opacity_kind: str,
     else:
         # Lookup table
         if select == 'photo':
-            k = opacity(T, rho,'red')
+            k = opacity(T, rho,'red', ln = False)
 
         if select == 'thermr' or select == 'thermr_plot':
-            k = opacity(T, rho,'effective')
+            k = opacity(T, rho,'effective', ln = False)
 
         kappa =  k * r_dlogr
 
@@ -236,7 +233,7 @@ if __name__ == "__main__":
     save = True
     check = 'fid' #'S60ComptonHires'
     m = 6
-    num = 1000
+    num = 400
 
     # Choose stuff
     now = datetime.now()
@@ -253,13 +250,11 @@ if __name__ == "__main__":
     for index in range(len(snapshots)): 
         snap = snapshots[index]       
         print('Snapshot ' + str(snap))
-        pre = s.select_prefix(m, check)
-        filename = f"{pre}{snap}/snap_{snap}.h5"
+        filename = f"{m}/{snap}/snap_{snap}.h5"
 
-        thetas, phis, stops, xyz_grid = ray_finder(filename)
-        rays = ray_maker_forest(snap, m, check, thetas, phis, 
-                                stops, num, opacity_kind)
-
+        thetas, phis, stops = ray_finder(filename)
+        rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, 
+                                opacity_kind)
 
         if photosphere:
             rays_kappa, rays_cumulative_kappas, rays_photo, _, _ = get_specialr(rays.T, 
@@ -273,9 +268,9 @@ if __name__ == "__main__":
 
         if thermalisation: 
             rays_tau, rays_cumulative_taus, rays_thermr, _, _ = get_specialr(rays.T, 
-                                                                            rays.den, 
-                                                                            rays.radii, 
-                                                                            rays.tree_indexes, opacity_kind, select = 'thermr_plot' )
+                                                                                rays.den, 
+                                                                                rays.radii, 
+                                                                                rays.tree_indexes, opacity_kind, select = 'thermr_plot' )
             rays_thermr = rays_thermr/c.Rsol_to_cm # to solar unit to plot
 
             fix_thermr_arit[index] = np.mean(rays_thermr)
@@ -289,8 +284,8 @@ if __name__ == "__main__":
             pre_saving = 'data/'
 
         if photosphere:         
-            with open(f'{pre_saving}special_radii_m{m}_box.txt', 'a') as file:
-                file.write('# Run of ' + now + ' \n#t/t_fb\n')
+            with open(f'{pre_saving}DYNspecial_radii_m{m}_box.txt', 'a') as file:
+                file.write('# Run of ' + now + ' with LTE opacity \n#t/t_fb\n')
                 file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Photosphere arithmetic mean \n')
                 file.write(' '.join(map(str, fix_photo_arit)) + '\n')
@@ -299,9 +294,9 @@ if __name__ == "__main__":
                 file.close()
                 
         if thermalisation:
-            with open(f'data/special_radii_m{m}_box.txt', 'a') as file:
-                # file.write('# Run of ' + now + ' \n#t/t_fb\n')
-                # file.write(' '.join(map(str, days)) + '\n')
+            with open(f'data/DYNspecial_radii_m{m}_box.txt', 'a') as file:
+                file.write('# Run of ' + now + ' with LTE opacity \n#t/t_fb\n')
+                file.write(' '.join(map(str, days)) + '\n')
                 file.write('# Thermalisation radius arithmetic mean \n')
                 file.write(' '.join(map(str, fix_thermr_arit)) + '\n')
                 file.write('# Thermalisation radius geometric mean \n')

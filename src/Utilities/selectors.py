@@ -17,7 +17,7 @@ def select_prefix(m, check):
         pre = prealice
     else:
         pre = str(m) + '/'
-    return pre 
+    return pre
 
 def select_snap(m, check):
     Mbh = 10**m
@@ -26,18 +26,18 @@ def select_snap(m, check):
     days = []
     if alice:
         if m == 6 and check == 'fid':
-            snapshots = np.arange(641,844)#, 1008 + 1, step = 1)
+            snapshots = np.arange(844, 1008 + 1, step = 1)
         if m == 4 and check == 'fid':
             snapshots = np.arange(110, 322 + 1) #np.arange(110, 322 + 1)
         if m == 4 and check == 'S60ComptonHires':
             snapshots = np.arange(210, 278 + 1)
     else:
         if m == 4 and check == 'fid':
-            snapshots = [322,394] #[233, 254, 263, 277 , 293, 308, 322]
+            snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         if m == 4 and check == 'S60ComptonHires':
-            snapshots = [] 
+            snapshots = [394] 
         if m == 6 and check == 'fid':
-            snapshots = [844, 882]#, 925]#, 950, 1008] 
+            snapshots = [844] #, 925, 950]#, 1008] 
     for snap in snapshots:
         snap = str(snap) 
         day = np.round(days_since_distruption( pre +
@@ -48,7 +48,7 @@ def select_snap(m, check):
 
 # Select opacity
 def select_opacity(m):
-    if m == 6:
+    if m==6:
         return 'cloudy'
     else:
         return 'LTE'
