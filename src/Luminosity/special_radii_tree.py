@@ -80,10 +80,10 @@ def get_kappa(T: float, rho: float, r_dlogr: float, opacity_kind: str,
         # Z = 0.02
         
         # Constant value for scatter
-        kscattering = opacity(Tmax, rho, 'scattering', ln = False) 
+        kscattering = opacity(Tmax, rho, 'scattering')#, ln = False) 
         
         # Scale as Kramers the last point for absorption
-        kplank_0 = opacity(Tmax, rho, 'planck', ln = False)
+        kplank_0 = opacity(Tmax, rho, 'planck')#, ln = False)
         kplanck = kplank_0 * (T/Tmax)**(-3.5)
         # kplanck =  3.8e22 * (1 + X) * T**(-3.5) * rho # [cm^2/g] Kramers'law
         # kplanck *= rho
@@ -101,10 +101,10 @@ def get_kappa(T: float, rho: float, r_dlogr: float, opacity_kind: str,
     else:
         # Lookup table
         if select == 'photo':
-            k = opacity(T, rho,'red', ln = False)
+            k = opacity(T, rho,'red')#, ln = False)
 
         if select == 'thermr' or select == 'thermr_plot':
-            k = opacity(T, rho,'effective', ln = False)
+            k = opacity(T, rho,'effective')#, ln = False)
 
         kappa =  k * r_dlogr
 
@@ -231,8 +231,8 @@ if __name__ == "__main__":
     photosphere = True
     thermalisation = True
     save = True
-    check = 'fid' #'S60ComptonHires'
-    m = 6
+    check = 'S60ComptonHires' #'S60ComptonHires'
+    m = 4
     num = 400
 
     # Choose stuff

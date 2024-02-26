@@ -101,3 +101,5 @@ ax.set_ylabel(r' Y/$R_T$ [R$_\odot$]', fontsize = 14)
 ax.set_xlim(-40, 5)
 ax.set_ylim(-20, 20)
 ax.set_title('Midplane', fontsize = 16)
+ax.plot(np.array(photo_x) / Rt, np.array(photo_y) / Rt, 
+        marker = 'o', color = 'springgreen', linewidth = 3)

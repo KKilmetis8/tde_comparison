@@ -54,12 +54,12 @@ def grid_maker(fix, m, check, what, mass_weigh, x_num, y_num, z_num = 100):
     # Ensure that the regular grid cells are smaller than simulation cells
     # NOTE: Shouldn't this conform to what the projector asks?
     x_start = -40 * Rt # -apocenter
-    x_stop = 5 * Rt
+    x_stop = 10 * Rt
     if m == 6:
-        y_start = -10 * Rt
+        y_start = -20 * Rt
         y_stop = 30 * Rt
     if m == 4:
-        y_start = -10 * Rt # -0.5*apocenter
+        y_start = -30 * Rt # -0.5*apocenter
         y_stop = 30 * Rt # 0.5*apocenter
     z_start = -2 * Rt
     z_stop = 2 * Rt
@@ -94,13 +94,13 @@ def grid_maker(fix, m, check, what, mass_weigh, x_num, y_num, z_num = 100):
 
  
 if __name__ == '__main__':
-    m = 6
+    m = 4
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
     check = 'fid'
     what = 'temperature'
-    gridded_indexes, grid_den, grid_mass, xs, ys, zs = grid_maker(844, m, check, what,
-                                                                  False, 400, 400, 100)
+    gridded_indexes, grid_den, grid_mass, xs, ys, zs = grid_maker(394, m, check, what,
+                                                                  False, 200, 200, 100)
 #%% Plot
     plot = True
     if plot:
@@ -132,8 +132,12 @@ if __name__ == '__main__':
         
         ax.set_xlabel(r' X/$R_T$ [R$_\odot$]', fontsize = 14)
         ax.set_ylabel(r' Y/$R_T$ [R$_\odot$]', fontsize = 14)
-        img = ax.pcolormesh(xs/Rt, ys/Rt, den_plot.T, cmap = 'cet_fire')
+        img = ax.pcolormesh(xs/Rt, ys/Rt, den_plot.T, cmap = 'cet_fire',
+                            vmin = vmin, vmax = vmax)
         cb = plt.colorbar(img)
         cb.set_label(cb_text, fontsize = 14)
         ax.set_title('Midplane', fontsize = 16)
-    
+        ax.set_xlim(-40,)
+        ax.set_ylim(-30,)
+        ax.plot(np.array(photo_x) / Rt, np.array(photo_y) / Rt, 
+                marker = 'o', color = 'springgreen', linewidth = 3)

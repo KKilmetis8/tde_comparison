@@ -66,7 +66,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
     IE = np.load(pre + fix + '/IE_' + fix + '.npy')
     Vol = np.load(pre + fix + '/Vol_' + fix + '.npy')
     if opacity == 'cloudy': # elad 
-        Tcool_min = np.loadtxt('src/Opacity/cloudy_opacity/Tcool_ext.txt')[0]
+        Tcool_min = np.loadtxt('src/Opacity/cloudy_data/Tcool_ext.txt')[0]
     
     # Convert Energy / Mass to Energy Density in CGS
     Rad *= Den 

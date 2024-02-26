@@ -106,4 +106,5 @@ if __name__ == '__main__':
    
             ax.set_title('XY Projection', fontsize = 16)
             plt.show()
+            
     
