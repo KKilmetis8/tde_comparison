@@ -27,7 +27,24 @@ def find_sph_coord(theta,phi):
     #xyz = [x, y, z]
     return x,y,z
 
+
 def select_observer(wanted_theta, wanted_phi, thetas, phis):
+    x_hp = np.zeros(192)
+    y_hp = np.zeros(192)
+    z_hp = np.zeros(192)
+    wanted_xyz = find_sph_coord(wanted_theta, wanted_phi)
+    
+    # Healpix XYZ
+    for i in range(192): 
+        x_hp[i], y_hp[i], z_hp[i] = find_sph_coord(thetas[i], phis[i])
+        
+    observers = np.array([x_hp, y_hp, z_hp]).T
+    inner_product = [np.dot(wanted_xyz, observer) for observer in observers]
+    index = np.argmax(inner_product) 
+        
+    return index
+
+def old_select_observer(wanted_theta, wanted_phi, thetas, phis):
     """ Gives thetas, phis from helpix and 
     the index of the points closer to the one given by (wanted_theta, wanted_phi)"""
     dist = np.zeros(192)
@@ -48,7 +65,7 @@ if __name__ == '__main__':
     snap = 844
     check = 'fid'
     _, observers, _, _, _, _, _, _, _ = ray_maker(snap, m, check, 500)
-    plot = '2dim'
+    plot = '3dim'
 
     # Observers from ray_maker: theta in [0,pi], phi in [0,2pi]
     thetas = np.zeros(192)
@@ -110,18 +127,36 @@ if __name__ == '__main__':
         
         # Observers from healpix nearest to the ones you want
         x_selected = np.zeros(len(wanted_thetas))
+        x_selected2 = np.zeros(len(wanted_thetas))
+
         y_selected = np.zeros(len(wanted_thetas))
+        y_selected2 = np.zeros(len(wanted_thetas))
+
         z_selected = np.zeros(len(wanted_thetas))
+        z_selected2 = np.zeros(len(wanted_thetas))
+
         for idx in range(len(wanted_thetas)):
             wanted_theta = wanted_thetas[idx]
             wanted_phi = wanted_phis[idx]
-            wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
+            wanted_index = old_select_observer(wanted_theta, wanted_phi, thetas, phis)
+            wanted_index_elad = select_observer(wanted_theta, wanted_phi, thetas, phis)
             x_selected[idx], y_selected[idx], z_selected[idx] = find_sph_coord(thetas[wanted_index], phis[wanted_index])
+            x_selected2[idx], y_selected2[idx], z_selected2[idx] = find_sph_coord(thetas[wanted_index_elad], phis[wanted_index_elad])
+
 
         print('X:' , x_selected)
         print('Y:' , y_selected)
         print('Z:' , z_selected)
-
+        
+        # What Elad Does
+        xhat = (1,0,0)
+        observers = np.array([x_healpix,
+                             y_healpix, 
+                             z_healpix]).T
+        inner_product = [np.dot(xhat, observer) for observer in observers]
+        blue_dot_idx = np.argmax(inner_product)
+        
+        # Plotting
         fig = plt.figure()
         ax = fig.add_subplot(projection = '3d')
         # Create a sphere
@@ -141,13 +176,27 @@ if __name__ == '__main__':
         ax.quiver(xar, yar, zar, x_wanted, y_wanted, z_wanted, arrow_length_ratio=0.1, color = 'k')
 
         ax.scatter(x_selected,y_selected,z_selected, color = col, s=20)
+        ax.scatter(x_selected2,y_selected2,z_selected2, color = col, s=50, marker = 's')
+
         ax.set_xlabel('X')
         ax.set_ylabel('Y')
         ax.set_zlabel('Z')
         plt.tight_layout()
         plt.savefig('Final_plot/observerspectra_healp.png')
-        plt.title('Simulation')
-
+        plt.title('dot vs haversine')
+        
+        # # Elad's point
+        # ax.scatter(observers[blue_dot_idx][0], observers[blue_dot_idx][1], 
+        #             observers[blue_dot_idx][2],
+        #             c = 'b', marker = 's', s = 50, alpha = 0.5)
+        # # Elad's point
+        # ax.scatter(observers[104][0], observers[104][1], 
+        #             observers[104][2],
+        #             c = 'b', marker = 's', s = 50, alpha = 0.5)
+        # ax.scatter(observers[88][0], observers[88][1], 
+        #            observers[88][2],
+        #            c = 'r', marker = 's', s = 50, alpha = 0.5)
+        
     if plot == '2dim':
         Mbh = 10**m 
         Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
@@ -203,3 +252,5 @@ if __name__ == '__main__':
         plt.savefig('Final_plot/observers_inproj.png')
 
         plt.show()
+        
+

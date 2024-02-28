@@ -1,33 +1,31 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import src.Utilities.prelude as c
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
-plt.rcParams['figure.figsize'] = [5 , 4]
+plt.rcParams['figure.figsize'] = [3 , 3]
 plt.rc('xtick', labelsize = 15) 
 plt.rc('ytick', labelsize = 15) 
 
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
-m = 4
-snap = 394
-num = 5000
-opacity = 'lte'
+m = 6
+snap = 844
+num = 1000
+pre = 'dot'
+opacity = 'cloudy'
 axis = 'temp'
 
-c = 2.99792458e10 #[cm/s]
-h = 6.62607015e-27 #[gcm^2/s]
-Kb = 1.380649e-16 #[gcm^2/s^2K]
-
 def temperature(n):
-        return n * h / Kb
+        return n * c.h / c.Kb
 
 def frequencies(T):
-        return T * Kb / h
+        return T * c.Kb / c.h
 
 def wavelength(n):
         # in angststrom 
-        return c *1e8 / n 
+        return c.c *1e8 / n 
 
 # x axis 
 x_array = np.loadtxt(f'data/blue/spectrafreq_m{m}.txt')
@@ -39,7 +37,7 @@ n_end = frequencies(T_end)
 lamda = wavelength(n_array)
 
 # y axis 
-nL_tilde_n = np.loadtxt(f'data/blue/TEST{opacity}_nLn_single_m{m}_{snap}_{num}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/{pre}_{opacity}_nLn_single_m{m}_{snap}_{num}.txt')
 
 if axis == 'freq':
         x_axis = n_array
@@ -71,7 +69,7 @@ ax2.set_xlim(wavelength(n_start), wavelength(n_end))
 ax1.loglog()
 ax1.grid()
 ax2.plot(wavelength(n_array), n_array * nL_tilde_n[0],  c = 'b')
-ax2.set_xlim(c/n_end *1e8, c/n_start * 1e8)
+ax2.set_xlim(c.c/n_end *1e8, c.c/n_start * 1e8)
 ax2.invert_xaxis()
 ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)

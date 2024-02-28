@@ -12,7 +12,7 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 import numpy as np
 from scipy.spatial import KDTree
 import healpy as hp
-from src.Luminosity.select_path import select_prefix
+from src.Utilities.selectors import select_prefix
 import matplotlib.pyplot as plt
 AEK = '#F1C410'
 from src.Utilities.isalice import isalice

@@ -40,10 +40,10 @@ days4 = [0.505,0.515,0.525,0.5325,0.5425,0.5525,0.56,0.57,0.58,0.59,0.5975,0.607
 # red4_CHR = np.loadtxt(pre + '4-S60ComptonHires.txt')
 
 fig = plt.figure()
-plt.plot(days6_before, lum6_before, c = AEK)
-plt.plot(days6, red6, c = AEK, label = r'$10^6 M_\odot$')
+plt.plot(np.multiply(days6_before,40), lum6_before, c = AEK)
+plt.plot(np.multiply(days6,40), red6, c = AEK, label = r'$10^6 M_\odot$')
 #plt.plot(red6[0], red6[1], c = 'tab:red', label = '6')
-plt.plot(days4, red4, c = 'k', label = r'$10^4 M_\odot$')#, label = '4')#- fiducial')
+plt.plot(np.multiply(days4,4), red4, c = 'k', label = r'$10^4 M_\odot$')#, label = '4')#- fiducial')
 #plt.plot(days4_CHR, red4_CHR, c = 'tab:green', label = '4 - Compton HiRes')
 
 # Eddington lines

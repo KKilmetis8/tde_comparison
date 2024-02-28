@@ -15,9 +15,9 @@ from src.Calculators.ray_forest import find_sph_coord, ray_finder, ray_maker_for
 from src.Luminosity.special_radii_tree import get_specialr
 from src.Calculators.THREE_tree_caster import grid_maker
 
-m = 6
+m = 4
 num = 400
-check = 'fid' # S60ComptonHires' #'S60ComptonHires'
+check = 'S60ComptonHires' # S60ComptonHires' #'S60ComptonHires'
 snapshots, days = s.select_snap(m, check)
 opacity_kind = s.select_opacity(m)
 #%% Get Midplane
@@ -80,7 +80,7 @@ cb = plt.colorbar(img)
 cb.set_label(cb_text, fontsize = 14)
 ax.set_title('Midplane', fontsize = 16)
 ax.set_xlim(-40,)
-ax.set_ylim(-30,)
+ax.set_ylim(-20,)
 
 # Plot the ones in the equatorial plane
 photo_x = []

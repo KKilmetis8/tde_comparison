@@ -3,7 +3,7 @@
 """
 Created on December 2023
 
-@author: paola 
+@author: paola, konstantinos
 
 Calculate the luminosity that we will use in the blue (BB) curve as sum of multiple BB.
 
@@ -21,27 +21,15 @@ from scipy.optimize import fsolve
 import h5py
 import healpy as hp
 
-
 # Chocolate Imports
+import src.Utilities.prelude as c
 from src.Opacity.cloudy_opacity import old_opacity 
 from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
-from src.Luminosity.special_radii_tree_cloudy import calc_specialr
-from src.Calculators.select_observers import select_observer 
-from src.Luminosity.select_path import select_snap
+from src.Luminosity.special_radii_tree import calc_specialr
+from src.Calculators.select_observers import select_observer# as select_observer
+from src.Utilities.selectors import select_snap
 from datetime import datetime
-plt.rcParams['text.usetex'] = True
-plt.rcParams['figure.dpi'] = 300
-plt.rcParams['figure.figsize'] = [5 , 4]
 
-# Constants
-c = 3e10 #2.99792458e10 #[cm/s]
-h = 6.62607015e-27 #[gcm^2/s]
-Kb = 1.380649e-16 #[erg/K]
-alpha = 7.5657e-15 #7.5646 * 10**(-15) # radiation density [erg/cm^3K^4]
-sigma_T = 6.6524e-25 #[cm^2] thomson cross section
-Msol_to_g = 2e33 #1.989e33 # [g]
-Rsol_to_cm = 6.957e10
-NSIDE = 4
 
 ###
 # FUNCTIONS
@@ -55,8 +43,8 @@ def log_array(n_min, n_max, lenght):
 
 def planck(Temperature: float, n: float) -> float:
     """ Planck function in a cell. It needs temperature and frequency n. """
-    const = 2*h/c**2
-    fun = const * n**3 / (np.exp(min(300,h*n/(Kb*Temperature))) - 1) #take min to avoid overflow
+    const = 2*c.h/c.c**2
+    fun = const * n**3 / (np.exp(min(300,c.h*n/(c.Kb*Temperature))) - 1) #take min to avoid overflow
 
     return fun
 
@@ -85,7 +73,7 @@ def normalisation(L_x: np.array, x_array: np.array, luminosity_fld: float) -> fl
 
 def find_lowerT(energy_density):
     """ Find temperature from energy density."""
-    T = (energy_density / alpha)**(1/4)
+    T = (energy_density / c.alpha)**(1/4)
     return T
 
 def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus, branch_v, radius, volume, bol_fld):
@@ -108,19 +96,19 @@ def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus,
             cv_ratio =  rad_energy_density / (7.6e8 * T * rho)
             vcompton = branch_v[reverse_idx]
             r = radius[reverse_idx]
-            compton_cooling = (0.075 * r / vcompton) * cv_ratio * 0.34 * rho * c * (4 * T * Kb /8.2e-7)
+            compton_cooling = (0.075 * r / vcompton) * cv_ratio * 0.34 * rho * c.c * (4 * T * c.Kb /8.2e-7)
             compton[i] = compton_cooling
 
 
             int_energy_density = branch_ie[reverse_idx]
             cv_temp = int_energy_density / T
-            total_E = int_energy_density + alpha * Tr**4
+            total_E = int_energy_density + c.alpha * Tr**4
 
             if (compton_cooling > 1):
                 print('here')
 
                 def function_forT(x):
-                    to_solve = cv_temp * x + alpha * x**4 - total_E # Elad has cv_temp*rho*x
+                    to_solve = cv_temp * x + c.alpha * x**4 - total_E # Elad has cv_temp*rho*x
                     return to_solve
                 
                 new_T = fsolve(function_forT, Tr)
@@ -140,9 +128,7 @@ def dot_prod(xyz_grid):
     dot_product = np.dot(xyz_grid, np.transpose(xyz_grid))
     dot_product[dot_product < 0] = 0
     dot_product = dot_product * 4 / 192
-
     return dot_product
-
 
 # MAIN
 if __name__ == "__main__":
@@ -186,7 +172,7 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(1,2): 
+    for idx_sn in range(0,1): 
         snap = snapshots[idx_sn]
         bol_fld = luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')
@@ -207,7 +193,7 @@ if __name__ == "__main__":
         stops = np.zeros(192) 
         xyz_grid = []
         for iobs in range(0,192):
-            theta, phi = hp.pix2ang(NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
+            theta, phi = hp.pix2ang(c.NSIDE, iobs) # theta in [0,pi], phi in [0,2pi]
             thetas[iobs] = theta
             phis[iobs] = phi
             observers.append( (theta, phi) )
@@ -234,23 +220,24 @@ if __name__ == "__main__":
 
             stops[iobs] = rmax
 
-        # rays is Er of Elad 
-        tree_indexes, rays_T, rays_den, rays, rays_ie, rays_radii, _, rays_v = ray_maker_forest(snap, m, check, thetas, phis, stops, num)
-
-        lum_n = []
+        # Make rays
+        rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, 
+                                'opacity')
 
         # Find volume of cells
-        # Radii has num+1 cell just to compute the volume for num cell. Then we delete the last radius cell
+        # Radii has num+1 cell just to compute the volume for num cell. 
+        # Then we delete the last radius cell
+        lum_n = []
         for j in range(len(observers)):
             print('ray', j)
 
-            branch_indexes = tree_indexes[j]
-            branch_T = rays_T[j]
-            branch_den = rays_den[j]
-            branch_en = rays[j]
-            branch_ie = rays_ie[j]
-            radius = rays_radii[j]
-            branch_v = rays_v[j]
+            branch_indexes = rays.tree_indexes[j]
+            branch_T = rays.T[j]
+            branch_den = rays.den[j]
+            branch_en = rays.rad[j]
+            branch_ie = rays.ie[j]
+            radius = rays.radii[j]
+            branch_v = rays.v[j]
 
             volume = np.zeros(len(radius)-1)
             for i in range(len(volume)): 
@@ -260,7 +247,7 @@ if __name__ == "__main__":
             radius = np.delete(radius, -1)
 
             # Get thermalisation radius
-            _, branch_cumulative_taus, _, _, _ = calc_specialr(branch_T, branch_den, radius, branch_indexes, select = 'thermr')
+            _, branch_cumulative_taus, _, _, _ = calc_specialr(branch_T, branch_den, radius, branch_indexes, 'cloudy', select = 'thermr')
 
             # Compute specific luminosity of every observers
             lum_n_ray = spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus, branch_v, radius, volume, bol_fld)
@@ -295,7 +282,7 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}000cloudy_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
+            with open(f'{pre_saving}dot_cloudy_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                 fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
                 fselect.close()
