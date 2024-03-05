@@ -304,7 +304,7 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
 ##
 if __name__ == "__main__":
     save = True
-    m = 6 # Choose BH
+    m = 5 # Choose BH
     check = 'fid' # Choose fid // S60ComptonHires
     num = 1000
     opacity_kind = s.select_opacity(m)

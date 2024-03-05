@@ -36,6 +36,8 @@ def select_snap(m, check):
             snapshots = [233] #, 254, 263, 277 , 293, 308, 322]
         if m == 4 and check == 'S60ComptonHires':
             snapshots = [234] 
+        if m == 5:
+            snapshots = [269]
         if m == 6 and check == 'fid':
             snapshots = [844, 882, 925, 950]#, 1008] 
     for snap in snapshots:

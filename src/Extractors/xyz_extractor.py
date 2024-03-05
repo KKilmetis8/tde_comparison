@@ -121,12 +121,12 @@ def extractor(filename):
     return X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P
 #%%
 # Change the current working directory
-fixes = [234]
+fixes = [269]
 for fix in fixes:
-    fix = str(fix)
-    snapshot = '4/' + fix + '/snap_' + fix + '.h5'
-    pre = '4/' + fix + '/'
-    suf = '_' + fix
+    m = 5
+    snapshot = f'{m}/{fix}/snap_{fix}.h5'
+    pre = f'{m}/{fix}/'
+    suf = f'_{fix}'
 
     X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P = extractor(snapshot)
     

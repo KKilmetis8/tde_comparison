@@ -66,21 +66,22 @@ def extractor(filename):
                 
             # For some reason, having the collumns into variables is way faster.
             T_data = f[key]['Volume']
-            # Z_data = f[key]['tracers']['ZRadEnergy']
+            Z_data = f[key]['tracers']['Star']
             for i in range(len(T_data)):
                 T.append(T_data[i])
-                # Z.append(Z_data[i])
+                Z.append(Z_data[i])
     # Close the file
     f.close()
     return T, Z
 
 #%% Doing the thing
-fixes = ['980']
+fixes = [269]
 for fix in fixes:
-    snapshot = '6/' + fix+'/snap_'+fix+'.h5'
-    T, _ = extractor(snapshot)   
+    m = 5
+    snapshot = f'{m}/{fix}/snap_{fix}.h5'
+    _, Z = extractor(snapshot)   
     # Save to another file.
-    np.save('6/' + fix + '/Vol_'+fix, T)
+    np.save(f'4/{fix}/Star_{fix}', Z)
 
 
     
