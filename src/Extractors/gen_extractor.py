@@ -81,7 +81,7 @@ for fix in fixes:
     snapshot = f'{m}/{fix}/snap_{fix}.h5'
     _, Z = extractor(snapshot)   
     # Save to another file.
-    np.save(f'4/{fix}/Star_{fix}', Z)
+    np.save(f'{m}/{fix}/Star_{fix}', Z)
 
 
     
