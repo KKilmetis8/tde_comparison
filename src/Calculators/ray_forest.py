@@ -65,6 +65,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
     Rad = np.load(pre + fix + '/Rad_' + fix + '.npy')
     IE = np.load(pre + fix + '/IE_' + fix + '.npy')
     Vol = np.load(pre + fix + '/Vol_' + fix + '.npy')
+    Star = np.load(pre + fix + '/Star_' + fix + '.npy')
     if opacity == 'cloudy': # elad 
         Tcool_min = np.loadtxt('src/Opacity/cloudy_data/Tcool_ext.txt')[0]
     
@@ -112,7 +113,18 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
                 rays_T[j][k] = max(T[idx], Tcool_min)
             else:
                 rays_T[j][k] = T[idx]
-            rays_den[j][k] = Den[idx] 
+
+            if m == 6:
+                if Star[idx]<0.999:
+                    print('hi')
+                    rays_den[j][k] = 0
+                else: 
+                    rays_den[j][k] = Den[idx] 
+            if m == 4:
+                if Star[idx]<0.5:
+                    rays_den[j][k] = 0
+                else: 
+                    rays_den[j][k] = Den[idx] 
             rays_rad[j][k] = Rad[idx] 
             rays_ie[j][k] = IE[idx] 
             rays_vol[j][k] = Vol[idx] # not in CGS

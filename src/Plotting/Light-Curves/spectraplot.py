@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
+
 import numpy as np
 import matplotlib.pyplot as plt
 import src.Utilities.prelude as c
@@ -7,11 +10,8 @@ plt.rcParams['figure.figsize'] = [3 , 3]
 plt.rc('xtick', labelsize = 15) 
 plt.rc('ytick', labelsize = 15) 
 
-import sys
-sys.path.append('/Users/paolamartire/tde_comparison')
-
 m = 6
-snap = 844
+snap = 882
 num = 1000
 pre = 'dot'
 opacity = 'cloudy'
@@ -60,11 +60,16 @@ ax1.plot(x_axis, n_array * nL_tilde_n[5], c = 'aqua', label = r'$-\vec{z}$')
 ax2 = ax1.twiny()
 ax1.set_xlabel(f'{label}', fontsize = 16)
 ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]', fontsize = 16)
+
 if m == 4:
-        ax1.set_ylim(1e36, 1e42)
+        y_lowlim = 1e36
+        y_highlim = 1e42
 elif m == 6:
-        ax1.set_ylim(2e39, 1.3e44)
+        y_lowlim = 2e39
+        y_highlim = 1.3e44
+
 ax1.set_xlim(x_start,x_end)
+ax1.set_ylim(y_lowlim, y_highlim)
 ax2.set_xlim(wavelength(n_start), wavelength(n_end))
 ax1.loglog()
 ax1.grid()
@@ -75,6 +80,16 @@ ax2.loglog()
 ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)
 ax1.legend()
 ax1.set_title(f'Spectra {snap} with {opacity} opacity')
+
+ax2.axvline(120, c = 'mediumorchid')
+ax2.axvspan(120, 4000, color = 'mediumorchid', alpha = 0.4)
+ax2.text(160, y_highlim/2, 'UV', rotation = 90, fontsize = 10)
+
+ax2.axvline(4000, c = 'gold')
+ax2.axvspan(4000, 7000, color = 'gold', alpha = 0.4)
+ax2.axvline(7000, c = 'gold', label = 'visible')
+ax2.text(6000, y_highlim/5, 'visible', rotation = 90, fontsize = 10)
+
 plt.savefig(f'Figs/{opacity}_spectra{snap}.png')
 plt.show()
 

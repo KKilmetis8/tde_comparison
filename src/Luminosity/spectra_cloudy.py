@@ -105,7 +105,7 @@ def spectrum(branch_T, branch_den, branch_en, branch_ie, branch_cumulative_taus,
             total_E = int_energy_density + c.alpha * Tr**4
 
             if (compton_cooling > 1):
-                print('here')
+                #print('compton cooling')
 
                 def function_forT(x):
                     to_solve = cv_temp * x + c.alpha * x**4 - total_E # Elad has cv_temp*rho*x
