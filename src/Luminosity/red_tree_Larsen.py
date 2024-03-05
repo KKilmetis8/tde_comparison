@@ -81,11 +81,12 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     Z = np.load(pre + snap + '/CMz_' + snap + '.npy')
     T = np.load(pre + snap + '/T_' + snap + '.npy')
     Den = np.load(pre + snap + '/Den_' + snap + '.npy')
-    Rad = np.load(pre +snap + '/Rad_' + snap + '.npy')
+    Rad = np.load(pre + snap + '/Rad_' + snap + '.npy')
     
     # convert in CGS
     Rad *= Den 
     Rad *= c.en_den_converter
+    Den *= c.den_converter
 
     # make a tree
     sim_value = [X, Y, Z] 
@@ -133,7 +134,7 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
         magnitude[i] = 1 / (np.linalg.norm(np.subtract(xyz_high, xyz_low)) * c.Rsol_to_cm) 
     
     # store data of neighbours
-    idx_low = [int(x) for x in idx_low] #necavoid dumb stuff with indexing later
+    idx_low = [int(x) for x in idx_low] #avoid dumb stuff with indexing later
     idx_high = [int(x) for x in idx_high] #same 
     energy_low = Rad[idx_low]
     energy_high = Rad[idx_high]
@@ -145,6 +146,7 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     #grad_xyz = grad_xyz / Rsol_to_cm
     grad_Er = deltaE * grad_r
     magnitude *= np.abs(deltaE)
+    
     
     return grad_Er, magnitude, energy_high, T_high, den_high
 
@@ -175,12 +177,8 @@ def flux_calculator(grad_E, magnitude, selected_energy,
         Flux at every ray.
     """
     f = np.zeros(len(grad_E))
-    max_count = 0
-    max_but_zero_count = 0
     zero_count = 0
-    flux_zero = 0
-    flux_count = 0
-
+   
     # Ensure we can interpolate
     rho_low = np.exp(-45)
     if opacity_kind == 'LTE':
@@ -195,18 +193,17 @@ def flux_calculator(grad_E, magnitude, selected_energy,
 
     for i in range(len(selected_energy)):
         Energy = selected_energy[i]
-        max_travel = np.sign(-grad_E[i]) * c.c * Energy 
         
         Temperature = selected_temperature[i]
         Density = selected_density[i]
 
         # If here is nothing, light continues
-        if np.logical_and(m!=6, Density < rho_low):
-            max_count += 1
-            f[i] = max_travel
-            if max_travel == 0:
-                max_but_zero_count +=1
-            continue
+        # if np.logical_and(m!=6, Density < rho_low):
+        #     max_count += 1
+        #     f[i] = max_travel
+        #     if max_travel == 0:
+        #         max_but_zero_count +=1
+        #     continue
         
         # If stream, no light 
         if Temperature < Tmin:
@@ -216,48 +213,27 @@ def flux_calculator(grad_E, magnitude, selected_energy,
         
         # T too high => scattering
         if Temperature > Tmax:
-            Tscatter = np.exp(17.87)
+            Tscatter = Tmax
             k_ross = opacity(Tscatter, Density, 'scattering')
         else:    
             # Get Opacity, NOTE: Breaks Numba
-            k_ross = opacity(Temperature, Density, 'rosseland')
+            k_ross = opacity(Temperature, Density, 'red')
         
-        # Calc R, eq. 28
-        R_kr = magnitude[i] /  (k_ross * Energy)
-        invR = 1 / R_kr
-        R_kr = float(R_kr) # to avoid dumb thing with tanh(R)
+        # k_ross *= c.Rsol_to_cm
+        D = c.c / np.sqrt((3*k_ross)**2 + (magnitude[i]/Energy)**2)
     
-        # Calc lambda, eq. 27
-        coth = 1 / np.tanh(R_kr)
-        lamda = invR * (coth - invR)
-        # Calc Flux, eq. 26
-        Flux =  - c.c * grad_E[i]  * lamda / k_ross
+        Flux =  - D * grad_E[i]
         
-        # Choose
-        if Flux > max_travel:
-            f[i] = max_travel
-            max_count += 1
-            if max_travel == 0:
-                max_but_zero_count +=1
-        else:
-            flux_count += 1
-            f[i] = Flux
-            if Flux == 0:  
-                flux_zero += 1
-
-    print('Max: ', max_count)
-    print('Zero due to: \n- max travel: ', max_but_zero_count)
-    print('- T_low:', zero_count)
-    print('- flux:', flux_zero) 
-    print('Flux: ', flux_count) 
+        f[i] = Flux
+    
     return f
 
-def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
+def fld_luminosity(snap, m, check, thetas, phis, stops, num, opacity_kind):
     """
     Gives bolometric L 
     """
-    rays = ray_maker_forest(snap, m, check, thetas, phis, stops, 
-                            num, opacity_kind)    
+    rays = ray_maker_forest(snap, m, check, thetas, phis, 
+                            stops, num, opacity_kind)   
     _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays.T, rays.den, rays.radii, 
                                                             rays.tree_indexes, opacity_kind, select = 'photo')
     
@@ -266,7 +242,7 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
         find_index_cell = int(rays_index_photo[j])
         vol_ph = rays.vol[j][find_index_cell]
         dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
-    dist_neigh = 2 * dim_ph
+    dist_neigh = 2 * dim_ph #solar units
     # dist_neigh *= Rsol_to_cm #convert in CGS
 
     # Find the cell outside the photosphere and save its quantities
@@ -282,15 +258,15 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
     zero_count = 0
     neg_count = 0
     for i in range(len(flux)):
+        lum_nodiff = 4 * np.pi * c.c * energy_high[i] * rays_photo[i]**2
         # Turn to luminosity
-        if flux[i] == 0:
-            zero_count += 1
         if flux[i] < 0:
             neg_count += 1
-            flux[i] = 0 
+            lum_fld = 1e100
+        else:
+            lum_fld = flux[i] * 4 * np.pi * rays_photo[i]**2
 
-        lum[i] = flux[i] * 4 * np.pi * rays_photo[i]**2
-
+        lum[i] = min(lum_fld, lum_nodiff)
     # Average in observers
     lum = np.sum(lum)/192
 
@@ -321,7 +297,7 @@ if __name__ == "__main__":
 
         thetas, phis, stops, xyz_grid = ray_finder(filename)
 
-        lum = doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind)
+        lum = fld_luminosity(snap, m, check, thetas, phis, stops, num, opacity_kind)
         lums[idx] = lum
     
     if save:
@@ -343,20 +319,5 @@ if __name__ == "__main__":
                  flum.write(' '.join(map(str, lums)) + '\n')
                  flum.close() 
 
-    # %% Plotting
-    # if plot:
-    #     plt.figure()
-    #     plt.plot(lums, '-o', color = 'maroon')
-    #     plt.yscale('log')
-    #     plt.ylabel('Bolometric Luminosity [erg/s]')
-    #     plt.xlabel('Days')
-    #     if m == 6:
-    #         plt.title('FLD for $10^6 \quad M_\odot$')
-    #         plt.ylim(1e41,1e45)
-    #     if m == 4:
-    #         plt.title('FLD for $10^4 \quad M_\odot$')
-    #         plt.ylim(1e39,1e42)
-    #     plt.grid()
-    #     #plt.savefig(f'Final plot/ourred{m}.png')
-    #     plt.show()
+
 
