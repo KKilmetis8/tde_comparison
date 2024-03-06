@@ -292,7 +292,7 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
             flux[i] = 0 
 
         lum[i] = flux[i] * 4 * np.pi * rays_photo[i]**2
-
+        # add an alice backup here
     # Average in observers
     lum = np.sum(lum)/192
 
@@ -319,7 +319,10 @@ if __name__ == "__main__":
     for idx in range(0,len(snapshots)):
         snap = snapshots[idx]
         print(f'Snapshot {snap}')
-        filename = f"{m}/{snap}/snap_{snap}.h5"
+        if alice:
+            filename = f'{m}-{check}/snap_{snap}/snap_{snap}.h5'
+        else:
+            filename = f"{m}/{snap}/snap_{snap}.h5"
 
         thetas, phis, stops, xyz_grid = ray_finder(filename)
 
