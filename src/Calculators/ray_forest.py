@@ -104,7 +104,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
         for k in range(num-1):
             radius = radii[k]
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
-            queried_value[0] += Rt #if you don't do -Rt before. Thus you consider the pericentre as origin
+            # queried_value[0] += Rt #if you don't do -Rt before. Thus you consider the pericentre as origin
             _, idx = sim_tree.query(queried_value)
 
             # Store
