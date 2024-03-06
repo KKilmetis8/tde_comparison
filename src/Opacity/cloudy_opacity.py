@@ -63,7 +63,7 @@ def old_opacity(T, rho, kind) -> float:
         # STEINBERG & STONE (9) (Rybicky & Lightman eq. 1.98)
         kapparho = np.sqrt(3 * k_a * (k_a + k_s)) 
     
-    elif kind == 'red':
+    elif kind == 'red' or kind == 'rosseland':
         kapparho = k_a + k_s
         
     return kapparho

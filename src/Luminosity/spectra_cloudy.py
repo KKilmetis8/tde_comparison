@@ -172,7 +172,7 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(1,2): 
+    for idx_sn in range(0,1): 
         snap = snapshots[idx_sn]
         bol_fld = luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')
@@ -222,7 +222,7 @@ if __name__ == "__main__":
 
         # Make rays
         rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, 
-                                'opacity')
+                                'opacity', star = False)
 
         # Find volume of cells
         # Radii has num+1 cell just to compute the volume for num cell. 
@@ -282,7 +282,7 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}TESTdot_cloudy_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
+            with open(f'{pre_saving}cloudy_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                 fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
                 fselect.close()

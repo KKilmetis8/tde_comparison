@@ -70,7 +70,7 @@ def get_kappa(T: float, rho: float, r_dlogr: float, opacity_kind: str,
     # Stream material, is opaque NOTE: WE WILL SEE ABOUT THIS
     elif T < Tmin:
         #print('T low')
-        return 0
+        return 1e-12
         #return 100
     
     # Too hot: scale as Kramers for absorption (planck)
@@ -141,7 +141,7 @@ def calc_specialr(T, rho, radius, branch_indexes, opacity_kind, select):
                     Photosphere/R_therm index in the tree.
     '''
     if select == 'photo':
-        threshold = 2/3
+        threshold =  2/3
     if select == 'thermr': 
         threshold = 5
     if select == 'thermr_plot': 

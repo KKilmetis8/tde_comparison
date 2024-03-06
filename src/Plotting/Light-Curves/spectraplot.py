@@ -11,7 +11,7 @@ plt.rc('xtick', labelsize = 15)
 plt.rc('ytick', labelsize = 15) 
 
 m = 6
-snap = 882
+snap = 844
 num = 1000
 pre = 'dot'
 opacity = 'cloudy'
@@ -37,7 +37,7 @@ n_end = frequencies(T_end)
 lamda = wavelength(n_array)
 
 # y axis 
-nL_tilde_n = np.loadtxt(f'data/blue/TEST{pre}_{opacity}_nLn_single_m{m}_{snap}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/{opacity}_nLn_single_m{m}_{snap}_{num}.txt')
 
 if axis == 'freq':
         x_axis = n_array

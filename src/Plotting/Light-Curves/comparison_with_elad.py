@@ -19,9 +19,9 @@ plt.rcParams['axes.facecolor'] = 'whitesmoke'
 plt.rcParams['xtick.labelsize'] = 15
 plt.rcParams['ytick.labelsize'] = 15
 
-plot_curves = False
+plot_curves = True
 residuals = False
-plot_radii_sphere = True
+plot_radii_sphere = False
 plot_fit = False
 m = 6
 check = 'fid'

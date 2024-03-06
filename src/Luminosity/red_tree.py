@@ -122,16 +122,16 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
         
         # Diff is vector
         diff = 1 / np.subtract(xyz_high, xyz_low)
-        diff = diff / c.Rsol_to_cm # convert to CGS
+        diff /= c.Rsol_to_cm # convert to CGS
         
         # Unitary vector in the r direction, for each observer
-        rhat = [np.sin(theta_obs[i]) * np.cos(phi_obs[i]),
+        rhat = [np.sin(theta_obs[i]) * np.cos(phi_obs[i]), # xyz vextor
                 np.sin(theta_obs[i]) * np.sin(phi_obs[i]),
                 np.cos(theta_obs[i])
                 ]
         grad_r[i] = np.dot(diff, rhat) # Project
-        magnitude[i] = 1 / (np.linalg.norm(np.subtract(xyz_high, xyz_low)) * c.Rsol_to_cm) 
-    
+        magnitude[i] = np.linalg.norm(np.divide(1, np.subtract(xyz_high, xyz_low) * c.Rsol_to_cm )) 
+
     # store data of neighbours
     idx_low = [int(x) for x in idx_low] #necavoid dumb stuff with indexing later
     idx_high = [int(x) for x in idx_high] #same 
@@ -220,6 +220,8 @@ def flux_calculator(grad_E, magnitude, selected_energy,
             k_ross = opacity(Tscatter, Density, 'scattering')
         else:    
             # Get Opacity, NOTE: Breaks Numba
+            # Paper says rosseland, page 22, below eq(3), but in the MATLAB 
+            # script they actualy use red = absorption(rosseland) + scattering
             k_ross = opacity(Temperature, Density, 'rosseland')
         
         # Calc R, eq. 28
@@ -257,16 +259,16 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
     Gives bolometric L 
     """
     rays = ray_maker_forest(snap, m, check, thetas, phis, stops, 
-                            num, opacity_kind)    
+                            num, opacity_kind, star = False)    
     _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays.T, rays.den, rays.radii, 
                                                             rays.tree_indexes, opacity_kind, select = 'photo')
-    
-    dim_ph = np.zeros(len(rays_index_photo))
+    # Calculate the distance of the neighbours considered
+    size_of_ph = np.zeros(len(rays_index_photo))
     for j in range(len(rays_index_photo)):
         find_index_cell = int(rays_index_photo[j])
         vol_ph = rays.vol[j][find_index_cell]
-        dim_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
-    dist_neigh = 2 * dim_ph
+        size_of_ph[j] = (3 * vol_ph /(4 * np.pi))**(1/3) #in solar units
+    dist_neigh = 2 * size_of_ph
     # dist_neigh *= Rsol_to_cm #convert in CGS
 
     # Find the cell outside the photosphere and save its quantities
@@ -283,7 +285,7 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
     neg_count = 0
     for i in range(len(flux)):
         # Turn to luminosity
-        if flux[i] == 0:
+        if np.abs(flux[i]) < 1e-3:
             zero_count += 1
         if flux[i] < 0:
             neg_count += 1
@@ -303,7 +305,7 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = False
+    save = True
     m = 6 # Choose BH
     check = 'fid' # Choose fid // S60ComptonHires
     num = 1000
@@ -323,6 +325,7 @@ if __name__ == "__main__":
 
         lum = doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind)
         lums[idx] = lum
+        print(lum)
     
     if save:
         if alice:
