@@ -10,11 +10,11 @@ plt.rcParams['figure.figsize'] = [3 , 3]
 plt.rc('xtick', labelsize = 15) 
 plt.rc('ytick', labelsize = 15) 
 
-m = 5
-snap = 269
+m = 6
+snap = 882
 num = 1000
 pre = 'dot'
-opacity = 'LTE'
+opacity = 'cloudy'
 axis = 'temp'
 
 def temperature(n):
@@ -37,7 +37,7 @@ n_end = frequencies(T_end)
 lamda = wavelength(n_array)
 
 # y axis 
-nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/TEST{pre}_{opacity}_nLn_single_m{m}_{snap}.txt')
 
 if axis == 'freq':
         x_axis = n_array
@@ -90,7 +90,7 @@ ax2.axvspan(4000, 7000, color = 'gold', alpha = 0.4)
 ax2.axvline(7000, c = 'gold', label = 'visible')
 ax2.text(6000, y_highlim/5, 'visible', rotation = 90, fontsize = 10)
 
-plt.savefig(f'Figs/{opacity}_spectra{snap}.png')
+plt.savefig(f'Figs/TEST{opacity}_spectra{snap}.png')
 plt.show()
 
 
