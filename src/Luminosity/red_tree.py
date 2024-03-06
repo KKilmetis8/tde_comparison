@@ -28,7 +28,7 @@ from datetime import datetime
 # Custom Imports
 import src.Utilities.prelude as c
 import src.Utilities.selectors as s
-from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest, ray_finder
+from src.Calculators.ray_forest import ray_maker_forest, ray_finder
 from src.Luminosity.special_radii_tree import get_specialr
 from astropy.coordinates import spherical_to_cartesian, cartesian_to_spherical
 
