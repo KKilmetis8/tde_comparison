@@ -320,7 +320,8 @@ if __name__ == "__main__":
         snap = snapshots[idx]
         print(f'Snapshot {snap}')
         if alice:
-            filename = f'{m}-{check}/snap_{snap}/snap_{snap}.h5'
+            pre = '/home/s3745597/data1/TDE/'
+            filename = pre + f'{m}-{check}/snap_{snap}/snap_{snap}.h5'
         else:
             filename = f"{m}/{snap}/snap_{snap}.h5"
 
