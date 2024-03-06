@@ -10,11 +10,11 @@ plt.rcParams['figure.figsize'] = [3 , 3]
 plt.rc('xtick', labelsize = 15) 
 plt.rc('ytick', labelsize = 15) 
 
-m = 6
-snap = 882
+m = 5
+snap = 269
 num = 1000
 pre = 'dot'
-opacity = 'cloudy'
+opacity = 'LTE'
 axis = 'temp'
 
 def temperature(n):
@@ -37,7 +37,7 @@ n_end = frequencies(T_end)
 lamda = wavelength(n_array)
 
 # y axis 
-nL_tilde_n = np.loadtxt(f'data/blue/{pre}_{opacity}_nLn_single_m{m}_{snap}_{num}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/nLn_single_m{m}_{snap}.txt')
 
 if axis == 'freq':
         x_axis = n_array
@@ -64,7 +64,7 @@ ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]', fontsize = 16)
 if m == 4:
         y_lowlim = 1e36
         y_highlim = 1e42
-elif m == 6:
+else:
         y_lowlim = 2e39
         y_highlim = 1.3e44
 
