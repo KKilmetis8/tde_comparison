@@ -105,7 +105,7 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     # convert to cartesian and query: BETTER TO USE OUR FIND_SPH_COORDINATE??
     x_low, y_low, z_low  = spherical_to_cartesian(r_low, theta_obs, phi_obs)
     x_high, y_high, z_high  = spherical_to_cartesian(r_high, theta_obs, phi_obs)
-    x_high += Rt # CHECK THIS!!!!!
+    # x_high += Rt # CHECK THIS!!!!!
     idx_low = np.zeros(len(tree_index_photo))
     idx_high = np.zeros(len(tree_index_photo))
     grad_r = np.zeros(len(tree_index_photo))
@@ -303,8 +303,8 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
 # MAIN
 ##
 if __name__ == "__main__":
-    save = True
-    m = 5 # Choose BH
+    save = False
+    m = 6 # Choose BH
     check = 'fid' # Choose fid // S60ComptonHires
     num = 1000
     opacity_kind = s.select_opacity(m)

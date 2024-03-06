@@ -40,9 +40,9 @@ class ray_keeper:
         self.radii = rays_radii
         self.vol = rays_vol
         self.v = rays_v
- 
 
-def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity): 
+def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity, 
+                     star = True): 
     """ 
     Num is 1001 because for blue we then delete the last cell.
     Outputs are in CGS with exception of ray_vol (in solar units).
@@ -65,7 +65,8 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
     Rad = np.load(pre + fix + '/Rad_' + fix + '.npy')
     IE = np.load(pre + fix + '/IE_' + fix + '.npy')
     Vol = np.load(pre + fix + '/Vol_' + fix + '.npy')
-    Star = np.load(pre + fix + '/Star_' + fix + '.npy')
+    if star:
+        Star = np.load(pre + fix + '/Star_' + fix + '.npy')
     if opacity == 'cloudy': # elad 
         Tcool_min = np.loadtxt('src/Opacity/cloudy_data/Tcool_ext.txt')[0]
     
@@ -82,11 +83,13 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
     sim_tree = KDTree(sim_value) 
 
     # Ensure that the regular grid cells are smaller than simulation cells
-    start = 0.56 # 1e-0.25 Solar radii  (arbitrary choice ELAD made)
+    # NOTE: for the 10^6 what do we do for the other???
+    # We are ignoring beta here.
+    start = Rt/200 # 1e-0.25 Solar radii  (arbitrary choice ELAD made)
     rays_radii = []
-
-    tree_indexes = np.zeros((len(thetas), num-1))
+    
     # you take num-1 beacause in blue you will delete the last cell of radii
+    tree_indexes = np.zeros((len(thetas), num-1))
     rays_T = np.zeros((len(thetas), num-1))
     rays_den = np.zeros((len(thetas), num-1))
     rays_rad = np.zeros((len(thetas), num-1))
@@ -104,7 +107,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
         for k in range(num-1):
             radius = radii[k]
             queried_value = find_sph_coord(radius, thetas[j], phis[j])
-            queried_value[0] += Rt #if you don't do -Rt before. Thus you consider the pericentre as origin
+            # queried_value[0] += Rt #if you don't do -Rt before. Thus you consider the pericentre as origin
             _, idx = sim_tree.query(queried_value)
 
             # Store
@@ -114,20 +117,23 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
             else:
                 rays_T[j][k] = T[idx]
 
-            # throw fluff
-            cell_star = Star[idx]
-            cell_star = 10 # use it if you want to avoid mask to test the code
-            if opacity == 'cloudy':
-                if ((1-cell_star) > 1e-3):
-                    rays_den[j][k] = 0
+            # Apply star mask, throw away the fluff
+            if star:
+                cell_star = Star[idx]
+                if opacity == 'cloudy':
+                    if ((1-cell_star) > 1e-3):
+                        rays_den[j][k] = 0
+                    else:
+                        rays_den[j][k] = Den[idx] 
                 else:
-                    rays_den[j][k] = Den[idx] 
+                    if cell_star < 0.5:
+                        rays_den[j][k] = 0
+                    else:
+                        rays_den[j][k] = Den[idx]
             else:
-                if cell_star < 0.5:
-                    rays_den[j][k] = 0
-                else:
-                    rays_den[j][k] = Den[idx]
-
+                rays_den[j][k] = Den[idx]
+                
+            # Apply mask
             rays_rad[j][k] = Rad[idx] 
             rays_ie[j][k] = IE[idx] 
             rays_vol[j][k] = Vol[idx] # not in CGS
@@ -149,22 +155,6 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity):
                             rays_radii, rays_vol, rays_v)
     
     return rays_local
-    #%% Plot
-    # ax = plt.figure().add_subplot(projection='3d')
-    # radii = np.array(radii)
-    # ax.scatter(our_x[::10], our_y[::10], our_z[::10], 
-    #             c = radii[::10], cmap = 'cet_bmy', alpha = 0.18, zorder = 2)
-    # # Selecting one ray
-    # pick = 107
-    # rat = pick * num
-    # old_rat = rat - num
-    # r_rat = np.sqrt(our_x[old_rat:rat]**2 + our_y[old_rat:rat]**2 + our_z[old_rat:rat]**2)
-    # ax.scatter(our_x[old_rat:rat], our_y[old_rat:rat], our_z[old_rat:rat], 
-    #             c = 'k', alpha = 1, zorder = 10)
-    # ax.set_xlim(-10_000, 10_000)
-    # ax.set_ylim(-10_000, 10_000)
-    # ax.set_zlim(-10_000, 10_000)
-
 
 def ray_finder(filename):
     # Get simulation box

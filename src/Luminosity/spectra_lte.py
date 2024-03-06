@@ -158,7 +158,7 @@ if __name__ == "__main__":
     luminosity_fld_fix = fld_data[1]
     
     for idx_sn in range(1,2): 
-        snap = 269 #snapshots[idx_sn]
+        snap = 226 #snapshots[idx_sn]
         bol_fld = luminosity_fld_fix[idx_sn]
         # Fancy f string
         filename = f"{m}/{snap}/snap_{snap}.h5"
