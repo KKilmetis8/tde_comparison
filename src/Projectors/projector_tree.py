@@ -22,7 +22,7 @@ from src.Calculators.THREE_tree_caster import grid_maker
 Rsol_to_cm = 6.957e10 # [cm]
 
 @numba.njit
-def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii):
+def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii, what):
     """ Project density on XY plane. NB: to plot you have to transpose the saved data"""
     # Make the 3D grid 
     flat_den =  np.zeros(( len(x_radii), len(y_radii) ))
@@ -30,27 +30,34 @@ def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii):
     for i in range(len(x_radii)):
         for j in range(len(y_radii)):
             mass_zsum = 0
+            step = 0
             for k in range(len(z_radii) - 1): # NOTE SKIPPING LAST Z PLANE
                 dz = (z_radii[k+1] - z_radii[k]) * Rsol_to_cm
                 if mass_weigh:
                     mass_zsum += gridded_mass[i,j,k]
                     flat_den[i,j] += gridded_den[i,j,k] * dz * gridded_mass[i,j,k]
                 else:
-                    flat_den[i,j] += gridded_den[i,j,k] # * dz
+                    if what == 'density':
+                        flat_den[i,j] += gridded_den[i,j,k] * dz
+                    else: 
+                        flat_den[i,j] += gridded_den[i,j,k]
+                        step += 1
             if mass_weigh:
                 flat_den[i,j] = np.divide(flat_den[i,j], mass_zsum)
+            if what != 'density': 
+                flat_den[i,j] /= step
     return flat_den
  
 if __name__ == '__main__':
-    m = 4
+    m = 6
     save = False 
-    check = 'S60ComptonHires' 
+    check = 'fid' 
     what = 'temperature' # temperature or density
     snapshots, days = select_snap(m, check)
 
     for snap in snapshots:
         _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, check, what, False,
-                                                        100, 100, 10)
+                                                        500, 500, 20, what)
         flat_den = projector(grid_den, grid_mass, False,
                              xs, ys, zs)
 
@@ -76,7 +83,6 @@ if __name__ == '__main__':
             plt.rcParams['figure.figsize'] = [6, 4]
             plt.rcParams['axes.facecolor']= 	'whitesmoke'
             
-            
             # Clean
             den_plot = np.nan_to_num(flat_den, nan = -1, neginf = -1)
             den_plot = np.log10(den_plot)
@@ -86,25 +92,26 @@ if __name__ == '__main__':
             if what == 'density':
                 cb_text = r'Density [g/cm$^2$]'
                 vmin = 0
-                vmax = 7
+                vmax = 6
             elif what == 'temperature':
                 cb_text = r'Temperature [K]'
-                vmin = 0
-                vmax = 7
+                vmin = 2
+                vmax = 8
             else:
                 raise ValueError('Hate to break it to you champ \n \
                                  but we don\'t have that quantity')
                     
-            # ax.set_xlim(-15_000, 2000)
-            # ax.set_ylim(-4_000, 4000)
-            ax.set_xlabel(r' X [$R_\odot$]', fontsize = 14)
-            ax.set_ylabel(r' Y [R$_\odot$]', fontsize = 14)
-            img = ax.pcolormesh(xs, ys, den_plot.T, cmap = 'cet_fire',
+            ax.set_xlim(-1, 10/20_000)
+            ax.set_ylim(-0.2, 0.2)
+            ax.set_xlabel(r' X [x/$R_a$]', fontsize = 14)
+            ax.set_ylabel(r' Y [y/$R_a$]', fontsize = 14)
+            img = ax.pcolormesh(xs/20_000, ys/20_000, den_plot.T, cmap = 'cet_fire',
                                 vmin = vmin, vmax = vmax)
             cb = plt.colorbar(img)
             cb.set_label(cb_text, fontsize = 14)
    
             ax.set_title('XY Projection', fontsize = 16)
+            plt.savefig(f'{snap}T.png')
             plt.show()
             
     
