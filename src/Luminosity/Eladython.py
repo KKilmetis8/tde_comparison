@@ -72,10 +72,33 @@ plank = np.reshape(plank, (len(T_cool), len(Rho_cool)))
 
 from scipy.interpolate import RegularGridInterpolator
 # Fill value none extrapolates
-rossland2 = RegularGridInterpolator( (T_cool, Rho_cool), rossland.T, 
-                                    bounds_error= False, fill_value=None)
-plank2 = RegularGridInterpolator( (T_cool, Rho_cool), plank.T, 
-                                   bounds_error= False, fill_value=None)
+def linearpad(D0,z0):
+    factor = 100
+    dz = z0[-1] - z0[-2]
+    # print(np.shape(D0))
+    dD = D0[-1,:] - D0[-2,:]
+    
+    z = [zi for zi in z0]
+    z.append(z[-1] + factor*dz)
+    z = np.array(z)
+    
+    D = [di for di in D0]
+
+    D.append(D[-1][:] + factor*dD)
+    return np.array(D), np.array(z)
+
+def pad_interp(x,y,V):
+    Vn, xn = linearpad(V, x)
+    Vn, xn = linearpad(np.fliplr(Vn), np.flip(xn))
+    Vn = Vn.T
+    Vn, yn = linearpad(Vn, y)
+    Vn, yn = linearpad(np.fliplr(Vn), np.flip(yn))
+    Vn = Vn.T
+    return x, y, V
+    
+T_cool2, Rho_cool2, rossland2 = pad_interp(T_cool, Rho_cool, rossland)
+_, _, plank2 = pad_interp(T_cool, Rho_cool, plank)
+
 
 #%% Tree ----------------------------------------------------------------------
 
@@ -87,46 +110,44 @@ N_ray = 5_000
 # In the future these will be ray class
 
 # Holders Rays
-d_ray = np.zeros((N_ray, 192))
-r_ray = np.zeros((N_ray, 192))
-T_ray = np.zeros((N_ray, 192))
-Trad_ray = np.zeros((N_ray, 192))
-Tnew_ray = np.zeros((N_ray, 192))
-tau_ray = np.zeros((N_ray, 192))
-tau_therm_ray = np.zeros((N_ray, 192))
-v_ray = np.zeros((N_ray, 192))
-c_ray = np.zeros((N_ray, 192))
+# d_ray = np.zeros((N_ray, 192))
+# r_ray = np.zeros((N_ray, 192))
+# T_ray = np.zeros((N_ray, 192))
+# Trad_ray = np.zeros((N_ray, 192))
+# Tnew_ray = np.zeros((N_ray, 192))
+# tau_ray = np.zeros((N_ray, 192))
+# tau_therm_ray = np.zeros((N_ray, 192))
+# v_ray = np.zeros((N_ray, 192))
+# c_ray = np.zeros((N_ray, 192))
 
 # Holders Photosphere / Thermalization
-d_photo = np.zeros(192)
-x_therm = np.zeros(192) 
-y_therm = np.zeros(192)
-z_therm = np.zeros(192)
-vr_therm = np.zeros(192)
-T_photo = np.zeros(192)
-r_photo = np.zeros(192)
-r_therm = np.zeros(192) 
-photo_ind = np.zeros(192)
-v_photo = np.zeros(192)
-T_avg_photo = np.zeros(192)
-L_avg = np.zeros(192)
-L = np.zeros(192)
-Lnew = np.zeros(192)
-L_g = np.zeros(192)
-L_r = np.zeros(192)
-L_i = np.zeros(192)
-L_uvw2 = np.zeros(192)
-L_uvm2 = np.zeros(192)
-L_uvw1 = np.zeros(192)
-L_uvotu = np.zeros(192)
-L_XRT = np.zeros(192)
-L_XRT2 = np.zeros(192)
+# d_photo = np.zeros(192)
+# x_therm = np.zeros(192) 
+# y_therm = np.zeros(192)
+# z_therm = np.zeros(192)
+# vr_therm = np.zeros(192)
+# T_photo = np.zeros(192)
+# r_photo = np.zeros(192)
+# r_therm = np.zeros(192) 
+# photo_ind = np.zeros(192)
+# v_photo = np.zeros(192)
+# T_avg_photo = np.zeros(192)
+# L_avg = np.zeros(192)
+# L = np.zeros(192)
+# Lnew = np.zeros(192)
+# L_g = np.zeros(192)
+# L_r = np.zeros(192)
+# L_i = np.zeros(192)
+# L_uvw2 = np.zeros(192)
+# L_uvm2 = np.zeros(192)
+# L_uvw1 = np.zeros(192)
+# L_uvotu = np.zeros(192)
+# L_XRT = np.zeros(192)
+# L_XRT2 = np.zeros(192)
 
 # Flux?
 F_photo = np.zeros((192, f_num))
-F_photo_linear = np.zeros((192, f_num))
 F_photo_temp = np.zeros((192, f_num))
-F_photo_linear = np.zeros((192, f_num))
 
 # Lines 99-128 use some files we don't have, I think we only need
 # these for blue. Ignore for now 
@@ -157,7 +178,7 @@ else:
     rmax = min(rmax, box[5] / mu_z)
 # This naming is so bad
 r = np.logspace( -0.25, np.log10(rmax), N_ray)
-alpha = r[1] - r[0] / (0.5 * ( r[0] + r[1]))
+alpha = (r[1] - r[0]) / (0.5 * ( r[0] + r[1]))
 dr = alpha * r
 
 x = r*mu_x
@@ -169,26 +190,32 @@ d = Den[idx] * c.den_converter
 t = T[idx]
 # i honest to goodness do not understand why we interpolate for a second time
 # i think we dont actually do it twice
-sigma_rossland = np.exp(rossland2(np.array([np.log(t), np.log(d)]).T))
-sigma_plank = np.exp(plank2(np.array([np.log(t), np.log(d)]).T))
 
-# Optical Depth --------------------------------------------------------------------------------
+
+sigma_rossland = RegularGridInterpolator( (T_cool2, Rho_cool2), rossland2.T, 
+                                    bounds_error= False, fill_value=0)
+sigma_plank = RegularGridInterpolator( (T_cool2, Rho_cool2), plank2.T, 
+                                   bounds_error= False, fill_value=0)
+
+sigma_rossland_eval = np.exp(sigma_rossland(np.array([np.log(t), np.log(d)]).T))
+sigma_plank_eval = np.exp(sigma_plank(np.array([np.log(t), np.log(d)]).T))
+# Optical Depth ---------------------------------------------------------------
 # Okay, line 232, this is the hard one.
 import scipy.integrate as sci
 r_fuT = np.flipud(r.T)
-# QUESTION this looks like the optical depth calculation
-kappa_rossland = np.flipud(sigma_rossland) 
+
+kappa_rossland = np.flipud(sigma_rossland_eval) 
 los = - np.flipud(sci.cumulative_trapezoid(r_fuT, kappa_rossland, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
 
-kappa_plank = np.flipud(sigma_plank) 
+kappa_plank = np.flipud(sigma_plank_eval) 
 los_abs = - np.flipud(sci.cumulative_trapezoid(r_fuT, kappa_plank, initial = 0)) * c.Rsol_to_cm
 
-k_effective = np.sqrt(3 * np.flipud(sigma_plank) * np.flipud(sigma_rossland)) 
-los_effective = - np.flipud(sci.cumulative_trapezoid(r_fuT, k_effective)) * c.Rsol_to_cm
+k_effective = np.sqrt(3 * np.flipud(sigma_plank_eval) * np.flipud(sigma_rossland_eval)) 
+los_effective = - np.flipud(sci.cumulative_trapezoid(r_fuT, k_effective, initial = 0)) * c.Rsol_to_cm
 
-tau_tot = dr.T * c.Rsol_to_cm * sigma_rossland
+tau_tot = dr.T * c.Rsol_to_cm * sigma_rossland_eval
 
-#%% Red ----------------------------------------------------------------------------------------
+#%% Red -----------------------------------------------------------------------
 
 # Get 20 unique, nearest neighbors
 xyz3 = np.array([X[idx], Y[idx], Z[idx]]).T
@@ -201,7 +228,6 @@ dx = 0.5 * Vol[idx]**(1/3)
 
 # Get the Grads
 from scipy.interpolate import griddata
-# QUESTION: I assume this is the part where we take the neighbors of the photo
 # sphere and get the gradient on them. Is it neccecery to re-interpolate?
 
 # scattered interpolant returns a function
@@ -211,35 +237,34 @@ gradx_p = griddata( f_inter_input, Rad_den[idxnew],
                     xi = np.array([ X[idx]+dx, Y[idx], Z[idx]]).T )
 gradx_m = griddata( f_inter_input, Rad_den[idxnew],
                     xi = np.array([ X[idx]-dx, Y[idx], Z[idx]]).T )
-gradx = gradx_p - gradx_m
+gradx = (gradx_p - gradx_m)/ (2*dx)
 
 grady_p = griddata( f_inter_input, Rad_den[idxnew],
                     xi = np.array([ X[idx], Y[idx]+dx, Z[idx]]).T )
 grady_m = griddata( f_inter_input, Rad_den[idxnew],
                     xi = np.array([ X[idx], Y[idx]-dx, Z[idx]]).T )
-grady = grady_p - grady_m
+grady = (grady_p - grady_m)/ (2*dx)
 
 gradz_p = griddata( f_inter_input, Rad_den[idxnew],
                     xi = np.array([ X[idx], Y[idx], Z[idx]+dx]).T )
 gradz_m = griddata( f_inter_input, Rad_den[idxnew],
                     xi = np.array([ X[idx], Y[idx], Z[idx]-dx]).T )
-gradz = gradz_p - gradz_m
+# some nans here
+gradz_m = np.nan_to_num(gradz_m, nan = 0)
+gradz = (gradz_p - gradz_m)/ (2*dx)
 
 grad = np.sqrt( (mu_x * gradx)**2 + (mu_y*grady)**2 + (mu_z*gradz)**2)
 # v_grad = np.sqrt( (VX[idx] * gradx)**2 +  (VY[idx] * grady)**2 + (VZ[idx] * gradz)**2)
-R_lamda = grad / ( c.Rsol_to_cm* sigma_rossland* Rad_den[idx])
+R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx])
 R_lamda[R_lamda < 1e-10] = 1e-10
-fld_factor = 3 * ( ( 1/np.tanh(R_lamda) ) -  (1/R_lamda) ) / R_lamda 
+fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
 
 from scipy.ndimage import uniform_filter1d # does moving mean without fucking the shape up
-# QUESTION: Why smooth it?
-smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * grad, 7)
-
-# QUESTION: If you smooth it, it is no longer len(Nray) but Nray-7
-
-# QUESTION: why use only the 1st one? 
+smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * grad / sigma_rossland_eval, 7)
+#%%
 b = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0]
-b2 = np.argmin(np.abs(los_effective-5))
+b2 = np.where(los_effective-5>0)[0][0]
+
 Lphoto2 = 4*np.pi*c.c*smoothed_flux[b] * c.Msol_to_g / (c.t**2)
 if Lphoto2 < 0:
     Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
@@ -247,10 +272,10 @@ max_length = 4*np.pi*c.c*Rad_den[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t*
 Lphoto = np.min( [Lphoto2, max_length]) 
 
 
-# Spectra -------------------------------------------
+# Spectra ---------------------------------------------------------------------
 los_effective[los_effective>30] = 30
-for k in range(b2, len(r)-1): # los_effective is 4999 for some reason....
-    F_photo_temp[i,:] += sigma_plank[k] * np.exp(-los_effective[k]) * frequencies**3 / (c.c**2 * ( np.exp(c.h * frequencies / (c.Kb * t[k])) - 1))
+for k in range(b2, len(r)):
+    F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * frequencies**3 / (c.c**2 * ( np.exp(c.h * frequencies / (c.Kb * t[k])) - 1))
 
 F_photo_temp[i,:] *= Lphoto / np.trapz(F_photo_temp[i,:], frequencies)
 # F_photo[i,:] = cross_dot[i,:] * F_photo_temp[i,:]
