@@ -64,7 +64,7 @@ def ray_maker(fix, m, check, num):
     Vol = np.load(pre + fix + '/Vol_' + fix + '.npy')
     
     # Move pericenter to 0
-    X -= Rt
+    #X -= Rt
     # Convert Energy / Mass to Energy Density in CGS
     Rad *= Den 
     Rad *= en_den_converter

@@ -49,17 +49,17 @@ def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii, 
     return flat_den
  
 if __name__ == '__main__':
-    m = 6
+    m = 5
     save = False 
     check = 'fid' 
-    what = 'temperature' # temperature or density
-    snapshots, days = select_snap(m, check)
+    what = 'density' # temperature or density
+    snapshots = select_snap(m, check)
 
     for snap in snapshots:
         _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, check, what, False,
-                                                        500, 500, 20, what)
+                                                        300, 300, 20)
         flat_den = projector(grid_den, grid_mass, False,
-                             xs, ys, zs)
+                             xs, ys, zs, what)
 
         if save:
             if alice:
@@ -101,11 +101,11 @@ if __name__ == '__main__':
                 raise ValueError('Hate to break it to you champ \n \
                                  but we don\'t have that quantity')
                     
-            ax.set_xlim(-1, 10/20_000)
-            ax.set_ylim(-0.2, 0.2)
-            ax.set_xlabel(r' X [x/$R_a$]', fontsize = 14)
-            ax.set_ylabel(r' Y [y/$R_a$]', fontsize = 14)
-            img = ax.pcolormesh(xs/20_000, ys/20_000, den_plot.T, cmap = 'cet_fire',
+            # ax.set_xlim(-1, 10/20_000)
+            # ax.set_ylim(-0.2, 0.2)
+            ax.set_xlabel(r' X [$R_\odot$]', fontsize = 14)
+            ax.set_ylabel(r' Y [$R_\odot$]', fontsize = 14)
+            img = ax.pcolormesh(xs, ys, den_plot.T, cmap = 'cet_fire',
                                 vmin = vmin, vmax = vmax)
             cb = plt.colorbar(img)
             cb.set_label(cb_text, fontsize = 14)

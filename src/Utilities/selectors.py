@@ -19,9 +19,8 @@ def select_prefix(m, check):
         pre = str(m) + '/'
     return pre
 
-def select_snap(m, check):
+def select_snap(m, mstar, rstar, check):
     Mbh = 10**m
-    t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
     pre = select_prefix(m, check)
     days = []
     if alice:
@@ -37,14 +36,13 @@ def select_snap(m, check):
         if m == 4 and check == 'S60ComptonHires':
             snapshots = [234] 
         if m == 5:
-            snapshots = [269]
+            snapshots = [308]
         if m == 6 and check == 'fid':
             snapshots = [844] # [844, 882, 925, 950]#, 1008] 
     for snap in snapshots:
         snap = str(snap) 
-        day = np.round(days_since_distruption( pre +
-                    snap + '/snap_' + snap + '.h5'), 1)
-        t_by_tfb = day / t_fall
+        t_by_tfb = np.round(days_since_distruption( pre +
+                    snap + '/snap_' + snap + '.h5', Mbh, mstar, rstar), 1)
         days.append(t_by_tfb)
     return snapshots, days
 

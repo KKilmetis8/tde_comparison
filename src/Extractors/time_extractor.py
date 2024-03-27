@@ -21,13 +21,17 @@ snapshot233= "/Users/paolamartire/tde_comparison/4/233/snap_full_233.h5"
 snapshot254= "/Users/paolamartire/tde_comparison/4/254/snap_full_254.h5"
 snapshot263 = "/Users/paolamartire/tde_comparison/4/263/snap_full_263.h5"
 snapshot277 = "/Users/paolamartire/tde_comparison/4/277/snap_full_277.h5"
+snapshot269 = '5/269/snap_269.h5'
+snapshot844 = '6/844/snap_844.h5'
+snapshot308 = '5/308/snap_308.h5'
+
 #%% Get Energies
 
 ## File structure is
 # box, cycle, time, mpi, rank0 ... rank99.
 # This iterates over all the ranks
 
-def days_since_distruption(filename):
+def days_since_distruption(filename, mbh, mstar, rstar):
     '''
     Loads the file, extracts specific kinetic and potential energies 
     
@@ -49,10 +53,14 @@ def days_since_distruption(filename):
     Msol = 1.98847e30 # kg
     Rsol = 6.957e8 # m
     t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G=1
-    Mbh = 1e6 # * Msol
+
     time = np.array(f['Time'])
     days = time.sum()*t / (24*60*60)
-    return days
+    tfb = 40 * np.power( mbh/1e6, 1/2) * np.power(mstar,-1) * np.power(rstar, 3/2)
+    print('days/tfb', days/tfb)
+    print('days', days)
+
+    return days/tfb
 
 
 #%% 

@@ -120,9 +120,11 @@ if __name__ == "__main__":
 
     # Choose BH 
     m = 5
+    mstar = 0.5
+    rstar = 0.47
     check = 'fid'
     num = 1000
-    #snapshots, days = s.select_snap(m, check)
+    snapshots, days = s.select_snap(m, mstar, rstar, check)
     opacity_kind = s.select_opacity(m)
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
@@ -157,8 +159,8 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(1,2): 
-        snap = 226 #snapshots[idx_sn]
+    for idx_sn in range(0,1): 
+        snap = snapshots[idx_sn]
         bol_fld = luminosity_fld_fix[idx_sn]
         # Fancy f string
         filename = f"{m}/{snap}/snap_{snap}.h5"

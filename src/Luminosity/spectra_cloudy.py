@@ -135,7 +135,7 @@ if __name__ == "__main__":
     save = True
 
     # Choose BH 
-    m = 6
+    m = 5
     check = 'fid'#S60ComptonHires'
     num = 1000
     snapshots, days = select_snap(m, check)
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     # Choose freq range
     n_min = 2.08e13
     n_max = 6.25e23
-    n_spacing = 100 # Elad used 1000, but no difference
+    n_spacing = 5000 # Elad used 5000, but no difference
     x_arr = log_array(n_min, n_max, n_spacing)
     n_arr = 10**x_arr
     

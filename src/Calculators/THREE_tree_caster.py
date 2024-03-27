@@ -58,6 +58,9 @@ def grid_maker(fix, m, check, what, mass_weigh, x_num, y_num, z_num = 100):
     if m == 6:
         y_start = -20 * Rt
         y_stop = 30 * Rt
+    if m == 5:
+        y_start = -20 * Rt
+        y_stop = 30 * Rt
     if m == 4:
         y_start = -30 * Rt # -0.5*apocenter
         y_stop = 30 * Rt # 0.5*apocenter

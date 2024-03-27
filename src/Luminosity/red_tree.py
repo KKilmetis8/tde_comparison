@@ -306,12 +306,14 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
 ##
 if __name__ == "__main__":
     save = True
-    m = 6 # Choose BH
+    m = 5 # Choose BH
+    mstar = 0.5
+    rstar = 0.47
     check = 'fid' # Choose fid // S60ComptonHires
     num = 1000
     opacity_kind = s.select_opacity(m)
 
-    snapshots, days = s.select_snap(m, check)
+    snapshots, days = s.select_snap(m, mstar, rstar, check)
     now = datetime.now()
     now = now.strftime("%d/%m/%Y %H:%M:%S")
 
