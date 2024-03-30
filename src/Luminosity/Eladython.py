@@ -189,11 +189,10 @@ y = r*mu_y
 z = r*mu_z
 xyz2 = np.array([x, y, z]).T
 _ , idx = tree.query(xyz2)
-d = Den[idx] * c.den_converter
+d = Den[idx] * c.den_converter #thus density is CGS
 t = T[idx]
 # i honest to goodness do not understand why we interpolate for a second time
 # i think we dont actually do it twice
-
 
 sigma_rossland = RegularGridInterpolator( (T_cool2, Rho_cool2), rossland2.T, 
                                     bounds_error= False, fill_value=0)
@@ -207,9 +206,9 @@ sigma_plank_eval = np.exp(sigma_plank(np.array([np.log(t), np.log(d)]).T))
 import scipy.integrate as sci
 r_fuT = np.flipud(r.T)
 
-# Commented all the conversion... isn't everything adimensional?
+# We multiply for Rsol beacuse r_fuT is in solar units, kappa in cm
 kappa_rossland = np.flipud(sigma_rossland_eval) 
-los = - np.flipud(sci.cumulative_trapezoid(r_fuT, kappa_rossland, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
+los = - np.flipud(sci.cumulative_trapezoid(r_fuT, kappa_rossland, initial = 0)) * c.Rsol_to_cm 
 
 kappa_plank = np.flipud(sigma_plank_eval) 
 los_abs = - np.flipud(sci.cumulative_trapezoid(r_fuT, kappa_plank, initial = 0)) * c.Rsol_to_cm
@@ -258,9 +257,9 @@ gradz_m = np.nan_to_num(gradz_m, nan = 0)
 gradz = (gradz_p - gradz_m)/ (2*dx)
 
 grad = np.sqrt( (mu_x * gradx)**2 + (mu_y*grady)**2 + (mu_z*gradz)**2)
+print(sigma_rossland_eval)
 # v_grad = np.sqrt( (VX[idx] * gradx)**2 +  (VY[idx] * grady)**2 + (VZ[idx] * gradz)**2)
-# R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx]) #why conversion? grad amd sigma*Rad have yhe same units
-R_lamda = grad / ( sigma_rossland_eval* Rad_den[idx])
+R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx]) #conversion because grad is in 1/Rsol and sigma in 1/cm
 R_lamda[R_lamda < 1e-10] = 1e-10
 fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
 
@@ -275,7 +274,6 @@ if Lphoto2 < 0:
     Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
 max_length = 4*np.pi*c.c*Rad_den[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
 Lphoto = np.min( [Lphoto2, max_length]) 
-print(Lphoto)
 
 
 # Spectra ---------------------------------------------------------------------
