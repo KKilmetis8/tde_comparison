@@ -5,6 +5,8 @@ Created on Tue Mar 26 18:52:21 2024
 
 @author: konstantinos
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
 
 # The goal is to replicate Elad's script. No nice code, no nothing. A shit ton
 # of comments though. 
@@ -67,6 +69,7 @@ rossland = np.loadtxt(f'{opac_path}/ross.txt')
 
 # Opacity Interpolation
 # T_interp, Rho_interp = np.meshgrid(T_cool,Rho_cool) all commented out
+# PAOLA: why these 2 lines?
 rossland = np.reshape(rossland, (len(T_cool), len(Rho_cool)))
 plank = np.reshape(plank, (len(T_cool), len(Rho_cool)))
 
@@ -145,7 +148,7 @@ N_ray = 5_000
 # L_XRT = np.zeros(192)
 # L_XRT2 = np.zeros(192)
 
-# Flux?
+# Flux
 F_photo = np.zeros((192, f_num))
 F_photo_temp = np.zeros((192, f_num))
 
@@ -197,13 +200,14 @@ sigma_rossland = RegularGridInterpolator( (T_cool2, Rho_cool2), rossland2.T,
 sigma_plank = RegularGridInterpolator( (T_cool2, Rho_cool2), plank2.T, 
                                    bounds_error= False, fill_value=0)
 
-sigma_rossland_eval = np.exp(sigma_rossland(np.array([np.log(t), np.log(d)]).T))
+sigma_rossland_eval = np.exp(sigma_rossland(np.array([np.log(t), np.log(d)]).T)) #both d and t are in CGS, thus also sigma rosseland and plank
 sigma_plank_eval = np.exp(sigma_plank(np.array([np.log(t), np.log(d)]).T))
 # Optical Depth ---------------------------------------------------------------
 # Okay, line 232, this is the hard one.
 import scipy.integrate as sci
 r_fuT = np.flipud(r.T)
 
+# Commented all the conversion... isn't everything adimensional?
 kappa_rossland = np.flipud(sigma_rossland_eval) 
 los = - np.flipud(sci.cumulative_trapezoid(r_fuT, kappa_rossland, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
 
@@ -213,7 +217,7 @@ los_abs = - np.flipud(sci.cumulative_trapezoid(r_fuT, kappa_plank, initial = 0))
 k_effective = np.sqrt(3 * np.flipud(sigma_plank_eval) * np.flipud(sigma_rossland_eval)) 
 los_effective = - np.flipud(sci.cumulative_trapezoid(r_fuT, k_effective, initial = 0)) * c.Rsol_to_cm
 
-tau_tot = dr.T * c.Rsol_to_cm * sigma_rossland_eval
+tau_tot = dr.T * sigma_rossland_eval * c.Rsol_to_cm
 
 #%% Red -----------------------------------------------------------------------
 
@@ -255,7 +259,8 @@ gradz = (gradz_p - gradz_m)/ (2*dx)
 
 grad = np.sqrt( (mu_x * gradx)**2 + (mu_y*grady)**2 + (mu_z*gradz)**2)
 # v_grad = np.sqrt( (VX[idx] * gradx)**2 +  (VY[idx] * grady)**2 + (VZ[idx] * gradz)**2)
-R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx])
+# R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx]) #why conversion? grad amd sigma*Rad have yhe same units
+R_lamda = grad / ( sigma_rossland_eval* Rad_den[idx])
 R_lamda[R_lamda < 1e-10] = 1e-10
 fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
 
@@ -270,47 +275,49 @@ if Lphoto2 < 0:
     Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
 max_length = 4*np.pi*c.c*Rad_den[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
 Lphoto = np.min( [Lphoto2, max_length]) 
+print(Lphoto)
 
 
 # Spectra ---------------------------------------------------------------------
 los_effective[los_effective>30] = 30
 for k in range(b2, len(r)):
+    # F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * frequencies**3 / (c.c**2 * ( np.exp(denom) - 1))
     F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * frequencies**3 / (c.c**2 * ( np.exp(c.h * frequencies / (c.Kb * t[k])) - 1))
 
 F_photo_temp[i,:] *= Lphoto / np.trapz(F_photo_temp[i,:], frequencies)
 # F_photo[i,:] = cross_dot[i,:] * F_photo_temp[i,:]
 
-
 #%% Compare -------------------------------------------
-import matplotlib.pyplot as plt
-plt.rcParams['figure.figsize'] = [4 , 4]
-plt.rc('xtick', labelsize = 15) 
-plt.rc('ytick', labelsize = 15) 
+# import matplotlib.pyplot as plt
+# plt.rcParams['figure.figsize'] = [4 , 4]
+# plt.rc('xtick', labelsize = 15) 
+# plt.rc('ytick', labelsize = 15) 
 
-import mat73
-mat = mat73.loadmat('data/data_308.mat')
-def temperature(n):
-        return n * c.h / c.Kb
-elad_T = np.array([ temperature(n) for n in mat['nu']])
-for obs in range(1):
-    y = np.multiply(frequencies, mat['F_photo_temp'][obs])
-    plt.loglog(elad_T, y, c='b', linestyle = '--', label ='Elad')
+# import mat73
+# mat = mat73.loadmat('data/data_308.mat')
+# def temperature(n):
+#         return n * c.h / c.Kb
+# elad_T = np.array([ temperature(n) for n in mat['nu']])
+# for obs in range(1):
+#     y = np.multiply(frequencies, mat['F_photo_temp'][obs])
+#     plt.loglog(elad_T, y, c='b', linestyle = '--', label ='Elad')
     
-# us
-y_us = F_photo_temp[0] * frequencies
-# temp_us = [temperature(n) for n in frequencies]
-plt.loglog(elad_T, np.abs(y_us), c = 'k',label='us')
+# # us
+# y_us = F_photo_temp[0] * frequencies
+# # temp_us = [temperature(n) for n in frequencies]
+# plt.loglog(elad_T, np.abs(y_us), c = 'k',label='us')
 
-# pretty
-x_start = 1e3
-x_end = 1e8
-y_lowlim = 1e10#2e39
-y_highlim = 1.3e44
-plt.xlim(x_start,x_end)
-plt.ylim(y_lowlim, y_highlim)
-plt.loglog()
-plt.grid()
-plt.legend(fontsize = 14)
-plt.title(r'Spectrum 10$^5$ $M_\odot$, Snap: 308, Observer , no cross dot')
-plt.xlabel('Temperature [K]', fontsize = 16)
-plt.ylabel(r'$\nu L_\nu$ [erg/s]', fontsize = 16)
+# # pretty
+# x_start = 1e3
+# x_end = 1e8
+# y_lowlim = 1e10#2e39
+# y_highlim = 1.3e44
+# plt.xlim(x_start,x_end)
+# plt.ylim(y_lowlim, y_highlim)
+# plt.loglog()
+# plt.grid()
+# plt.legend(fontsize = 14)
+# plt.title(r'Spectrum 10$^5$ $M_\odot$, Snap: 308, Observer , no cross dot')
+# plt.xlabel('Temperature [K]', fontsize = 16)
+# plt.ylabel(r'$\nu L_\nu$ [erg/s]', fontsize = 16)
+# plt.show()
