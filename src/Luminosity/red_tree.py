@@ -226,13 +226,13 @@ def flux_calculator(grad_E, magnitude, selected_energy,
         
         # Calc R, eq. 28
         R_kr = magnitude[i] /  (k_ross * Energy)
-        print(magnitude[i]/Energy)
         invR = 1 / R_kr
         R_kr = float(R_kr) # to avoid dumb thing with tanh(R)
     
         # Calc lambda, eq. 27
         coth = 1 / np.tanh(R_kr)
         lamda = invR * (coth - invR)
+        print(k_ross)
         # Calc Flux, eq. 26
         Flux =  - c.c * grad_E[i]  * lamda / k_ross
         

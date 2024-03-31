@@ -200,6 +200,7 @@ sigma_plank = RegularGridInterpolator( (T_cool2, Rho_cool2), plank2,
                                    bounds_error= False, fill_value=0)
 sigma_rossland_eval = np.exp(sigma_rossland(np.array([np.log(t), np.log(d)]).T)) #both d and t are in CGS, thus also sigma rosseland and plank
 sigma_plank_eval = np.exp(sigma_plank(np.array([np.log(t), np.log(d)]).T))
+
 # Optical Depth ---------------------------------------------------------------
 # Okay, line 232, this is the hard one.
 import scipy.integrate as sci
@@ -268,12 +269,12 @@ smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * grad / sigma_rossland_ev
 b = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0]
 b2 = np.where(los_effective-5>0)[0][0]
 
+print(sigma_rossland_eval[b])
 Lphoto2 = 4*np.pi*c.c*smoothed_flux[b] * c.Msol_to_g / (c.t**2)
 if Lphoto2 < 0:
     Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
 max_length = 4*np.pi*c.c*Rad_den[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
 Lphoto = np.min( [Lphoto2, max_length]) 
-
 
 # Spectra ---------------------------------------------------------------------
 los_effective[los_effective>30] = 30
