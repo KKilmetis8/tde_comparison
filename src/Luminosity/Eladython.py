@@ -198,13 +198,15 @@ sigma_rossland = RegularGridInterpolator( (T_cool2, Rho_cool2), rossland2,
                                     bounds_error= False, fill_value=0)
 sigma_plank = RegularGridInterpolator( (T_cool2, Rho_cool2), plank2, 
                                    bounds_error= False, fill_value=0)
+
 sigma_rossland_eval = np.exp(sigma_rossland(np.array([np.log(t), np.log(d)]).T)) #both d and t are in CGS, thus also sigma rosseland and plank
+# with respect to our code, sigma_rossland_eval has 4/5 order of magnitude less. This + maybe multiplication for Rsol should fix the value of Lphoto
 sigma_plank_eval = np.exp(sigma_plank(np.array([np.log(t), np.log(d)]).T))
 
 # Optical Depth ---------------------------------------------------------------
 # Okay, line 232, this is the hard one.
 import scipy.integrate as sci
-r_fuT = np.flipud(r.T)
+r_fuT = np.flipud(r.T) 
 
 # We multiply for Rsol beacuse r_fuT is in solar units, kappa in cm
 kappa_rossland = np.flipud(sigma_rossland_eval) 
@@ -259,17 +261,17 @@ gradz = (gradz_p - gradz_m)/ (2*dx)
 grad = np.sqrt( (mu_x * gradx)**2 + (mu_y*grady)**2 + (mu_z*gradz)**2)
 # v_grad = np.sqrt( (VX[idx] * gradx)**2 +  (VY[idx] * grady)**2 + (VZ[idx] * gradz)**2)
 R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx]) #conversion because grad is in 1/Rsol and sigma in 1/cm
-
+print(sigma_rossland_eval)
 R_lamda[R_lamda < 1e-10] = 1e-10
 fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
 
 from scipy.ndimage import uniform_filter1d # does moving mean without fucking the shape up
-smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * grad / sigma_rossland_eval, 7)
+smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * grad / sigma_rossland_eval, 7) 
 #%%
 b = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0]
 b2 = np.where(los_effective-5>0)[0][0]
 
-print(sigma_rossland_eval[b])
+# print(R_lamda[[i<b for i in range(len(los))]])
 Lphoto2 = 4*np.pi*c.c*smoothed_flux[b] * c.Msol_to_g / (c.t**2)
 if Lphoto2 < 0:
     Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
@@ -284,7 +286,7 @@ for k in range(b2, len(r)):
     denom[denom>300] = 300 # according to Elad to avoid overflow
     F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * frequencies**3 / (c.c**2 * ( np.exp(denom) - 1)) 
 
-print('Lphoto: ', Lphoto)
+print('Lphoto: ', Lphoto2)
 F_photo_temp[i,:] *= Lphoto / np.trapz(F_photo_temp[i,:], frequencies)
 # F_photo[i,:] = cross_dot[i,:] * F_photo_temp[i,:]
 

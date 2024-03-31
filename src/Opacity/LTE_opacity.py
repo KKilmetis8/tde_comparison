@@ -275,9 +275,13 @@ if __name__ == '__main__':
             Tmin = np.exp(8.666)
             pre = '5/'
             fix = '308'
-            T_plot = np.linspace(1e5,6e5, 120)
+            T_snapplot = np.load(pre + fix + '/T_' + fix + '.npy') #np.linspace(1e5,6e5, 120)
+            T_snapplot = T_snapplot[::200]
+            rho_snapplot = np.load(pre + fix + '/Den_' + fix + '.npy') #np.linspace(1e-3, 8e-3, 150)
+            rho_snapplot = rho_snapplot[::200]*c.en_den_converter
+            T_plot = T_snapplot[(T_snapplot<Tmax) & (rho_snapplot<np.max(rho))]
+            rho_plot = rho_snapplot[(T_snapplot<Tmax) & (rho_snapplot<np.max(rho))]
             logT_plot = np.log(T_plot)
-            rho_plot = np.linspace(1e-3, 8e-3, 150)
             logrho_plot = np.log(rho_plot)
 
         kappa_lte = np.zeros((len(T_plot),len(rho_plot)))
@@ -296,22 +300,24 @@ if __name__ == '__main__':
 
         fig, axs = plt.subplots(1,2, tight_layout = True)
         # Old
-        img0 = axs[0].pcolormesh(logrho_plot, logT_plot, kappa_lte, cmap = 'cet_rainbow', vmin = -2, vmax = 4)
+        img0 = axs[0].pcolormesh(logrho_plot, logT_plot, kappa_lte, cmap = 'cet_rainbow', vmin = -6, vmax = 4)
         cbar0 = plt.colorbar(img0)
         axs[0].set_xlabel(r'$\log_{10}\rho [g/cm^3]$', fontsize = 12)
         axs[0].set_ylabel(r'$\log_{10}$T [K]', fontsize = 12)
         # cbar0.set_label(r'$\log_{10}\kappa [1/cm]$', fontsize = 10)
         axs[0].title.set_text('Us before')
         # Eladython
-        img1 = axs[1].pcolormesh(logrho_plot, logT_plot, log_sigma_ross, cmap = 'cet_rainbow', vmin = -2, vmax = 4)
+        img1 = axs[1].pcolormesh(logrho_plot, logT_plot, log_sigma_ross, cmap = 'cet_rainbow', vmin = -6, vmax = 4)
         cbar1 = plt.colorbar(img1)
         axs[1].set_xlabel(r'$\log_{10}\rho [g/cm^3]$', fontsize = 12)
         cbar1.set_label(r'$\log_{10}\kappa [1/cm]$', fontsize = 10)
         axs[1].title.set_text('Eladython')
 
-        plt.suptitle(r'Opacity using $\rho$,T from tables')
         if tables:
+            plt.suptitle(r'Opacity using $\rho$,T from tables')
             plt.savefig('CompareOpacityTables.png')
         else: 
-            plt.savefig('CompareOpacity.png')
+            plt.savefig('CompareOpacityFromSnap.png')
         plt.show()
+
+    
