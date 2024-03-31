@@ -70,8 +70,8 @@ rossland = np.loadtxt(f'{opac_path}/ross.txt')
 # Opacity Interpolation
 # T_interp, Rho_interp = np.meshgrid(T_cool,Rho_cool) all commented out
 # PAOLA: why these 2 lines?
-rossland = np.reshape(rossland, (len(T_cool), len(Rho_cool)))
-plank = np.reshape(plank, (len(T_cool), len(Rho_cool)))
+# rossland = np.reshape(rossland, (len(T_cool), len(Rho_cool)))
+# plank = np.reshape(plank, (len(T_cool), len(Rho_cool)))
 
 from scipy.interpolate import RegularGridInterpolator
 # Fill value none extrapolates
@@ -194,11 +194,10 @@ t = T[idx]
 # i honest to goodness do not understand why we interpolate for a second time
 # i think we dont actually do it twice
 
-sigma_rossland = RegularGridInterpolator( (T_cool2, Rho_cool2), rossland2.T, 
+sigma_rossland = RegularGridInterpolator( (T_cool2, Rho_cool2), rossland2, 
                                     bounds_error= False, fill_value=0)
-sigma_plank = RegularGridInterpolator( (T_cool2, Rho_cool2), plank2.T, 
+sigma_plank = RegularGridInterpolator( (T_cool2, Rho_cool2), plank2, 
                                    bounds_error= False, fill_value=0)
-
 sigma_rossland_eval = np.exp(sigma_rossland(np.array([np.log(t), np.log(d)]).T)) #both d and t are in CGS, thus also sigma rosseland and plank
 sigma_plank_eval = np.exp(sigma_plank(np.array([np.log(t), np.log(d)]).T))
 # Optical Depth ---------------------------------------------------------------
@@ -257,9 +256,9 @@ gradz_m = np.nan_to_num(gradz_m, nan = 0)
 gradz = (gradz_p - gradz_m)/ (2*dx)
 
 grad = np.sqrt( (mu_x * gradx)**2 + (mu_y*grady)**2 + (mu_z*gradz)**2)
-print(sigma_rossland_eval)
 # v_grad = np.sqrt( (VX[idx] * gradx)**2 +  (VY[idx] * grady)**2 + (VZ[idx] * gradz)**2)
 R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx]) #conversion because grad is in 1/Rsol and sigma in 1/cm
+
 R_lamda[R_lamda < 1e-10] = 1e-10
 fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
 
@@ -280,8 +279,11 @@ Lphoto = np.min( [Lphoto2, max_length])
 los_effective[los_effective>30] = 30
 for k in range(b2, len(r)):
     # F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * frequencies**3 / (c.c**2 * ( np.exp(denom) - 1))
-    F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * frequencies**3 / (c.c**2 * ( np.exp(c.h * frequencies / (c.Kb * t[k])) - 1))
+    denom = c.h * frequencies / (c.Kb * t[k])
+    denom[denom>300] = 300 # according to Elad to avoid overflow
+    F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * frequencies**3 / (c.c**2 * ( np.exp(denom) - 1)) 
 
+print('Lphoto: ', Lphoto)
 F_photo_temp[i,:] *= Lphoto / np.trapz(F_photo_temp[i,:], frequencies)
 # F_photo[i,:] = cross_dot[i,:] * F_photo_temp[i,:]
 

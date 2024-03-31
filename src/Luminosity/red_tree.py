@@ -83,7 +83,7 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     Den = np.load(pre + snap + '/Den_' + snap + '.npy')
     Rad = np.load(pre +snap + '/Rad_' + snap + '.npy')
     
-    # convert in CGS
+    # convert in CGS 
     Rad *= Den 
     Rad *= c.en_den_converter
 
@@ -226,6 +226,7 @@ def flux_calculator(grad_E, magnitude, selected_energy,
         
         # Calc R, eq. 28
         R_kr = magnitude[i] /  (k_ross * Energy)
+        print(magnitude[i]/Energy)
         invR = 1 / R_kr
         R_kr = float(R_kr) # to avoid dumb thing with tanh(R)
     
