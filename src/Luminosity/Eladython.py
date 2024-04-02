@@ -154,9 +154,9 @@ F_photo_temp = np.zeros((192, f_num))
 
 # Lines 99-128 use some files we don't have, I think we only need
 # these for blue. Ignore for now 
-
+rb_all = []
 # Dynamic Box -----------------------------------------------------------------
-#for i in range(1):
+#for i in range(140):
 i = 0
 # Progress 
 if i % 10 == 0:
@@ -197,7 +197,7 @@ t = T[idx]
 sigma_rossland = RegularGridInterpolator( (T_cool2, Rho_cool2), rossland2, 
                                     bounds_error= False, fill_value=0)
 sigma_plank = RegularGridInterpolator( (T_cool2, Rho_cool2), plank2, 
-                                   bounds_error= False, fill_value=0)
+                                bounds_error= False, fill_value=0)
 
 sigma_rossland_eval = np.exp(sigma_rossland(np.array([np.log(t), np.log(d)]).T)) #both d and t are in CGS, thus also sigma rosseland and plank
 # with respect to our code, sigma_rossland_eval has 4/5 order of magnitude less. This + maybe multiplication for Rsol should fix the value of Lphoto
@@ -261,7 +261,6 @@ gradz = (gradz_p - gradz_m)/ (2*dx)
 grad = np.sqrt( (mu_x * gradx)**2 + (mu_y*grady)**2 + (mu_z*gradz)**2)
 # v_grad = np.sqrt( (VX[idx] * gradx)**2 +  (VY[idx] * grady)**2 + (VZ[idx] * gradz)**2)
 R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx]) #conversion because grad is in 1/Rsol and sigma in 1/cm
-print(sigma_rossland_eval)
 R_lamda[R_lamda < 1e-10] = 1e-10
 fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
 
@@ -269,6 +268,10 @@ from scipy.ndimage import uniform_filter1d # does moving mean without fucking th
 smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * grad / sigma_rossland_eval, 7) 
 #%%
 b = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0]
+#     rb_all.append(r[b])
+#     print(b)
+
+# np.savetxt('photosphereEladhton.txt', rb_all)
 b2 = np.where(los_effective-5>0)[0][0]
 
 # print(R_lamda[[i<b for i in range(len(los))]])
@@ -286,7 +289,7 @@ for k in range(b2, len(r)):
     denom[denom>300] = 300 # according to Elad to avoid overflow
     F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * frequencies**3 / (c.c**2 * ( np.exp(denom) - 1)) 
 
-print('Lphoto: ', Lphoto2)
+print('Lphoto: ', Lphoto)
 F_photo_temp[i,:] *= Lphoto / np.trapz(F_photo_temp[i,:], frequencies)
 # F_photo[i,:] = cross_dot[i,:] * F_photo_temp[i,:]
 

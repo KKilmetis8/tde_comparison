@@ -226,7 +226,6 @@ def flux_calculator(grad_E, magnitude, selected_energy,
         
         # Calc R, eq. 28
         R_kr = magnitude[i] /  (k_ross * Energy)
-        print(k_ross)
         invR = 1 / R_kr
         R_kr = float(R_kr) # to avoid dumb thing with tanh(R)
     
