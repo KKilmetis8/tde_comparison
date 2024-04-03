@@ -5,13 +5,13 @@ Created on Tue Mar 26 18:52:21 2024
 
 @author: konstantinos
 """
-import sys
-sys.path.append('/Users/paolamartire/tde_comparison')
 
 # The goal is to replicate Elad's script. No nice code, no nothing. A shit ton
 # of comments though. 
 import numpy as np
 import h5py
+import matplotlib.pyplot as plt
+
 import src.Utilities.prelude as c
 # Okay, import the constants. Do not be absolutely terrible'''
     # n_start = snap_no_start
@@ -69,26 +69,28 @@ rossland = np.loadtxt(f'{opac_path}/ross.txt')
 
 # Opacity Interpolation
 # T_interp, Rho_interp = np.meshgrid(T_cool,Rho_cool) all commented out
-# PAOLA: why these 2 lines?
 # rossland = np.reshape(rossland, (len(T_cool), len(Rho_cool)))
 # plank = np.reshape(plank, (len(T_cool), len(Rho_cool)))
 
-from scipy.interpolate import RegularGridInterpolator
 # Fill value none extrapolates
 def linearpad(D0,z0):
     factor = 100
     dz = z0[-1] - z0[-2]
     # print(np.shape(D0))
-    dD = D0[-1,:] - D0[-2,:]
+    dD = D0[:,-1] - D0[:,-2]
     
     z = [zi for zi in z0]
     z.append(z[-1] + factor*dz)
+    
     z = np.array(z)
     
-    D = [di for di in D0]
+    #D = [di for di in D0]
 
-    D.append(D[-1][:] + factor*dD)
-    return np.array(D), np.array(z)
+    to_stack = np.add(D0[:,-1], factor*dD)
+    to_stack = np.reshape(to_stack, (len(to_stack),1) )
+    D = np.hstack((D0, to_stack))
+    #D.append(to_stack)
+    return np.array(D), z
 
 def pad_interp(x,y,V):
     Vn, xn = linearpad(V, x)
@@ -97,11 +99,10 @@ def pad_interp(x,y,V):
     Vn, yn = linearpad(Vn, y)
     Vn, yn = linearpad(np.fliplr(Vn), np.flip(yn))
     Vn = Vn.T
-    return x, y, V
-    
-T_cool2, Rho_cool2, rossland2 = pad_interp(T_cool, Rho_cool, rossland)
-_, _, plank2 = pad_interp(T_cool, Rho_cool, plank)
-
+    return xn, yn, Vn
+# #%%    
+T_cool2, Rho_cool2, rossland2 = pad_interp(T_cool, Rho_cool, rossland.T)
+_, _, plank2 = pad_interp(T_cool, Rho_cool, plank.T)
 
 #%% Tree ----------------------------------------------------------------------
 
@@ -148,15 +149,15 @@ N_ray = 5_000
 # L_XRT = np.zeros(192)
 # L_XRT2 = np.zeros(192)
 
-# Flux
+# Flux?
 F_photo = np.zeros((192, f_num))
 F_photo_temp = np.zeros((192, f_num))
 
 # Lines 99-128 use some files we don't have, I think we only need
 # these for blue. Ignore for now 
-rb_all = []
+
 # Dynamic Box -----------------------------------------------------------------
-#for i in range(140):
+#for i in range(1):
 i = 0
 # Progress 
 if i % 10 == 0:
@@ -189,141 +190,148 @@ y = r*mu_y
 z = r*mu_z
 xyz2 = np.array([x, y, z]).T
 _ , idx = tree.query(xyz2)
-d = Den[idx] * c.den_converter #thus density is CGS
+d = Den[idx] * c.den_converter
 t = T[idx]
 # i honest to goodness do not understand why we interpolate for a second time
 # i think we dont actually do it twice
+from scipy.interpolate import  griddata
 
-sigma_rossland = RegularGridInterpolator( (T_cool2, Rho_cool2), rossland2, 
-                                    bounds_error= False, fill_value=0)
-sigma_plank = RegularGridInterpolator( (T_cool2, Rho_cool2), plank2, 
-                                bounds_error= False, fill_value=0)
+# sigma_rossland = RectBivariateSpline(x = T_cool, y = Rho_cool, z = rossland)
+# sigma_rossland_eval = np.exp(sigma_rossland(np.log(t), np.log(d), grid = False))
+# sigma_plank = RectBivariateSpline(x = T_cool, y = Rho_cool, z = plank)
+# sigma_plank_eval = np.exp(sigma_plank(np.log(t), np.log(d), grid = False))
 
-sigma_rossland_eval = np.exp(sigma_rossland(np.array([np.log(t), np.log(d)]).T)) #both d and t are in CGS, thus also sigma rosseland and plank
-# with respect to our code, sigma_rossland_eval has 4/5 order of magnitude less. This + maybe multiplication for Rsol should fix the value of Lphoto
-sigma_plank_eval = np.exp(sigma_plank(np.array([np.log(t), np.log(d)]).T))
+T_cool2, Rho_cool2 = np.meshgrid(T_cool2,Rho_cool2)
+T_cool2 = T_cool2.ravel()
 
-# Optical Depth ---------------------------------------------------------------
+Rho_cool2 = Rho_cool2.ravel()
+
+cool = np.array([T_cool2, Rho_cool2]).T
+# sigma_rossland = griddata( (T_cool2, Rho_cool2), rossland2.ravel(),
+#                             xi = np.array([np.log(t), np.log(d)]).T )
+sigma_rossland = griddata( cool, rossland2.ravel(),
+                            xi = np.array([np.log(t), np.log(d)]).T )
+sigma_plank = griddata( (T_cool2, Rho_cool2), plank2.ravel(),
+                            xi = np.array([np.log(t), np.log(d)]).T )
+
+sigma_rossland_eval = np.exp(sigma_rossland)
+sigma_plank_eval = np.exp(sigma_plank)
+#%% Optical Depth ---------------------------------------------------------------
 # Okay, line 232, this is the hard one.
 import scipy.integrate as sci
-r_fuT = np.flipud(r.T) 
 
-# We multiply for Rsol beacuse r_fuT is in solar units, kappa in cm
+r_fuT = np.flipud(r.T)
+
 kappa_rossland = np.flipud(sigma_rossland_eval) 
-los = - np.flipud(sci.cumulative_trapezoid(r_fuT, kappa_rossland, initial = 0)) * c.Rsol_to_cm 
+los = - np.flipud(sci.cumulative_trapezoid(kappa_rossland, r_fuT, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
 
 kappa_plank = np.flipud(sigma_plank_eval) 
-los_abs = - np.flipud(sci.cumulative_trapezoid(r_fuT, kappa_plank, initial = 0)) * c.Rsol_to_cm
+los_abs = - np.flipud(sci.cumulative_trapezoid(kappa_plank, r_fuT, initial = 0)) * c.Rsol_to_cm
 
 k_effective = np.sqrt(3 * np.flipud(sigma_plank_eval) * np.flipud(sigma_rossland_eval)) 
-los_effective = - np.flipud(sci.cumulative_trapezoid(r_fuT, k_effective, initial = 0)) * c.Rsol_to_cm
-
-tau_tot = dr.T * sigma_rossland_eval * c.Rsol_to_cm
+los_effective = - np.flipud(sci.cumulative_trapezoid(k_effective, r_fuT, initial = 0)) * c.Rsol_to_cm
+# tau_tot = dr.T * c.Rsol_to_cm * sigma_rossland_eval
 
 #%% Red -----------------------------------------------------------------------
 
 # Get 20 unique, nearest neighbors
 xyz3 = np.array([X[idx], Y[idx], Z[idx]]).T
-idxnew = tree.query(xyz3, k=20) # 20 nearest neighbors
-idxnew = np.array([idxnew], dtype = int).T #np.reshape(idxnew, (1, len(idxnew))) #.T
-idxnew = np.unique(idxnew)
+_, idxnew = tree.query(xyz3, k=20) # 20 nearest neighbors
+#idxnew = np.array([idxnew], dtype = int).T #np.reshape(idxnew, (1, len(idxnew))) #.T
+idxnew = np.unique(idxnew).T
 
 # Cell radius
 dx = 0.5 * Vol[idx]**(1/3)
 
 # Get the Grads
-from scipy.interpolate import griddata
 # sphere and get the gradient on them. Is it neccecery to re-interpolate?
 
 # scattered interpolant returns a function
 # griddata DEMANDS that you pass it the values you want to eval at
-f_inter_input = np.array([ X[idxnew],Y[idxnew],Z[idxnew] ]).T
-gradx_p = griddata( f_inter_input, Rad_den[idxnew],
+f_inter_input = np.array([ X[idxnew], Y[idxnew], Z[idxnew] ]).T
+
+gradx_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                     xi = np.array([ X[idx]+dx, Y[idx], Z[idx]]).T )
-gradx_m = griddata( f_inter_input, Rad_den[idxnew],
+gradx_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                     xi = np.array([ X[idx]-dx, Y[idx], Z[idx]]).T )
 gradx = (gradx_p - gradx_m)/ (2*dx)
 
-grady_p = griddata( f_inter_input, Rad_den[idxnew],
+grady_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                     xi = np.array([ X[idx], Y[idx]+dx, Z[idx]]).T )
-grady_m = griddata( f_inter_input, Rad_den[idxnew],
+grady_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                     xi = np.array([ X[idx], Y[idx]-dx, Z[idx]]).T )
 grady = (grady_p - grady_m)/ (2*dx)
 
-gradz_p = griddata( f_inter_input, Rad_den[idxnew],
+gradz_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                     xi = np.array([ X[idx], Y[idx], Z[idx]+dx]).T )
-gradz_m = griddata( f_inter_input, Rad_den[idxnew],
+gradz_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                     xi = np.array([ X[idx], Y[idx], Z[idx]-dx]).T )
 # some nans here
-gradz_m = np.nan_to_num(gradz_m, nan = 0)
+gradz_m = np.nan_to_num(gradz_m, nan =  0)
 gradz = (gradz_p - gradz_m)/ (2*dx)
-
-grad = np.sqrt( (mu_x * gradx)**2 + (mu_y*grady)**2 + (mu_z*gradz)**2)
+grad = np.sqrt(gradx**2 + grady**2 + gradz**2)
+gradr = (mu_x * gradx) + (mu_y*grady) + (mu_z*gradz)
 # v_grad = np.sqrt( (VX[idx] * gradx)**2 +  (VY[idx] * grady)**2 + (VZ[idx] * gradz)**2)
-R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx]) #conversion because grad is in 1/Rsol and sigma in 1/cm
+R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx])
 R_lamda[R_lamda < 1e-10] = 1e-10
 fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
 
 from scipy.ndimage import uniform_filter1d # does moving mean without fucking the shape up
-smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * grad / sigma_rossland_eval, 7) 
+smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) # i have removed the minus
 #%%
 b = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0]
-#     rb_all.append(r[b])
-#     print(b)
 
-# np.savetxt('photosphereEladhton.txt', rb_all)
-b2 = np.where(los_effective-5>0)[0][0]
-
-# print(R_lamda[[i<b for i in range(len(los))]])
 Lphoto2 = 4*np.pi*c.c*smoothed_flux[b] * c.Msol_to_g / (c.t**2)
 if Lphoto2 < 0:
     Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
 max_length = 4*np.pi*c.c*Rad_den[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
-Lphoto = np.min( [Lphoto2, max_length]) 
+Lphoto = np.min( [Lphoto2, max_length])
 
 # Spectra ---------------------------------------------------------------------
 los_effective[los_effective>30] = 30
-for k in range(b2, len(r)):
-    # F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * frequencies**3 / (c.c**2 * ( np.exp(denom) - 1))
-    denom = c.h * frequencies / (c.Kb * t[k])
-    denom[denom>300] = 300 # according to Elad to avoid overflow
-    F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * frequencies**3 / (c.c**2 * ( np.exp(denom) - 1)) 
+b2 = np.argmin(np.abs(los_effective-5))
 
-print('Lphoto: ', Lphoto)
-F_photo_temp[i,:] *= Lphoto / np.trapz(F_photo_temp[i,:], frequencies)
+for k in range(b2, len(r)):
+    wien = np.exp(c.h * frequencies / (c.Kb * t[k])) - 1
+    black_body = frequencies**3 / (c.c**2 * wien)
+    F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * black_body
+
+norm = Lphoto / np.trapz(F_photo_temp[i,:], frequencies)
+F_photo_temp[i,:] *= norm
 # F_photo[i,:] = cross_dot[i,:] * F_photo_temp[i,:]
 
+
 #%% Compare -------------------------------------------
-# import matplotlib.pyplot as plt
-# plt.rcParams['figure.figsize'] = [4 , 4]
-# plt.rc('xtick', labelsize = 15) 
-# plt.rc('ytick', labelsize = 15) 
+import matplotlib.pyplot as plt
+plt.rcParams['figure.figsize'] = [4 , 4]
+plt.rc('xtick', labelsize = 15) 
+plt.rc('ytick', labelsize = 15) 
+plt.figure()
 
-# import mat73
-# mat = mat73.loadmat('data/data_308.mat')
-# def temperature(n):
-#         return n * c.h / c.Kb
-# elad_T = np.array([ temperature(n) for n in mat['nu']])
-# for obs in range(1):
-#     y = np.multiply(frequencies, mat['F_photo_temp'][obs])
-#     plt.loglog(elad_T, y, c='b', linestyle = '--', label ='Elad')
+import mat73
+mat = mat73.loadmat('data/data_308.mat')
+def temperature(n):
+        return n * c.h / c.Kb
+elad_T = np.array([ temperature(n) for n in mat['nu']])
+for obs in range(1):
+    y = np.multiply(mat['nu'], mat['F_photo_temp'][obs])
+    plt.loglog(elad_T, y, c='b', linestyle = '--', label ='Elad')
     
-# # us
-# y_us = F_photo_temp[0] * frequencies
-# # temp_us = [temperature(n) for n in frequencies]
-# plt.loglog(elad_T, np.abs(y_us), c = 'k',label='us')
+# us
+y_us = F_photo_temp[0] * frequencies
+# temp_us = [temperature(n) for n in frequencies]
+plt.loglog(elad_T, np.abs(y_us), c = 'k',label='us')
 
-# # pretty
-# x_start = 1e3
-# x_end = 1e8
-# y_lowlim = 1e10#2e39
-# y_highlim = 1.3e44
-# plt.xlim(x_start,x_end)
-# plt.ylim(y_lowlim, y_highlim)
-# plt.loglog()
-# plt.grid()
-# plt.legend(fontsize = 14)
-# plt.title(r'Spectrum 10$^5$ $M_\odot$, Snap: 308, Observer , no cross dot')
-# plt.xlabel('Temperature [K]', fontsize = 16)
-# plt.ylabel(r'$\nu L_\nu$ [erg/s]', fontsize = 16)
-# plt.show()
+# pretty
+x_start = 1e3
+x_end = 1e8
+y_lowlim = 1e10#2e39
+y_highlim = 1.3e54
+plt.xlim(x_start,x_end)
+plt.ylim(y_lowlim, y_highlim)
+plt.loglog()
+plt.grid()
+plt.legend(fontsize = 14)
+plt.title(r'Spectrum 10$^5$ $M_\odot$, Snap: 308, Observer , no cross dot')
+plt.xlabel('Temperature [K]', fontsize = 16)
+plt.ylabel(r'$\nu L_\nu$ [erg/s]', fontsize = 16)

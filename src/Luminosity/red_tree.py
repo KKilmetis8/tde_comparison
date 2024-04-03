@@ -83,7 +83,7 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
     Den = np.load(pre + snap + '/Den_' + snap + '.npy')
     Rad = np.load(pre +snap + '/Rad_' + snap + '.npy')
     
-    # convert in CGS 
+    # convert in CGS
     Rad *= Den 
     Rad *= c.en_den_converter
 

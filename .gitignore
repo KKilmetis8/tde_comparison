@@ -4,3 +4,11 @@
 Figs
 .DS_Store
 data
+eladlab
+d0.npy
+t0.npy
+t.txt
+k_eff.txt
+d.txt
+octave-workspace
+test_opacity.ipynb

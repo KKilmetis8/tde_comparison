@@ -8,8 +8,6 @@ Created on Fri Jun  9 16:26:39 2023
 NOTES FOR OTHERS
 - T, rho are in CGS
 """
-import sys
-sys.path.append('/Users/paolamartire/tde_comparison')
 
 import numpy as np
 from scipy.interpolate import RegularGridInterpolator
@@ -104,9 +102,7 @@ def opacity(T, rho, kind, ln = False) -> float:
 if __name__ == '__main__':
     
     elena = False
-    extrapolation_comp = False
-    test_elad = True
-
+    extrapolation_comp = True
     if elena:
         lnT = np.loadtxt(loadpath + 'T.txt')
         lnrho = np.loadtxt(loadpath + 'rho.txt')
@@ -223,101 +219,3 @@ if __name__ == '__main__':
         ax[2].set_title('Data from Elad')
         ax[2].set_xlabel(r'Density $\log_{10}( \rho )$ [g/cm$^3$]')
         ax[2].set_ylabel(r'Opacity $\log_{10}(\kappa)$ [1/cm$^{-1}$]')
-
-    if test_elad: 
-        tables = False
-        # Load data
-        lnT = np.loadtxt(loadpath + 'T.txt')
-        lnrho = np.loadtxt(loadpath + 'rho.txt')
-        T = np.exp(lnT)
-        rho = np.exp(lnrho)
-        diff = np.zeros((len(T),len(rho)))
-        logT = np.log10(T)
-        logrho = np.log10(rho)
-
-        # From Eladython
-        def linearpad(D0,z0):
-            factor = 100
-            dz = z0[-1] - z0[-2]
-            # print(np.shape(D0))
-            dD = D0[-1,:] - D0[-2,:]
-            
-            z = [zi for zi in z0]
-            z.append(z[-1] + factor*dz)
-            z = np.array(z)
-            
-            D = [di for di in D0]
-
-            D.append(D[-1][:] + factor*dD)
-            return np.array(D), np.array(z)
-
-        def pad_interp(x,y,V):
-            Vn, xn = linearpad(V, x)
-            Vn, xn = linearpad(np.fliplr(Vn), np.flip(xn))
-            Vn = Vn.T
-            Vn, yn = linearpad(Vn, y)
-            Vn, yn = linearpad(np.fliplr(Vn), np.flip(yn))
-            Vn = Vn.T
-            return x, y, V
-        
-        rossland = np.loadtxt(loadpath + 'ross.txt')
-        T_cool2, Rho_cool2, rossland2 = pad_interp(lnT, lnrho, rossland)
-        sigma_rossland = RegularGridInterpolator( (T_cool2, Rho_cool2), rossland2, 
-                                            bounds_error= False, fill_value=0)
-        
-        if tables:
-            T_plot = T
-            rho_plot = rho
-            logT_plot = logT
-            logrho_plot = logrho
-        else:
-            Tmax = np.exp(17.87)
-            Tmin = np.exp(8.666)
-            pre = '5/'
-            fix = '308'
-            T_snapplot = np.load(pre + fix + '/T_' + fix + '.npy') #np.linspace(1e5,6e5, 120)
-            T_snapplot = T_snapplot[::200]
-            rho_snapplot = np.load(pre + fix + '/Den_' + fix + '.npy') #np.linspace(1e-3, 8e-3, 150)
-            rho_snapplot = rho_snapplot[::200]*c.en_den_converter
-            T_plot = T_snapplot[(T_snapplot<Tmax) & (rho_snapplot<np.max(rho))]
-            rho_plot = rho_snapplot[(T_snapplot<Tmax) & (rho_snapplot<np.max(rho))]
-            logT_plot = np.log(T_plot)
-            logrho_plot = np.log(rho_plot)
-
-        kappa_lte = np.zeros((len(T_plot),len(rho_plot)))
-        log_sigma_ross = np.zeros((len(T_plot),len(rho_plot)))
-    
-        for i in range(len(T_plot)):
-            for j in range(len(rho_plot)):
-                # Old (till march 2024) code 
-                opacity_lte = opacity(T_plot[i], rho_plot[j], 'rosseland', ln = False)
-                kappa_lte[i][j] = np.log10(opacity_lte)
-
-                # Eladython
-                sigma_rossland_eval = np.exp(sigma_rossland(np.array([np.log(T_plot[i]), np.log(rho_plot[j])]))) #both d and t are in CGS, thus also sigma rosseland and plank
-                log_sigma_ross[i][j] = np.log10(sigma_rossland_eval) 
-                #diff[i][j] = kappa_lte[i][j] - log_sigma_ross[i][j]
-
-        fig, axs = plt.subplots(1,2, tight_layout = True)
-        # Old
-        img0 = axs[0].pcolormesh(logrho_plot, logT_plot, kappa_lte, cmap = 'cet_rainbow', vmin = -6, vmax = 4)
-        cbar0 = plt.colorbar(img0)
-        axs[0].set_xlabel(r'$\log_{10}\rho [g/cm^3]$', fontsize = 12)
-        axs[0].set_ylabel(r'$\log_{10}$T [K]', fontsize = 12)
-        # cbar0.set_label(r'$\log_{10}\kappa [1/cm]$', fontsize = 10)
-        axs[0].title.set_text('Us before')
-        # Eladython
-        img1 = axs[1].pcolormesh(logrho_plot, logT_plot, log_sigma_ross, cmap = 'cet_rainbow', vmin = -6, vmax = 4)
-        cbar1 = plt.colorbar(img1)
-        axs[1].set_xlabel(r'$\log_{10}\rho [g/cm^3]$', fontsize = 12)
-        cbar1.set_label(r'$\log_{10}\kappa [1/cm]$', fontsize = 10)
-        axs[1].title.set_text('Eladython')
-
-        if tables:
-            plt.suptitle(r'Opacity using $\rho$,T from tables')
-            plt.savefig('CompareOpacityTables.png')
-        else: 
-            plt.savefig('CompareOpacityFromSnap.png')
-        plt.show()
-
-    
