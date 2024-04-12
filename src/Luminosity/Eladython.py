@@ -5,6 +5,8 @@ Created on Tue Mar 26 18:52:21 2024
 
 @author: konstantinos
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
 
 # The goal is to replicate Elad's script. No nice code, no nothing. A shit ton
 # of comments though. 
@@ -46,12 +48,11 @@ velocity = np.sqrt(VX**2 + VY**2 + VZ**2)
 #%% Cross dot -----------------------------------------------------------------
 import healpy as hp
 observers_xyz = hp.pix2vec(c.NSIDE, range(192))
-# observers_xyz = np.array([observers_xyz])
-# observers_xyz = np.reshape(observers_xyz, (192,3))
 # Line 17, * is matrix multiplication, ' is .T
-# cross_dot = np.matmul(observers_xyz,  observers_xyz.T )
-# cross_dot[cross_dot<0] = 0
-# cross_dot *= 4/192
+observers_xyz = np.array(observers_xyz).T
+cross_dot = np.matmul(observers_xyz,  observers_xyz.T)
+cross_dot[cross_dot<0] = 0
+cross_dot *= 4/192
 
 #%% Opacities -----------------------------------------------------------------
 # Freq range
@@ -108,7 +109,7 @@ _, _, plank2 = pad_interp(T_cool, Rho_cool, plank.T)
 #%% Tree ----------------------------------------------------------------------
 import matlab.engine
 eng = matlab.engine.start_matlab()
-from scipy.spatial import KDTree
+#from scipy.spatial import KDTree
 xyz = np.array([X, Y, Z]).T
 # tree = KDTree(xyz, leafsize=50)
 tree = eng.KDTreeSearcher(xyz)
@@ -165,31 +166,31 @@ i = 74
 # Progress 
 if i % 10 == 0:
     print('Eladython Ray no:', i)
-    
-mu_x = observers_xyz[0][i]
-mu_y = observers_xyz[1][i]
-mu_z = observers_xyz[2][i]
+
+mu_x = observers_xyz[i][0]
+mu_y = observers_xyz[i][1]
+mu_z = observers_xyz[i][2]
 
 # Box is for dynamic ray making
 if mu_x < 0:
     rmax = box[0] / mu_x
-    print('x-', rmax)
+    # print('x-', rmax)
 else:
     rmax = box[3] / mu_x
-    print('x+', rmax)
+    # print('x+', rmax)
 if mu_y < 0:
     rmax = min(rmax, box[1] / mu_y)
-    print('y-', rmax)
+    # print('y-', rmax)
 else:
     rmax = min(rmax, box[4] / mu_y)
-    print('y+', rmax)
+    # print('y+', rmax)
 
 if mu_z < 0:
     rmax = min(rmax, box[2] / mu_z)
-    print('z-', rmax)
+    # print('z-', rmax)
 else:
     rmax = min(rmax, box[5] / mu_z)
-    print('z+', rmax)
+    # print('z+', rmax)
 print(rmax)
 # This naming is so bad
 r = np.logspace( -0.25, np.log10(rmax), N_ray)
@@ -271,14 +272,14 @@ gradx_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
 gradx_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                     xi = np.array([ X[idx]-dx, Y[idx], Z[idx]]).T )
 gradx = (gradx_p - gradx_m)/ (2*dx)
-plt.plot(gradx)
+
 gradx = np.nan_to_num(gradx, nan =  0)
 grady_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                     xi = np.array([ X[idx], Y[idx]+dx, Z[idx]]).T )
 grady_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                     xi = np.array([ X[idx], Y[idx]-dx, Z[idx]]).T )
 grady = (grady_p - grady_m)/ (2*dx)
-plt.plot(grady)
+
 grady = np.nan_to_num(grady, nan =  0)
 
 gradz_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
@@ -288,13 +289,15 @@ gradz_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
 # some nans here
 gradz_m = np.nan_to_num(gradz_m, nan =  0)
 gradz = (gradz_p - gradz_m)/ (2*dx)
-plt.plot(gradz)
+
 grad = np.sqrt(gradx**2 + grady**2 + gradz**2)
 gradr = (mu_x * gradx) + (mu_y*grady) + (mu_z*gradz)
 # v_grad = np.sqrt( (VX[idx] * gradx)**2 +  (VY[idx] * grady)**2 + (VZ[idx] * gradz)**2)
 R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx])
 R_lamda[R_lamda < 1e-10] = 1e-10
 fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
+
+eng.exit()
 
 from scipy.ndimage import uniform_filter1d # does moving mean without fucking the shape up
 smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) # i have removed the minus
@@ -322,8 +325,7 @@ for k in range(b2, len(r)):
 
 norm = Lphoto / np.trapz(F_photo_temp[i,:], frequencies)
 F_photo_temp[i,:] *= norm
-# F_photo[i,:] = cross_dot[i,:] * F_photo_temp[i,:]
-
+F_photo[i,:] = np.matmul(cross_dot[i,:], F_photo_temp[:,:]) 
 
 #%% Compare -------------------------------------------
 import matplotlib.pyplot as plt
@@ -361,3 +363,5 @@ plt.legend(fontsize = 14)
 plt.title(r'Spectrum 10$^5$ $M_\odot$, Snap: 308, Observer , no cross dot')
 plt.xlabel('Temperature [K]', fontsize = 16)
 plt.ylabel(r'$\nu L_\nu$ [erg/s]', fontsize = 16)
+plt.savefig(f'spectra{fix}nocrossdot.png')
+plt.show()
