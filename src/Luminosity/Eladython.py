@@ -174,8 +174,8 @@ for snap in snapshots:
     # Dynamic Box -----------------------------------------------------------------
     for i in range(192):
         # Progress 
-        if i % 10 == 0:
-            print('Eladython Ray no:', i)
+        # if i % 10 == 0:
+        #     print('Eladython Ray no:', i)
 
         mu_x = observers_xyz[i][0]
         mu_y = observers_xyz[i][1]
