@@ -11,8 +11,8 @@ plt.rcParams['figure.figsize'] = [3 , 3]
 plt.rc('xtick', labelsize = 15) 
 plt.rc('ytick', labelsize = 15) 
 
-m = 5
-snap = 308
+m = 6
+snap = 1008
 num = 1000
 pre = 'dot'
 opacity = 'cloudy'
@@ -38,7 +38,8 @@ n_end = frequencies(T_end)
 lamda = wavelength(n_array)
 
 # y axis 
-nL_tilde_n = np.loadtxt(f'data/blue/NOstarnLn_single_m{m}_{snap}.txt')
+nL_tilde_n = np.loadtxt(f'data/blue/{opacity}_nLn_single_m{m}_{snap}_1000.txt')
+nL_tilde_n *=1.6339520760162161/9.763337052609916
 
 if axis == 'freq':
         x_axis = n_array
@@ -59,15 +60,15 @@ ax1.plot(x_axis, n_array * nL_tilde_n[2], c = 'k', label = r'$\vec{y}$')
 ax1.plot(x_axis, n_array * nL_tilde_n[3], c = 'lime', label = r'$-\vec{y}$')
 ax1.plot(x_axis, n_array * nL_tilde_n[4], c = 'magenta', label = r'$\vec{z}$')
 ax1.plot(x_axis, n_array * nL_tilde_n[5], c = 'aqua', label = r'$-\vec{z}$')
-# ax2 = ax1.twiny()
+ax2 = ax1.twiny()
 ax1.set_xlabel(f'{label}', fontsize = 16)
 ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]', fontsize = 16)
 if m == 4:
         y_lowlim = 1e36
         y_highlim = 1e42
 else:
-        y_lowlim = 2e39
-        y_highlim = 1.3e44
+        y_lowlim = 2e40
+        y_highlim = 1.3e45
 ax1.set_xlim(x_start,x_end)
 ax1.set_ylim(y_lowlim, y_highlim)
 ax1.loglog()
@@ -77,12 +78,12 @@ ax1.set_title(f'Spectra {snap} with {opacity} opacity')
 
 
 
-# ax2.set_xlim(wavelength(n_start), wavelength(n_end))
-# ax2.plot(wavelength(n_array), n_array * nL_tilde_n[0],  c = 'b')
-# ax2.set_xlim(c.c/n_end *1e8, c.c/n_start * 1e8)
-# ax2.invert_xaxis()
-# ax2.loglog()
-# ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)
+ax2.set_xlim(wavelength(n_start), wavelength(n_end))
+ax2.plot(wavelength(n_array), n_array * nL_tilde_n[0],  c = 'b')
+ax2.set_xlim(c.c/n_end *1e8, c.c/n_start * 1e8)
+ax2.invert_xaxis()
+ax2.loglog()
+ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)
 
 # ax2.axvline(120, c = 'mediumorchid')
 # ax2.axvspan(120, 4000, color = 'mediumorchid', alpha = 0.4)
@@ -93,19 +94,19 @@ ax1.set_title(f'Spectra {snap} with {opacity} opacity')
 # ax2.axvline(7000, c = 'gold', label = 'visible')
 # ax2.text(6000, y_highlim/5, 'visible', rotation = 90, fontsize = 10)
 
-# plt.savefig(f'Figs/TEST{opacity}_spectra{snap}.png')
-#plt.show()
+plt.savefig(f'Figs/TEST{opacity}_spectra{snap}.png')
+plt.show()
 
 # Elad
 # plt.figure()
-import mat73
-mat = mat73.loadmat('data/data_308.mat')
-elad_T = np.array([ temperature(n) for n in mat['nu']])
-#elad_T = np.logspace(3,13,1000)[::10]
-for obs in range(1):
-    y = np.multiply(mat['nu'], 1)
-    y = np.multiply(y, mat['F_photo'][obs])
-    plt.loglog(elad_T, y, c='k', linestyle = '--', label ='One of Elads obs')
+# import mat73
+# mat = mat73.loadmat('data/data_308.mat')
+# elad_T = np.array([ temperature(n) for n in mat['nu']])
+# #elad_T = np.logspace(3,13,1000)[::10]
+# for obs in range(1):
+#     y = np.multiply(mat['nu'], 1)
+#     y = np.multiply(y, mat['F_photo'][obs])
+#     plt.loglog(elad_T, y, c='k', linestyle = '--', label ='One of Elads obs')
 
         # if telescope: 
         #     ultrasat_min = 1.03e15

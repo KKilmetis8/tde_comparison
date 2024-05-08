@@ -27,7 +27,7 @@ from src.Opacity.cloudy_opacity import old_opacity
 from src.Calculators.ray_forest import find_sph_coord, ray_maker_forest
 from src.Luminosity.special_radii_tree import calc_specialr
 from src.Calculators.select_observers import select_observer# as select_observer
-from src.Utilities.selectors import select_snap
+from src.Utilities.selectors import select_snap, select_opacity
 from datetime import datetime
 
 
@@ -135,10 +135,14 @@ if __name__ == "__main__":
     save = True
 
     # Choose BH 
-    m = 5
-    check = 'fid'#S60ComptonHires'
+    m = 6 # Choose BH
+    mstar = 1.
+    rstar = 1.
+    check = 'fid' # Choose fid // S60ComptonHires
     num = 1000
-    snapshots, days = select_snap(m, check)
+    opacity_kind = select_opacity(m)
+
+    snapshots, days = select_snap(m, mstar, rstar, check)
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
     wanted_thetas = [np.pi/2, np.pi/2, np.pi/2, np.pi/2, np.pi, 0] # x, -x, y, -y, z, -z
@@ -172,7 +176,7 @@ if __name__ == "__main__":
     fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
     luminosity_fld_fix = fld_data[1]
     
-    for idx_sn in range(0,1): 
+    for idx_sn in range(1,2): 
         snap = snapshots[idx_sn]
         bol_fld = luminosity_fld_fix[idx_sn]
         print(f'Snap {snap}')
@@ -282,7 +286,7 @@ if __name__ == "__main__":
                     pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
                 else:
                     pre_saving = 'data/blue/'
-            with open(f'{pre_saving}cloudy_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
+            with open(f'{pre_saving}TESTcloudy_nLn_single_m{m}_{snap}_{num}.txt', 'a') as fselect:
                 fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
                 fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
                 fselect.close()

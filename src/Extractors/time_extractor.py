@@ -49,7 +49,7 @@ def days_since_distruption(filename, mbh, mstar, rstar):
     start_time = datetime.now()
     # Read File
     f = h5py.File(filename, "r")
-    G = 6.6743e-11 # SI
+    G = 6.6743e-11 # SI 
     Msol = 1.98847e30 # kg
     Rsol = 6.957e8 # m
     t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G=1
