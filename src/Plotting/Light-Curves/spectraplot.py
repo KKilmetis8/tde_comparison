@@ -11,8 +11,8 @@ plt.rcParams['figure.figsize'] = [3 , 3]
 plt.rc('xtick', labelsize = 15) 
 plt.rc('ytick', labelsize = 15) 
 
-m = 6
-snap = 1008
+m = 4
+snap = 293
 num = 1000
 pre = 'dot'
 opacity = 'cloudy'

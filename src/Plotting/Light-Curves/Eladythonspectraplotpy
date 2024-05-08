@@ -1,0 +1,91 @@
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
+import scipy.io
+
+import numpy as np
+import matplotlib.pyplot as plt
+import src.Utilities.prelude as c
+plt.rcParams['text.usetex'] = True
+plt.rcParams['figure.dpi'] = 300
+plt.rcParams['figure.figsize'] = [3 , 3]
+plt.rc('xtick', labelsize = 15) 
+plt.rc('ytick', labelsize = 15) 
+
+m = 4
+snap = 322
+axis = 'temp'
+
+def temperature(n):
+        return n * c.h / c.Kb
+
+def frequencies(T):
+        return T * c.Kb / c.h
+
+def wavelength(n):
+        # in angststrom 
+        return c.c *1e8 / n 
+
+# x axis 
+n_array = np.loadtxt(f'data/blue/frequencies_m{m}.txt')
+T_start = 1e3
+T_end = 1e8
+n_start = frequencies(T_start)
+n_end = frequencies(T_end)
+lamda = wavelength(n_array)
+
+# y axis 
+L_n = np.loadtxt(f'data/blue/Ln_m{m}_{snap}.txt')
+print(n_array*L_n[74])
+if axis == 'freq':
+        x_axis = n_array
+        x_start = n_start
+        x_end = n_end
+        label = r'$log_{10}\nu$ [Hz]'
+if axis == 'temp':
+        x_axis = temperature(n_array)
+        label = r'$log_{10}$T [K]'
+        x_start = T_start
+        x_end = T_end
+
+fig, ax1 = plt.subplots( figsize = (9,6) ) 
+ax1.plot(x_axis, n_array * L_n[74], c = 'b',  label = r'$\vec{x}$')
+ax1.plot(x_axis, n_array * L_n[75], c = 'r', label = r'$-\vec{x}$')
+# ax1.plot(x_axis, n_array * L_n[2], c = 'k', label = r'$\vec{y}$')
+# ax1.plot(x_axis, n_array * L_n[3], c = 'lime', label = r'$-\vec{y}$')
+# ax1.plot(x_axis, n_array * L_n[4], c = 'magenta', label = r'$\vec{z}$')
+# ax1.plot(x_axis, n_array * L_n[5], c = 'aqua', label = r'$-\vec{z}$')
+ax2 = ax1.twiny()
+ax1.set_xlabel(f'{label}', fontsize = 16)
+ax1.set_ylabel(r'$log_{10}(\nu L_\nu)$ [erg/s]', fontsize = 16)
+if m==6:
+        y_lowlim = 2e40
+        y_highlim = 1.3e45
+else:
+        y_lowlim = 1e36
+        y_highlim = 1e42
+ax1.set_xlim(x_start,x_end)
+ax1.set_ylim(y_lowlim, y_highlim)
+ax1.loglog()
+ax1.grid()
+ax1.legend()
+ax1.set_title(f'Spectra {snap} ')
+
+
+ax2.set_xlim(wavelength(n_start), wavelength(n_end))
+ax2.plot(wavelength(n_array), n_array * L_n[74],  c = 'b')
+ax2.set_xlim(c.c/n_end *1e8, c.c/n_start * 1e8)
+ax2.invert_xaxis()
+ax2.loglog()
+ax2.set_xlabel(r'$log_{10}\lambda [\AA]$', fontsize = 16)
+
+# ax2.axvline(120, c = 'mediumorchid')
+# ax2.axvspan(120, 4000, color = 'mediumorchid', alpha = 0.4)
+# ax2.text(160, y_highlim/2, 'UV', rotation = 90, fontsize = 10)
+
+# ax2.axvline(4000, c = 'gold')
+# ax2.axvspan(4000, 7000, color = 'gold', alpha = 0.4)
+# ax2.axvline(7000, c = 'gold', label = 'visible')
+# ax2.text(6000, y_highlim/5, 'visible', rotation = 90, fontsize = 10)
+
+plt.savefig(f'Figs/spectra_m{m}_{snap}.png')
+plt.show()

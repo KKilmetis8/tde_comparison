@@ -30,6 +30,61 @@ check = 'fid'
 mstar = 1.
 rstar = 1.
 snapshots, days = s.select_snap(m, mstar, rstar, check)
+
+#%% Opacities -----------------------------------------------------------------
+# Freq range
+f_min = c.Kb * 1e3 / c.h
+f_max = c.Kb * 3e13 / c.h
+f_num = 1_000
+frequencies = np.logspace(np.log10(f_min), np.log10(f_max), f_num)
+
+# Opacity Input
+opac_path = f'src/Opacity/{opac_kind}_data/'
+T_cool = np.loadtxt(f'{opac_path}/T.txt')
+Rho_cool = np.loadtxt(f'{opac_path}/rho.txt')
+plank = np.loadtxt(f'{opac_path}/planck.txt')
+rossland = np.loadtxt(f'{opac_path}/ross.txt')
+
+# Opacity Interpolation
+# T_interp, Rho_interp = np.meshgrid(T_cool,Rho_cool) all commented out
+# rossland = np.reshape(rossland, (len(T_cool), len(Rho_cool)))
+# plank = np.reshape(plank, (len(T_cool), len(Rho_cool)))
+
+# Fill value none extrapolates
+def linearpad(D0,z0):
+    factor = 100
+    dz = z0[-1] - z0[-2]
+    # print(np.shape(D0))
+    dD = D0[:,-1] - D0[:,-2]
+    
+    z = [zi for zi in z0]
+    z.append(z[-1] + factor*dz)
+    
+    z = np.array(z)
+    
+    #D = [di for di in D0]
+
+    to_stack = np.add(D0[:,-1], factor*dD)
+    to_stack = np.reshape(to_stack, (len(to_stack),1) )
+    D = np.hstack((D0, to_stack))
+    #D.append(to_stack)
+    return np.array(D), z
+
+def pad_interp(x,y,V):
+    Vn, xn = linearpad(V, x)
+    Vn, xn = linearpad(np.fliplr(Vn), np.flip(xn))
+    Vn = Vn.T
+    Vn, yn = linearpad(Vn, y)
+    Vn, yn = linearpad(np.fliplr(Vn), np.flip(yn))
+    Vn = Vn.T
+    return xn, yn, Vn
+
+T_cool2, Rho_cool2, rossland2 = pad_interp(T_cool, Rho_cool, rossland.T)
+_, _, plank2 = pad_interp(T_cool, Rho_cool, plank.T)
+
+import matlab.engine
+eng = matlab.engine.start_matlab()
+
 for snap in snapshots:
     #%% Load data -----------------------------------------------------------------
     pre = s.select_prefix(m, check)
@@ -64,60 +119,7 @@ for snap in snapshots:
     cross_dot[cross_dot<0] = 0
     cross_dot *= 4/192
 
-    #%% Opacities -----------------------------------------------------------------
-    # Freq range
-    f_min = c.Kb * 1e3 / c.h
-    f_max = c.Kb * 3e13 / c.h
-    f_num = 1_000
-    frequencies = np.logspace(np.log10(f_min), np.log10(f_max), f_num)
-
-    # Opacity Input
-    opac_path = f'src/Opacity/{opac_kind}_data/'
-    T_cool = np.loadtxt(f'{opac_path}/T.txt')
-    Rho_cool = np.loadtxt(f'{opac_path}/rho.txt')
-    plank = np.loadtxt(f'{opac_path}/planck.txt')
-    rossland = np.loadtxt(f'{opac_path}/ross.txt')
-
-    # Opacity Interpolation
-    # T_interp, Rho_interp = np.meshgrid(T_cool,Rho_cool) all commented out
-    # rossland = np.reshape(rossland, (len(T_cool), len(Rho_cool)))
-    # plank = np.reshape(plank, (len(T_cool), len(Rho_cool)))
-
-    # Fill value none extrapolates
-    def linearpad(D0,z0):
-        factor = 100
-        dz = z0[-1] - z0[-2]
-        # print(np.shape(D0))
-        dD = D0[:,-1] - D0[:,-2]
-        
-        z = [zi for zi in z0]
-        z.append(z[-1] + factor*dz)
-        
-        z = np.array(z)
-        
-        #D = [di for di in D0]
-
-        to_stack = np.add(D0[:,-1], factor*dD)
-        to_stack = np.reshape(to_stack, (len(to_stack),1) )
-        D = np.hstack((D0, to_stack))
-        #D.append(to_stack)
-        return np.array(D), z
-
-    def pad_interp(x,y,V):
-        Vn, xn = linearpad(V, x)
-        Vn, xn = linearpad(np.fliplr(Vn), np.flip(xn))
-        Vn = Vn.T
-        Vn, yn = linearpad(Vn, y)
-        Vn, yn = linearpad(np.fliplr(Vn), np.flip(yn))
-        Vn = Vn.T
-        return xn, yn, Vn
-    # #%%    
-    T_cool2, Rho_cool2, rossland2 = pad_interp(T_cool, Rho_cool, rossland.T)
-    _, _, plank2 = pad_interp(T_cool, Rho_cool, plank.T)
-
     #%% Tree ----------------------------------------------------------------------
-    import matlab.engine
-    eng = matlab.engine.start_matlab()
     #from scipy.spatial import KDTree
     xyz = np.array([X, Y, Z]).T
     # tree = KDTree(xyz, leafsize=50)
@@ -317,6 +319,7 @@ for snap in snapshots:
         max_length = 4*np.pi*c.c*EEr[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
         Lphoto = np.min( [Lphoto2, max_length])
         # Lphoto = Lphoto2
+
         # Spectra ---------------------------------------------------------------------
         los_effective[los_effective>30] = 30
         b2 = np.argmin(np.abs(los_effective-5))
@@ -325,14 +328,14 @@ for snap in snapshots:
         for k in range(b2, len(r)): 
             dr = r[k]-r[k-1]
             Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
-            wien = np.exp(min(300, c.h * frequencies / (c.Kb * t[k])) - 1) # Elad: min to avoid overflow
+            wien = np.exp( c.h * frequencies / (c.Kb * t[k])) - 1 # Elad: min to avoid overflow
             black_body = frequencies**3 / (c.c**2 * wien)
             F_photo_temp[i,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body # there should be a 4*np.pi*, but doesn't matter because we normalize
 
         norm = Lphoto / np.trapz(F_photo_temp[i,:], frequencies)
         F_photo_temp[i,:] *= norm
         F_photo[i,:] = np.matmul(cross_dot[i,:], F_photo_temp[:,:]) 
-    
+        
 
     #%% Save data ------------------------------------------------------------------
     if save:
@@ -343,9 +346,7 @@ for snap in snapshots:
         with open(f'{pre_saving}/frequencies_m'+ str(m) + '.txt', 'w') as f:
                 f.write(' '.join(map(str, frequencies)) + '\n') 
                 f.close()
-        with open(f'{pre_saving}/Ln_m{m}_{snap}.txt', 'w') as flum:
-            flum.write(' '.join(map(str, F_photo)) + '\n')
-            flum.close()
+        np.savetxt(f'{pre_saving}/Ln_m{m}_{snap}.txt', F_photo)
 
     #%% Plot -----------------------------------------------------------------------
     if plot:
@@ -358,7 +359,7 @@ for snap in snapshots:
                 return n * c.h / c.Kb
 
         # us
-        y_us = F_photo_temp[i] * frequencies
+        y_us = F_photo[i] * frequencies
         temp_us = [temperature(n) for n in frequencies]
         plt.loglog(temp_us, np.abs(y_us), c = 'k',label='us',
                 ls = ' ', marker = 'o', markersize = 5)
