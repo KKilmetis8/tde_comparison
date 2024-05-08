@@ -57,9 +57,8 @@ def days_since_distruption(filename, mbh, mstar, rstar):
     time = np.array(f['Time'])
     days = time.sum()*t / (24*60*60)
     tfb = 40 * np.power( mbh/1e6, 1/2) * np.power(mstar,-1) * np.power(rstar, 3/2)
-    print('days/tfb', days/tfb)
-    print('days', days)
-
+    # print('days/tfb', days/tfb)
+    # print('days', days)
     return days/tfb
 
 
