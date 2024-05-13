@@ -17,13 +17,13 @@ from datetime import datetime
 import h5py
 
 #%% Extract Energy
-snapshot233= "/Users/paolamartire/tde_comparison/4/233/snap_full_233.h5"
-snapshot254= "/Users/paolamartire/tde_comparison/4/254/snap_full_254.h5"
-snapshot263 = "/Users/paolamartire/tde_comparison/4/263/snap_full_263.h5"
-snapshot277 = "/Users/paolamartire/tde_comparison/4/277/snap_full_277.h5"
-snapshot269 = '5/269/snap_269.h5'
-snapshot844 = '6/844/snap_844.h5'
-snapshot308 = '5/308/snap_308.h5'
+# snapshot233= "/Users/paolamartire/tde_comparison/4/233/snap_full_233.h5"
+# snapshot254= "/Users/paolamartire/tde_comparison/4/254/snap_full_254.h5"
+# snapshot263 = "/Users/paolamartire/tde_comparison/4/263/snap_full_263.h5"
+# snapshot277 = "/Users/paolamartire/tde_comparison/4/277/snap_full_277.h5"
+# snapshot269 = '5/269/snap_269.h5'
+# snapshot844 = '6/844/snap_844.h5'
+# snapshot308 = '5/308/snap_308.h5'
 
 #%% Get Energies
 
@@ -61,36 +61,6 @@ def days_since_distruption(filename, mbh, mstar, rstar):
     # print('days', days)
     return days/tfb
 
-
-#%% 
-def linear_fit_days(x):
-    '''
-    Converts from snapshot number to the more 
-    intuitive days since distruption metric. 
-    
-    Uses a linear fit from snapshots 243, 881, and,
-    254 and thus could prove to not be 100% accurate.
-    
-    Parameters
-    ----------
-    x : int,
-        Snapshot number to convert from.
-
-    Returns
-    -------
-    y : int,
-        Days since distruption.
-
-    '''
-    days233= days_since_distruption(snapshot233)
-    days254 = days_since_distruption(snapshot254)
-    days263 = days_since_distruption(snapshot263)
-    days277 = days_since_distruption(snapshot277)
-    snaps = [233, 254, 263, 277]
-    days = [days233, days254, days263, days277]
-    time_fit = np.polyfit(snaps, days, deg=1)
-    y = time_fit[0]*x + time_fit[1]
-    return y
 #%%
 if __name__ == '__main__':
     # snaps = [820, 881, 254]
@@ -105,8 +75,13 @@ if __name__ == '__main__':
     # plt.plot(testspace, linear_fit_days(testspace), label='fit', color='maroon')
     # plt.grid()
     # plt.legend()
-    days322 = linear_fit_days(322)
-    print(days322)
+    # days322 = linear_fit_days(322)
+    #print(days322)
+    m = 4
+    snapno = 200
+    snap = f'{m}/{snapno}/snap_full_{snapno}.h5'
+    tbytfb = days_since_distruption(snap,10**m,1.0,1.0)
+    np.savetxt(f'{m}/{snapno}/tbytfb_{snapno}.txt',[tbytfb])
         
     
     

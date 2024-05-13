@@ -4,7 +4,7 @@ save_data_on_exit = True
 save_history = True
 save_non_project_files = False
 project_type = 'empty-project-type'
-recent_files = ['src/Luminosity/Eladython.py', 'src/Luminosity/Eladlab.m', 'idx.txt']
+recent_files = ['../../4-COP/3NRN/ppchain.py', '../../4-COP/3NRN/coreT.py', 'src/Utilities/prelude.py', '../../4-COP/3NRN/newt_raph_test(itworks).py']
 
 [main]
 version = 0.2.0

@@ -23,7 +23,7 @@ opacity_kind = s.select_opacity(m)
 #%% Get Midplane
 Mbh = 10**m 
 Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
-what = 'temperature'
+what = 'density'
 gridded_indexes, grid_den, grid_mass, xs, ys, zs = grid_maker(snapshots[0], m, check, what,
                                                               False, 200, 200, 100)
 

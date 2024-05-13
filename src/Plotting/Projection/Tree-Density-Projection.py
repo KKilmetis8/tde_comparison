@@ -20,7 +20,7 @@ plt.rcParams['figure.figsize'] = [10, 4]
 plt.rcParams['axes.facecolor']= 	'whitesmoke'
 
 # Choose simulation
-m = 6
+m = 5
 check = 'fid'
 
 Mbh = 10**m 
@@ -29,7 +29,8 @@ apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
 t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
 
 #snapshots, days = select_snap(m, check)
-snapshots = np.arange(844, 1008 + 1)
+#snapshots = np.arange(844, 1008 + 1)
+snapshots = (259)
 days = np.loadtxt('data/red/alicered6fid_days.txt')
 
 for snap, day in zip(snapshots, days):

@@ -13,6 +13,7 @@ from src.Calculators.casters import THE_CASTER
 from src.Extractors.time_extractor import days_since_distruption
 import matplotlib.pyplot as plt
 import matplotlib.patheffects as PathEffects
+
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [9 , 8]
@@ -149,6 +150,7 @@ if when == 'last':
     title_txt = 'Time: Last available t/t$_{FB}$'
 
 
+
 for i in range(len(fixes4)):
     x4, y4, d4 = maker(4, 1000, fixes4[i], plane, thing)
     # x6, y6, d6 = maker(6, 1_000, fixes6[i], plane, thing)
@@ -182,15 +184,15 @@ for i in range(len(fixes4)):
     # txt1.set_path_effects([PathEffects.withStroke(linewidth=3, foreground='k')])    
     
     # Axis labels
-    fig.text(0.5, -0.01, plane[0] + r' [x/R$_a$]', ha='center', fontsize = 14)
-    fig.text(-0.02, 0.5, plane[1] + r' [y/R$_a$]', va='center', rotation='vertical', fontsize = 14)
+    fig.text(0.5, -0.01, plane[0] + r' [x/R$_a$]', ha='center', fontsize = 20)
+    fig.text(-0.02, 0.5, plane[1] + r' [y/R$_a$]', va='center', rotation='vertical', fontsize = 20)
     
     cbx = 1.08
     cby = 0.35
     # Titles
     if thing == 'Den':
-        fig.suptitle(plane + ' Density Projection - ' + title_txt, fontsize = 20)
-        fig.text(cbx, cby, r'Density $\log_{10}(\rho)$ [g/cm$^2$]', fontsize = 15,
+        # fig.suptitle(plane + ' Density Projection - ' + title_txt, fontsize = 20)
+        fig.text(cbx, cby, r'Density $\log_{10}(\rho)$ [g/cm$^2$]', fontsize = 20,
         		    color='k', fontfamily = 'monospace', rotation = 270)
     if thing == 'T':
         fig.suptitle(plane + ' Temperature Projection - ' + title_txt, fontsize = 20)

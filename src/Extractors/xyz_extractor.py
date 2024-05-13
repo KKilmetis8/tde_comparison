@@ -19,7 +19,7 @@ import os
 
 
 
-def extractor(filename):
+def extractor(filename, m):
     '''
     Loads the file, extracts X,Y,Z and Density. 
     
@@ -97,7 +97,10 @@ def extractor(filename):
             vol_data = f[key]['Volume']
             
             ie_data = f[key]['InternalEnergy']
-            rad_data = f[key]['Erad']  #f[key]['tracers']['ZRadEnergy'] 
+            if m == 6:
+                rad_data = f[key]['tracers']['ZRadEnergy'] 
+            else:
+                rad_data = f[key]['Erad']  #
             T_data = f[key]['Temperature']
             P_data = f[key]['Pressure']
             for i in range(len(x_data)):
@@ -121,14 +124,14 @@ def extractor(filename):
     return X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P
 #%%
 # Change the current working directory
-fixes = [308]
+fixes = [200]
 for fix in fixes:
-    m = 5
-    snapshot = f'{m}/{fix}/snap_{fix}.h5'
+    m = 4
+    snapshot = f'{m}/{fix}/snap_full_{fix}.h5'
     pre = f'{m}/{fix}/'
     suf = f'_{fix}'
 
-    X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P = extractor(snapshot)
+    X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P = extractor(snapshot, m)
     
     # Save to another file.
     np.save(pre + 'CMx' + suf, X)   
