@@ -25,6 +25,7 @@ den_converter = Msol_to_g / Rsol_to_cm**3
 def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
     """ Outputs are in in solar units """
     Mbh = 10**m
+    fix = str(fix)
     if 'star' == 'half':
         mstar = 0.5
         rstar = 0.47
