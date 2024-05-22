@@ -12,7 +12,10 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
-
+if alice:
+    realpre = '/home/s3745597/data1/TDE/'
+else:
+    realpre = ''
 import numpy as np
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
@@ -37,7 +40,7 @@ def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
     pre = f'{m}{star}/snap_{fix}'
     
     # Mass = np.load(pre + '/Mass_' + fix + '.npy')
-    Den = np.load(pre + '/Den_' + fix + '.npy')
+    Den = np.load(realpre + pre + '/Den_' + fix + '.npy')
     # Need to convert Msol/Rsol^2 to g/cm
     Msol_to_g = 1.989e33
     Rsol_to_cm = 6.957e10
@@ -45,8 +48,8 @@ def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
     Den *=  converter
 
     # CM Position Data
-    X = np.load(pre + '/CMx_' + fix + '.npy')
-    Y = np.load(pre + '/CMy_' + fix + '.npy')
+    X = np.load(realpre + pre + '/CMx_' + fix + '.npy')
+    Y = np.load(realpre + pre + '/CMy_' + fix + '.npy')
     x_start = -apocenter
     x_stop = 0.2 * apocenter
     # x_num = pixel_num # np.abs(x_start - x_stop)
@@ -56,7 +59,7 @@ def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
     # y_num = pixel_num # np.abs(y_start - y_stop)
     ys = np.linspace(y_start, y_stop, num = y_num)
     
-    Z = np.load(pre + '/CMz_' + fix + '.npy')
+    Z = np.load(realpre + pre + '/CMz_' + fix + '.npy')
 
     sim_value = [X, Y, Z] 
     sim_value = np.transpose(sim_value) #array of dim (number_points, 3)

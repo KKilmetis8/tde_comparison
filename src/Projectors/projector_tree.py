@@ -11,7 +11,6 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
-
 import numpy as np
 import matplotlib.pyplot as plt
 import numba
