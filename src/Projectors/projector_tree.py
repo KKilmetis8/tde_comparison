@@ -3,7 +3,7 @@
 """
 Project quantities.
 
-@author: paola
+@author: paola + konstantinos
 
 """
 import sys
@@ -50,21 +50,22 @@ def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii, 
  
 if __name__ == '__main__':
     m = 5
-    save = False 
+    star = 'half'
+    save = True
     check = 'fid' 
     what = 'density' # temperature or density
-    snapshots = select_snap(m, check)
+    snapshots = np.arange(2,365)#select_snap(m, check)
 
     for snap in snapshots:
-        _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, check, what, False,
-                                                        300, 300, 20)
+        _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, star, what, False,
+                                                        500, 500, 100)
         flat_den = projector(grid_den, grid_mass, False,
                              xs, ys, zs, what)
 
         if save:
             if alice:
                 pre = '/home/s3745597/data1/TDE/'
-                sim = f'{m}-{check}'
+                sim = f'{m}{star}'# -{check}'
                 np.savetxt(f'{pre}tde_comparison/data/denproj/denproj{sim}{snap}.txt', flat_den)
                 np.savetxt(f'{pre}tde_comparison/data/denproj/xarray{sim}.txt', xs)
                 np.savetxt(f'{pre}tde_comparison/data/denproj/yarray{sim}.txt', ys)
@@ -81,7 +82,7 @@ if __name__ == '__main__':
             plt.rcParams['figure.dpi'] = 300
             plt.rcParams['font.family'] = 'Times New Roman'
             plt.rcParams['figure.figsize'] = [6, 4]
-            plt.rcParams['axes.facecolor']= 	'whitesmoke'
+            plt.rcParams['axes.facecolor']=     'whitesmoke'
             
             # Clean
             den_plot = np.nan_to_num(flat_den, nan = -1, neginf = -1)
@@ -113,5 +114,3 @@ if __name__ == '__main__':
             ax.set_title('XY Projection', fontsize = 16)
             plt.savefig(f'{snap}T.png')
             plt.show()
-            
-    

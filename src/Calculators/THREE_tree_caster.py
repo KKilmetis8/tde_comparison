@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Gives ray which are logspaced. Around photosphere they sould be 1.
+Gives ray. Around photosphere they sould be 1.
 Created on Tue Oct 10 10:19:34 2023
 Also does midplane
-@author: paola, konstantinos
+@authors: paola, konstantinos
 
 """
 import sys
@@ -22,78 +22,78 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 
-def grid_maker(fix, m, check, what, mass_weigh, x_num, y_num, z_num = 100):
+def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
     """ Outputs are in in solar units """
-    fix = str(fix)
-    Mbh = 10**m 
-    Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
-    apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
-    
-    # Load data
-    pre = select_prefix(m, check)
-    X = np.load(pre + fix + '/CMx_' + fix + '.npy')
-    Y = np.load(pre + fix + '/CMy_' + fix + '.npy')
-    Z = np.load(pre + fix + '/CMz_' + fix + '.npy')
-    if mass_weigh:
-        Mass = np.load(pre + fix + '/Mass_' + fix + '.npy')    
-    
-    if what == 'density':
-        projected_quantity = np.load(pre + fix + '/Den_' + fix + '.npy')
-        projected_quantity *= den_converter 
-    elif what == 'temperature':
-        projected_quantity = np.load(pre + fix + '/T_' + fix + '.npy')
+    Mbh = 10**m
+    if 'star' == 'half':
+        mstar = 0.5
+        rstar = 0.47
     else:
-        raise ValueError('Hate to break it to you champ \n \
-                         but we don\'t have that quantity')
+        mstar = 1
+        rstar = 1
+    Rt = rstar * (Mbh/mstar)**(1/3) 
+    apocenter = 2 * Rt * (Mbh/mstar)**(1/3)
+    pre = f'{m}{star}/{fix}'
+    
+    # Mass = np.load(pre + '/Mass_' + fix + '.npy')
+    Den = np.load(pre + '/Den_' + fix + '.npy')
+    # Need to convert Msol/Rsol^2 to g/cm
+    Msol_to_g = 1.989e33
+    Rsol_to_cm = 6.957e10
+    converter = Msol_to_g / Rsol_to_cm**2
+    Den *=  converter
 
-    # make a tree
+    # CM Position Data
+    X = np.load(pre + '/CMx_' + fix + '.npy')
+    Y = np.load(pre + '/CMy_' + fix + '.npy')
+    x_start = -apocenter
+    x_stop = 0.2 * apocenter
+    # x_num = pixel_num # np.abs(x_start - x_stop)
+    xs = np.linspace(x_start, x_stop, num = x_num )
+    y_start = -0.2 * apocenter 
+    y_stop = 0.2 * apocenter
+    # y_num = pixel_num # np.abs(y_start - y_stop)
+    ys = np.linspace(y_start, y_stop, num = y_num)
+    
+    Z = np.load(pre + '/CMz_' + fix + '.npy')
+
     sim_value = [X, Y, Z] 
     sim_value = np.transpose(sim_value) #array of dim (number_points, 3)
     sim_tree = KDTree(sim_value) 
     
-    # Ensure that the regular grid cells are smaller than simulation cells
-    # NOTE: Shouldn't this conform to what the projector asks?
-    x_start = -40 * Rt # -apocenter
-    x_stop = 10 * Rt
-    if m == 6:
-        y_start = -20 * Rt
-        y_stop = 30 * Rt
-    if m == 5:
-        y_start = -20 * Rt
-        y_stop = 30 * Rt
-    if m == 4:
-        y_start = -30 * Rt # -0.5*apocenter
-        y_stop = 30 * Rt # 0.5*apocenter
     z_start = -2 * Rt
     z_stop = 2 * Rt
-    
-    x_radii = np.linspace(x_start, x_stop, x_num) #simulator units
-    y_radii = np.linspace(y_start, y_stop, y_num) #simulator units
+    z_num = 100
     z_radii = np.linspace(z_start, z_stop, z_num) #simulator units
 
-    gridded_indexes =  np.zeros(( len(x_radii), len(y_radii), len(z_radii) ))
-    gridded_den =  np.zeros(( len(x_radii), len(y_radii), len(z_radii) ))
-    gridded_mass =  np.zeros(( len(x_radii), len(y_radii), len(z_radii) ))
-    for i in range(len(x_radii)):
-        last_progress = 1
-        for j in range(len(y_radii)):
+    gridded_indexes =  np.zeros(( len(xs), len(ys), len(z_radii) ))
+    den_cast =  np.zeros(( len(xs), len(ys), len(z_radii) ))
+    gridded_mass =  np.zeros(( len(xs), len(ys), len(z_radii) ))
+    for i in range(len(xs)):
+        for j in range(len(ys)):
             for k in range(len(z_radii)):
-                queried_value = [x_radii[i], y_radii[j], z_radii[k]]
+                queried_value = [xs[i], ys[j], z_radii[k]]
                 _, idx = sim_tree.query(queried_value)
                                     
                 # Store
                 gridded_indexes[i, j, k] = idx
-                gridded_den[i, j, k] = projected_quantity[idx]
-                if mass_weigh:
-                    gridded_mass[i,j, k] = Mass[idx]
+                den_cast[i, j, k] = Den[idx]
+    #             gridded_mass[i,j, k] = Mass[idx]
+    # den_cast = np.divide(den_cast, gridded_mass)
+    den_cast = np.sum(den_cast, axis=2) / 100
+
+    # Remove bullshit and fix things
+    den_cast = np.nan_to_num(den_cast.T)
+    den_cast = np.log10(den_cast) # we want a log plot
+    den_cast = np.nan_to_num(den_cast, neginf=0) # fix the fuckery
         
-        # Progress Check
-        progress = int(100 * i/len(x_radii))
-        if progress != last_progress:
-            last_progress = progress    
-            print('Progress: {:1.0%}'.format(i/len(x_radii)))
+    # Color re-normalization
+    den_cast[den_cast<0.2] = 0
+    den_cast[den_cast>5] = 5
+
+    return xs/apocenter, ys/apocenter, den_cast, apocenter# , days
         
-    return gridded_indexes, gridded_den, gridded_mass, x_radii, y_radii, z_radii
+    # return gridded_indexes, gridded_den, gridded_mass, x_radii, y_radii, z_radii
 
  
 if __name__ == '__main__':

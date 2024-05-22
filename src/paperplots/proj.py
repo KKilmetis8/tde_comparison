@@ -30,22 +30,17 @@ def maker(m, pixel_num, fix, plane, thing, how, star = 'half'):
     else:
         mstar = 1
         rstar = 1
-    Rt = rstar * (Mbh/mstar)**(1/3) # Msol = 1, Rsol = 1
-    # t_fall = 40 * (Mbh/1e6)**(0.5) # days EMR+20 p13
-
+    Rt = rstar * (Mbh/mstar)**(1/3) 
     apocenter = 2 * Rt * (Mbh/mstar)**(1/3)
     pre = f'{m}{star}/{fix}'
     
-    # days = np.round( days_since_distruption(pre+'/snap_'+fix+'.h5') / t_fall, 1)
-    Mass = np.load(pre + '/Mass_' + fix + '.npy')
-
+    # Mass = np.load(pre + '/Mass_' + fix + '.npy')
     Den = np.load(pre + '/Den_' + fix + '.npy')
     # Need to convert Msol/Rsol^2 to g/cm
     Msol_to_g = 1.989e33
     Rsol_to_cm = 6.957e10
     converter = Msol_to_g / Rsol_to_cm**2
     Den *=  converter
-
 
     # CM Position Data
     X = np.load(pre + '/CMx_' + fix + '.npy')
@@ -89,7 +84,7 @@ def maker(m, pixel_num, fix, plane, thing, how, star = 'half'):
                     den_cast[i, j, k] = Den[idx]
         #             gridded_mass[i,j, k] = Mass[idx]
         # den_cast = np.divide(den_cast, gridded_mass)
-        den_cast = den_cast[:,:,len(z_radii)//2]
+        den_cast = np.sum(den_cast, axis=2) / 100
 
     # Remove bullshit and fix things
     den_cast = np.nan_to_num(den_cast.T)
@@ -220,56 +215,56 @@ x5, y5, d5, apo5 = maker(5, res, fixes5[i], plane, thing, how)
 # x6, y6, d6, apo6 = maker(6, res, fixes6[i], plane, thing, how)
 
 #%% Plotting
-rate = 2
-y = 5
-x = y * rate
-fig, ax = plt.subplots(3, 3, clear = True, tight_layout = True, 
-                       figsize = (x,y), sharex=True, sharey=True)
-if how == 'tree':
-    vmax = 5
-else:
-    vmax = 8
-# Image making ----------------------------------------------------------------
-width = 0.035
-ax[0,0].pcolormesh(x4, y4, d4, cmap='cet_fire', vmin = 0, vmax = vmax)
-img2 = ax[0,1].pcolormesh(x5, y5, d5, cmap='cet_fire', vmin = 0, vmax = vmax)
-ax[0,2].pcolormesh(x6, y6, d6, cmap='cet_fire', vmin = 0, vmax = vmax)
+# rate = 2
+# y = 5
+# x = y * rate
+# fig, ax = plt.subplots(3, 3, clear = True, tight_layout = True, 
+#                        figsize = (x,y), sharex=True, sharey=True)
+# if how == 'tree':
+#     vmax = 5
+# else:
+#     vmax = 8
+# # Image making ----------------------------------------------------------------
+# width = 0.035
+# ax[0,0].pcolormesh(x4, y4, d4, cmap='cet_fire', vmin = 0, vmax = vmax)
+# img2 = ax[0,1].pcolormesh(x5, y5, d5, cmap='cet_fire', vmin = 0, vmax = vmax)
+# ax[0,2].pcolormesh(x6, y6, d6, cmap='cet_fire', vmin = 0, vmax = vmax)
 
-# Photosphere -----------------------------------------------------------------
-ax[0,0].plot(photo_x4 / apo4, photo_y4 / apo4, 
-        marker = '', color = 'cyan', ls = '-',
-        linewidth = 2, markersize = 10)
-ax[0,1].plot(photo_x5 / apo5, photo_y5 / apo5, 
-        marker = '', color = 'cyan', ls = '-',
-        linewidth = 2, markersize = 10)
-ax[0,2].plot(photo_x6 / apo6, photo_y6 / apo6, 
-        marker = '', color = 'cyan', ls = '-',
-        linewidth = 1)
-# Limits
-ax[0,0].set_xlim(-1.,0.2)
-ax[0,0].set_ylim(-0.2,0.2)
+# # Photosphere -----------------------------------------------------------------
+# ax[0,0].plot(photo_x4 / apo4, photo_y4 / apo4, 
+#         marker = '', color = 'cyan', ls = '-',
+#         linewidth = 2, markersize = 10)
+# ax[0,1].plot(photo_x5 / apo5, photo_y5 / apo5, 
+#         marker = '', color = 'cyan', ls = '-',
+#         linewidth = 2, markersize = 10)
+# ax[0,2].plot(photo_x6 / apo6, photo_y6 / apo6, 
+#         marker = '', color = 'cyan', ls = '-',
+#         linewidth = 1)
+# # Limits
+# ax[0,0].set_xlim(-1.,0.2)
+# ax[0,0].set_ylim(-0.2,0.2)
 
-# Colorbar --------------------------------------------------------------------
-width = 0.035
-pad = 0.1
-cax = fig.add_axes([ax[1,2].get_position().xmax + pad, 
-                    ax[2,2].get_position().ymin, 
-                    width,
-                    ax[0,2].get_position().ymax - ax[2,2].get_position().ymin + 0.08]) 
+# # Colorbar --------------------------------------------------------------------
+# width = 0.035
+# pad = 0.1
+# cax = fig.add_axes([ax[1,2].get_position().xmax + pad, 
+#                     ax[2,2].get_position().ymin, 
+#                     width,
+#                     ax[0,2].get_position().ymax - ax[2,2].get_position().ymin + 0.08]) 
 
-cb = fig.colorbar(img2, cax=cax)  
-cb.ax.tick_params(labelsize=25, pad = 5)
-cb.set_label(r'Density $\log_{10}(\rho)$ [g/cm$^2$]', fontsize = 20, labelpad = 15)
-# Axis labels
-# fig.text(0.5, -0.03, plane[0] + r' [x/R$_a$]', ha='center', fontsize = 25)
-# fig.text(-0.02, 0.5, plane[1] + r' [y/R$_a$]', va='center', rotation='vertical', fontsize = 25)
-ax[2,1].set_xlabel(plane[0] + r' [x/R$_a$]', ha='center', fontsize = 25 )
-ax[1,0].set_ylabel(plane[1] + r' [y/R$_a$]', ha='center', fontsize = 25 )
+# cb = fig.colorbar(img2, cax=cax)  
+# cb.ax.tick_params(labelsize=25, pad = 5)
+# cb.set_label(r'Density $\log_{10}(\rho)$ [g/cm$^2$]', fontsize = 20, labelpad = 15)
+# # Axis labels
+# # fig.text(0.5, -0.03, plane[0] + r' [x/R$_a$]', ha='center', fontsize = 25)
+# # fig.text(-0.02, 0.5, plane[1] + r' [y/R$_a$]', va='center', rotation='vertical', fontsize = 25)
+# ax[2,1].set_xlabel(plane[0] + r' [x/R$_a$]', ha='center', fontsize = 25 )
+# ax[1,0].set_ylabel(plane[1] + r' [y/R$_a$]', ha='center', fontsize = 25 )
 
-#plt.savefig('xyproj.png')#, format = 'pdf', dpi = 400)
+# #plt.savefig('xyproj.png')#, format = 'pdf', dpi = 400)
 
-from src.Utilities.finished import finished
-finished()
+# from src.Utilities.finished import finished
+# finished()
 #%% Just 3
 rate = 1.5
 y = 5

@@ -47,11 +47,20 @@ def ray_maker_forest(fix, m, star, check, thetas, phis, stops, num, opacity, bet
     Num is 1001 because for blue we then delete the last cell.
     Outputs are in CGS with exception of ray_vol (in solar units).
     """
+    
 
+    
     fix = str(fix)
     Mbh = 10**m 
-    Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
-
+    if 'star' == 'half':
+        mstar = 0.5
+        rstar = 0.47
+    else:
+        mstar = 1
+        rstar = 1
+    Rt = rstar * (Mbh/mstar)**(1/3) 
+    apocenter = 2 * Rt * (Mbh/mstar)**(1/3)
+    
     # Load data
     pre = s.select_prefix(m, check)
     pre = f'{m}{star}/'
