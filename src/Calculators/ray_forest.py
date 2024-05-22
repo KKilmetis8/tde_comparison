@@ -41,8 +41,8 @@ class ray_keeper:
         self.vol = rays_vol
         self.v = rays_v
 
-def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity, 
-                     star = True): 
+def ray_maker_forest(fix, m, star, check, thetas, phis, stops, num, opacity, beta,
+                     starflag = True): 
     """ 
     Num is 1001 because for blue we then delete the last cell.
     Outputs are in CGS with exception of ray_vol (in solar units).
@@ -54,6 +54,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity,
 
     # Load data
     pre = s.select_prefix(m, check)
+    pre = f'{m}{star}/'
     X = np.load(pre + fix + '/CMx_' + fix + '.npy')
     Y = np.load(pre + fix + '/CMy_' + fix + '.npy')
     Z = np.load(pre + fix + '/CMz_' + fix + '.npy')
@@ -65,7 +66,7 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity,
     Rad = np.load(pre + fix + '/Rad_' + fix + '.npy')
     IE = np.load(pre + fix + '/IE_' + fix + '.npy')
     Vol = np.load(pre + fix + '/Vol_' + fix + '.npy')
-    if star:
+    if starflag:
         Star = np.load(pre + fix + '/Star_' + fix + '.npy')
     if opacity == 'cloudy': # elad 
         Tcool_min = np.loadtxt('src/Opacity/cloudy_data/Tcool_ext.txt')[0]
@@ -84,8 +85,8 @@ def ray_maker_forest(fix, m, check, thetas, phis, stops, num, opacity,
 
     # Ensure that the regular grid cells are smaller than simulation cells
     # NOTE: for the 10^6 what do we do for the other???
-    # We are ignoring beta here.
-    start = Rt/200 # 1e-0.25 Solar radii  (arbitrary choice ELAD made)
+    # We are ignoring beta here. -> not anymore
+    start = Rt/200 /beta # 1e-0.25 Solar radii  (arbitrary choice ELAD made)
     rays_radii = []
     
     # you take num-1 beacause in blue you will delete the last cell of radii

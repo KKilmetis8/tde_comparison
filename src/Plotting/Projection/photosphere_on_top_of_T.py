@@ -34,10 +34,11 @@ for index in range(len(snapshots)):
     filename = f"{m}/{snap}/snap_{snap}.h5"
     
     thetas, phis, stops = ray_finder(filename)
-    rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, 
-                            opacity_kind)
+    check = ''
+    rays = ray_maker_forest(snap, m, check, 
+                            thetas, phis, stops, 
+                            num, opacity_kind)
     
-
     _, _, rays_photo, _, _ = get_specialr(rays.T, rays.den, rays.radii, 
                                           rays.tree_indexes, opacity_kind, 
                                           select = 'photo' )
@@ -46,7 +47,8 @@ for index in range(len(snapshots)):
                                           rays.tree_indexes, opacity_kind, 
                                           select = 'thermr_plot' )
     rays_photo = rays_photo/c.Rsol_to_cm # to solar unit to plot
-    rays_thermr = rays_thermr/c.Rsol_to_cm
+    
+    # rays_thermr = rays_thermr/c.Rsol_to_cm
 #%% Plot Midplane
 import colorcet
 fig, ax = plt.subplots(1,1)

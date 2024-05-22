@@ -9,6 +9,7 @@ Created on Fri Feb 24 17:06:56 2023
 import numpy as np
 import h5py
 from datetime import datetime
+from src.Extractors.time_extractor import time_extractor
 import os
 
 #%% Get Densities
@@ -73,6 +74,7 @@ def extractor(filename, m):
     Rad = []
     T = []
     P = []
+    star = []
     
     # Iterate over ranks
     for key in keys:
@@ -90,7 +92,7 @@ def extractor(filename, m):
             y_data = f[key]['CMy']
             z_data = f[key]['CMz']
             den_data = f[key]['Density']
-            
+            star_data = f[key]['tracers']['Star']
             vx_data = f[key]['Vx']
             vy_data = f[key]['Vy']
             vz_data = f[key]['Vz']
@@ -117,23 +119,25 @@ def extractor(filename, m):
                 Mass.append(vol_data[i] * den_data[i])
                 T.append(T_data[i])
                 P.append(P_data[i])
+                star.append(star_data[i])
 
 
     # Close the file
     f.close()
-    return X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P
+    return X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P, star
 #%%
 # Change the current working directory
-fixes = [200]
+fixes = [348]
 for fix in fixes:
     m = 4
-    snapshot = f'{m}/{fix}/snap_full_{fix}.h5'
-    pre = f'{m}/{fix}/'
+    star = 'half'
+    snapshot = f'{m}{star}/{fix}/snap_full_{fix}.h5'
+    pre = f'{m}{star}/{fix}/'
     suf = f'_{fix}'
 
-    X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P = extractor(snapshot, m)
+    X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P, Star = extractor(snapshot, m)
     
-    # Save to another file.
+    #%% Save to another file.
     np.save(pre + 'CMx' + suf, X)   
     np.save(pre + 'CMy' + suf, Y) 
     np.save(pre + 'CMz' + suf, Z) 
@@ -147,4 +151,10 @@ for fix in fixes:
     np.save(pre + 'Rad' + suf, Rad)
     np.save(pre + 'T' + suf, T)
     np.save(pre + 'P' + suf, P) 
+    np.save(pre + 'Star' + suf, Star)
+    
+    #%% Do time
+    time_extractor(m, star, fix, 0.5, 0.47)
+    
+    
             

@@ -75,10 +75,10 @@ def extractor(filename):
     return T, Z
 
 #%% Doing the thing
-fixes = [269]
+fixes = [683]
 for fix in fixes:
-    m = 5
-    snapshot = f'{m}/{fix}/snap_{fix}.h5'
+    m = 6
+    snapshot = f'{m}/{fix}/snap_full_{fix}.h5'
     _, Z = extractor(snapshot)   
     # Save to another file.
     np.save(f'{m}/{fix}/Star_{fix}', Z)

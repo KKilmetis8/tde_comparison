@@ -62,6 +62,12 @@ def days_since_distruption(filename, mbh, mstar, rstar):
     return days/tfb
 
 #%%
+
+def time_extractor(m, star, snapno, mass, radius):
+    snap = f'{m}{star}/{snapno}/snap_full_{snapno}.h5'
+    tbytfb = days_since_distruption(snap,10**m,mass,radius)
+    np.savetxt(f'{m}{star}/{snapno}/tbytfb_{snapno}.txt',[tbytfb])
+    
 if __name__ == '__main__':
     # snaps = [820, 881, 254]
     # days820 = days_since_distruption(snapshot820)
