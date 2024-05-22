@@ -5,13 +5,19 @@ Created on Fri Feb 24 17:06:56 2023
 
 @author: konstantinos
 """
-
+import os
 import numpy as np
 import h5py
 from datetime import datetime
-from src.Extractors.time_extractor import time_extractor
-import os
 
+from src.Extractors.time_extractor import time_extractor
+from src.Utilities.isalice import isalice
+
+alice, _ = isalice()
+if alice:
+    realpre = '/data1/s3745597/TDE/'
+else:
+    realpre = ''
 #%% Get Densities
 
 ## File structure is

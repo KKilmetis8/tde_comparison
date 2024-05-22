@@ -33,7 +33,7 @@ def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
         rstar = 1
     Rt = rstar * (Mbh/mstar)**(1/3) 
     apocenter = 2 * Rt * (Mbh/mstar)**(1/3)
-    pre = f'{m}{star}/{fix}'
+    pre = f'{m}{star}/snap_{fix}'
     
     # Mass = np.load(pre + '/Mass_' + fix + '.npy')
     Den = np.load(pre + '/Den_' + fix + '.npy')
