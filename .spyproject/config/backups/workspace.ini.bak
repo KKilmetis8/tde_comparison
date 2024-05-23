@@ -4,7 +4,7 @@ save_data_on_exit = True
 save_history = True
 save_non_project_files = False
 project_type = 'empty-project-type'
-recent_files = ['src/paperplots/proj.py', 'src/Calculators/ray_forest.py', '../../../Desktop/folder_placer.py', '../../../Desktop/super_extractor.py']
+recent_files = ['src/paperplots/proj.py', 'src/Calculators/ray_forest.py', 'src/Projectors/projector_tree.py', 'src/Calculators/THREE_tree_caster.py']
 
 [main]
 version = 0.2.0

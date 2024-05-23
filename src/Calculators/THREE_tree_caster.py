@@ -94,10 +94,10 @@ def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
     # Color re-normalization
     den_cast[den_cast<0.2] = 0
     den_cast[den_cast>5] = 5
-
-    return xs/apocenter, ys/apocenter, den_cast, apocenter# , days
-        
-    # return gridded_indexes, gridded_den, gridded_mass, x_radii, y_radii, z_radii
+    # aesS
+    # return xs/apocenter, ys/apocenter, den_cast, apocenter# , days
+    # 
+    return gridded_indexes, den_cast, gridded_mass, xs/apocenter, ys/apocenter, z_radii
 
  
 if __name__ == '__main__':
