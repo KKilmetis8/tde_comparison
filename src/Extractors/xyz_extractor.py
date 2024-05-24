@@ -147,29 +147,31 @@ for fix in snapshots:
     else:
         pre_file = f'{m}/{fix}'
     snapshot = f'{pre_file}/snap_{fix}.h5'
-    pre = f'{pre_file}/'
-    suf = f'_{fix}'
 
-    X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P, Star = extractor(snapshot, m)
-    
-    #%% Save to another file.
-    np.save(pre + 'CMx' + suf, X)   
-    np.save(pre + 'CMy' + suf, Y) 
-    np.save(pre + 'CMz' + suf, Z) 
-    np.save(pre + 'Den' + suf, Den)
-    np.save(pre + 'Vx' + suf, Vx)   
-    np.save(pre + 'Vy' + suf, Vy) 
-    np.save(pre + 'Vz' + suf, Vz)
-    np.save(pre + 'Vol' + suf, Vol)
-    np.save(pre + 'Mass' + suf, Mass)   
-    np.save(pre + 'IE' + suf, IE) 
-    np.save(pre + 'Rad' + suf, Rad)
-    np.save(pre + 'T' + suf, T)
-    np.save(pre + 'P' + suf, P) 
-    np.save(pre + 'Star' + suf, Star)
-    
-    #%% Do time
-    #time_extractor(m, star, fix, 0.5, 0.47)
+    if os.path.isfile(snapshot):
+        pre = f'{pre_file}/'
+        suf = f'_{fix}'
+
+        X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P, Star = extractor(snapshot, m)
+        
+        #%% Save to another file.
+        np.save(pre + 'CMx' + suf, X)   
+        np.save(pre + 'CMy' + suf, Y) 
+        np.save(pre + 'CMz' + suf, Z) 
+        np.save(pre + 'Den' + suf, Den)
+        np.save(pre + 'Vx' + suf, Vx)   
+        np.save(pre + 'Vy' + suf, Vy) 
+        np.save(pre + 'Vz' + suf, Vz)
+        np.save(pre + 'Vol' + suf, Vol)
+        np.save(pre + 'Mass' + suf, Mass)   
+        np.save(pre + 'IE' + suf, IE) 
+        np.save(pre + 'Rad' + suf, Rad)
+        np.save(pre + 'T' + suf, T)
+        np.save(pre + 'P' + suf, P) 
+        np.save(pre + 'Star' + suf, Star)
+        
+        #%% Do time
+        #time_extractor(m, star, fix, 0.5, 0.47)
     
     
             
