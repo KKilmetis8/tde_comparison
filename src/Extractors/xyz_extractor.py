@@ -148,7 +148,7 @@ for fix in snapshots:
     else:
         pre_file = f'{m}/{fix}'
 
-    if os.path.isdir(pre_file):
+    if os.path.exists(pre_file):
         snapshot = f'{pre_file}/snap_{fix}.h5'
         pre = f'{pre_file}/'
         suf = f'_{fix}'
