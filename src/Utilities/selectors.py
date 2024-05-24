@@ -19,7 +19,7 @@ def select_prefix(m, check):
         pre = f'{m}/'
     return pre
 
-def select_snap(m, mstar, rstar, check):
+def select_snap(m, mstar, rstar, check, time = True):
     Mbh = 10**m
     pre = select_prefix(m, check)
     days = []
@@ -43,10 +43,13 @@ def select_snap(m, mstar, rstar, check):
             snapshots = [844,1008] # [844, 882, 925, 950]#, 1008] 
     for snap in snapshots:
         snap = str(snap) 
-        t_by_tfb = np.round(days_since_distruption( pre +
-                    snap + '/snap_' + snap + '.h5', Mbh, mstar, rstar), 1)
-        days.append(t_by_tfb)
-    return snapshots, days
+        if time:
+            t_by_tfb = np.round(days_since_distruption( pre +
+                        snap + '/snap_' + snap + '.h5', Mbh, mstar, rstar), 1)
+            days.append(t_by_tfb)
+            return snapshots, days
+        else:
+            return snapshots
 
 # Select opacity
 def select_opacity(m):

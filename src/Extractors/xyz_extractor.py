@@ -139,7 +139,7 @@ else:
     star = ''
 rstar = 0.47
 check = 'fid'
-snapshots, _ = s.select_snap(m, mstar, rstar, check)
+snapshots = s.select_snap(m, mstar, rstar, check, time = False)
 
 for fix in snapshots:
     if alice:
