@@ -145,7 +145,9 @@ check = 'fid'
 snapshots, _ = s.select_snap(m, mstar, rstar, check)
 
 for fix in snapshots:
-    snapshot = f'{m}{star}-{check}/snap_{fix}/snap_{fix}.h5'
+    if alice:
+        pre_file = f'/home/s3745597/data1/TDE/{m}{star}-{check}/snap_{fix}'
+    snapshot = f'{pre_file}/snap_{fix}.h5'
     pre = f'{m}{star}-{check}/snap_{fix}/'
     suf = f'_{fix}'
 
