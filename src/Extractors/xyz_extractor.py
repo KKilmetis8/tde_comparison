@@ -11,6 +11,7 @@ import h5py
 from datetime import datetime
 
 from src.Extractors.time_extractor import time_extractor
+import src.Utilities.selectors as s
 from src.Utilities.isalice import isalice
 
 alice, _ = isalice()
@@ -133,12 +134,19 @@ def extractor(filename, m):
     return X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P, star
 #%%
 # Change the current working directory
-fixes = [348]
-for fix in fixes:
-    m = 4
+m = 5
+mstar = 0.5
+if mstar == 0.5:
     star = 'half'
-    snapshot = f'{m}{star}/{fix}/snap_full_{fix}.h5'
-    pre = f'{m}{star}/{fix}/'
+else:
+    star = ''
+rstar = 0.47
+check = 'fid'
+snapshots, _ = s.select_snap(m, mstar, rstar, check)
+
+for fix in snapshots:
+    snapshot = f'{m}{star}-{check}/snap_{fix}/snap_{fix}.h5'
+    pre = f'{m}{star}-{check}/snap_{fix}/'
     suf = f'_{fix}'
 
     X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P, Star = extractor(snapshot, m)
@@ -160,7 +168,7 @@ for fix in fixes:
     np.save(pre + 'Star' + suf, Star)
     
     #%% Do time
-    time_extractor(m, star, fix, 0.5, 0.47)
+    #time_extractor(m, star, fix, 0.5, 0.47)
     
     
             

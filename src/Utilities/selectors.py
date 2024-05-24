@@ -31,7 +31,7 @@ def select_snap(m, mstar, rstar, check):
         if m == 4 and check == 'S60ComptonHires':
             snapshots = np.arange(210, 278 + 1)
         if m == 5:
-            snapshots = [100, 200]
+            snapshots = [132, 210]
     else:
         if m == 4 and check == 'fid':
             snapshots = [293,322] #, 254, 263, 277 , 293, 308, 322]
