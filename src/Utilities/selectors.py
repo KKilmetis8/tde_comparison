@@ -13,7 +13,7 @@ from src.Extractors.time_extractor import days_since_distruption
 
 def select_prefix(m, check):
     if alice:
-        prealice = '/home/s3745597/data1/TDE/' + str(m) + '-' + check + '/snap_'
+        prealice = '/home/s3745597/data1/TDE/' + str(m) + 'half-' + check + '/snap_'
         pre = prealice
     else:
         pre = f'{m}/'

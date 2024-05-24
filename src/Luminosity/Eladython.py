@@ -5,8 +5,8 @@ Created on Tue Mar 26 18:52:21 2024
 
 @author: konstantinos
 """
-import sys
-sys.path.append('/Users/paolamartire/tde_comparison')
+# import sys
+# sys.path.append('/Users/paolamartire/tde_comparison')
 
 # The goal is to replicate Elad's script. No nice code, no nothing. A shit ton
 # of comments though. 
@@ -24,11 +24,11 @@ import src.Utilities.selectors as s
 
 #%% Choose parameters -----------------------------------------------------------------
 save = True
-m = 4
+m = 5
 opac_kind = 'LTE'
 check = 'fid'
-mstar = 1.
-rstar = 1.
+mstar = 0.5
+rstar = 0.47
 snapshots, days = s.select_snap(m, mstar, rstar, check)
 
 #%% Opacities -----------------------------------------------------------------
@@ -340,13 +340,17 @@ for snap in snapshots:
     #%% Save data ------------------------------------------------------------------
     if save:
         if alice:
-            pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
+            pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/half5'
         else:
             pre_saving = 'data/blue/'
         with open(f'{pre_saving}/frequencies_m'+ str(m) + '.txt', 'w') as f:
                 f.write(' '.join(map(str, frequencies)) + '\n') 
                 f.close()
         np.savetxt(f'{pre_saving}/Ln_m{m}_{snap}.txt', F_photo)
+
+        with open(f'{pre_saving}/red'+ str(m) + '.txt', 'a') as fred:
+                fred.write(' '.join(map(str, frequencies)) + '\n') 
+                fred.close()
 
     #%% Plot -----------------------------------------------------------------------
     if plot:
