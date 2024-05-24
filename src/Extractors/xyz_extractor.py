@@ -15,10 +15,7 @@ import src.Utilities.selectors as s
 from src.Utilities.isalice import isalice
 
 alice, _ = isalice()
-if alice:
-    realpre = '/data1/s3745597/TDE/'
-else:
-    realpre = ''
+
 #%% Get Densities
 
 ## File structure is
