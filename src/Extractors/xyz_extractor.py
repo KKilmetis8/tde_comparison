@@ -144,11 +144,12 @@ snapshots, _ = s.select_snap(m, mstar, rstar, check)
 for fix in snapshots:
     if alice:
         pre_file = f'/home/s3745597/data1/TDE/{m}{star}-{check}/snap_{fix}'
+
     else:
         pre_file = f'{m}/{fix}'
 
-    if os.path.isfile(pre_file):
-        snapshot = f'{pre_file}/snap_{fix}.h5'
+    snapshot = f'{pre_file}/snap_{fix}.h5'
+    if os.path.isdir(pre_file):
         pre = f'{pre_file}/'
         suf = f'_{fix}'
 
