@@ -85,8 +85,7 @@ _, _, plank2 = pad_interp(T_cool, Rho_cool, plank.T)
 import matlab.engine
 eng = matlab.engine.start_matlab()
 
-snapshots_test = snapshots[0:2]
-for snap in snapshots_test:
+for snap in snapshots:
     #%% Load data -----------------------------------------------------------------
     pre = s.select_prefix(m, check)
     X = np.load(f'{pre}{snap}/CMx_{snap}.npy')
