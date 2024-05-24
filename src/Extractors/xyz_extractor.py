@@ -146,9 +146,9 @@ for fix in snapshots:
         pre_file = f'/home/s3745597/data1/TDE/{m}{star}-{check}/snap_{fix}'
     else:
         pre_file = f'{m}/{fix}'
-    snapshot = f'{pre_file}/snap_{fix}.h5'
 
-    if os.path.isfile(snapshot):
+    if os.path.isfile(pre_file):
+        snapshot = f'{pre_file}/snap_{fix}.h5'
         pre = f'{pre_file}/'
         suf = f'_{fix}'
 
