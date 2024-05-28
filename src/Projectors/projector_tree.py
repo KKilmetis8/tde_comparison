@@ -21,7 +21,7 @@ import os
 # Constants & Converter
 Rsol_to_cm = 6.957e10 # [cm]
 
-# @numba.njit
+@numba.njit
 def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii, what):
     """ Project density on XY plane. NB: to plot you have to transpose the saved data"""
     # Make the 3D grid 
@@ -35,12 +35,10 @@ def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii, 
             for k in range(len(z_radii) - 1): # NOTE SKIPPING LAST Z PLANE
                 dz = (z_radii[k+1] - z_radii[k]) * Rsol_to_cm
                 if mass_weigh:
-                    print('mass weight')
                     mass_zsum += gridded_mass[i,j,k]
                     flat_den[i,j] += gridded_den[i,j,k] * dz * gridded_mass[i,j,k]
                 else:
                     if what == 'density':
-                        print('here')
                         flat_den[i,j] += gridded_den[i,j,k] * dz
                     else: 
                         flat_den[i,j] += gridded_den[i,j,k]
@@ -57,7 +55,7 @@ if __name__ == '__main__':
     save = True
     check = 'fid' 
     what = 'density' # temperature or density
-    snapshots = np.arange(2, 365)#select_snap(m, check)
+    snapshots = np.arange(3,266)#select_snap(m, check)
 
     for snap in snapshots:
         if alice:
@@ -65,8 +63,8 @@ if __name__ == '__main__':
         else:
             pre_file = f'{m}/{snap}'
         if os.path.exists(pre_file):
-            _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, star, check, what, False,
-                                                            500, 500, 100)
+            _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, star, check,
+                                                            500, 500, 100, False)
             flat_den = projector(grid_den, grid_mass, False,
                                 xs, ys, zs, what)
 

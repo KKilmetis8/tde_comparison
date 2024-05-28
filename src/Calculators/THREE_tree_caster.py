@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Make a 3D grid of the data, searching for simulation data in the vicinity of the one chosem.
+Make a 3D grid, searching for simulation data in the vicinity of the one chosen and storing X,Y,Z,Den.
 Created on Tue Oct 10 10:19:34 2023
 
 @authors: paola, konstantinos
@@ -24,7 +24,7 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 
-def grid_maker(fix, m, star, check, what, mass_weigh, x_num, y_num, z_num = 100):
+def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False):
     """ ALL outputs are in in solar units """
     Mbh = 10**m
     fix = str(fix)
@@ -65,15 +65,15 @@ def grid_maker(fix, m, star, check, what, mass_weigh, x_num, y_num, z_num = 100)
     z_start = -2 * Rt
     z_stop = 2 * Rt
     z_num = 100
-    z_radii = np.linspace(z_start, z_stop, z_num) #simulator units
+    zs = np.linspace(z_start, z_stop, z_num) #simulator units
 
-    gridded_indexes =  np.zeros(( len(xs), len(ys), len(z_radii) ))
-    gridded_den =  np.zeros(( len(xs), len(ys), len(z_radii) ))
-    gridded_mass =  np.zeros(( len(xs), len(ys), len(z_radii) ))
+    gridded_indexes =  np.zeros(( len(xs), len(ys), len(zs) ))
+    gridded_den =  np.zeros(( len(xs), len(ys), len(zs) ))
+    gridded_mass =  np.zeros(( len(xs), len(ys), len(zs) ))
     for i in range(len(xs)):
         for j in range(len(ys)):
-            for k in range(len(z_radii)):
-                queried_value = [xs[i], ys[j], z_radii[k]]
+            for k in range(len(zs)):
+                queried_value = [xs[i], ys[j], zs[k]]
                 _, idx = sim_tree.query(queried_value)
                                     
                 # Store
@@ -94,7 +94,7 @@ def grid_maker(fix, m, star, check, what, mass_weigh, x_num, y_num, z_num = 100)
 
     # return xs/apocenter, ys/apocenter, den_cast, apocenter# , days
     # 
-    return gridded_indexes, gridded_den, gridded_mass, xs, ys, z_radii
+    return gridded_indexes, gridded_den, gridded_mass, xs, ys, zs
 
  
 if __name__ == '__main__':
