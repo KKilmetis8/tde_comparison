@@ -56,7 +56,7 @@ if __name__ == '__main__':
     snapshots = np.arange(325, 327)#select_snap(m, check)
 
     for snap in snapshots:
-        _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, star, what, False,
+        _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, star, check, what, False,
                                                         500, 500, 100)
         flat_den = projector(grid_den, grid_mass, False,
                              xs, ys, zs, what)

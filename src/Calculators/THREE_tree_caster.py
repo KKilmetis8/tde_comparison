@@ -7,14 +7,13 @@ Also does midplane
 @authors: paola, konstantinos
 
 """
-import sys
-sys.path.append('/Users/paolamartire/tde_comparison')
-
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 if alice:
     realpre = '/home/s3745597/data1/TDE/'
 else:
+    import sys
+    sys.path.append('/Users/paolamartire/tde_comparison')
     realpre = ''
 import numpy as np
 from scipy.spatial import KDTree
@@ -25,7 +24,7 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 
-def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
+def grid_maker(fix, m, star, check, what, mass_weigh, x_num, y_num, z_num = 100):
     """ Outputs are in in solar units """
     Mbh = 10**m
     fix = str(fix)
@@ -37,7 +36,7 @@ def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
         rstar = 1
     Rt = rstar * (Mbh/mstar)**(1/3) 
     apocenter = 2 * Rt * (Mbh/mstar)**(1/3)
-    pre = f'{m}{star}/snap_{fix}'
+    pre = f'{m}{star}-{check}/snap_{fix}'
     
     # Mass = np.load(pre + '/Mass_' + fix + '.npy')
     Den = np.load(realpre + pre + '/Den_' + fix + '.npy')
