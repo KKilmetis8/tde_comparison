@@ -53,7 +53,7 @@ if __name__ == '__main__':
     save = True
     check = 'fid' 
     what = 'density' # temperature or density
-    snapshots = np.arange(2,365)#select_snap(m, check)
+    snapshots = np.arange(325, 327)#select_snap(m, check)
 
     for snap in snapshots:
         _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, star, what, False,
@@ -64,10 +64,10 @@ if __name__ == '__main__':
         if save:
             if alice:
                 pre = '/home/s3745597/data1/TDE/'
-                sim = f'{m}{star}'# -{check}'
-                np.savetxt(f'{pre}tde_comparison/data/denproj/denproj{sim}{snap}.txt', flat_den)
-                np.savetxt(f'{pre}tde_comparison/data/denproj/xarray{sim}.txt', xs)
-                np.savetxt(f'{pre}tde_comparison/data/denproj/yarray{sim}.txt', ys)
+                sim = f'{m}{star}-{check}'
+                np.savetxt(f'{pre}tde_comparison/data/denproj/{sim}/denproj{sim}{snap}.txt', flat_den)
+                np.savetxt(f'{pre}tde_comparison/data/denproj/{sim}/xarray{sim}.txt', xs)
+                np.savetxt(f'{pre}tde_comparison/data/denproj/{sim}/yarray{sim}.txt', ys)
             else:
                 np.savetxt(f'data/localdenproj{m})_{snap}.txt', flat_den) 
                 np.savetxt(f'data/localxarray{m}.txt', xs) 
