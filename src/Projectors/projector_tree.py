@@ -55,7 +55,7 @@ if __name__ == '__main__':
     save = True
     check = 'fid' 
     what = 'density' # temperature or density
-    snapshots = np.arange(3,266)#select_snap(m, check)
+    snapshots = np.arange(150,266)#select_snap(m, check)
 
     for snap in snapshots:
         if alice:
