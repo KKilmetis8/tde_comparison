@@ -5,6 +5,9 @@ Created on Wed Jan 31 15:04:06 2024
 
 @author: konstantinos
 """
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
+
 import src.Utilities.prelude
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
