@@ -85,7 +85,8 @@ _, _, plank2 = pad_interp(T_cool, Rho_cool, plank.T)
 import matlab.engine
 eng = matlab.engine.start_matlab()
 
-for snap in snapshots:
+Lphoto_all = np.zeros(len(snapshots))
+for idx_s, snap in enumerate(snapshots):
     #%% Load data -----------------------------------------------------------------
     pre = s.select_prefix(m, check)
     X = np.load(f'{pre}{snap}/CMx_{snap}.npy')
@@ -318,6 +319,7 @@ for snap in snapshots:
             Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
         max_length = 4*np.pi*c.c*EEr[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
         Lphoto = np.min( [Lphoto2, max_length])
+        Lphoto_all[idx_s] = Lphoto # save red
         # Lphoto = Lphoto2
 
         # Spectra ---------------------------------------------------------------------
@@ -339,18 +341,18 @@ for snap in snapshots:
 
     #%% Save data ------------------------------------------------------------------
     if save:
+        if mstar == 0.5:
+            star = 'half'
+        else:   
+            star = ''
         if alice:
-            pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/half5'
+            pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/{star}{m}'
         else:
             pre_saving = 'data/blue/'
         with open(f'{pre_saving}/frequencies_m'+ str(m) + '.txt', 'w') as f:
                 f.write(' '.join(map(str, frequencies)) + '\n') 
                 f.close()
         np.savetxt(f'{pre_saving}/Ln_m{m}_{snap}.txt', F_photo)
-
-        with open(f'{pre_saving}/red'+ str(m) + '.txt', 'a') as fred:
-                fred.write(' '.join(map(str, frequencies)) + '\n') 
-                fred.close()
 
     #%% Plot -----------------------------------------------------------------------
     if plot:
@@ -393,3 +395,9 @@ for snap in snapshots:
         plt.show()
 
 eng.exit()
+
+# Save red
+if save:
+    with open(f'{pre_saving}/red'+ str(m) + '.txt', 'a') as fred:
+        fred.write(' '.join(map(str, Lphoto_all))) 
+        fred.close()
