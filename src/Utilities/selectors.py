@@ -12,11 +12,16 @@ import src.Utilities.prelude
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 import numpy as np
+import os
 from src.Extractors.time_extractor import days_since_distruption
 
-def select_prefix(m, check):
+def select_prefix(m, check, mstar):
+    if mstar == 0.5:
+        star = 'half'
+    else:
+        star = ''
     if alice:
-        prealice = '/home/s3745597/data1/TDE/' + str(m) + 'half-' + check + '/snap_'
+        prealice = f'/home/s3745597/data1/TDE/{m}{star}-{check}/snap_'
         pre = prealice
     else:
         pre = f'{m}/'
@@ -24,7 +29,7 @@ def select_prefix(m, check):
 
 def select_snap(m, mstar, rstar, check, time = True):
     Mbh = 10**m
-    pre = select_prefix(m, check)
+    pre = select_prefix(m, check, mstar)
     days = []
     if alice:
         if m == 6 and check == 'fid':
@@ -34,7 +39,9 @@ def select_snap(m, mstar, rstar, check, time = True):
         if m == 4 and check == 'S60ComptonHires':
             snapshots = np.arange(210, 278 + 1)
         if m == 5:
-            snapshots = np.arange(100,365+1)
+            snapshots = np.arange(100,365+1) 
+        # select just the ones that actually exist
+        snapshots = [snap for snap in snapshots if os.path.exists(f'{pre}{snap}/snap_{snap}.h5')]
     else:
         if m == 4 and check == 'fid':
             snapshots = [293,322] #, 254, 263, 277 , 293, 308, 322]

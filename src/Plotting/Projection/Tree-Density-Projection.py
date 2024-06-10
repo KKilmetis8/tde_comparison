@@ -35,9 +35,7 @@ Mbh = 10**m
 Rt =  rstar * (Mbh/mstar)**(1/3) 
 apocenter = 2 * Rt * (Mbh/mstar)**(1/3) 
 
-# snapshots, days = s.select_snap(m, mstar, rstar, check)
-days = [1.5]
-snapshots = [263]
+snapshots, days = s.select_snap(m, mstar, rstar, check)
 
 for snap, day in zip(snapshots, days):
     sim = f'{m}{star}-{check}'
