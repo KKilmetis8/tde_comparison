@@ -79,8 +79,8 @@ if __name__ == '__main__':
 
         if save:
             if alice:
-                pre = f'/home/s3745597/data1/TDE/tde_comparison/data/denproj/{sim}'
                 sim = f'{m}{star}-{check}'
+                pre = f'/home/s3745597/data1/TDE/tde_comparison/data/denproj/{sim}'
                 np.savetxt(f'{pre}/denproj{sim}{snap}.txt', flat_den)
                 np.savetxt(f'{pre}/xarray{sim}.txt', xs)
                 np.savetxt(f'{pre}/yarray{sim}.txt', ys)

@@ -63,7 +63,6 @@ def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False
     
     z_start = -2 * Rt
     z_stop = 2 * Rt
-    z_num = 100
     zs = np.linspace(z_start, z_stop, z_num) #simulator units
 
     gridded_indexes =  np.zeros(( len(xs), len(ys), len(zs) ))
