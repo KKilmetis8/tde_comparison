@@ -5,8 +5,8 @@ Created on Tue Mar 26 18:52:21 2024
 
 @author: konstantinos
 """
-# import sys
-# sys.path.append('/Users/paolamartire/tde_comparison')
+import sys
+sys.path.append('/Users/paolamartire/tde_comparison')
 
 # The goal is to replicate Elad's script. No nice code, no nothing. A shit ton
 # of comments though. 
@@ -29,7 +29,7 @@ opac_kind = 'LTE'
 check = 'fid'
 mstar = 0.5
 rstar = 0.47
-snapshots, days = s.select_snap(m, mstar, rstar, check)
+snapshots, days = s.select_snap(m, mstar, rstar, check, time = True)
 
 #%% Opacities -----------------------------------------------------------------
 # Freq range
@@ -88,7 +88,7 @@ eng = matlab.engine.start_matlab()
 Lphoto_all = np.zeros(len(snapshots))
 for idx_s, snap in enumerate(snapshots):
     #%% Load data -----------------------------------------------------------------
-    pre = s.select_prefix(m, check)
+    pre = s.select_prefix(m, check, mstar)
     X = np.load(f'{pre}{snap}/CMx_{snap}.npy')
     Y = np.load(f'{pre}{snap}/CMy_{snap}.npy')
     Z = np.load(f'{pre}{snap}/CMz_{snap}.npy')
@@ -128,7 +128,6 @@ for idx_s, snap in enumerate(snapshots):
     N_ray = 5_000
 
     # In the future these will be ray class
-
     # Holders Rays
     # d_ray = np.zeros((N_ray, 192))
     # r_ray = np.zeros((N_ray, 192))
@@ -177,7 +176,7 @@ for idx_s, snap in enumerate(snapshots):
         # Progress 
         # if i % 10 == 0:
         #     print('Eladython Ray no:', i)
-
+        print(i)
         mu_x = observers_xyz[i][0]
         mu_y = observers_xyz[i][1]
         mu_z = observers_xyz[i][2]
@@ -348,7 +347,7 @@ for idx_s, snap in enumerate(snapshots):
         if alice:
             pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/{star}{m}'
         else:
-            pre_saving = 'data/blue/'
+            pre_saving = 'data/blue'
         with open(f'{pre_saving}/frequencies_m'+ str(m) + '.txt', 'w') as f:
                 f.write(' '.join(map(str, frequencies)) + '\n') 
                 f.close()
