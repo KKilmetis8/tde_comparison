@@ -41,11 +41,11 @@ def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False
         pre = f'{m}/{fix}'
     
     # Mass = np.load(pre + '/Mass_' + fix + '.npy')
-    Den = np.load(realpre + pre + '/Den_' + fix + '.npy')
+    Den = np.load(f'{realpre}{pre}/Den_{fix}.npy')
 
     # CM Position Data
-    X = np.load(realpre + pre + '/CMx_' + fix + '.npy')
-    Y = np.load(realpre + pre + '/CMy_' + fix + '.npy')
+    X = np.load(f'{realpre}{pre}/CMx_{fix}.npy')
+    Y = np.load(f'{realpre}{pre}/CMy_{fix}.npy')
     x_start = -apocenter
     x_stop = 0.2 * apocenter
     # x_num = pixel_num # np.abs(x_start - x_stop)
@@ -55,7 +55,7 @@ def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False
     # y_num = pixel_num # np.abs(y_start - y_stop)
     ys = np.linspace(y_start, y_stop, num = y_num)
     
-    Z = np.load(realpre + pre + '/CMz_' + fix + '.npy')
+    Z = np.load(f'{realpre}{pre}/CMz_{fix}.npy')
 
     sim_value = [X, Y, Z] 
     sim_value = np.transpose(sim_value) #array of dim (number_points, 3)
