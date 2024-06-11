@@ -398,5 +398,8 @@ eng.exit()
 # Save red
 if save:
     with open(f'{pre_saving}/red'+ str(m) + '.txt', 'a') as fred:
-        fred.write(' '.join(map(str, Lphoto_all))) 
+        fred.write('# t/t_fb \n')
+        fred.write(' '.join(map(str, days))+ '\n') 
+        fred.write('# Red \n')
+        fred.write(' '.join(map(str, Lphoto_all))+ '\n') 
         fred.close()
