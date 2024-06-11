@@ -64,7 +64,7 @@ if __name__ == '__main__':
     beta = 1
     what = 'density' # temperature or density
     save = True
-    snapshots = s.select_snap(m, mstar, rstar, check)
+    snapshots, days = s.select_snap(m, mstar, rstar, check, time = True)
 
     for snap in snapshots:
         # if alice:

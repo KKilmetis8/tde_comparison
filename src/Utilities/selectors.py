@@ -27,7 +27,7 @@ def select_prefix(m, check, mstar):
         pre = f'{m}/'
     return pre
 
-def select_snap(m, mstar, rstar, check, time = True):
+def select_snap(m, mstar, rstar, check, time = False):
     Mbh = 10**m
     pre = select_prefix(m, check, mstar)
     days = []
@@ -42,9 +42,9 @@ def select_snap(m, mstar, rstar, check, time = True):
             snapshots = [245,246,247]#np.arange(100,365+1) 
         # select just the ones that actually exist
         snapshots = [snap for snap in snapshots if os.path.exists(f'{pre}{snap}/snap_{snap}.h5')]
-        print('before', snapshots)
-        snapshots = np.array(snapshots)
-        print('after', snapshots)
+        # print('before', snapshots)
+        # snapshots = np.array(snapshots)
+        # print('after', snapshots)
     else:
         if m == 4 and check == 'fid':
             snapshots = [293,322] #, 254, 263, 277 , 293, 308, 322]
