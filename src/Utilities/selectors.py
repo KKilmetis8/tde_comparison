@@ -39,7 +39,7 @@ def select_snap(m, mstar, rstar, check, time = True):
         if m == 4 and check == 'S60ComptonHires':
             snapshots = np.arange(210, 278 + 1)
         if m == 5 and check == 'fid':
-            snapshots = np.arange(100,365+1) 
+            snapshots = [245,246]#np.arange(100,365+1) 
         # select just the ones that actually exist
         snapshots = [snap for snap in snapshots if os.path.exists(f'{pre}{snap}/snap_{snap}.h5')]
     else:
