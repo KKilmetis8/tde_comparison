@@ -8,7 +8,7 @@ Created on Fri Feb 24 17:06:56 2023
 import os
 import numpy as np
 import h5py
-from datetime import datetime
+from tqdm import tqdm
 
 from src.Extractors.time_extractor import time_extractor
 from src.Utilities.isalice import isalice
@@ -47,8 +47,6 @@ def extractor(filename, m):
         Density.
     
     '''
-    # Timing start
-    start_time = datetime.now()
     # Read File
     f = h5py.File(filename, "r")
     # HDF5 are dicts, get the keys.
@@ -83,32 +81,27 @@ def extractor(filename, m):
     star = []
     
     # Iterate over ranks
-    for key in keys:
+    for key in tqdm(keys):
         if key in not_ranks:
             # Skip whatever is not a mpi rank
             continue
         else:
-            # Sanity Check
-            print(key)
-            # Timing
-            end_time = datetime.now()
-            print('Duration: {}'.format(end_time - start_time))
             # For some reason, having the collumns into variables is way faster.
             x_data = f[key]['CMx']
             y_data = f[key]['CMy']
             z_data = f[key]['CMz']
             den_data = f[key]['Density']
-            star_data = f[key]['tracers']['Star']
+            #star_data = f[key]['tracers']['Star']
             vx_data = f[key]['Vx']
             vy_data = f[key]['Vy']
-            vz_data = f[key]['Vz']
+            #vz_data = f[key]['Vz']
             vol_data = f[key]['Volume']
             
-            ie_data = f[key]['InternalEnergy']
-            if m == 6:
-                rad_data = f[key]['tracers']['ZRadEnergy'] 
-            else:
-                rad_data = f[key]['Erad']  #
+            #ie_data = f[key]['InternalEnergy']
+            #if m == 6:
+                #rad_data = f[key]['tracers']['ZRadEnergy'] 
+            #else:
+                #rad_data = f[key]['Erad']  #
             T_data = f[key]['Temperature']
             P_data = f[key]['Pressure']
             for i in range(len(x_data)):
@@ -118,30 +111,30 @@ def extractor(filename, m):
                 Den.append(den_data[i])
                 Vx.append(vx_data[i])
                 Vy.append(vy_data[i])
-                Vz.append(vz_data[i])
+                #Vz.append(vz_data[i])
                 Vol.append(vol_data[i])
-                IE.append(ie_data[i])
-                Rad.append(rad_data[i])
-                Mass.append(vol_data[i] * den_data[i])
+                #IE.append(ie_data[i])
+                #Rad.append(rad_data[i])
+                #Mass.append(vol_data[i] * den_data[i])
                 T.append(T_data[i])
                 P.append(P_data[i])
-                star.append(star_data[i])
+                #star.append(star_data[i])
 
 
     # Close the file
     f.close()
-    return X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P, star
+    return X, Y, Z, Den, Vx, Vy, Vol, T, P
 #%%
 # Change the current working directory
-fixes = [348]
+fixes = [164]
 for fix in fixes:
     m = 4
-    star = 'half'
+    star = 'halfHR'
     snapshot = f'{m}{star}/{fix}/snap_full_{fix}.h5'
     pre = f'{m}{star}/{fix}/'
     suf = f'_{fix}'
 
-    X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P, Star = extractor(snapshot, m)
+    X, Y, Z, Den, Vx, Vy,Vol,T, P  = extractor(snapshot, m)
     
     #%% Save to another file.
     np.save(pre + 'CMx' + suf, X)   
@@ -150,14 +143,14 @@ for fix in fixes:
     np.save(pre + 'Den' + suf, Den)
     np.save(pre + 'Vx' + suf, Vx)   
     np.save(pre + 'Vy' + suf, Vy) 
-    np.save(pre + 'Vz' + suf, Vz)
+    # np.save(pre + 'Vz' + suf, Vz)
     np.save(pre + 'Vol' + suf, Vol)
-    np.save(pre + 'Mass' + suf, Mass)   
-    np.save(pre + 'IE' + suf, IE) 
-    np.save(pre + 'Rad' + suf, Rad)
+    # np.save(pre + 'Mass' + suf, Mass)   
+    # np.save(pre + 'IE' + suf, IE) 
+    # np.save(pre + 'Rad' + suf, Rad)
     np.save(pre + 'T' + suf, T)
     np.save(pre + 'P' + suf, P) 
-    np.save(pre + 'Star' + suf, Star)
+    # np.save(pre + 'Star' + suf, Star)
     
     #%% Do time
     time_extractor(m, star, fix, 0.5, 0.47)

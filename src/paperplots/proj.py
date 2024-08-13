@@ -45,12 +45,12 @@ def maker(m, pixel_num, fix, plane, thing, how, star = 'half'):
     # CM Position Data
     X = np.load(pre + '/CMx_' + fix + '.npy')
     Y = np.load(pre + '/CMy_' + fix + '.npy')
-    x_start = -apocenter
+    x_start = 2 * -apocenter
     x_stop = 0.2 * apocenter
     x_num = pixel_num # np.abs(x_start - x_stop)
     xs = np.linspace(x_start, x_stop, num = x_num )
-    y_start = -0.2 * apocenter 
-    y_stop = 0.2 * apocenter
+    y_start = -0.4 * apocenter 
+    y_stop = 0.4 * apocenter
     y_num = pixel_num # np.abs(y_start - y_stop)
     ys = np.linspace(y_start, y_stop, num = y_num)
     
@@ -169,8 +169,8 @@ def photo_plot(m, num, snap, opacity_kind, beta, star = 'half'):
     photo_y = np.concatenate((plus_y[psort],  np.flip(neg_y[nsort], )))
     
     # Close the loop
-    # photo_x = np.append(photo_x, photo_x[0])
-    # photo_y = np.append(photo_y, photo_y[0])
+    photo_x = np.append(photo_x, photo_x[0])
+    photo_y = np.append(photo_y, photo_y[0])
     
     return photo_x, photo_y
 #%%
@@ -283,17 +283,17 @@ img2 = ax[1].pcolormesh(x5, y5, d5, cmap='cet_fire', vmin = 0, vmax = vmax)
 
 # Photosphere -----------------------------------------------------------------
 ax[0].plot(photo_x4 / apo4, photo_y4 / apo4, 
-        marker = '', color = 'cyan', ls = '-',
+        marker = 'o', color = 'cyan', ls = '-',
         linewidth = 2, markersize = 10)
 ax[1].plot(photo_x5 / apo5, photo_y5 / apo5, 
-        marker = '', color = 'cyan', ls = '-',
+        marker = 'o', color = 'cyan', ls = '-',
         linewidth = 2, markersize = 10)
 # ax[2].plot(photo_x6 / apo6, photo_y6 / apo6, 
 #         marker = '', color = 'cyan', ls = '-',
 #         linewidth = 1)
 # Limits
-ax[0].set_xlim(-1.,0.2)
-ax[0].set_ylim(-0.2,0.2)
+# ax[0].set_xlim(-1.,0.2)
+# ax[0].set_ylim(-0.2,0.2)
 
 # Colorbar --------------------------------------------------------------------
 left, bottom, width, height = 1, 0.14, 0.035, 0.82
@@ -302,8 +302,8 @@ cb = fig.colorbar(img2, cax=cax)
 cb.ax.tick_params(labelsize=25, pad = 5)
 cb.set_label(r'Density $\log_{10}(\rho)$ [g/cm$^2$]', fontsize = 20, labelpad = 15)
 # Axis labels
-# fig.text(0.5, -0.03, plane[0] + r' [x/R$_a$]', ha='center', fontsize = 25)
-# fig.text(-0.02, 0.5, plane[1] + r' [y/R$_a$]', va='center', rotation='vertical', fontsize = 25)
+ax[0].text(-1.55, 0.2, r'10$^4 M_\odot$', ha='right', fontsize = 25, color = 'white')
+ax[1].text(-1.55, 0.2, r'10$^5 M_\odot$', ha='right', fontsize = 25, color = 'white')
 ax[1].set_xlabel(plane[0] + r' [x/R$_a$]', ha='center', fontsize = 25 )
 ax[1].set_ylabel(plane[1] + r' [y/R$_a$]', ha='center', fontsize = 25 )
 ax[0].set_ylabel(plane[1] + r' [y/R$_a$]', ha='center', fontsize = 25 )
