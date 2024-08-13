@@ -256,10 +256,8 @@ for fix in fixes:
 
     for i in tqdm( range(ray_no)):
         # ray_array = np.array(rays[i])
-        try:
-            den_maxidx = np.argmax(dens[i])
-        except:
-            continue
+        den_maxidx = np.argmax(dens[i])
+
 
         den_max_point = rays[i][den_maxidx]
         # If I have velocity (vx, vy), the normal vector is n = (vy, -vx) 
