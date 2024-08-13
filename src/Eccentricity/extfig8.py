@@ -5,26 +5,37 @@ Created on Tue Jan 31 18:19:32 2023
 
 @author: konstantinos
 """
-from src.Utilities.isalice import isalice
-alice, plot = isalice()
-
-# Choose Simulation
-save = True
-m = 4
-method = 'caster'
-check = 'fid'
-
-# Imports
-from src.Calculators.ONE_TREE_CASTER import BONSAI
-from src.Calculators.casters import THE_SMALL_CASTER
-from src.Extractors.time_extractor import days_since_distruption
-from src.Eccentricity.eccentricity import e_calc
+# Vanilla
 import numba
+import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [8.0, 4.0]
+
+# Chocolate
+from src.Calculators.ONE_TREE_CASTER import BONSAI
+from src.Calculators.casters import THE_SMALL_CASTER
+from src.Extractors.time_extractor import days_since_distruption
+from src.Eccentricity.eccentricity import e_calc
+from src.Utilities.isalice import isalice
+from src.Utilities.parser import parse
+alice, plot = isalice()
+
+# Choose Simulation
+if alice:
+    args = parse()
+    sim = args.name
+    m = args.mass
+    r = args.radius
+    Mbh = args.blackhole
+    fixes = np.arange(args.first, args.last + 1)
+else:
+    # do it yourself
+
+save = True
+method = 'caster'
 
 # Constants
 G = 6.6743e-11  # SI
@@ -40,22 +51,6 @@ rg = 2*Mbh/c**2
 t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
 apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
 
-if alice:
-    sim = str(m) + '-' + check
-    if m == 6:
-        fixes = ['683', '844', '979', '1008'] #t/t_fb = 0.5, 1, 1.5, 1.6
-    if m == 4 and check == 'fid':
-        fixes = np.arange(197, 322+1) #t/t_fb = 0.5, 1, 1.56, 1.8
-    if m == 4 and check == 'S60ComptonHires':
-        fixes = np.arange(210, 278+1)
-else:
-    sim = str(m) + '/'
-    if m == 6:
-        fixes = ['844', '881', '925'] 
-    if m == 4:
-        fixes = ['233', '293', '322']
-
-
 @numba.njit
 def masker(arr, mask):
     len_bound = np.sum(mask)
@@ -66,7 +61,6 @@ def masker(arr, mask):
             new_arr[k] = arr[i]
             k += 1
     return new_arr
-
 
 # %%
 # MAIN
@@ -84,7 +78,10 @@ for fix in fixes:
         Vx = np.load(pre + sim + '/snap_'  + fix + '/Vx_' + fix + '.npy')
         Vy = np.load(pre + sim + '/snap_'  +fix + '/Vy_' + fix + '.npy')
         Vz = np.load(pre + sim + '/snap_'  +fix + '/Vz_' + fix + '.npy')
-        M = np.load(pre + sim + '/snap_'  + fix + '/Mass_' + fix + '.npy')
+        Den = np.load(pre + sim + '/snap_'  + fix + '/Den_' + fix + '.npy')
+        Vol = np.load(pre + sim + '/snap_'  + fix + '/Vol_' + fix + '.npy')
+        M = np.multiply(Den, Vol)
+        del Den, Vol
     else:
         X = np.load(str(m) + '/' + fix + '/CMx_' + fix + '.npy')
         Y = np.load(str(m) + '/' + fix + '/CMy_' + fix + '.npy')
@@ -131,9 +128,7 @@ for fix in fixes:
     colarr.append(ecc_cast)
 
     if alice:
-        day = np.round(days_since_distruption( pre +
-            sim + '/snap_' + fix + '/snap_' + fix + '.h5'), 1)
-        t_by_tfb = day / t_fall
+        t_by_tfb = np.loadtxt(f'{sim}/snap_{fix}/tbytfb_{fix}.txt')
         fixdays.append(t_by_tfb)
     else:
         day = np.round(days_since_distruption(
@@ -143,8 +138,8 @@ for fix in fixes:
 
     if save:
         if alice:
-            np.savetxt(pre + 'tde_comparison/data/ecc'+ str(m) + check + '.txt', colarr)
-            np.savetxt(pre + 'tde_comparison/data/eccdays'+ str(m) + check + '.txt', fixdays)
+            np.savetxt(f'{pre}tde_comparison/data/ecc{sim}.txt', colarr)
+            np.savetxt(f'{pre}tde_comparison/data/eccdays{sim}.txt', fixdays)
         else:
              with open('data/ecc'+ str(m) + '.txt', 'a') as file:
                 for i in range(len(colarr)):
