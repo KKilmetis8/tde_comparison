@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 import numba
 from src.Utilities.selectors import select_snap
 from src.Calculators.THREE_tree_caster import grid_maker
+import os 
 
 # Constants & Converter
 Rsol_to_cm = 6.957e10 # [cm]
@@ -48,30 +49,45 @@ def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii, 
     return flat_den
  
 if __name__ == '__main__':
+    import src.Utilities.selectors as s
+
+    # Choose simulation
     m = 5
-    star = 'half'
-    save = True
-    check = 'fid' 
+    opac_kind = 'LTE'
+    check = 'fid'
+    mstar = 0.5
+    if mstar == 0.5:
+        star = 'half'
+    else:
+        star = ''
+    rstar = 0.47
+    beta = 1
     what = 'density' # temperature or density
-    snapshots = np.arange(2,365)#select_snap(m, check)
+    save = True
+    snapshots, days = s.select_snap(m, mstar, rstar, check, time = True)
 
     for snap in snapshots:
-        _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, star, what, False,
-                                                        500, 500, 100)
+        # if alice:
+        #     pre_file = f'/home/s3745597/data1/TDE/{m}{star}-{check}/snap_{snap}'
+        # else:
+        #     pre_file = f'{m}/{snap}'
+        # if os.path.exists(pre_file):
+        _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, star, check,
+                                                        500, 500, 100, False)
         flat_den = projector(grid_den, grid_mass, False,
-                             xs, ys, zs, what)
+                            xs, ys, zs, what)
 
         if save:
             if alice:
-                pre = '/home/s3745597/data1/TDE/'
-                sim = f'{m}{star}'# -{check}'
-                np.savetxt(f'{pre}tde_comparison/data/denproj/denproj{sim}{snap}.txt', flat_den)
-                np.savetxt(f'{pre}tde_comparison/data/denproj/xarray{sim}.txt', xs)
-                np.savetxt(f'{pre}tde_comparison/data/denproj/yarray{sim}.txt', ys)
+                sim = f'{m}{star}-{check}'
+                pre = f'/home/s3745597/data1/TDE/tde_comparison/data/denproj/{sim}'
+                np.savetxt(f'{pre}/denproj{sim}{snap}.txt', flat_den)
+                np.savetxt(f'{pre}/xarray{sim}.txt', xs)
+                np.savetxt(f'{pre}/yarray{sim}.txt', ys)
             else:
-                np.savetxt(f'data/localdenproj{m})_{snap}.txt', flat_den) 
-                np.savetxt(f'data/localxarray{m}.txt', xs) 
-                np.savetxt(f'data/localyarray{m}.txt', ys) 
+                np.savetxt(f'data/denproj{m}_{snap}.txt', flat_den) 
+                np.savetxt(f'data/xarray{m}.txt', xs) 
+                np.savetxt(f'data/yarray{m}.txt', ys) 
 
 #%% Plot
         if plot:
@@ -99,17 +115,17 @@ if __name__ == '__main__':
                 vmax = 8
             else:
                 raise ValueError('Hate to break it to you champ \n \
-                                 but we don\'t have that quantity')
+                                but we don\'t have that quantity')
                     
             # ax.set_xlim(-1, 10/20_000)
             # ax.set_ylim(-0.2, 0.2)
             ax.set_xlabel(r' X [$R_\odot$]', fontsize = 14)
             ax.set_ylabel(r' Y [$R_\odot$]', fontsize = 14)
-            img = ax.pcolormesh(xs, ys, den_plot.T, cmap = 'cet_fire',
-                                vmin = vmin, vmax = vmax)
+            img = ax.pcolormesh(xs, ys, den_plot.T, cmap = 'cet_fire')
+                                #vmin = vmin, vmax = vmax)
             cb = plt.colorbar(img)
             cb.set_label(cb_text, fontsize = 14)
-   
+
             ax.set_title('XY Projection', fontsize = 16)
             plt.savefig(f'{snap}T.png')
             plt.show()

@@ -11,13 +11,11 @@ import h5py
 from tqdm import tqdm
 
 from src.Extractors.time_extractor import time_extractor
+import src.Utilities.selectors as s
 from src.Utilities.isalice import isalice
 
 alice, _ = isalice()
-if alice:
-    realpre = '/data1/s3745597/TDE/'
-else:
-    realpre = ''
+
 #%% Get Densities
 
 ## File structure is
@@ -126,6 +124,7 @@ def extractor(filename, m):
     return X, Y, Z, Den, Vx, Vy, Vol, T, P
 #%%
 # Change the current working directory
+<<<<<<< HEAD
 fixes = [164]
 for fix in fixes:
     m = 4
@@ -154,6 +153,51 @@ for fix in fixes:
     
     #%% Do time
     time_extractor(m, star, fix, 0.5, 0.47)
+=======
+m = 5
+mstar = 0.5
+if mstar == 0.5:
+    star = 'half'
+else:
+    star = ''
+rstar = 0.47
+check = 'fid'
+snapshots = s.select_snap(m, mstar, rstar, check, time = False)
+
+for fix in snapshots:
+    if alice:
+        pre_file = f'/home/s3745597/data1/TDE/{m}{star}-{check}/snap_{fix}'
+
+    else:
+        pre_file = f'{m}/{fix}'
+
+    if os.path.exists(pre_file):
+        print('exists')
+        snapshot = f'{pre_file}/snap_{fix}.h5'
+        pre = f'{pre_file}/'
+        suf = f'_{fix}'
+
+        X, Y, Z, Den, Vx, Vy, Vz, Vol, Mass, IE, Rad, T, P, Star = extractor(snapshot, m)
+        
+        #%% Save to another file.
+        np.save(pre + 'CMx' + suf, X)   
+        np.save(pre + 'CMy' + suf, Y) 
+        np.save(pre + 'CMz' + suf, Z) 
+        np.save(pre + 'Den' + suf, Den)
+        np.save(pre + 'Vx' + suf, Vx)   
+        np.save(pre + 'Vy' + suf, Vy) 
+        np.save(pre + 'Vz' + suf, Vz)
+        np.save(pre + 'Vol' + suf, Vol)
+        np.save(pre + 'Mass' + suf, Mass)   
+        np.save(pre + 'IE' + suf, IE) 
+        np.save(pre + 'Rad' + suf, Rad)
+        np.save(pre + 'T' + suf, T)
+        np.save(pre + 'P' + suf, P) 
+        np.save(pre + 'Star' + suf, Star)
+        
+        #%% Do time
+        #time_extractor(m, star, fix, 0.5, 0.47)
+>>>>>>> 1288b6e8811c658f9bfa70b1ccfba5d3dd103704
     
     
             

@@ -1,20 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Gives ray. Around photosphere they sould be 1.
+Make a 3D grid, searching for simulation data in the vicinity of the one chosen and storing X,Y,Z,Den.
 Created on Tue Oct 10 10:19:34 2023
-Also does midplane
+
 @authors: paola, konstantinos
 
 """
-import sys
-sys.path.append('/Users/paolamartire/tde_comparison')
-
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 if alice:
     realpre = '/home/s3745597/data1/TDE/'
 else:
+    import sys
+    sys.path.append('/Users/paolamartire/tde_comparison')
     realpre = ''
 import numpy as np
 from scipy.spatial import KDTree
@@ -25,10 +24,9 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 
-def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
-    """ Outputs are in in solar units """
+def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False):
+    """ ALL outputs are in in solar units """
     Mbh = 10**m
-    fix = str(fix)
     if 'star' == 'half':
         mstar = 0.5
         rstar = 0.47
@@ -37,19 +35,17 @@ def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
         rstar = 1
     Rt = rstar * (Mbh/mstar)**(1/3) 
     apocenter = 2 * Rt * (Mbh/mstar)**(1/3)
-    pre = f'{m}{star}/snap_{fix}'
+    if alice:
+        pre = f'{m}{star}-{check}/snap_{fix}'
+    else: 
+        pre = f'{m}/{fix}'
     
     # Mass = np.load(pre + '/Mass_' + fix + '.npy')
-    Den = np.load(realpre + pre + '/Den_' + fix + '.npy')
-    # Need to convert Msol/Rsol^2 to g/cm
-    Msol_to_g = 1.989e33
-    Rsol_to_cm = 6.957e10
-    converter = Msol_to_g / Rsol_to_cm**2
-    Den *=  converter
+    Den = np.load(f'{realpre}{pre}/Den_{fix}.npy')
 
     # CM Position Data
-    X = np.load(realpre + pre + '/CMx_' + fix + '.npy')
-    Y = np.load(realpre + pre + '/CMy_' + fix + '.npy')
+    X = np.load(f'{realpre}{pre}/CMx_{fix}.npy')
+    Y = np.load(f'{realpre}{pre}/CMy_{fix}.npy')
     x_start = -apocenter
     x_stop = 0.2 * apocenter
     # x_num = pixel_num # np.abs(x_start - x_stop)
@@ -59,7 +55,7 @@ def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
     # y_num = pixel_num # np.abs(y_start - y_stop)
     ys = np.linspace(y_start, y_stop, num = y_num)
     
-    Z = np.load(realpre + pre + '/CMz_' + fix + '.npy')
+    Z = np.load(f'{realpre}{pre}/CMz_{fix}.npy')
 
     sim_value = [X, Y, Z] 
     sim_value = np.transpose(sim_value) #array of dim (number_points, 3)
@@ -67,37 +63,36 @@ def grid_maker(fix, m, star, what, mass_weigh, x_num, y_num, z_num = 100):
     
     z_start = -2 * Rt
     z_stop = 2 * Rt
-    z_num = 100
-    z_radii = np.linspace(z_start, z_stop, z_num) #simulator units
+    zs = np.linspace(z_start, z_stop, z_num) #simulator units
 
-    gridded_indexes =  np.zeros(( len(xs), len(ys), len(z_radii) ))
-    den_cast =  np.zeros(( len(xs), len(ys), len(z_radii) ))
-    gridded_mass =  np.zeros(( len(xs), len(ys), len(z_radii) ))
+    gridded_indexes =  np.zeros(( len(xs), len(ys), len(zs) ))
+    gridded_den =  np.zeros(( len(xs), len(ys), len(zs) ))
+    gridded_mass =  np.zeros(( len(xs), len(ys), len(zs) ))
     for i in range(len(xs)):
         for j in range(len(ys)):
-            for k in range(len(z_radii)):
-                queried_value = [xs[i], ys[j], z_radii[k]]
+            for k in range(len(zs)):
+                queried_value = [xs[i], ys[j], zs[k]]
                 _, idx = sim_tree.query(queried_value)
                                     
                 # Store
                 gridded_indexes[i, j, k] = idx
-                den_cast[i, j, k] = Den[idx]
+                gridded_den[i, j, k] = Den[idx]
     #             gridded_mass[i,j, k] = Mass[idx]
     # den_cast = np.divide(den_cast, gridded_mass)
-    den_cast = np.sum(den_cast, axis=2) / 100
+    # den_cast = np.sum(gridded_den, axis=2) / 100
 
-    # Remove bullshit and fix things
-    den_cast = np.nan_to_num(den_cast.T)
-    den_cast = np.log10(den_cast) # we want a log plot
-    den_cast = np.nan_to_num(den_cast, neginf=0) # fix the fuckery
+    # # Remove bullshit and fix things
+    # den_cast = np.nan_to_num(den_cast.T)
+    # den_cast = np.log10(den_cast) # we want a log plot
+    # den_cast = np.nan_to_num(den_cast, neginf=0) # fix the fuckery
         
-    # Color re-normalization
-    den_cast[den_cast<0.2] = 0
-    den_cast[den_cast>5] = 5
-    # aesS
+    # # Color re-normalization
+    # den_cast[den_cast<0.2] = 0
+    # den_cast[den_cast>5] = 5
+
     # return xs/apocenter, ys/apocenter, den_cast, apocenter# , days
     # 
-    return gridded_indexes, den_cast, gridded_mass, xs/apocenter, ys/apocenter, z_radii
+    return gridded_indexes, gridded_den, gridded_mass, xs, ys, zs
 
  
 if __name__ == '__main__':
