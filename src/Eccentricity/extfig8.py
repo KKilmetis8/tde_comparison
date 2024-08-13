@@ -32,6 +32,7 @@ if alice:
     Mbh = args.blackhole
     fixes = np.arange(args.first, args.last + 1)
 else:
+    m = 10
     # do it yourself
 
 save = True
@@ -128,7 +129,7 @@ for fix in fixes:
     colarr.append(ecc_cast)
 
     if alice:
-        t_by_tfb = np.loadtxt(f'{sim}/snap_{fix}/tbytfb_{fix}.txt')
+        t_by_tfb = np.loadtxt(f'{pre}{sim}/snap_{fix}/tbytfb_{fix}.txt')
         fixdays.append(t_by_tfb)
     else:
         day = np.round(days_since_distruption(
