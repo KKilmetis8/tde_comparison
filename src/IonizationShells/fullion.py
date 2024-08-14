@@ -33,7 +33,7 @@ if alice:
     Mbh = args.blackhole
     fixes = np.arange(args.first, args.last + 1)
 else:
-    fix = 164
+    fixes = [164]
     sim = '4half'
     res = 'FID' # just for titling
     time = '0.5' # same 
@@ -41,16 +41,26 @@ else:
 argmax_fuckery = False
 for fix in fixes:
     print(fix)
-    X = np.load(f'{pre}{sim}/snap_{fix}/CMx_{fix}.npy')
-    Y = np.load(f'{pre}{sim}/snap_{fix}/CMy_{fix}.npy')
-    Z = np.load(f'{pre}{sim}/snap_{fix}/CMz_{fix}.npy')
-    Den = np.load(f'{pre}{sim}/snap_{fix}/Den_{fix}.npy')
-    Vol = np.load(f'{pre}{sim}/snap_{fix}/Vol_{fix}.npy')
-    Vx = np.load(f'{pre}{sim}/snap_{fix}/Vx_{fix}.npy')
-    Vy = np.load(f'{pre}{sim}/snap_{fix}/Vy_{fix}.npy')
-    T = np.load(f'{pre}{sim}/snap_{fix}/T_{fix}.npy')
-    P = np.load(f'{pre}{sim}/snap_{fix}/P_{fix}.npy')
-
+    if alice:
+        X = np.load(f'{pre}{sim}/snap_{fix}/CMx_{fix}.npy')
+        Y = np.load(f'{pre}{sim}/snap_{fix}/CMy_{fix}.npy')
+        Z = np.load(f'{pre}{sim}/snap_{fix}/CMz_{fix}.npy')
+        Den = np.load(f'{pre}{sim}/snap_{fix}/Den_{fix}.npy')
+        Vol = np.load(f'{pre}{sim}/snap_{fix}/Vol_{fix}.npy')
+        Vx = np.load(f'{pre}{sim}/snap_{fix}/Vx_{fix}.npy')
+        Vy = np.load(f'{pre}{sim}/snap_{fix}/Vy_{fix}.npy')
+        T = np.load(f'{pre}{sim}/snap_{fix}/T_{fix}.npy')
+        P = np.load(f'{pre}{sim}/snap_{fix}/P_{fix}.npy')
+    else:
+        X = np.load(f'{pre}{sim}/{fix}/CMx_{fix}.npy')
+        Y = np.load(f'{pre}{sim}/{fix}/CMy_{fix}.npy')
+        Z = np.load(f'{pre}{sim}/{fix}/CMz_{fix}.npy')
+        Den = np.load(f'{pre}{sim}/{fix}/Den_{fix}.npy')
+        Vol = np.load(f'{pre}{sim}/{fix}/Vol_{fix}.npy')
+        Vx = np.load(f'{pre}{sim}/{fix}/Vx_{fix}.npy')
+        Vy = np.load(f'{pre}{sim}/{fix}/Vy_{fix}.npy')
+        T = np.load(f'{pre}{sim}/{fix}/T_{fix}.npy')
+        P = np.load(f'{pre}{sim}/{fix}/P_{fix}.npy')
     # Mask
     mstar = 0.5
     rstar = 0.47
