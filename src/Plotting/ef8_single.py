@@ -14,7 +14,7 @@ import src.Utilities.prelude
 
 rstar = 0.47
 mstar = 0.5
-Mbh = 10000
+Mbh = 100000
 extra = 'beta1S60n1.5Compton'
 extra2 = 'beta1S60n1.5ComptonHiRes'
 simname = f'R{rstar}M{mstar}BH{Mbh}{extra}' 
@@ -23,23 +23,23 @@ simname2 = f'R{rstar}M{mstar}BH{Mbh}{extra2}'
 pre = 'data/ef8/'
 ecc = np.loadtxt(f'{pre}ecc{simname}.txt')
 days = np.loadtxt(f'{pre}eccdays{simname}.txt')
-ecc2 = np.loadtxt(f'{pre}ecc{simname2}.txt')
-days2 = np.loadtxt(f'{pre}eccdays{simname2}.txt')
+# ecc2 = np.loadtxt(f'{pre}ecc{simname2}.txt')
+# days2 = np.loadtxt(f'{pre}eccdays{simname2}.txt')
 
 Rt = rstar * (Mbh/mstar)**(1/3) # Msol = 1, Rsol = 1
 apocenter = Rt * (Mbh/mstar)**(1/3)
 
 radii_start = np.log10(0.4*Rt)
 radii_stop = np.log10(apocenter) # apocenter
-radii = np.logspace(radii_start, radii_stop, 200) / apocenter
+radii = np.logspace(radii_start, radii_stop, 100) / apocenter
 # radii4 = np.linspace(0.2*2*Rt4, apocenter, 100) 
 
-diff = np.abs(ecc[:len(ecc2)] - ecc2)
+#diff = np.abs(ecc[:len(ecc2)] - ecc2)
 #%%
 fig, ax = plt.subplots(1,1, figsize = (4,4))
 
-img1 = ax.pcolormesh(radii, days2, diff,
-                     cmap = 'cet_rainbow4', vmin = 0, vmax = 0.1)
+img1 = ax.pcolormesh(radii, days, ecc,
+                     cmap = 'cet_rainbow4', vmin = 0, vmax = 1)
 
 
 cb = fig.colorbar(img1)
@@ -54,7 +54,7 @@ plt.text(Rt/apocenter + 0.005, 0.5, '$R_\mathrm{T}$',
 fig.text(0.5, -0.01, r'r/R$_a$', ha='center', fontsize = 14)
 fig.text(-0.02, 0.5, r' Time / Fallback time $\left[ t/t_{FB} \right]$', va='center', rotation='vertical', fontsize = 14)
 ax.tick_params(axis = 'both', which = 'both', direction='in')
-ax.set_title(r'$10^4$ M$_\odot$ Absolute Difference Fid-HR ')
+ax.set_title(r'$10^5$ M$_\odot$')
 
 #%%
 import src.Utilities.prelude as c
