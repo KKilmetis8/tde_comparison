@@ -15,8 +15,6 @@ import src.Utilities.prelude as c
 from src.Utilities.isalice import isalice
 from src.Utilities.parser import parse
 
-
-
 #%%
 alice, plot = isalice()
 if alice:
@@ -39,7 +37,6 @@ else:
     res = 'FID' # just for titling
     time = '0.5' # same 
 
-argmax_fuckery = False
 for fix in fixes:
     print(fix)
     if alice:
@@ -190,144 +187,144 @@ for fix in fixes:
         if mean_xH[i] > 0.01 and mean_xH[i] < 0.99:
             transition_slices.append( (i, mean_xH[i]) )
             
-    if alice:
-        np.savetxt(f'{pre}tde_comparison/data/ion{sim}.txt', transition_slices)
+if alice:
+    np.savetxt(f'{pre}tde_comparison/data/ion{sim}.txt', transition_slices)
 
-    if plot:
-        plt.ioff()
-        for check in range(ray_no):#ray_no) ):
-            if len(density_maxima[check]) < 1 or len(stream[check]) < 1:
-                continue
-            
-            to_plot = np.array(stream[check]).T
-            center = density_maxima[check][0]
-            center_n = center[3]
-            center_z = center[2]
+if plot:
+    plt.ioff()
+    for check in range(ray_no):#ray_no) ):
+        if len(density_maxima[check]) < 1 or len(stream[check]) < 1:
+            continue
+        
+        to_plot = np.array(stream[check]).T
+        center = density_maxima[check][0]
+        center_n = center[3]
+        center_z = center[2]
 
-            ns = to_plot[2]# - center_n
-            zs = to_plot[1]# - center_z
-            center_n = 0
-            center_z = 0
-            
-            fig, axs = plt.subplots(2,3, figsize= (10,6), tight_layout = True)
-            msize = 100 # len(to_plot[2])//30
-            alpha = 0.8
-            ymax = 3.5
-            ymin = -3.5
-            xmax = 3.5
-            xmin = -3.5
-            # Density
-            cbar = axs[0,0].scatter(ns, zs,
-                                c = to_plot[9], marker = 'h',
-                                cmap='viridis',  s = msize,
-                                vmin = 1e-7, vmax = 3e-6, alpha = alpha)
-            axs[0,0].scatter(center_n, center_z, 
-                        c = c.AEK, marker = 'X', ec = 'k',
-                        s = 100, alpha = 0.3)
-            cb = plt.colorbar(cbar)
-            cb.set_label('Density [g/cm$^3$]')
-            axs[0,0].set_xlabel('Width [$R_\odot$]', fontsize = 14)
-            axs[0,0].set_ylabel('Height (Z) [$R_\odot$]', fontsize = 14)
-            axs[0,0].set_ylim(ymin, ymax)
-            axs[0,0].set_xlim(xmin, xmax)
-            
-            # Height
-            h1 = np.argmax(zs)
-            h2 = np.argmin(zs)
-            w1 = np.argmax(ns)
-            w2 = np.argmin(ns)
-            
-            axs[0,0].plot( (0,0),  (zs[h1],zs[h2]), c = 'r')
-            axs[0,0].plot( (ns[w1],ns[w2]), (0,0), c = 'magenta')
-            axs[0,0].text( 0.55,-3.2, f'H: {np.abs(zs[h1]-zs[h2]):.2f}',c='r', 
-                        fontsize = 18 )
-            axs[0,0].text( -3,-3.2, f'W: {np.abs(ns[w1]-ns[w2]):.2f}', c='magenta',
-                        fontsize = 18 )
+        ns = to_plot[2]# - center_n
+        zs = to_plot[1]# - center_z
+        center_n = 0
+        center_z = 0
+        
+        fig, axs = plt.subplots(2,3, figsize= (10,6), tight_layout = True)
+        msize = 100 # len(to_plot[2])//30
+        alpha = 0.8
+        ymax = 3.5
+        ymin = -3.5
+        xmax = 3.5
+        xmin = -3.5
+        # Density
+        cbar = axs[0,0].scatter(ns, zs,
+                            c = to_plot[9], marker = 'h',
+                            cmap='viridis',  s = msize,
+                            vmin = 1e-7, vmax = 3e-6, alpha = alpha)
+        axs[0,0].scatter(center_n, center_z, 
+                    c = c.AEK, marker = 'X', ec = 'k',
+                    s = 100, alpha = 0.3)
+        cb = plt.colorbar(cbar)
+        cb.set_label('Density [g/cm$^3$]')
+        axs[0,0].set_xlabel('Width [$R_\odot$]', fontsize = 14)
+        axs[0,0].set_ylabel('Height (Z) [$R_\odot$]', fontsize = 14)
+        axs[0,0].set_ylim(ymin, ymax)
+        axs[0,0].set_xlim(xmin, xmax)
+        
+        # Height
+        h1 = np.argmax(zs)
+        h2 = np.argmin(zs)
+        w1 = np.argmax(ns)
+        w2 = np.argmin(ns)
+        
+        axs[0,0].plot( (0,0),  (zs[h1],zs[h2]), c = 'r')
+        axs[0,0].plot( (ns[w1],ns[w2]), (0,0), c = 'magenta')
+        axs[0,0].text( 0.55,-3.2, f'H: {np.abs(zs[h1]-zs[h2]):.2f}',c='r', 
+                    fontsize = 18 )
+        axs[0,0].text( -3,-3.2, f'W: {np.abs(ns[w1]-ns[w2]):.2f}', c='magenta',
+                    fontsize = 18 )
 
-            num = len(zs)
-            
-            axs[0,0].scatter(center_n, center_z, 
-                        c = c.AEK, marker = 'X', ec = 'k',
-                        s = 100, alpha = 0.4)
+        num = len(zs)
+        
+        axs[0,0].scatter(center_n, center_z, 
+                    c = c.AEK, marker = 'X', ec = 'k',
+                    s = 100, alpha = 0.4)
 
-            # Stream
-            density_maxima=np.array(density_maxima)
-            axs[0,1].scatter(density_maxima.T[0], density_maxima.T[1], 
-                        c='k', marker = 'h')
-            axs[0,1].scatter(center[0], center[1], 
-                        c=c.AEK, marker = 'X', ec='k', s = 100, zorder = 3, alpha = 0.9)
-            axs[0,1].set_xlabel('X [$R_\odot$]', fontsize = 14)
-            axs[0,1].set_ylabel('Y [$R_\odot$]', fontsize = 14)
-            
-            # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
-            # fig.text(0.65, 0.5, 'M$_*$ = 0.5 $M_\odot$ \n M$_\mathrm{BH}$ = 10$^4 M_\odot$ \n Res: fiducial  \n t/t$_\mathrm{fb}$ = 0.7',
-            #          bbox = props)
-            fig.suptitle(f'M$_*$ = 0.5 $M_\odot$ | M$_\mathrm{{BH}}$ = 10$^4 M_\odot$ | Res: {res} | t/t$_\mathrm{{fb}}$ = {time}')
-            
-            
-            # Temperature
-            cbar = axs[0,2].scatter( ns, zs,
-                                c = np.log10(to_plot[8]), marker = 'h',
-                                cmap='cet_CET_L4', s = msize, alpha = alpha,
-                                vmin = 3.5, vmax = 4.5)
-            axs[0,2].scatter(center_n - center_n, center[2], 
-                        c = c.AEK, marker = 'X', ec = 'k',
-                        s = 100, alpha = 0.5)
-            cb = plt.colorbar(cbar)
-            cb.set_label('Log(Temperature) [K]')
-            axs[0,2].set_xlabel('Width [$R_\odot$]', fontsize = 14)
-            axs[0,2].set_ylabel('Height (Z) [$R_\odot$]', fontsize = 14)
-            axs[0,2].set_ylim(ymin, ymax)
-            axs[0,2].set_xlim(xmin, xmax)
-            #axs[0,2].plot(np.log10(to_plot[8]))
-            
-            # Hyd Ion
-            cbar = axs[1,0].scatter( ns, zs,
-                                c = to_plot[5], marker = 'h', alpha = alpha,
-                                cmap='cet_linear_grey_0_100_c0', ec = 'k', s = msize,
-                                vmin = 0, vmax = 1)
-            axs[1,0].scatter(center_n - center_n, center[2], 
-                        c = c.AEK, marker = 'X', ec = 'k',
-                        s = 100, alpha = 0.3)
-            cb = plt.colorbar(cbar)
-            cb.set_label('Hydrogen Ionization Fraction')
-            axs[1,0].set_xlabel('Width [$R_\odot$]', fontsize = 14)
-            axs[1,0].set_ylabel('Height (Z) [$R_\odot$]', fontsize = 14)
-            axs[1,0].set_ylim(ymin, ymax)
-            axs[1,0].set_xlim(xmin, xmax)
-            
-            # He Ion 1
-            cbar = axs[1,1].scatter( ns, zs,
-                                c = to_plot[6], marker = 'h', alpha = alpha,
-                                cmap='cet_linear_grey_0_100_c0', ec = 'k', s = msize,
-                                vmin = 0, vmax = 1)
-            axs[1,1].scatter(center_n - center_n, center[2], 
-                        c = c.AEK, marker = 'X', ec = 'k',
-                        s = 100, alpha = 0.3)
-            cb = plt.colorbar(cbar)
-            cb.set_label('First Helium Ionization Fraction')
-            axs[1,1].set_xlabel('Width [$R_\odot$]', fontsize = 14)
-            axs[1,1].set_ylabel('Height (Z) [$R_\odot$]', fontsize = 14)
-            axs[1,1].set_ylim(ymin, ymax)
-            axs[1,1].set_xlim(xmin, xmax)
-            
-            # He Ion 2
-            cbar = axs[1,2].scatter( ns, zs,
-                                c = to_plot[7], marker = 'h', alpha = alpha,
-                                cmap='cet_linear_grey_0_100_c0', ec = 'k', s = msize,
-                                vmin = 0, vmax = 1)
-            axs[1,2].scatter(center_n - center_n, center[2], 
-                        c = c.AEK, marker = 'X', ec = 'k',
-                        s = 100, alpha = 0.3)
-            cb = plt.colorbar(cbar)
-            cb.set_label('Second Helium Ionization Fraction')
-            axs[1,2].set_xlabel('Width [$R_\odot$]', fontsize = 14)
-            axs[1,2].set_ylabel('Height (Z) [$R_\odot$]', fontsize = 14)
-            axs[1,2].set_ylim(ymin, ymax)
-            axs[1,2].set_xlim(xmin, xmax)
-            
-            figno = str(ray_no - check)
-            if len(figno) < 2:
-                figno = '0'+figno
-            plt.savefig(f'/home/konstantinos/ionfig/{figno}.png', dpi = 300)
-            plt.close()
+        # Stream
+        density_maxima=np.array(density_maxima)
+        axs[0,1].scatter(density_maxima.T[0], density_maxima.T[1], 
+                    c='k', marker = 'h')
+        axs[0,1].scatter(center[0], center[1], 
+                    c=c.AEK, marker = 'X', ec='k', s = 100, zorder = 3, alpha = 0.9)
+        axs[0,1].set_xlabel('X [$R_\odot$]', fontsize = 14)
+        axs[0,1].set_ylabel('Y [$R_\odot$]', fontsize = 14)
+        
+        # props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
+        # fig.text(0.65, 0.5, 'M$_*$ = 0.5 $M_\odot$ \n M$_\mathrm{BH}$ = 10$^4 M_\odot$ \n Res: fiducial  \n t/t$_\mathrm{fb}$ = 0.7',
+        #          bbox = props)
+        fig.suptitle(f'M$_*$ = 0.5 $M_\odot$ | M$_\mathrm{{BH}}$ = 10$^4 M_\odot$ | Res: {res} | t/t$_\mathrm{{fb}}$ = {time}')
+        
+        
+        # Temperature
+        cbar = axs[0,2].scatter( ns, zs,
+                            c = np.log10(to_plot[8]), marker = 'h',
+                            cmap='cet_CET_L4', s = msize, alpha = alpha,
+                            vmin = 3.5, vmax = 4.5)
+        axs[0,2].scatter(center_n - center_n, center[2], 
+                    c = c.AEK, marker = 'X', ec = 'k',
+                    s = 100, alpha = 0.5)
+        cb = plt.colorbar(cbar)
+        cb.set_label('Log(Temperature) [K]')
+        axs[0,2].set_xlabel('Width [$R_\odot$]', fontsize = 14)
+        axs[0,2].set_ylabel('Height (Z) [$R_\odot$]', fontsize = 14)
+        axs[0,2].set_ylim(ymin, ymax)
+        axs[0,2].set_xlim(xmin, xmax)
+        #axs[0,2].plot(np.log10(to_plot[8]))
+        
+        # Hyd Ion
+        cbar = axs[1,0].scatter( ns, zs,
+                            c = to_plot[5], marker = 'h', alpha = alpha,
+                            cmap='cet_linear_grey_0_100_c0', ec = 'k', s = msize,
+                            vmin = 0, vmax = 1)
+        axs[1,0].scatter(center_n - center_n, center[2], 
+                    c = c.AEK, marker = 'X', ec = 'k',
+                    s = 100, alpha = 0.3)
+        cb = plt.colorbar(cbar)
+        cb.set_label('Hydrogen Ionization Fraction')
+        axs[1,0].set_xlabel('Width [$R_\odot$]', fontsize = 14)
+        axs[1,0].set_ylabel('Height (Z) [$R_\odot$]', fontsize = 14)
+        axs[1,0].set_ylim(ymin, ymax)
+        axs[1,0].set_xlim(xmin, xmax)
+        
+        # He Ion 1
+        cbar = axs[1,1].scatter( ns, zs,
+                            c = to_plot[6], marker = 'h', alpha = alpha,
+                            cmap='cet_linear_grey_0_100_c0', ec = 'k', s = msize,
+                            vmin = 0, vmax = 1)
+        axs[1,1].scatter(center_n - center_n, center[2], 
+                    c = c.AEK, marker = 'X', ec = 'k',
+                    s = 100, alpha = 0.3)
+        cb = plt.colorbar(cbar)
+        cb.set_label('First Helium Ionization Fraction')
+        axs[1,1].set_xlabel('Width [$R_\odot$]', fontsize = 14)
+        axs[1,1].set_ylabel('Height (Z) [$R_\odot$]', fontsize = 14)
+        axs[1,1].set_ylim(ymin, ymax)
+        axs[1,1].set_xlim(xmin, xmax)
+        
+        # He Ion 2
+        cbar = axs[1,2].scatter( ns, zs,
+                            c = to_plot[7], marker = 'h', alpha = alpha,
+                            cmap='cet_linear_grey_0_100_c0', ec = 'k', s = msize,
+                            vmin = 0, vmax = 1)
+        axs[1,2].scatter(center_n - center_n, center[2], 
+                    c = c.AEK, marker = 'X', ec = 'k',
+                    s = 100, alpha = 0.3)
+        cb = plt.colorbar(cbar)
+        cb.set_label('Second Helium Ionization Fraction')
+        axs[1,2].set_xlabel('Width [$R_\odot$]', fontsize = 14)
+        axs[1,2].set_ylabel('Height (Z) [$R_\odot$]', fontsize = 14)
+        axs[1,2].set_ylim(ymin, ymax)
+        axs[1,2].set_xlim(xmin, xmax)
+        
+        figno = str(ray_no - check)
+        if len(figno) < 2:
+            figno = '0'+figno
+        plt.savefig(f'/home/konstantinos/ionfig/{figno}.png', dpi = 300)
+        plt.close()

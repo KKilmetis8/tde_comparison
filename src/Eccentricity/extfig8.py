@@ -43,7 +43,6 @@ G = 6.6743e-11  # SI
 Msol = 1.98847e30  # kg
 Rsol = 6.957e8  # m
 
-Mbh = 10**m
 Rt = Mbh**(1/3)
 t = np.sqrt(Rsol**3 / (Msol*G))  # Follows from G=1
 # Need these for the PW potential
