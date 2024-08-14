@@ -146,7 +146,7 @@ def main():
 
     parser.add_argument(
         "-b", "--blackhole",
-        type = float,
+        type = str,
         help = "Mass of the Black Hole",
         required = True
     )
@@ -176,7 +176,7 @@ def main():
     simname = args.name
     m = args.mass
     r = args.radius
-    mbh = args.blackhole
+    mbh = float(args.blackhole)
 
     fixes = np.arange(args.first, args.last + 1)
     realpre = '/data1/s3745597/TDE/'
@@ -185,9 +185,12 @@ def main():
         snapshot = f'{realpre}{simname}/snap_{fix}/snap_{fix}.h5'
         pre = f'{realpre}{simname}/snap_{fix}/'
         suf = f'_{fix}'
-
-        X, Y, Z, Den, Vx, Vy, Vz, Vol, IE, Rad, T, P = extractor(snapshot)
         
+        try:
+            X, Y, Z, Den, Vx, Vy, Vz, Vol, IE, Rad, T, P = extractor(snapshot)
+        except:
+            continue
+        print('Did ', fix)
         #%% Save to another file.
         np.save(pre + 'CMx' + suf, X)   
         np.save(pre + 'CMy' + suf, Y) 
