@@ -48,6 +48,7 @@ for fix in fixes:
         Vx = np.load(f'{pre}{sim}/snap_{fix}/Vx_{fix}.npy')
         Vy = np.load(f'{pre}{sim}/snap_{fix}/Vy_{fix}.npy')
         T = np.load(f'{pre}{sim}/snap_{fix}/T_{fix}.npy')
+        time = np.loadtxt(f'{pre}{sim}/snap_{fix}/tbytfb_{fix}.txt')
     else:
         X = np.load(f'{pre}{sim}/{fix}/CMx_{fix}.npy')
         Y = np.load(f'{pre}{sim}/{fix}/CMy_{fix}.npy')
@@ -185,7 +186,7 @@ for fix in fixes:
         mean_xH[i] = np.nan_to_num(np.mean(xH_in_salami), nan = -1) # argmax fuckery
     
         if mean_xH[i] > 0.01 and mean_xH[i] < 0.99:
-            transition_slices.append( (i, mean_xH[i]) )
+            transition_slices.append( (i, time, mean_xH[i]) )
             
 if alice:
     np.savetxt(f'{pre}tde_comparison/data/ion{sim}.txt', transition_slices)
