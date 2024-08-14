@@ -63,8 +63,7 @@ for fix in fixes:
     # Mask
     mstar = 0.5
     rstar = 0.47
-    mbh = 1e4
-    Rt = rstar * (mbh / mstar)**(1/3) 
+    Rt = rstar * (Mbh / mstar)**(1/3) 
 
     xmin = -25*Rt
     xmax = 3.5*Rt
