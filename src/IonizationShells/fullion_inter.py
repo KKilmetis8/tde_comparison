@@ -173,10 +173,11 @@ for fix in fixes:
                 # if dist<5: # be close to den max, tangent-wise
                 x_from_denmax = cell['x'] - den_max_point['x']
                 y_from_denmax = cell['y'] - den_max_point['y']
+                r_for_nick = np.sqrt(cell['x']**2 + cell['y']**2)
                 n_coord = np.dot([x_from_denmax, y_from_denmax], nhat)
                 stream[i].append((j, cell['z'], n_coord, x_from_denmax, y_from_denmax, 
                                 cell['ion1'], cell['ion2'], cell['ion3'],  
-                                cell['T'], cell['den']))
+                                cell['T'], cell['den'], r_for_nick))
     #%% Find where the trensition happens.
     mean_xH = np.zeros(ray_no)
     density_maxima=np.array(density_maxima)
@@ -186,7 +187,7 @@ for fix in fixes:
         mean_xH[i] = np.nan_to_num(np.mean(xH_in_salami), nan = -1) # argmax fuckery
     
         if mean_xH[i] > 0.01 and mean_xH[i] < 0.99:
-            transition_slices.append( (i, time, mean_xH[i]) )
+            transition_slices.append( (i, time, mean_xH[i], salami[-1]) )
             
 if alice:
     np.savetxt(f'{pre}tde_comparison/data/ion{sim}.txt', transition_slices)

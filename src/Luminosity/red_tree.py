@@ -16,6 +16,8 @@ sys.path.append('/Users/paolamartire/tde_comparison')
 
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
+if alice:
+    pre = '/home/s3745597/data1/TDE/'
 
 # Vanilla Imports
 import numpy as np
@@ -30,6 +32,7 @@ import src.Utilities.prelude as c
 import src.Utilities.selectors as s
 from src.Calculators.ray_forest import ray_maker_forest, ray_finder
 from src.Luminosity.special_radii_tree import get_specialr
+from src.Utilities.parser import parse
 from astropy.coordinates import spherical_to_cartesian, cartesian_to_spherical
 
 #%%
@@ -70,18 +73,29 @@ def find_neighbours(snap, m, check, tree_index_photo, dist_neigh):
              Density for every ray in a cell outside photosphere (CGS). 
 
     """
-    Mbh = 10**m 
-    Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
-    pre = s.select_prefix(m, check)
-    snap = str(snap)
+    if alice:
+        args = parse()
+        sim = args.name
+        m = args.mass
+        r = args.radius
+        Mbh = args.blackhole
+        Rt = r * (Mbh / m)**(1/3) 
+        pre = '/home/s3745597/data1/TDE/'
+
+    else: 
+        Mbh = 10**m 
+        Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
+        pre = s.select_prefix(m, check)
+        snap = str(snap)
    
     # Import
-    X = np.load(pre + snap + '/CMx_' + snap + '.npy') 
-    Y = np.load(pre + snap + '/CMy_' + snap + '.npy')
-    Z = np.load(pre + snap + '/CMz_' + snap + '.npy')
-    T = np.load(pre + snap + '/T_' + snap + '.npy')
-    Den = np.load(pre + snap + '/Den_' + snap + '.npy')
-    Rad = np.load(pre +snap + '/Rad_' + snap + '.npy')
+    
+    X = np.load(f'{pre}{sim}/snap_{snap}/CMx_{snap}.npy') 
+    Y = np.load(f'{pre}{sim}/snap_{snap}/CMy_{snap}.npy')
+    Z = np.load(f'{pre}{sim}/snap_{snap}/CMz_{snap}.npy')
+    T = np.load(f'{pre}{sim}/snap_{snap}/T_{snap}.npy')
+    Den = np.load(f'{pre}{sim}/snap_{snap}/Den_{snap}.npy')
+    Rad = np.load(f'{pre}{sim}/snap_{snap}/Rad_{snap}.npy')
     
     # convert in CGS
     Rad *= Den 
@@ -258,8 +272,8 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
     """
     Gives bolometric L 
     """
-    rays = ray_maker_forest(snap, m, check, thetas, phis, stops, 
-                            num, opacity_kind, star = False)    
+    rays = ray_maker_forest(snap, m, check, None, thetas, phis, stops, 
+                            num, opacity_kind, beta = 1, starflag = False)    
     _, _, rays_photo, rays_index_photo, tree_index_photo = get_specialr(rays.T, rays.den, rays.radii, 
                                                             rays.tree_indexes, opacity_kind, select = 'photo')
     # Calculate the distance of the neighbours considered
@@ -273,7 +287,7 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
 
     # Find the cell outside the photosphere and save its quantities
     grad_E, magnitude, energy_high, T_high, den_high  = find_neighbours(snap, m, check,
-                                                                        tree_index_photo, dist_neigh)
+                                                        tree_index_photo, dist_neigh)
 
     # Calculate Flux and see how it looks
     flux = flux_calculator(grad_E, magnitude, energy_high, 
@@ -306,44 +320,63 @@ def doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind):
 ##
 if __name__ == "__main__":
     save = True
-    m = 6 # Choose BH
-    mstar = 1
-    rstar = 1
-    check = 'fid' # Choose fid // S60ComptonHires
+    num = 1000
+    if alice:
+        pre = '/home/s3745597/data1/TDE/'
+        args = parse()
+        sim = args.name
+        mstar = args.mass
+        rstar = args.radius
+        Mbh = args.blackhole
+        fixes = np.arange(args.first, args.last + 1)
+        m = 'AEK'
+        check = 'MONO AEK'
+    else:
+        pre = ''
+        snapshots, days = s.select_snap(m, mstar, rstar, check)
+
     num = 1000
     opacity_kind = s.select_opacity(m)
 
-    snapshots, days = s.select_snap(m, mstar, rstar, check)
     now = datetime.now()
     now = now.strftime("%d/%m/%Y %H:%M:%S")
 
-    lums = np.zeros(len(snapshots))
-    for idx in range(0,len(snapshots)):
-        snap = snapshots[idx]
-        print(f'Snapshot {snap}')
+    lums = np.zeros(len(fixes))
+    days = np.zeros(len(fixes))
+    for i, idx in enumerate(fixes):
+        # snap = fixes[idx]
+        print(f'Snapshot {idx}')
         if alice:
             pre = '/home/s3745597/data1/TDE/'
-            filename = pre + f'{m}-{check}/snap_{snap}/snap_{snap}.h5'
+            filename = f'{pre}/{sim}/snap_{idx}/snap_{idx}.h5'
         else:
-            filename = f"{m}/{snap}/snap_{snap}.h5"
+            filename = f"{m}/{idx}/snap_{idx}.h5"
 
         thetas, phis, stops, xyz_grid = ray_finder(filename)
 
-        lum = doer_of_thing(snap, m, check, thetas, phis, stops, num, opacity_kind)
-        lums[idx] = lum
-        print(lum)
-    
+        lum = doer_of_thing(idx, m, check, thetas, phis, stops, num, opacity_kind)
+        lums[i] = lum
+        day = np.loadtxt(f'{pre}/{sim}/snap_{idx}/tbytfb_{idx}.txt')
+        print(day)
+        days[i] = day
     if save:
         if alice:
-            pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/alicered{m}{check}'
-            with open(f'{pre_saving}_days.txt', 'a') as fdays:
-                 fdays.write('# Run of ' + now + '\n#t/t_fb\n') 
-                 fdays.write(' '.join(map(str, days)) + '\n')
-                 fdays.close()
-            with open(f'{pre_saving}.txt', 'a') as flum:
-                 flum.write('# Run of ' + now + 't/t_fb\n')
-                 flum.write(' '.join(map(str, lums)) + '\n')
-                 flum.close()
+            pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/red/red{sim}'
+            np.savetxt(f'{pre_saving}_lums.txt', lums)
+            print('saved lums')
+            np.savetxt(f'{pre_saving}_days.txt', days)
+            print('saved days')
+
+
+            # with open(f'{pre_saving}_days.txt', 'a') as fdays:
+                 
+            #      fdays.write('# Run of ' + now + '\n#t/t_fb\n') 
+            #      fdays.write(' '.join(map(str, days)) + '\n')
+            #      fdays.close()
+            # with open(f'{pre_saving}_lums.txt', 'a') as flum:
+            #      flum.write('# Run of ' + now + 't/t_fb\n')
+            #      flum.write(' '.join(map(str, lums)) + '\n')
+            #      flum.close()
         else:
              with open(f'data/red/reddata_m{m}{check}.txt', 'a') as flum:
                  flum.write('# Run of ' + now + '\n#t/t_fb\n') 

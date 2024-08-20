@@ -188,7 +188,7 @@ def main():
         
         try:
             X, Y, Z, Den, Vx, Vy, Vz, Vol, IE, Rad, T, P = extractor(snapshot)
-        except:
+        except FileNotFoundError:
             continue
         print('Did ', fix)
         #%% Save to another file.

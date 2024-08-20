@@ -9,15 +9,23 @@ Project quantities.
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
-from src.Utilities.isalice import isalice
-alice, plot = isalice()
+
 import numpy as np
 import matplotlib.pyplot as plt
 import numba
-from src.Utilities.selectors import select_snap
-from src.Calculators.THREE_tree_caster import grid_maker
-import os 
 
+from src.Calculators.THREE_tree_caster import grid_maker
+import src.Utilities.selectors as s
+from src.Utilities.parser import parse
+from src.Utilities.isalice import isalice
+alice, plot = isalice()
+
+#%%
+alice, plot = isalice()
+if alice:
+    pre = '/home/s3745597/data1/TDE/'
+else:
+    pre = ''
 # Constants & Converter
 Rsol_to_cm = 6.957e10 # [cm]
 
@@ -49,43 +57,48 @@ def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii, 
     return flat_den
  
 if __name__ == '__main__':
-    import src.Utilities.selectors as s
 
-    # Choose simulation
-    m = 5
-    opac_kind = 'LTE'
-    check = 'fid'
-    mstar = 0.5
-    if mstar == 0.5:
-        star = 'half'
+    if alice:
+        args = parse()
+        fixes = np.arange(args.first, args.last + 1)
+        sim = args.name
+        save = True
+        m = 'AEK'
+        star = 'MONO AEK'
+        check = 'OPOIOS SAS GAMAEI EINAI AEK'
+        what = 'density'
     else:
-        star = ''
-    rstar = 0.47
-    beta = 1
-    what = 'density' # temperature or density
-    save = True
-    snapshots, days = s.select_snap(m, mstar, rstar, check, time = True)
+        # Choose simulation
+        m = 5
+        opac_kind = 'LTE'
+        check = 'fid'
+        mstar = 0.5
+        if mstar == 0.5:
+            star = 'half'
+        else:
+            star = ''
+        rstar = 0.47
+        beta = 1
+        what = 'density' # temperature or density
+        save = True
+        fixes, days = s.select_snap(m, mstar, rstar, check, time = True)
+        args = None
 
-    for snap in snapshots:
-        # if alice:
-        #     pre_file = f'/home/s3745597/data1/TDE/{m}{star}-{check}/snap_{snap}'
-        # else:
-        #     pre_file = f'{m}/{snap}'
-        # if os.path.exists(pre_file):
-        _, grid_den, grid_mass, xs, ys, zs = grid_maker(snap, m, star, check,
-                                                        500, 500, 100, False)
+    for fix in fixes:
+        _, grid_den, grid_mass, xs, ys, zs = grid_maker(fix, m, star, check,
+                                                        500, 500, 100, False,
+                                                        args)
         flat_den = projector(grid_den, grid_mass, False,
                             xs, ys, zs, what)
 
         if save:
             if alice:
-                sim = f'{m}{star}-{check}'
                 pre = f'/home/s3745597/data1/TDE/tde_comparison/data/denproj/{sim}'
-                np.savetxt(f'{pre}/denproj{sim}{snap}.txt', flat_den)
+                np.savetxt(f'{pre}/denproj{sim}{fix}.txt', flat_den)
                 np.savetxt(f'{pre}/xarray{sim}.txt', xs)
                 np.savetxt(f'{pre}/yarray{sim}.txt', ys)
             else:
-                np.savetxt(f'data/denproj{m}_{snap}.txt', flat_den) 
+                np.savetxt(f'data/denproj{m}_{fix}.txt', flat_den) 
                 np.savetxt(f'data/xarray{m}.txt', xs) 
                 np.savetxt(f'data/yarray{m}.txt', ys) 
 

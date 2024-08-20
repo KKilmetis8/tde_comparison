@@ -17,8 +17,12 @@ from scipy.spatial import KDTree
 
 # Chocolate
 import src.Utilities.prelude as c
+from src.Utilities.parser import parse
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
+if alice:
+    pre = '/home/s3745597/data1/TDE/'
+
 import src.Utilities.selectors as s
 #%% Constants & Converter
 
@@ -47,34 +51,27 @@ def ray_maker_forest(fix, m, star, check, thetas, phis, stops, num, opacity, bet
     Num is 1001 because for blue we then delete the last cell.
     Outputs are in CGS with exception of ray_vol (in solar units).
     """
-    
-
-    
     fix = str(fix)
-    Mbh = 10**m 
-    if 'star' == 'half':
-        mstar = 0.5
-        rstar = 0.47
-    else:
-        mstar = 1
-        rstar = 1
+    args = parse()
+    sim = args.name
+    mstar = args.mass
+    rstar = args.radius
+    Mbh = args.blackhole
     Rt = rstar * (Mbh/mstar)**(1/3) 
-    apocenter = 2 * Rt * (Mbh/mstar)**(1/3)
+    apocenter = rstar * (Mbh/mstar)**(1/3)
     
     # Load data
-    pre = s.select_prefix(m, check)
-    pre = f'{m}{star}/'
-    X = np.load(pre + fix + '/CMx_' + fix + '.npy')
-    Y = np.load(pre + fix + '/CMy_' + fix + '.npy')
-    Z = np.load(pre + fix + '/CMz_' + fix + '.npy')
-    VX = np.load(pre + fix + '/Vx_' + fix + '.npy')
-    VY = np.load(pre + fix + '/Vy_' + fix + '.npy')
-    VZ = np.load(pre + fix + '/Vz_' + fix + '.npy')
-    T = np.load(pre + fix + '/T_' + fix + '.npy')
-    Den = np.load(pre + fix + '/Den_' + fix + '.npy')
-    Rad = np.load(pre + fix + '/Rad_' + fix + '.npy')
-    IE = np.load(pre + fix + '/IE_' + fix + '.npy')
-    Vol = np.load(pre + fix + '/Vol_' + fix + '.npy')
+    X = np.load(f'{pre}{sim}/snap_{fix}/CMx_{fix}.npy') 
+    Y = np.load(f'{pre}{sim}/snap_{fix}/CMy_{fix}.npy')
+    Z = np.load(f'{pre}{sim}/snap_{fix}/CMz_{fix}.npy')
+    VX = np.load(f'{pre}{sim}/snap_{fix}/Vx_{fix}.npy') 
+    VY = np.load(f'{pre}{sim}/snap_{fix}/Vy_{fix}.npy')
+    VZ = np.load(f'{pre}{sim}/snap_{fix}/Vz_{fix}.npy')
+    T = np.load(f'{pre}{sim}/snap_{fix}/T_{fix}.npy') 
+    Den = np.load(f'{pre}{sim}/snap_{fix}/Den_{fix}.npy')
+    Rad = np.load(f'{pre}{sim}/snap_{fix}/Rad_{fix}.npy')
+    IE = np.load(f'{pre}{sim}/snap_{fix}/IE_{fix}.npy') 
+    Vol = np.load(f'{pre}{sim}/snap_{fix}/Vol_{fix}.npy')
     if starflag:
         Star = np.load(pre + fix + '/Star_' + fix + '.npy')
     if opacity == 'cloudy': # elad 
@@ -128,7 +125,7 @@ def ray_maker_forest(fix, m, star, check, thetas, phis, stops, num, opacity, bet
                 rays_T[j][k] = T[idx]
 
             # Apply star mask, throw away the fluff
-            if star:
+            if starflag:
                 cell_star = Star[idx]
                 if opacity == 'cloudy':
                     if ((1-cell_star) > 1e-3):
