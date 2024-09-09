@@ -19,6 +19,17 @@ else:
     sys.path.append('/Users/paolamartire/tde_comparison')
     realpre = ''
 
+import numba
+
+# @numba.njit
+# def masker(Den, X, Y, Z):
+#     denmask = np.where((Den > 1e-12))[0]
+#     X = X[denmask]
+#     Y = Y[denmask]
+#     Z = Z[denmask]
+#     Den = Den[denmask]
+#     return Den, X, Y, Z
+import numexpr as ne
 #%% Constants & Converter
 Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
@@ -47,6 +58,8 @@ def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False
         Y = np.load(f'{realpre}{pre}/CMy_{fix}.npy')
         Z = np.load(f'{realpre}{pre}/CMz_{fix}.npy')
         Den = np.load(f'{realpre}{pre}/Den_{fix}.npy')
+
+
     else:
         sim = parsed.name
         mstar = parsed.mass
@@ -72,6 +85,15 @@ def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False
     zs = np.linspace(z_start, z_stop, z_num) #simulator units
 
 
+    # Density cut
+    # denmask = np.where((Den > 1e-12))[0]
+    denmask = ne.evaluate("Den > 1e-12")
+    X = X[denmask]
+    Y = Y[denmask]
+    Z = Z[denmask]
+    Den = Den[denmask]
+    # Den, X, Y, Z = masker(Den, X, Y, Z)
+    
     sim_value = [X, Y, Z] 
     sim_value = np.transpose(sim_value) #array of dim (number_points, 3)
     sim_tree = KDTree(sim_value) 

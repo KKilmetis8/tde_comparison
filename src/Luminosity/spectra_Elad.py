@@ -17,6 +17,8 @@ import healpy as hp
 import scipy.integrate as sci
 from scipy.interpolate import griddata
 import matlab.engine
+from tqdm import tqdm
+
 
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
@@ -37,10 +39,25 @@ if alice:
     mstar = args.mass
     rstar = args.radius
     Mbh = args.blackhole
-    fixes = np.arange(args.first, args.last + 1)
+    # fixes = np.arange(args.first, args.last + 1)
     opac_kind = 'LTE'
     m = 'AEK'
     check = 'MONO AEK'
+
+    if Mbh == 10_000:
+        if 'HiRes' in sim:
+            fixes = [210]
+            print('BH 4 HiRes')
+
+        else:
+            fixes = [272] # [164, 237, 313]
+            print('BH 4')
+    elif Mbh == 100_000:
+        fixes = [302] # [208, 268,]# 365]
+        print('BH 5')
+    else:
+        fixes = [351]
+        print('BH 6')
 else:
     m = 5
     opac_kind = 'LTE'
@@ -105,7 +122,7 @@ eng = matlab.engine.start_matlab()
 
 Lphoto_all = np.zeros(len(fixes))
 days = []
-for idx_s, snap in enumerate(fixes):
+for idx_s, snap in tqdm(enumerate(fixes)):
     print('Snapshot: ', snap)
     #%% Load data -----------------------------------------------------------------
     if alice:
@@ -160,42 +177,6 @@ for idx_s, snap in enumerate(fixes):
     tree = eng.KDTreeSearcher(xyz)
     N_ray = 5_000
 
-    # In the future these will be ray class
-    # Holders Rays
-    # d_ray = np.zeros((N_ray, 192))
-    # r_ray = np.zeros((N_ray, 192))
-    # T_ray = np.zeros((N_ray, 192))
-    # Trad_ray = np.zeros((N_ray, 192))
-    # Tnew_ray = np.zeros((N_ray, 192))
-    # tau_ray = np.zeros((N_ray, 192))
-    # tau_therm_ray = np.zeros((N_ray, 192))
-    # v_ray = np.zeros((N_ray, 192))
-    # c_ray = np.zeros((N_ray, 192))
-
-    # Holders Photosphere / Thermalization
-    # d_photo = np.zeros(192)
-    # x_therm = np.zeros(192) 
-    # y_therm = np.zeros(192)
-    # z_therm = np.zeros(192)
-    # vr_therm = np.zeros(192)
-    # T_photo = np.zeros(192)
-    # r_photo = np.zeros(192)
-    # r_therm = np.zeros(192) 
-    # photo_ind = np.zeros(192)
-    # v_photo = np.zeros(192)
-    # T_avg_photo = np.zeros(192)
-    # L_avg = np.zeros(192)
-    # L = np.zeros(192)
-    # Lnew = np.zeros(192)
-    # L_g = np.zeros(192)
-    # L_r = np.zeros(192)
-    # L_i = np.zeros(192)
-    # L_uvw2 = np.zeros(192)
-    # L_uvm2 = np.zeros(192)
-    # L_uvw1 = np.zeros(192)
-    # L_uvotu = np.zeros(192)
-    # L_XRT = np.zeros(192)
-    # L_XRT2 = np.zeros(192)
 
     # Flux?
     F_photo = np.zeros((192, f_num))
@@ -205,7 +186,7 @@ for idx_s, snap in enumerate(fixes):
     # these for blue. Ignore for now 
 
     # Dynamic Box -----------------------------------------------------------------
-    for i in range(192):
+    for i in tqdm(range(192)):
         # Progress 
         # if i % 10 == 0:
         #     print('Eladython Ray no:', i)
@@ -378,52 +359,8 @@ for idx_s, snap in enumerate(fixes):
         
         np.savetxt(f'{pre_saving}blue/{sim}/freqs.txt', frequencies)
         np.savetxt(f'{pre_saving}blue/{sim}/spectra{snap}.txt', F_photo)
-if save:
-    if alice:
-        pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/'
-        np.savetxt(f'{pre_saving}red/{sim}_eladred.txt', Lphoto_all)
-        np.savetxt(f'{pre_saving}red/{sim}_eladreddays.txt', days)
-        print('saved red and days')
 
 eng.exit()
 
-#%% Plot -----------------------------------------------------------------------
-if plot:
-    import matplotlib.pyplot as plt
-    plt.rcParams['figure.figsize'] = [4 , 4]
-    plt.rc('xtick', labelsize = 15) 
-    plt.rc('ytick', labelsize = 15) 
-    plt.figure()
-    def temperature(n):
-            return n * c.h / c.Kb
 
-    # us
-    y_us = F_photo[i] * frequencies
-    temp_us = [temperature(n) for n in frequencies]
-    plt.loglog(temp_us, np.abs(y_us), c = 'k',label='us',
-            ls = ' ', marker = 'o', markersize = 5)
-    #Compare 10^5 snap 308 
-    # import mat73
-    # mat = mat73.loadmat('data/data_308.mat')
-    # elad_T = np.array([ temperature(n) for n in mat['nu']])
-    # for obs in range(1):
-    #     y = np.multiply(mat['nu'], mat['F_photo_temp'][obs])
-    #     plt.loglog(elad_T, y, c='r', ls = ' ', label ='Elad', zorder = 4,
-    #                marker = 'o', markersize = 2)
-    
-    # pretty
-    x_start = 1e3
-    x_end = 1e8
-    y_lowlim = 1e35#2e39
-    y_highlim = 1.3e43
-    plt.xlim(x_start,x_end)
-    plt.ylim(y_lowlim, y_highlim)
-    plt.loglog()
-    plt.grid()
-    plt.legend(fontsize = 14)
-    plt.title(rf'Spectrum 10$^{m}$ $M_\odot$, Snap: {snap}, Observer , no cross dot')
-    plt.xlabel('Temperature [K]', fontsize = 16)
-    plt.ylabel(r'$\nu L_\nu$ [erg/s]', fontsize = 16)
-    plt.savefig(f'Figs/spectra{snap}nocrossdot.png')
-    plt.show()
 

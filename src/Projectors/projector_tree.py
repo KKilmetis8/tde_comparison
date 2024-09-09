@@ -85,6 +85,7 @@ if __name__ == '__main__':
         args = None
 
     for fix in fixes:
+        print(fix)
         _, grid_den, grid_mass, xs, ys, zs = grid_maker(fix, m, star, check,
                                                         500, 500, 100, False,
                                                         args)

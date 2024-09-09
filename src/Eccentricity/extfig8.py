@@ -30,6 +30,7 @@ if alice:
     m = args.mass
     r = args.radius
     Mbh = args.blackhole
+    Rt = Mbh**(1/3)
     fixes = np.arange(args.first, args.last + 1)
 else:
     m = 10
@@ -43,7 +44,6 @@ G = 6.6743e-11  # SI
 Msol = 1.98847e30  # kg
 Rsol = 6.957e8  # m
 
-Rt = Mbh**(1/3)
 t = np.sqrt(Rsol**3 / (Msol*G))  # Follows from G=1
 # Need these for the PW potential
 c = 3e8 * t/Rsol  # c in simulator units.
@@ -81,7 +81,17 @@ for fix in fixes:
         Den = np.load(pre + sim + '/snap_'  + fix + '/Den_' + fix + '.npy')
         Vol = np.load(pre + sim + '/snap_'  + fix + '/Vol_' + fix + '.npy')
         M = np.multiply(Den, Vol)
+        denmask = np.where((Den > 1e-12))[0]
         del Den, Vol
+
+            
+        X = X[denmask]
+        Y = Y[denmask]
+        Z = Z[denmask]
+        Vx = Vx[denmask]
+        Vy = Vy[denmask]
+        Vz = Vz[denmask]
+        M = M[denmask]
     else:
         X = np.load(str(m) + '/' + fix + '/CMx_' + fix + '.npy')
         Y = np.load(str(m) + '/' + fix + '/CMy_' + fix + '.npy')

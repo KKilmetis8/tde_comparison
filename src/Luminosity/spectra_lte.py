@@ -26,6 +26,7 @@ from src.Opacity.LTE_opacity import opacity
 from src.Calculators.ray_forest import ray_finder, ray_maker_forest
 from src.Luminosity.special_radii_tree import calc_specialr
 from src.Calculators.select_observers import select_observer 
+from src.Utilities.parser import parse
 import src.Utilities.prelude as c
 import src.Utilities.selectors as s
 
@@ -117,14 +118,24 @@ def dot_prod(xyz_grid):
 # MAIN
 if __name__ == "__main__":
     save = True
-
-    # Choose BH 
-    m = 5
-    mstar = 0.5
-    rstar = 0.47
-    check = 'fid'
     num = 1000
-    snapshots, days = s.select_snap(m, mstar, rstar, check)
+    if alice:
+        pre = '/home/s3745597/data1/TDE/'
+        args = parse()
+        sim = args.name
+        mstar = args.mass
+        rstar = args.radius
+        Mbh = args.blackhole
+        fixes = np.arange(args.first, args.last + 1)
+        m = 'AEK'
+        check = 'MONO AEK'
+    else:
+        # Choose BH 
+        m = 5
+        mstar = 0.5
+        rstar = 0.47
+        check = 'fid'
+        fixes, days = s.select_snap(m, mstar, rstar, check)
     opacity_kind = s.select_opacity(m)
 
     # Choose the observers: theta in [0, pi], phi in [0,2pi]
@@ -134,18 +145,15 @@ if __name__ == "__main__":
     # Choose freq range
     n_min = 2.08e13 # [Hz]
     n_max = 6.25e23 # [Hz]
-    n_spacing = 100 # Elad used 1000, but no difference
+    n_spacing = 1000 # Elad used 1000, but no difference
     x_arr = log_array(n_min, n_max, n_spacing)
     n_arr = 10**x_arr
     
     # Save frequency range
     if save:
         if alice:
-            pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
-            with open(f'{pre_saving}spectrafreq_m{m}.txt', 'w') as f:
-                f.write('# exponents x of frequencies: n = 10^x  \n')
-                f.write(' '.join(map(str, x_arr)) + '\n') 
-                f.close()
+            pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/blue'
+            np.savetxt(f'{pre_saving}{sim}spectra_freq.txt')
         else:
             with open('data/blue/spectrafreq_m'+ str(m) + '.txt', 'w') as f:
                 f.write('# exponents x of frequencies: n = 10^x  \n')
@@ -156,14 +164,15 @@ if __name__ == "__main__":
     now = now.strftime("%d/%m/%Y %H:%M:%S")
 
     # Load data for normalsation 
-    fld_data = np.loadtxt('data/red/reddata_m'+ str(m) + check +'.txt')
-    luminosity_fld_fix = fld_data[1]
+    fld_data = np.loadtxt(f'data/red/red{sim}_lums.txt')
+    luminosity_fld_fix = fld_data
     
-    for idx_sn in range(0,1): 
-        snap = snapshots[idx_sn]
-        bol_fld = luminosity_fld_fix[idx_sn]
-        # Fancy f string
-        filename = f"{m}/{snap}/snap_{snap}.h5"
+    for i, fix in enumerate(fixes): 
+        snap = fixes[fix]
+        bol_fld = luminosity_fld_fix[fix]
+        if alice:
+            pre = '/home/s3745597/data1/TDE/'
+            filename = f'{pre}/{sim}/snap_{fix}/snap_{fix}.h5'
         
         thetas, phis, stops, xyz_grid = ray_finder(filename)
         rays = ray_maker_forest(snap, m, check, thetas, phis, stops, num, 
@@ -201,20 +210,27 @@ if __name__ == "__main__":
         lum_n_selected = np.dot(dot_product, lum_n)
 
         # Select the observer for single spectrum and compute the dot product
+        dirs6 = []
         for idx in range(len(wanted_thetas)):
             wanted_theta = wanted_thetas[idx]
             wanted_phi = wanted_phis[idx]
             wanted_index = select_observer(wanted_theta, wanted_phi, thetas, phis)
             print('index ', wanted_index)
+            dirs6.append(lum_n_selected[wanted_index])
 
-            # Save data and plot
-            if save:
-                if alice:
-                    pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/'
-                else:
-                    pre_saving = 'data/blue/'
-                with open(f'{pre_saving}NOstarnLn_single_m{m}_{snap}.txt', 'a') as fselect:
-                    fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
-                    fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
-                    fselect.close()
+        if save:
+            if alice:
+                pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/blue/'
+                np.savetxt(f'{pre_saving}{sim}_spectrum.txt', lum_n_selected)
+                np.savetxt(f'{pre_saving}{sim}_dirs6.txt', dirs6)
+            # # Save data and plot
+            # if save:
+            #     if alice:
+            #         pre_saving = '/home/s3745597/data1/TDE/tde_comparison/data/blue'
+            #     else:
+            #         pre_saving = 'data/blue/'
+            #     with open(f'{pre_saving}{sim}spectrum.txt', 'a') as fselect:
+            #         fselect.write(f'#snap {snap} L_tilde_n (theta, phi) = ({np.round(wanted_theta,4)},{np.round(wanted_phi,4)}) with num = {num} \n')
+            #         fselect.write(' '.join(map(str, lum_n_selected[wanted_index])) + '\n')
+            #         fselect.close()
                 
