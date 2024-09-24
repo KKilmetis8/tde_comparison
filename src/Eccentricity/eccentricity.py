@@ -18,8 +18,11 @@ def e_calc(position, velocity, mu):
     # To be returned
     ecc = np.zeros((len(position),len(position[0])))
     ecc_mag = np.zeros((len(position)))
+    semi_major_axis = np.zeros((len(position)))
     # Grav. parameter μ = GM_bh but G=1
-
+    
+    # For semi-major axis
+    
     for i in range(len(position)):
         # Calc. the magnitude of the vectors
         r_mag = np.linalg.norm(position[i])
@@ -39,7 +42,9 @@ def e_calc(position, velocity, mu):
         # Grab the mag. as well
         ecc_mag[i] = np.linalg.norm(ecc[i])
         
-    return ecc, ecc_mag
+        j_mag_sq = r_mag*r_mag*v_mag*v_mag
+        semi_major_axis[i] = j_mag_sq / mu * 1 / (1 - ecc_mag[i]**2)
+    return ecc, ecc_mag, semi_major_axis
 
 @numba.njit 
 def ta_calc(ecc, position, velocity):

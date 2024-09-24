@@ -35,8 +35,8 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 
-def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False,
-               parsed = None):
+def grid_maker(fix, m, star, check, what, x_num, y_num, z_num = 100, 
+               mass_weight=False, parsed = None):
     """ ALL outputs are in in solar units """
 
     if type(parsed) == type(None):
@@ -70,7 +70,7 @@ def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False
         X = np.load(f'{realpre}{sim}/snap_{fix}/CMx_{fix}.npy')
         Y = np.load(f'{realpre}{sim}/snap_{fix}/CMy_{fix}.npy')
         Z = np.load(f'{realpre}{sim}/snap_{fix}/CMz_{fix}.npy')
-        Den = np.load(f'{realpre}{sim}/snap_{fix}/Den_{fix}.npy')
+        Den = np.load(f'{realpre}{sim}/snap_{fix}/{what}_{fix}.npy')
 
     x_start = -apocenter
     x_stop = 0.2 * apocenter

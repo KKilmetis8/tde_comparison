@@ -10,7 +10,7 @@ import numpy as np
 import h5py
 import os
 import argparse
-
+from src.Utilities.parser import parse
 ## File structure is
 # box, cycle, time, mpi, rank0 ... rank99.
 # This iterates over all the ranks
@@ -125,54 +125,8 @@ def time_extractor(mbh, snapno, mass, radius, pre):
 #%% Do it    
 
 def main():
-    parser = argparse.ArgumentParser(
-        description="Parses simulation features for file extraction"
-    )
-
-    # Add arguments to the parser
-    parser.add_argument(
-        "-m", "--mass",
-        type = float,
-        help = "Mass of the star",
-        required = True
-    )
-
-    parser.add_argument(
-        "-r", "--radius",
-        type = float,
-        help = "Radius of the star",
-        required = True
-    )
-
-    parser.add_argument(
-        "-b", "--blackhole",
-        type = str,
-        help = "Mass of the Black Hole",
-        required = True
-    )
-
-    parser.add_argument(
-        "-n", "--name",
-        type = str,
-        help = 'Name of the directory to save at',
-        required = True
-    )
-    
-    parser.add_argument(
-        "-f", "--first",
-        type = int,
-        help = 'First snapshot to extract',
-        required = True,
-    )
-
-    parser.add_argument(
-        "-l", "--last",
-        type = int,
-        help = 'Last snapshot to extract',
-        required = True,
-    )
     # Parse the command-line arguments
-    args = parser.parse_args()
+    args = parse()
     simname = args.name
     m = args.mass
     r = args.radius
@@ -181,15 +135,14 @@ def main():
     fixes = np.arange(args.first, args.last + 1)
     realpre = '/data1/s3745597/TDE/'
     for fix in fixes:
-        star = 'half'
         snapshot = f'{realpre}{simname}/snap_{fix}/snap_{fix}.h5'
         pre = f'{realpre}{simname}/snap_{fix}/'
         suf = f'_{fix}'
         
-        try:
-            X, Y, Z, Den, Vx, Vy, Vz, Vol, IE, Rad, T, P = extractor(snapshot)
-        except FileNotFoundError:
-            continue
+        #try:
+        X, Y, Z, Den, Vx, Vy, Vz, Vol, IE, Rad, T, P = extractor(snapshot)
+        # except FileNotFoundError:
+        #     continue
         print('Did ', fix)
         #%% Save to another file.
         np.save(pre + 'CMx' + suf, X)   

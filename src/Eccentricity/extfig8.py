@@ -27,10 +27,11 @@ alice, plot = isalice()
 if alice:
     args = parse()
     sim = args.name
-    m = args.mass
-    r = args.radius
+    mstar = args.mass
+    rstar = args.radius
     Mbh = args.blackhole
-    Rt = Mbh**(1/3)
+    Mbh = float(Mbh)
+    Rt = rstar * (Mbh/mstar)**(1/3)
     fixes = np.arange(args.first, args.last + 1)
 else:
     m = 10
@@ -66,7 +67,10 @@ def masker(arr, mask):
 # MAIN
 colarr = []
 fixdays = []
-
+massarr = []
+smaarr = []
+orbarr = []
+jsqarr = []
 for fix in fixes:
     if alice:
         fix = str(fix)
@@ -83,8 +87,7 @@ for fix in fixes:
         M = np.multiply(Den, Vol)
         denmask = np.where((Den > 1e-12))[0]
         del Den, Vol
-
-            
+    
         X = X[denmask]
         Y = Y[denmask]
         Z = Z[denmask]
@@ -117,26 +120,36 @@ for fix in fixes:
     Vy = masker(Vy, bound_mask)
     Vz = masker(Vz, bound_mask)
     M = masker(M, bound_mask)
+    Orbital = masker(Orbital, bound_mask)
 
     position = np.array((X, Y, Z)).T  # Transpose for col. vectors
     velocity = np.array((Vx, Vy, Vz)).T
     del X, Y, Z, Vx, Vy, Vz
 
     # EVOKE eccentricity
-    _, ecc = e_calc(position, velocity, Mbh)
+    _, ecc, semi_major_axis = e_calc(position, velocity, Mbh)
 
     # Cast down to 100 values
     radii = np.logspace(np.log10(0.4*Rt), np.log10(apocenter),
-                        num=100)  # simulator units
+                        num=1000)  # simulator units
 
     if method == 'caster':
         ecc_cast = THE_SMALL_CASTER(radii, R_bound, ecc, weights=M)
+        M_cast = THE_SMALL_CASTER(radii, R_bound, M)
+        semi_major_axis_cast = THE_SMALL_CASTER(radii, R_bound, 
+                                                semi_major_axis, weights=M)
+        orbital_cast = THE_SMALL_CASTER(radii, R_bound, Orbital)
+        # jsq_cast = THE_SMALL_CASTER(radii, R_bound, jsq, weights=M)
+
     if method == 'tree':
         ecc_cast = BONSAI(radii, R_bound, ecc)
 
     # mw_ecc_casted = np.nan_to_num(mw_ecc_casted)
     colarr.append(ecc_cast)
-
+    massarr.append(M_cast)
+    smaarr.append(semi_major_axis_cast)
+    orbarr.append(orbital_cast)
+    # jsqarr.append(jsq_cast)
     if alice:
         t_by_tfb = np.loadtxt(f'{pre}{sim}/snap_{fix}/tbytfb_{fix}.txt')
         fixdays.append(t_by_tfb)
@@ -150,6 +163,11 @@ for fix in fixes:
         if alice:
             np.savetxt(f'{pre}tde_comparison/data/ecc{sim}.txt', colarr)
             np.savetxt(f'{pre}tde_comparison/data/eccdays{sim}.txt', fixdays)
+            np.savetxt(f'{pre}tde_comparison/data/eccmass{sim}.txt', massarr)
+            np.savetxt(f'{pre}tde_comparison/data/eccsemimajoraxis{sim}.txt', smaarr)
+            np.savetxt(f'{pre}tde_comparison/data/eccenergy{sim}.txt', orbarr)
+            # np.savetxt(f'{pre}tde_comparison/data/eccjsq{sim}.txt', jsqarr)
+
         else:
              with open('data/ecc'+ str(m) + '.txt', 'a') as file:
                 for i in range(len(colarr)):
