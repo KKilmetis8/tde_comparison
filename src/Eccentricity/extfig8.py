@@ -50,7 +50,7 @@ t = np.sqrt(Rsol**3 / (Msol*G))  # Follows from G=1
 c = 3e8 * t/Rsol  # c in simulator units.
 rg = 2*Mbh/c**2
 t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
-apocenter = 2 * Rt * Mbh**(1/3)  # There is m_* hereeee
+apocenter = 0.5 * Rt * Mbh**(1/3)  # There is m_* hereeee
 @numba.njit
 def masker(arr, mask):
     len_bound = np.sum(mask)
