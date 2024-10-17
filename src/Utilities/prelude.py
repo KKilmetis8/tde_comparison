@@ -29,6 +29,7 @@ mhe = 4 * mp
 # Solar units
 Msol = 2e30 #1.98847e30 # kg
 Rsol = 7e8 #6.957e8 # m
+Lsol_to_ergs = 3.846e33
 t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G = 1
 
 # Ionization energies
@@ -46,6 +47,7 @@ rot = 170.64 # [K]
 # Converters
 Rsol_to_cm = 6.957e10 # [cm]
 Msol_to_g = 2e33 # 1.989e33 # [g]
+Gcgs = 6.6743e-8 # cgs
 den_converter = Msol_to_g / Rsol_to_cm**3
 numden_converter = 1/Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
@@ -53,8 +55,8 @@ sec_to_day = 60*60*24
 
 # Healpy
 import healpy as hp
-NSIDE = 4
-NPIX = hp.nside2npix(NSIDE)#  int(NSIDE * 96)
+NSIDE = 8
+NPIX = hp.nside2npix(NSIDE )#  int(NSIDE * 96)
 
 # Select opacity
 def select_opacity(m):
@@ -74,3 +76,23 @@ plt.rcParams['axes.facecolor']= 'whitesmoke'
 plt.rcParams['xtick.direction'] = 'in'
 plt.rcParams['ytick.direction'] = 'in'
 AEK = '#F1C410'
+
+# 6 palette
+darkb = '#264653'
+cyan = '#2A9D8F'
+prasinaki = '#6a994e'
+yellow = '#E9C46A'
+kroki = '#F2A261'
+reddish = '#E76F51'
+
+
+# 9 palette
+c91 = '#e03524'
+c92 = '#f07c12'
+c93 = '#ffc200'
+c94 = '#90bc1a'
+c95 = '#21b534'
+c96 = '#0095ac'
+c97 = '#1f64ad'
+c98 = '#4040a0'
+c99 = '#903498'

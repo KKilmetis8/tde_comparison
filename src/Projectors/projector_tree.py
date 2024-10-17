@@ -66,7 +66,7 @@ if __name__ == '__main__':
         m = 'AEK'
         star = 'MONO AEK'
         check = 'OPOIOS SAS GAMAEI EINAI AEK'
-        what = args.what # 'Diss' # T or Den or Diss
+        what = 'density'
     else:
         # Choose simulation
         m = 5
@@ -79,14 +79,14 @@ if __name__ == '__main__':
             star = ''
         rstar = 0.47
         beta = 1
-        what = 'Diss' # T or Den or Diss
+        what = 'density' # temperature or density
         save = True
         fixes, days = s.select_snap(m, mstar, rstar, check, time = True)
         args = None
 
     for fix in fixes:
         print(fix)
-        _, grid_den, grid_mass, xs, ys, zs = grid_maker(fix, m, star, check, what,
+        _, grid_den, grid_mass, xs, ys, zs = grid_maker(fix, m, star, check,
                                                         500, 500, 100, False,
                                                         args)
         flat_den = projector(grid_den, grid_mass, False,
@@ -95,7 +95,7 @@ if __name__ == '__main__':
         if save:
             if alice:
                 pre = f'/home/s3745597/data1/TDE/tde_comparison/data/denproj/{sim}'
-                np.savetxt(f'{pre}/{what}proj{sim}{fix}.txt', flat_den)
+                np.savetxt(f'{pre}/denproj{sim}{fix}.txt', flat_den)
                 np.savetxt(f'{pre}/xarray{sim}.txt', xs)
                 np.savetxt(f'{pre}/yarray{sim}.txt', ys)
             else:
@@ -119,18 +119,14 @@ if __name__ == '__main__':
             den_plot = np.nan_to_num(den_plot, neginf= 0)
             
             # Specify
-            if what == 'Den':
+            if what == 'density':
                 cb_text = r'Density [g/cm$^2$]'
                 vmin = 0
                 vmax = 6
-            elif what == 'T':
+            elif what == 'temperature':
                 cb_text = r'Temperature [K]'
                 vmin = 2
                 vmax = 8
-            elif what == 'Diss':
-                cb_text = r'Energy Dissipation'
-                vmin = 12
-                vmax = 18
             else:
                 raise ValueError('Hate to break it to you champ \n \
                                 but we don\'t have that quantity')

@@ -9,7 +9,7 @@ import numpy as np
 import h5py
 from datetime import datetime
 import src.Utilities.prelude as c
-snapshot881 = "5/269/snap_269.h5"
+snapshot881 = "4/199/snap_full_199.h5"
 # f = h5py.File(snapshot881, "r")
 #%% Explores the structure of the hdf5
 
@@ -26,7 +26,7 @@ def h5printR(item, leading = ''):
 def h5print(filename):
     with h5py.File(filename, 'r') as h:
         print(filename)
-        # h5printR(h, '  ')
+        h5printR(h, '  ')
         sec_to_day = 60*60*24
         a = np.array([h['Time']])[0] * c.t / sec_to_day
         m = 5 
