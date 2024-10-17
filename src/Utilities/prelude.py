@@ -52,7 +52,9 @@ en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 sec_to_day = 60*60*24
 
 # Healpy
+import healpy as hp
 NSIDE = 4
+NPIX = hp.nside2npix(NSIDE)#  int(NSIDE * 96)
 
 # Select opacity
 def select_opacity(m):

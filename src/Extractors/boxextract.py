@@ -30,7 +30,7 @@ def main():
     simname = args.name
 
     fixes = np.arange(args.first, args.last + 1)
-    realpre = '/data1/s3745597/TDE/'
+    realpre = '/data1/kilmetisk/TDE/'
     for fix in fixes:
         snapshot = f'{realpre}{simname}/snap_{fix}/snap_{fix}.h5'
         pre = f'{realpre}{simname}/snap_{fix}/'

@@ -7,6 +7,7 @@ Created on Fri Aug 23
 """
 import sys
 import gc
+import time
 sys.path.append('/Users/paolamartire/tde_comparison')
 import warnings
 warnings.filterwarnings('ignore')
@@ -138,16 +139,25 @@ for idx_s, snap in enumerate(fixes):
         box = np.load(f'{pre}{snap}/box_{snap}.npy')
         #days.append(day)
         #del day
+    denmask = Den > 1e-19
+    X = X[denmask]
+    Y = Y[denmask]
+    Z = Z[denmask]
+    T = T[denmask]
+    Den = Den[denmask]
+
+    Rad = Rad[denmask]
+    Vol = Vol[denmask]
     Rad_den = np.multiply(Rad,Den)
     del Rad            
     R = np.sqrt(X**2 + Y**2 + Z**2)
     #%% Cross dot -----------------------------------------------------------------
-    observers_xyz = hp.pix2vec(c.NSIDE, range(192))
+    observers_xyz = hp.pix2vec(c.NSIDE, range(c.NPIX))
     # Line 17, * is matrix multiplication, ' is .T
     observers_xyz = np.array(observers_xyz).T
     cross_dot = np.matmul(observers_xyz,  observers_xyz.T)
     cross_dot[cross_dot<0] = 0
-    cross_dot *= 4/192
+    cross_dot *= 4/c.NPIX
 
     #%% Tree ----------------------------------------------------------------------
     #from scipy.spatial import KDTree
@@ -155,17 +165,23 @@ for idx_s, snap in enumerate(fixes):
     N_ray = 5_000
 
     # Flux?
-    F_photo = np.zeros((192, f_num))
-    F_photo_temp = np.zeros((192, f_num))
+    F_photo = np.zeros((c.NPIX, f_num))
+    F_photo_temp = np.zeros((c.NPIX, f_num))
 
     # Lines 99-128 use some files we don't have, I think we only need
     # these for blue. Ignore for now 
 
     # Dynamic Box -----------------------------------------------------------------
-    reds = np.zeros(192)
-    for i in tqdm(range(192)):
-
+    reds = np.zeros(c.NPIX)
+    time_start = 0
+    for i in range(c.NPIX):
         # Progress 
+        time_end = time.time()
+        print(f'Snap: {snap}, Obs: {i}', flush=False)
+        print(f'Time for prev. Obs: {(time_end - time_start)/60} min', flush = False)
+        time_start = time.time()
+        sys.stdout.flush()
+
         # if i % 10 == 0:
         #     print('Eladython Ray no:', i)
         # print(i)
@@ -279,7 +295,7 @@ for idx_s, snap in enumerate(fixes):
         fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
         smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) # i have remov
         # Spectra --------------------------------------------------------------
-        F_photo_temp = np.zeros((192, f_num))
+        F_photo_temp = np.zeros((c.NPIX, f_num))
         try:
             b = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0] 
         except IndexError:
@@ -294,15 +310,15 @@ for idx_s, snap in enumerate(fixes):
         del smoothed_flux, R_lamda, fld_factor, EEr, los,
         gc.collect()
 if single:
-    Lphoto_this = 4*np.pi*np.mean(reds)
+    Lphoto_this = np.mean(reds)
 else:
-    Lphoto_all[idx_s] = 4*np.pi*np.mean(reds) # save red
+    Lphoto_all[idx_s] = np.mean(reds) # save red
     # Lphoto = Lphoto2
 if save:
     if alice:
-        pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/'
+        pre_saving = f'/home/kilmetisk/data1/TDE/tde_comparison/data/'
         if single:
-            filepath =  f'{pre_saving}red/{sim}/eladred.csv'
+            filepath =  f'{pre_saving}red/{sim}/eladred_d19.csv'
             data = [snap, day, Lphoto_this]
             with open(filepath, 'a', newline='') as file:
                 writer = csv.writer(file)
