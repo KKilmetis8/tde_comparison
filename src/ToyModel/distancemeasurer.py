@@ -155,7 +155,7 @@ for idx_s, snap in enumerate(fixes):
 # fig, ax = plt.subplots(1,1, figsize = (4,3), dpi = 300)
 # ax.plot(days, mean_dists, c='r', ls = '-')
 # ax2 = ax.twinx()
-# ax2.plot(days, t_circ, c='k', ls = '--')
+# ax2.plot(daays, t_circ, c='k', ls = '--')
 # # ax2.set_ylim(0, 100)
 # ax2.set_ylabel('$t_\mathrm{circ}$ [steps]')
 # ax.set_xlabel('Time [$t_\mathrm{FB}$]')
