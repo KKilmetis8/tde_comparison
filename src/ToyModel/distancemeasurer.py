@@ -60,7 +60,7 @@ def get_dist(energy, j, Mbh):
 
 #%% Import data
 if alice:
-    pre = '/home/s3745597/data1/TDE/'
+    pre = '/home/kilmetisk/data1/TDE/'
     args = parse()
     sim = args.name
     mstar = args.mass
@@ -78,6 +78,7 @@ if alice:
         fixes = [351]
         print('BH 6')
     Mbh = float(Mbh)
+    rg = 2*Mbh/c.c**2
     Rt = rstar * (Mbh/mstar)**(1/3)
     Rp = Rt
     jp = np.sqrt(2*Rp*Mbh)
@@ -104,9 +105,6 @@ for idx_s, snap in enumerate(fixes):
         X = np.load(f'{pre}{sim}/snap_{snap}/CMx_{snap}.npy')
         Y = np.load(f'{pre}{sim}/snap_{snap}/CMy_{snap}.npy')
         Z = np.load(f'{pre}{sim}/snap_{snap}/CMz_{snap}.npy')
-        R = np.sqrt(X**2 + Y**2 + Z**2)
-        del X, Y, Z
-        gc.collect()
         VX = np.load(f'{pre}{sim}/snap_{snap}/Vx_{snap}.npy')
         VY = np.load(f'{pre}{sim}/snap_{snap}/Vy_{snap}.npy')
         VZ = np.load(f'{pre}{sim}/snap_{snap}/Vz_{snap}.npy')
@@ -158,8 +156,8 @@ for idx_s, snap in enumerate(fixes):
     
     if alice:
         pre_saving = f'/home/kilmetisk/data1/TDE/tde_comparison/data/'
-        filepath =  f'{pre_saving}red/{sim}/meandists.csv'
-        data = [snap, day, mean_dist]
+        filepath =  f'{pre_saving}tcirc/{sim}/meandists.csv'
+        data = [snap, days, mean_dist]
         with open(filepath, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(data)

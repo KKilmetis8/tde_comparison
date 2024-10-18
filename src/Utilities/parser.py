@@ -55,6 +55,19 @@ def parse():
         help = 'Last snapshot to extract',
         required = True,
     )
+
+    parser.add_argument(
+        "-ο", "--only",
+        type = int,
+        help = "Do something for one snapshot",
+        required = False
+    )
+    parser.add_argument(
+        "-s", "--single",
+        type = bool,
+        help = "Do something for one snapshot",
+        required = True
+    )
     # Parse the command-line arguments
     args = parser.parse_args()
     return args
