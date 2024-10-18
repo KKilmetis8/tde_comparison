@@ -5,7 +5,6 @@
 5half
 Figs
 .DS_Store
-data
 eladlab
 d0.npy
 t0.npy
@@ -15,3 +14,7 @@ d.txt
 octave-workspace
 test_opacity.ipynb
 *.npy
+*.out
+.spyproject/config
+__pycache__
+data

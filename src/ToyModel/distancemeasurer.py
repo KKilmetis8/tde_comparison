@@ -102,7 +102,6 @@ for idx_s, snap in enumerate(fixes):
         Vol = np.load(f'{pre}{sim}/snap_{snap}/Vol_{snap}.npy')
         day = np.loadtxt(f'{pre}{sim}/snap_{snap}/tbytfb_{snap}.txt')
         days.append(day)
-        del day
     else:
         X = np.load(f'{pre}{snap}/CMx_{snap}.npy')
         Y = np.load(f'{pre}{snap}/CMy_{snap}.npy')
@@ -147,7 +146,7 @@ for idx_s, snap in enumerate(fixes):
     if alice:
         pre_saving = f'/home/kilmetisk/data1/TDE/tde_comparison/data/'
         filepath =  f'{pre_saving}tcirc/{sim}/meandists.csv'
-        data = [snap, days, mean_dist]
+        data = [snap, day, mean_dist]
         with open(filepath, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(data)
