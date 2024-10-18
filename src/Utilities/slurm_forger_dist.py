@@ -9,11 +9,11 @@ Created on Wed Oct 9
 import numpy as np
 pre = '/home/kilmetisk/data1/TDE/'
 
-Mbh = '1e+06' # 10000, 100000, 1e+06
+Mbh = '100000' # 10000, 100000, 1e+06
 suffix = 'beta1S60n1.5Compton'
 res = 'h'  # 'f' for fiducial, 'h' for HiRes, 's' for super high res,
            # 'd' double rad
-if Mbh == '1e+06':
+if Mbh == '10000':
     runnos = np.arange(0, 9) + 1
     firsts = np.arange(88, 338, step = 30)
     lasts =  np.arange(98, 348, step = 30)

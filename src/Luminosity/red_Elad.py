@@ -6,19 +6,22 @@ Created on Fri Aug 23
 @author: konstantinos
 """
 import sys
+import gc
+import time
 sys.path.append('/Users/paolamartire/tde_comparison')
+import warnings
+warnings.filterwarnings('ignore')
+import csv
+
 
 # The goal is to replicate Elad's script. No nice code, no nothing. A shit ton
 # of comments though. 
 import numpy as np
-import h5py
-import matplotlib.pyplot as plt
 import healpy as hp
 import scipy.integrate as sci
 from scipy.interpolate import griddata
 import matlab.engine
-from tqdm import tqdm
-
+from sklearn.neighbors import KDTree
 
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
@@ -32,25 +35,29 @@ from src.Utilities.parser import parse
 #%% Choose parameters -----------------------------------------------------------------
 save = True
 if alice:
-    pre = '/home/s3745597/data1/TDE/'
+    pre = '/home/kilmetisk/data1/TDE/'
     args = parse()
     sim = args.name
     mstar = args.mass
     rstar = args.radius
     Mbh = args.blackhole
     fixes = np.arange(args.first, args.last + 1)
-    first = args.first
-    last = args.last
+    single = args.single
+    if single:
+        fixes = [args.only]
+    else:
+        Lphoto_all = np.zeros(len(fixes))
     opac_kind = 'LTE'
     m = 'AEK'
     check = 'MONO AEK'
 else:
     m = 5
+    pre = f'{m}/'
+    fixes = [236]
     opac_kind = 'LTE'
-    check = 'fid'
     mstar = 0.5
     rstar = 0.47
-    fixes, days = s.select_snap(m, mstar, rstar, check, time = True)
+
 
 #%% Opacities -----------------------------------------------------------------
 # Freq range
@@ -99,73 +106,79 @@ _, _, plank2 = pad_interp(T_cool, Rho_cool, plank.T)
 # MATLAB GOES WHRRRR, thanks Cindy.
 eng = matlab.engine.start_matlab()
 
-Lphoto_all = np.zeros(len(fixes))
 days = []
-for idx_s, snap in tqdm(enumerate(fixes)):
-    print('\n Snapshot: ', snap, '\n')
+for idx_s, snap in enumerate(fixes):
     #%% Load data -----------------------------------------------------------------
     if alice:
-        X = np.load(f'{pre}{sim}/snap_{snap}/CMx_{snap}.npy')
-        Y = np.load(f'{pre}{sim}/snap_{snap}/CMy_{snap}.npy')
-        Z = np.load(f'{pre}{sim}/snap_{snap}/CMz_{snap}.npy')
-        VX = np.load(f'{pre}{sim}/snap_{snap}/Vx_{snap}.npy')
-        VY = np.load(f'{pre}{sim}/snap_{snap}/Vy_{snap}.npy')
-        VZ = np.load(f'{pre}{sim}/snap_{snap}/Vz_{snap}.npy')
-        T = np.load(f'{pre}{sim}/snap_{snap}/T_{snap}.npy')
-        Den = np.load(f'{pre}{sim}/snap_{snap}/Den_{snap}.npy')
-        Rad = np.load(f'{pre}{sim}/snap_{snap}/Rad_{snap}.npy')
-        Vol = np.load(f'{pre}{sim}/snap_{snap}/Vol_{snap}.npy')
-        day = np.loadtxt(f'{pre}{sim}/snap_{snap}/tbytfb_{snap}.txt')
-        days.append(day)
+            X = np.load(f'{pre}{sim}/snap_{snap}/CMx_{snap}.npy')
+            Y = np.load(f'{pre}{sim}/snap_{snap}/CMy_{snap}.npy')
+            Z = np.load(f'{pre}{sim}/snap_{snap}/CMz_{snap}.npy')
+            T = np.load(f'{pre}{sim}/snap_{snap}/T_{snap}.npy')
+            Den = np.load(f'{pre}{sim}/snap_{snap}/Den_{snap}.npy')
+            Rad = np.load(f'{pre}{sim}/snap_{snap}/Rad_{snap}.npy')
+            Vol = np.load(f'{pre}{sim}/snap_{snap}/Vol_{snap}.npy')
+            day = np.loadtxt(f'{pre}{sim}/snap_{snap}/tbytfb_{snap}.txt')
+            box = np.load(f'{pre}{sim}/snap_{snap}/box_{snap}.npy')
+            days.append(day)
     else:
         X = np.load(f'{pre}{snap}/CMx_{snap}.npy')
         Y = np.load(f'{pre}{snap}/CMy_{snap}.npy')
         Z = np.load(f'{pre}{snap}/CMz_{snap}.npy')
-        VX = np.load(f'{pre}{snap}/Vx_{snap}.npy')
-        VY = np.load(f'{pre}{snap}/Vy_{snap}.npy')
-        VZ = np.load(f'{pre}{snap}/Vz_{snap}.npy')
+        # VX = np.load(f'{pre}{snap}/Vx_{snap}.npy')
+        # VY = np.load(f'{pre}{snap}/Vy_{snap}.npy')
+        # VZ = np.load(f'{pre}{snap}/Vz_{snap}.npy')
         T = np.load(f'{pre}{snap}/T_{snap}.npy')
         Den = np.load(f'{pre}{snap}/Den_{snap}.npy')
         Rad = np.load(f'{pre}{snap}/Rad_{snap}.npy')
-        IE = np.load(f'{pre}{snap}/IE_{snap}.npy')
+        # IE = np.load(f'{pre}{snap}/IE_{snap}.npy')
         Vol = np.load(f'{pre}{snap}/Vol_{snap}.npy')
+        #day = np.loadtxt(f'{pre}{sim}/snap_{snap}/tbytfb_{snap}.txt')
+        box = np.load(f'{pre}{snap}/box_{snap}.npy')
+        #days.append(day)
+        #del day
+    denmask = Den > 1e-19
+    X = X[denmask]
+    Y = Y[denmask]
+    Z = Z[denmask]
+    T = T[denmask]
+    Den = Den[denmask]
 
-    box = np.zeros(6)
-    with h5py.File(f'{pre}{sim}/snap_{snap}/snap_{snap}.h5', 'r') as fileh:
-        for i in range(len(box)):
-            box[i] = fileh['Box'][i]
-        fileh.close()
-            
+    Rad = Rad[denmask]
+    Vol = Vol[denmask]
     Rad_den = np.multiply(Rad,Den)
+    del Rad            
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    velocity_vector = np.divide( VX * X + VY * Y + VZ * Z,R)
-    velocity = np.sqrt(VX**2 + VY**2 + VZ**2)
     #%% Cross dot -----------------------------------------------------------------
-    observers_xyz = hp.pix2vec(c.NSIDE, range(192))
+    observers_xyz = hp.pix2vec(c.NSIDE, range(c.NPIX))
     # Line 17, * is matrix multiplication, ' is .T
     observers_xyz = np.array(observers_xyz).T
     cross_dot = np.matmul(observers_xyz,  observers_xyz.T)
     cross_dot[cross_dot<0] = 0
-    cross_dot *= 4/192
+    cross_dot *= 4/c.NPIX
 
     #%% Tree ----------------------------------------------------------------------
     #from scipy.spatial import KDTree
     xyz = np.array([X, Y, Z]).T
-    # tree = KDTree(xyz, leafsize=50)
-    tree = eng.KDTreeSearcher(xyz)
     N_ray = 5_000
 
     # Flux?
-    F_photo = np.zeros((192, f_num))
-    F_photo_temp = np.zeros((192, f_num))
+    F_photo = np.zeros((c.NPIX, f_num))
+    F_photo_temp = np.zeros((c.NPIX, f_num))
 
     # Lines 99-128 use some files we don't have, I think we only need
     # these for blue. Ignore for now 
 
     # Dynamic Box -----------------------------------------------------------------
-    reds = np.zeros(192)
-    for i in tqdm(range(192)):
+    reds = np.zeros(c.NPIX)
+    time_start = 0
+    for i in range(c.NPIX):
         # Progress 
+        time_end = time.time()
+        print(f'Snap: {snap}, Obs: {i}', flush=False)
+        print(f'Time for prev. Obs: {(time_end - time_start)/60} min', flush = False)
+        time_start = time.time()
+        sys.stdout.flush()
+
         # if i % 10 == 0:
         #     print('Eladython Ray no:', i)
         # print(i)
@@ -203,9 +216,10 @@ for idx_s, snap in tqdm(enumerate(fixes)):
         y = r*mu_y
         z = r*mu_z
         xyz2 = np.array([x, y, z]).T
-        # _ , idx = tree.query(xyz2)
-        idx = eng.knnsearch(tree, xyz2)
-        idx = [ int(idx[i][0] - 1) for i in range(len(idx))] # -1 because we start from 0
+        del x, y, z
+        tree = KDTree(xyz, leaf_size=50)
+        _, idx = tree.query(xyz2, k=1)
+        idx = [ int(idx[i][0]) for i in range(len(idx))] # no -1 because we start from 0
         d = Den[idx] * c.den_converter
         t = T[idx]
 
@@ -217,38 +231,27 @@ for idx_s, snap in tqdm(enumerate(fixes)):
         sigma_plank = eng.interp2(T_cool2,Rho_cool2,plank2,np.log(t),np.log(d),'linear',0)
         sigma_plank = [sigma_plank[0][i] for i in range(N_ray)]
         sigma_plank_eval = np.exp(sigma_plank)
-        #%% Optical Depth ---------------------------------------------------------------
+        del sigma_rossland, sigma_plank 
+        gc.collect()
+
+        # Optical Depth ---------------------------------------------------------------
         # Okay, line 232, this is the hard one.
-
         r_fuT = np.flipud(r.T)
-
         kappa_rossland = np.flipud(sigma_rossland_eval) 
         los = - np.flipud(sci.cumulative_trapezoid(kappa_rossland, r_fuT, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
-
-        kappa_plank = np.flipud(sigma_plank_eval) 
-        los_abs = - np.flipud(sci.cumulative_trapezoid(kappa_plank, r_fuT, initial = 0)) * c.Rsol_to_cm
-
         k_effective = np.sqrt(3 * np.flipud(sigma_plank_eval) * np.flipud(sigma_rossland_eval)) 
         los_effective = - np.flipud(sci.cumulative_trapezoid(k_effective, r_fuT, initial = 0)) * c.Rsol_to_cm
-        # tau_tot = dr.T * c.Rsol_to_cm * sigma_rossland_eval
 
-        #%% Red -----------------------------------------------------------------------
-
+        # Red -----------------------------------------------------------------------
         # Get 20 unique, nearest neighbors
         xyz3 = np.array([X[idx], Y[idx], Z[idx]]).T
-        # _, idxnew = tree.query(xyz3, k=20) # 20 nearest neighbors
-        idxnew = eng.knnsearch(tree, xyz3, 'K', 20)
-        #
-
-        #idxnew = np.array([idxnew], dtype = int).T #np.reshape(idxnew, (1, len(idxnew))) #.T
+        xyz3 = np.array([X[idx], Y[idx], Z[idx]]).T
+        _, idxnew = tree.query(xyz3, k=20)
         idxnew = np.unique(idxnew).T
-        idxnew = [ int(idxnew[i] -1) for i in range(len(idxnew))]
-        # Cell radius
-        dx = 0.5 * Vol[idx]**(1/3)
+        dx = 0.5 * Vol[idx]**(1/3) # Cell radius
 
         # Get the Grads
         # sphere and get the gradient on them. Is it neccecery to re-interpolate?
-
         # scattered interpolant returns a function
         # griddata DEMANDS that you pass it the values you want to eval at
         f_inter_input = np.array([ X[idxnew], Y[idxnew], Z[idxnew] ]).T
@@ -258,6 +261,7 @@ for idx_s, snap in tqdm(enumerate(fixes)):
         gradx_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                             xi = np.array([ X[idx]-dx, Y[idx], Z[idx]]).T )
         gradx = (gradx_p - gradx_m)/ (2*dx)
+        del gradx_p, gradx_m
 
         gradx = np.nan_to_num(gradx, nan =  0)
         grady_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
@@ -265,6 +269,7 @@ for idx_s, snap in tqdm(enumerate(fixes)):
         grady_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                             xi = np.array([ X[idx], Y[idx]-dx, Z[idx]]).T )
         grady = (grady_p - grady_m)/ (2*dx)
+        del grady_p, grady_m
 
         grady = np.nan_to_num(grady, nan =  0)
 
@@ -275,17 +280,19 @@ for idx_s, snap in tqdm(enumerate(fixes)):
         # some nans here
         gradz_m = np.nan_to_num(gradz_m, nan =  0)
         gradz = (gradz_p - gradz_m)/ (2*dx)
+        del gradz_p, gradz_m
 
         grad = np.sqrt(gradx**2 + grady**2 + gradz**2)
         gradr = (mu_x * gradx) + (mu_y*grady) + (mu_z*gradz)
-        # v_grad = np.sqrt( (VX[idx] * gradx)**2 +  (VY[idx] * grady)**2 + (VZ[idx] * gradz)**2)
+        del gradx, grady, gradz
+        gc.collect()
+
         R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx])
         R_lamda[R_lamda < 1e-10] = 1e-10
         fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
-
-        smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) # i have removed the minus
-        #%% Spectra
-        F_photo_temp = np.zeros((192, f_num))
+        smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) # i have remov
+        # Spectra --------------------------------------------------------------
+        F_photo_temp = np.zeros((c.NPIX, f_num))
         try:
             b = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0] 
         except IndexError:
@@ -293,17 +300,29 @@ for idx_s, snap in tqdm(enumerate(fixes)):
         Lphoto2 = 4*np.pi*c.c*smoothed_flux[b] * c.Msol_to_g / (c.t**2)
         EEr = Rad_den[idx]
         if Lphoto2 < 0:
-            Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
+            Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives
         max_length = 4*np.pi*c.c*EEr[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
         Lphoto = np.min( [Lphoto2, max_length])
         reds[i] = Lphoto
-
+        del smoothed_flux, R_lamda, fld_factor, EEr, los,
+        gc.collect()
+if single:
+    Lphoto_this = np.mean(reds)
+else:
     Lphoto_all[idx_s] = np.mean(reds) # save red
     # Lphoto = Lphoto2
 if save:
     if alice:
-        pre_saving = f'/home/s3745597/data1/TDE/tde_comparison/data/'
-        np.savetxt(f'{pre_saving}red/{sim}_eladred_{first}to{last}.txt', Lphoto_all)
-        np.savetxt(f'{pre_saving}red/{sim}_eladreddays_{first}to{last}.txt', days)
+        pre_saving = f'/home/kilmetisk/data1/TDE/tde_comparison/data/'
+        if single:
+            filepath =  f'{pre_saving}red/{sim}/eladred_d19.csv'
+            data = [snap, day, Lphoto_this]
+            with open(filepath, 'a', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(data)
+            file.close()
+        else:
+            np.savetxt(f'{pre_saving}red/{sim}_eladred_{args.first}to{args.last}.txt', Lphoto_all)
+            np.savetxt(f'{pre_saving}red/{sim}_eladreddays_{args.first}to{args.last}.txt', days)
         print('saved red and days')
 eng.exit()

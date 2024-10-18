@@ -66,17 +66,7 @@ if alice:
     mstar = args.mass
     rstar = args.radius
     Mbh = args.blackhole
-    single = args.single
-
-    if Mbh == 10_000:
-        fixes = [272] # [164, 237, 313]
-        print('BH 4')
-    elif Mbh == 100_000:
-        fixes = [302] # [208, 268,]# 365]
-        print('BH 5')
-    else:
-        fixes = [351]
-        print('BH 6')
+    fixes = [args.only]
     Mbh = float(Mbh)
     rg = 2*Mbh/c.c**2
     Rt = rstar * (Mbh/mstar)**(1/3)
