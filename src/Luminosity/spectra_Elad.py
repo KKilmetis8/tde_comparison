@@ -33,7 +33,7 @@ from src.Utilities.parser import parse
 #%% Choose parameters -----------------------------------------------------------------
 save = True
 if alice:
-    pre = '/home/s3745597/data1/TDE/'
+    pre = '/home/kilmetisk/data1/TDE/'
     args = parse()
     sim = args.name
     mstar = args.mass
