@@ -6,17 +6,10 @@ Created on Fri Oct 11 16:55:12 2024
 @author: konstantinos
 """
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Oct 10 14:17:38 2024
-
-@author: konstantinos
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as col
+
 import colorcet
 
 import src.Utilities.prelude as c
@@ -40,25 +33,33 @@ extra = 'beta1S60n1.5Compton'
 fig, ax = plt.subplots(1,1, figsize = (5,4), tight_layout = True, sharex=True)
 for Mbh, co in zip(Mbhs, cols):
     #DeltaE = mstar/rstar * ( (Mbh/mstar)**(1/3) - 1 )
-    data = np.genfromtxt(f'{pre}eladred{Mbh}.csv', delimiter = ',').T
-    days = data[1]
-    L = data[2] / (4*np.pi) # CAREFUL
     data = np.genfromtxt(f'{pre}eladred{Mbh}_d19.csv', delimiter = ',').T
-    days2 =  data[1]
-    L2 = data[2] / (4*np.pi)
+    days = data[1]
+    sorter = np.argsort(days)
+    
+    L = data[2] / (4*np.pi) # CAREFUL
+    if Mbh == 6:
+        L[163:] *= 4*np.pi
+    
     peak4, peaktime4 = peak_finder(L, days)
     # Plot    
-    ax.scatter(days, L, color=co, lw = 2)
+    ax.plot(days[sorter], L[sorter], color=co, lw = 0.5, marker = 'o', markersize = 2)
 
-    ax.plot(peaktime4, peak4, c = 'white', marker = 'X', markersize = 15, 
-            markeredgecolor = co, markeredgewidth = 2)
+    ax.plot(peaktime4, peak4, c = 'white', marker = 'X', markersize = 8, 
+            markeredgecolor = co, markeredgewidth = 0.65, alpha = 0.75)
     ax.axhline(Leddington(10**Mbh), ls = '--', c = co)
+    
+    # Text
+    ax.text(0.9, Leddington(10**Mbh) * 0.35, f'$10^{Mbh}$ $M_\odot$', color = co,
+                fontsize = 14)
+    ax.text(1.6, Leddington(10**Mbh) * 1.3,'$L_\mathrm{Edd}$', color = co,
+                fontsize = 14 )
 
 # Make nice
 ax.set_yscale('log')
 ax.set_xlim(0)
-ax.set_ylim(1e41)
+ax.set_ylim(5e39)
 
-ax.set_xlabel('Time $[t_\mathrm{FB}]$', fontsize = 14)
-ax.set_ylabel('$L_\mathrm{bol}$ [erg/s]', fontsize = 14)
+ax.set_xlabel('Time $[t_\mathrm{FB}]$', fontsize = 16)
+ax.set_ylabel('$L_\mathrm{FLD}$ [erg/s]', fontsize = 16)
 
