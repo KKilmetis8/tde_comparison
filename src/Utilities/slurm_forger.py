@@ -9,9 +9,9 @@ Created on Wed Oct 9
 import numpy as np
 pre = '/home/kilmetisk/data1/TDE/'
 
-Mbh = '10000' # 10000, 100000, 1e+06
-suffix = 'beta1S60n1.5ComptonHiRes'
-res = 'h'  # 'f' for fiducial, 'h' for HiRes, 's' for super high res,
+Mbh = '1e+06' # 10000, 100000, 1e+06
+suffix = 'beta1S60n1.5Compton'
+res = 'f'  # 'f' for fiducial, 'h' for HiRes, 's' for super high res,
            # 'd' double rad
 if Mbh == '10000':
     runnos = np.arange(0, 22) + 1
@@ -50,7 +50,7 @@ if Mbh == '1e+06':
 
 for runno, first, last in zip(runnos, firsts, lasts):
     # Open file and read it
-    f = open(f'{pre}slurms/proto_elad_red.sh', 'r')
+    f = open(f'{pre}slurms/proto_elad_photo.sh', 'r')
     g = f.read()
     f.close()
 
@@ -64,7 +64,7 @@ for runno, first, last in zip(runnos, firsts, lasts):
     g = g.replace('<suffix>', str(suffix))
     g = g.replace('<res>', str(res))
     # Write
-    name = f'{pre}slurms/forged/Elad_red_{m}_{res}_{runno}.slurm'
+    name = f'{pre}slurms/forged/Elad_photo_{m}_{res}_{runno}.slurm'
     h = open(name, 'w')
     h.write(g)
     h.close()

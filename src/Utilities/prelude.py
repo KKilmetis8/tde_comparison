@@ -55,7 +55,7 @@ sec_to_day = 60*60*24
 
 # Healpy
 import healpy as hp
-NSIDE = 4
+NSIDE = 8
 NPIX = hp.nside2npix(NSIDE )#  int(NSIDE * 96)
 
 # Select opacity

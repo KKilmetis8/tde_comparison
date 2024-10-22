@@ -13,7 +13,6 @@ import warnings
 warnings.filterwarnings('ignore')
 import csv
 
-
 # The goal is to replicate Elad's script. No nice code, no nothing. A shit ton
 # of comments though. 
 import numpy as np
@@ -26,8 +25,9 @@ from sklearn.neighbors import KDTree
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 import src.Utilities.prelude as c
+c.NSIDE = 4 # remove that at some point
+c.NPIX = 192
 from scipy.ndimage import uniform_filter1d # does moving mean without fucking the shape up
-import src.Utilities.selectors as s
 from src.Utilities.parser import parse
 
 # Okay, import the constants. Do not be absolutely terrible'''
@@ -302,7 +302,7 @@ for idx_s, snap in enumerate(fixes):
             [ data.append(photosphere[i]) for i in range(c.NPIX)]
             [ data.append(colorsphere[i]) for i in range(c.NPIX)]
             with open(filepath, 'a', newline='') as file:
-                file.write('# snap, time [tfb], photo [Rsol], color [Rsol] NPIX, NPIX cols with photo for each observer, NPIX cols with color for each observer \n')
+                file.write('# snap, time [tfb], photo [Rsol], color [Rsol], NPIX, NPIX cols with photo for each observer, NPIX cols with color for each observer \n')
                 writer = csv.writer(file)
                 writer.writerow(data)
             file.close()
