@@ -302,7 +302,7 @@ for idx_s, snap in enumerate(fixes):
             [ data.append(photosphere[i]) for i in range(c.NPIX)]
             [ data.append(colorsphere[i]) for i in range(c.NPIX)]
             with open(filepath, 'a', newline='') as file:
-                file.write('# snap, time [tfb], photo [Rsol], color [Rsol], NPIX, NPIX cols with photo for each observer, NPIX cols with color for each observer \n')
+                # file.write('# snap, time [tfb], photo [Rsol], color [Rsol], NPIX, NPIX cols with photo for each observer, NPIX cols with color for each observer \n')
                 writer = csv.writer(file)
                 writer.writerow(data)
             file.close()

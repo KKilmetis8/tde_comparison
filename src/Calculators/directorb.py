@@ -30,7 +30,7 @@ if alice:
     mstar = args.mass
     rstar = args.radius
     Mbh = args.blackhole
-    fixes = [args.only]
+    fixes = np.arange(args.first, args.last + 1)
     Mbh = float(Mbh)
     rg = 2*Mbh/c.c**2
     Rt = rstar * (Mbh/mstar)**(1/3)
@@ -54,6 +54,7 @@ else:
 days = []
 mean_dists = []
 for idx_s, snap in enumerate(fixes):
+    print(snap)
     # Load data -----------------------------------------------------------------
     if alice:
         X = np.load(f'{pre}{sim}/snap_{snap}/CMx_{snap}.npy')

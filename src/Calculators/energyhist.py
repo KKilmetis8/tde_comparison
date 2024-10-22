@@ -26,7 +26,7 @@ if alice:
     mstar = args.mass
     rstar = args.radius
     Mbh = args.blackhole
-    # fixes = np.arange(args.first, args.last + 1)
+    fixes = np.arange(args.first, args.last + 1)
     opac_kind = 'LTE'
     m = 'AEK'
     check = 'MONO AEK'
