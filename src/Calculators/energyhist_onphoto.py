@@ -59,8 +59,6 @@ for idx_s, snap in enumerate(fixes):
         Vol = np.load(f'{pre}{sim}/snap_{snap}/Vol_{snap}.npy')
         day = np.loadtxt(f'{pre}{sim}/snap_{snap}/tbytfb_{snap}.txt')
         box = np.load(f'{pre}{sim}/snap_{snap}/box_{snap}.npy')
-        days.append(day)
-        del day
         m = int(np.log10(float(Mbh)))
         photodata = np.genfromtxt(f'{pre}/tde_comparison/data/photosphere/photocolor{m}.csv', delimiter=',')
     else:
