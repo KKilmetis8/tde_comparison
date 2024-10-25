@@ -48,41 +48,85 @@ def extractor(filename):
     not_ranks = ['Box', 'Cycle', 'Time', 'mpi']
     
     # Use lists for clarity
-    T = []
+    X = []
+    Y = []
     Z = []
+    Den = []
+    Vx = []
+    Vy = []
+    Vz = []
+    Vol = []
+    Mass = []
+    IE = []
+    Rad = []
+    T = []
+    P = []
+    star = []
+    
     # Iterate over ranks
     for key in keys:
         if key in not_ranks:
             # Skip whatever is not a mpi rank
             continue
         else:
-            # Sanity Check & Timing
-            printing_ranks = ['rank1','rank2','rank3','rank4','rank5','rank6',
-                              'rank7','rank8','rank9']
-            end_time = datetime.now()
-            if key in printing_ranks:
-                print(key)
-                print('Duration: {}'.format(end_time - start_time))
-                
             # For some reason, having the collumns into variables is way faster.
-            T_data = f[key]['Volume']
-            Z_data = f[key]['tracers']['Star']
-            for i in range(len(T_data)):
-                T.append(T_data[i])
-                Z.append(Z_data[i])
+            x_data = f[key]['CMx']
+            y_data = f[key]['CMy']
+            z_data = f[key]['CMz']
+            den_data = f[key]['Density']
+            vx_data = f[key]['Vx']
+            vy_data = f[key]['Vy']
+            vz_data = f[key]['Vz']
+            vol_data = f[key]['Volume']
+
+            for i in range(len(x_data)):
+                X.append(x_data[i])
+                Y.append(y_data[i])
+                Z.append(z_data[i])
+                Den.append(den_data[i])
+                Vx.append(vx_data[i])
+                Vy.append(vy_data[i])
+                Vz.append(vz_data[i])
+                Vol.append(vol_data[i])
     # Close the file
     f.close()
-    return T, Z
-
+    return X, Y, Z, Den, Vx, Vy, Vz, Vol, 
 #%% Doing the thing
-fixes = [351]
+fixes = [50]
 for fix in fixes:
-    m = 6
-    snapshot = f'{m}/{fix}/snap_full_{fix}.h5'
-    _, Z = extractor(snapshot)   
+    m = 4
+    snapshot = f'{m}/{fix}/snap_{fix}.h5'
+    X, Y, Z, Den, Vx, Vy, Vz, Vol, = extractor(snapshot)   
     # Save to another file.
-    np.save(f'{m}/{fix}/Star_{fix}', Z)
+    pre = f'{m}/{fix}/'
+    suf = f'_{fix}'
+    np.save(pre + 'CMx' + suf, X)   
+    np.save(pre + 'CMy' + suf, Y) 
+    np.save(pre + 'CMz' + suf, Z) 
+    np.save(pre + 'Den' + suf, Den)
+    np.save(pre + 'Vx' + suf, Vx)   
+    np.save(pre + 'Vy' + suf, Vy) 
+    np.save(pre + 'Vz' + suf, Vz)
+    np.save(pre + 'Vol' + suf, Vol)
+#%%
+def time_extractor(mbh, snapno, mass, radius, pre):
+    snap = f'{pre}/snap_{snapno}.h5'
+    f = h5py.File(snap, "r")
+    G = 6.6743e-11 # SI 
+    Msol = 1.98847e30 # kg
+    Rsol = 6.957e8 # m
+    t = np.sqrt(Rsol**3 / (Msol*G )) # Follows from G=1
+    
+    #mbh = 10**m
+    time = np.array(f['Time'])
+    days = time.sum()*t / (24*60*60)
+    tfb = 40 * np.power( mbh/1e6, 1/2) * np.power(mass,-1) * np.power(radius, 3/2)
+    np.savetxt(f'{pre}/tbytfb_{snapno}.txt',[days/tfb])
 
+fix = 50
+mstar = 0.5
+rstar = 0.47
+time_extractor(m, fix, mstar,  rstar, f'{m}/{fix}/')
 
     
     
