@@ -27,10 +27,11 @@ alice, plot = isalice()
 if alice:
     args = parse()
     sim = args.name
-    m = args.mass
-    r = args.radius
+    mstar = args.mass
+    rstar = args.radius
     Mbh = args.blackhole
-    Rt = Mbh**(1/3)
+    Mbh = float(Mbh)
+    Rt = rstar * (Mbh/mstar)**(1/3)
     fixes = np.arange(args.first, args.last + 1)
 else:
     m = 10
@@ -49,8 +50,7 @@ t = np.sqrt(Rsol**3 / (Msol*G))  # Follows from G=1
 c = 3e8 * t/Rsol  # c in simulator units.
 rg = 2*Mbh/c**2
 t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
-apocenter = 0.5 * Rt * (Mbh/m)**(1/3)  # There is m_* hereeee
-
+apocenter = 0.5 * Rt * (Mbh/mstar)**(1/3)  # There is m_* hereeee
 @numba.njit
 def masker(arr, mask):
     len_bound = np.sum(mask)
@@ -66,11 +66,15 @@ def masker(arr, mask):
 # MAIN
 colarr = []
 fixdays = []
-
+massarr = []
+Tarr = []
+smaarr = []
+orbarr = []
+jsqarr = []
 for fix in fixes:
     if alice:
         fix = str(fix)
-        pre = '/home/s3745597/data1/TDE/'
+        pre = '/home/kilmetisk/data1/TDE/'
         # Import
         X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy')
         Y = np.load(pre + sim + '/snap_'  + fix + '/CMy_' + fix + '.npy')
@@ -80,11 +84,11 @@ for fix in fixes:
         Vz = np.load(pre + sim + '/snap_'  +fix + '/Vz_' + fix + '.npy')
         Den = np.load(pre + sim + '/snap_'  + fix + '/Den_' + fix + '.npy')
         Vol = np.load(pre + sim + '/snap_'  + fix + '/Vol_' + fix + '.npy')
+        T = np.load(pre + sim + '/snap_'  + fix + '/T_' + fix + '.npy')
         M = np.multiply(Den, Vol)
         denmask = np.where((Den > 1e-12))[0]
         del Den, Vol
-
-            
+    
         X = X[denmask]
         Y = Y[denmask]
         Z = Z[denmask]
@@ -92,6 +96,7 @@ for fix in fixes:
         Vy = Vy[denmask]
         Vz = Vz[denmask]
         M = M[denmask]
+        T = T[denmask]
     else:
         X = np.load(str(m) + '/' + fix + '/CMx_' + fix + '.npy')
         Y = np.load(str(m) + '/' + fix + '/CMy_' + fix + '.npy')
@@ -111,32 +116,42 @@ for fix in fixes:
     X = masker(X, bound_mask)
     Y = masker(Y, bound_mask)
     Z = masker(Z, bound_mask)
+    T = masker(T, bound_mask)
     # Redefine only for bound
     R_bound = np.sqrt(np.power(X, 2) + np.power(Y, 2) + np.power(Z, 2))
     Vx = masker(Vx, bound_mask)
     Vy = masker(Vy, bound_mask)
     Vz = masker(Vz, bound_mask)
     M = masker(M, bound_mask)
+    Orbital = masker(Orbital, bound_mask)
 
     position = np.array((X, Y, Z)).T  # Transpose for col. vectors
     velocity = np.array((Vx, Vy, Vz)).T
     del X, Y, Z, Vx, Vy, Vz
 
     # EVOKE eccentricity
-    _, ecc = e_calc(position, velocity, Mbh)
-
+    # _, ecc, semi_major_axis = e_calc(position, velocity, Mbh)
     # Cast down to 100 values
     radii = np.logspace(np.log10(0.4*Rt), np.log10(apocenter),
-                        num=100)  # simulator units
+                        num=1000)  # simulator units
 
     if method == 'caster':
-        ecc_cast = THE_SMALL_CASTER(radii, R_bound, ecc, weights=M)
+        print('hi')
+        # ecc_cast = THE_SMALL_CASTER(radii, R_bound, ecc, weights=M)
+        # T_cast = THE_SMALL_CASTER(radii, R_bound, T, weights=M)
+        # semi_major_axis_cast = THE_SMALL_CASTER(radii, R_bound, 
+        #                                       semi_major_axis, weights=M)
+        # orbital_cast = THE_SMALL_CASTER(radii, R_bound, Orbital, weights = M)
+        # jsq_cast = THE_SMALL_CASTER(radii, R_bound, jsq, weights=M)
     if method == 'tree':
         ecc_cast = BONSAI(radii, R_bound, ecc)
 
     # mw_ecc_casted = np.nan_to_num(mw_ecc_casted)
-    colarr.append(ecc_cast)
-
+    #colarr.append(ecc_cast)
+    #Tarr.append(T_cast)
+    #smaarr.append(semi_major_axis_cast)
+    #orbarr.append(orbital_cast)
+    # jsqarr.append(jsq_cast)
     if alice:
         t_by_tfb = np.loadtxt(f'{pre}{sim}/snap_{fix}/tbytfb_{fix}.txt')
         fixdays.append(t_by_tfb)
@@ -146,17 +161,22 @@ for fix in fixes:
         t_by_tfb = day  # /t_fall
         fixdays.append(t_by_tfb)
 
-    if save:
-        if alice:
-            np.savetxt(f'{pre}tde_comparison/data/ecc{sim}.txt', colarr)
-            np.savetxt(f'{pre}tde_comparison/data/eccdays{sim}.txt', fixdays)
-        else:
-             with open('data/ecc'+ str(m) + '.txt', 'a') as file:
-                for i in range(len(colarr)):
-                    file.write('# snap' + ' '.join(map(str, fixes[i])) + '\n')
-                    file.write('# Eccentricity \n') 
-                    file.write(' '.join(map(str, colarr[i])) + '\n')
-                file.close() 
+if save:
+    if alice:
+        print('saving...')
+        #np.savetxt(f'{pre}tde_comparison/data/ecc{sim}.txt', colarr)
+        np.savetxt(f'{pre}tde_comparison/data/ef8/eccdays{sim}.txt', fixdays)
+        #np.savetxt(f'{pre}tde_comparison/data/eccT{sim}.txt', Tarr)
+        #np.savetxt(f'{pre}tde_comparison/data/eccsemimajoraxis{sim}.txt', smaarr)
+        np.savetxt(f'{pre}tde_comparison/data/ef8/eccenergy{sim}.txt', orbarr)
+        # np.savetxt(f'{pre}tde_comparison/data/eccjsq{sim}.txt', jsqarr)
+    else:
+        with open('data/ecc'+ str(m) + '.txt', 'a') as file:
+            for i in range(len(colarr)):
+                file.write('# snap' + ' '.join(map(str, fixes[i])) + '\n')
+                file.write('# Eccentricity \n') 
+                file.write(' '.join(map(str, colarr[i])) + '\n')
+            file.close() 
 # %% Plotting
 if plot:
     img = plt.pcolormesh(radii, fixdays, colarr,
