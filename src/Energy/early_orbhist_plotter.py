@@ -28,6 +28,8 @@ if alice:
     fixes = np.arange(args.first, args.last + 1)
     opac_kind = 'LTE'
     m = int(np.log10(float(Mbh)))
+    deltaE = 2 * mstar/rstar * ((float(Mbh)/mstar)**(1/3) + 1)
+
 else:
     m = 4
     Mbh = 10**m
@@ -38,8 +40,7 @@ else:
     deltaE = 2 * mstar/rstar * ((Mbh/mstar)**(1/3) + 1)
 
 #%% Do it --- -----------------------------------------------------------------
-days = []
-rg = 2*Mbh/c.c**2
+rg = 2*float(Mbh)/(c.c * c.t/c.Rsol_to_cm)**2
 Rt = rstar * (Mbh/mstar)**(1/3) 
 for idx_s, snap in enumerate(fixes):
     # Load data
@@ -54,6 +55,8 @@ for idx_s, snap in enumerate(fixes):
         Vol = np.load(f'{pre}{sim}/snap_{snap}/Vol_{snap}.npy')
         day = np.loadtxt(f'{pre}{sim}/snap_{snap}/tbytfb_{snap}.txt')
         m = int(np.log10(float(Mbh)))
+        Parabolic_CM = np.genfromtxt(f'{pre}/tde_comparison/data/parabolic_orbit_{m}.csv'
+                                     , delimiter = ',')
     else:
         X = np.load(f'{pre}{snap}/CMx_{snap}.npy')
         Y = np.load(f'{pre}{snap}/CMy_{snap}.npy')
@@ -64,26 +67,44 @@ for idx_s, snap in enumerate(fixes):
         Den = np.load(f'{pre}{snap}/Den_{snap}.npy')
         Vol = np.load(f'{pre}{snap}/Vol_{snap}.npy')
         day = np.loadtxt(f'{pre}{snap}/tbytfb_{snap}.txt')
-    step = 100
-    plt.scatter(X[::step], Y[::step], c = np.log10(Den[::step]), cmap = 'cet_fire', s = 0.1)
-    #%%
+        m = int(np.log10(float(Mbh)))
+        Parabolic_CM = np.genfromtxt(f'data/parabolic_orbit_{m}.csv', 
+                                     delimiter = ',')
+
+    #
+    index = np.argmin(np.abs(day - Parabolic_CM.T[0]))
+    X += Parabolic_CM.T[1][index]
+    Y += Parabolic_CM.T[2][index]
+    VX += Parabolic_CM.T[3][index]
+    VY += Parabolic_CM.T[4][index]
+
     R = np.sqrt(X**2 + Y**2 + Z**2)
     V = np.sqrt(VX**2 + VY**2 + VZ**2)
     Orb = 0.5*V**2 - Mbh/(R - rg) 
     Mass = np.multiply(Vol, Den)
     del X, Y, Z, VX, VY, VZ,
     
-    plt.figure(figsize = (3,3), dpi = 300)
-    plt.hist(Orb/deltaE, color='k', edgecolor = 'white', bins = 20, 
-             range = (-1000, 1000), density = False, weights = Mass,)
-    # plt.xlim(-10, 10)
-    plt.text(350, 1e-1, f'Min: {np.min(Orb/deltaE):.0f}', 
+    fig, axs = plt.subplots(1, 2, figsize = (6,3), dpi = 300, tight_layout = True)
+    axs[0].hist(Orb/deltaE, color='k', bins = 100, 
+             range = (-5, 5), weights = Mass,)
+    axs[0].axvline(1, c = c.AEK, ls ='--')
+    axs[0].axvline(-1, c = c.AEK, ls ='--')
+    axs[0].axvline(0, c = 'white', ls =':')
+
+    axs[0].set_ylim(1e-4, 3e-2)
+
+    axs[1].hist(Orb/deltaE, color='k', bins = 1000, 
+             range = (-1000, 1000),  weights = Mass,)
+    axs[1].text(100, 1e-2, f'Min: {np.min(Orb/deltaE):.0f}', 
              bbox = dict(boxstyle='square', facecolor='white', alpha=0.5))
-    plt.yscale('log')
-    plt.xlabel('Orbital Energy $[\Delta E_\mathrm{min}]$')
-    plt.ylabel('Mass weighted Counts')
-    plt.ylim(1e-9, 1)
-    plt.title(f'$10^{m} M_\odot$ $|$ {day:.3f} $t_\mathrm{{FB}}$')
+    axs[1].set_ylim(1e-15, 2)
+
+    # Make pretty 
+    axs[0].set_yscale('log')
+    axs[1].set_yscale('log')
+    axs[0].set_xlabel('Orbital Energy $[\Delta E_\mathrm{min}]$')
+    axs[0].set_ylabel('Mass weighted Counts')
+    fig.suptitle(f'$10^{m} M_\odot$ $|$ {day:.3f} $t_\mathrm{{FB}}$', y = 0.97)
 
     if alice:
         # Save plot
