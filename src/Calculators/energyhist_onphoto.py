@@ -97,8 +97,9 @@ for idx_s, snap in enumerate(fixes):
     mean_IE = np.mean(Eie[mask])
     
     if alice:
+        m = int(np.log10(float(Mbh)))
         pre_saving = f'/home/kilmetisk/data1/TDE/tde_comparison/data/'
-        filepath =  f'{pre_saving}/energyhist/energies_photo.csv'
+        filepath =  f'{pre_saving}/energyhist/{m}energies_photo.csv'
         data = [day, mean_orb, mean_IE, mean_rad]
         with open(filepath, 'a', newline='') as file:
             writer = csv.writer(file)
