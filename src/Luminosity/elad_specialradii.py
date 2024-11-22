@@ -51,16 +51,16 @@ if alice:
     m = 'AEK'
     check = 'MONO AEK'
 else:
-    m = 5
+    m = 4
     pre = f'{m}/'
-    fixes = [236]
+    fixes = [297]
     opac_kind = 'LTE'
     mstar = 0.5
     rstar = 0.47
 #%% Opacities -----------------------------------------------------------------
 # Freq range
-f_min = c.Kb * 1e3 / c.h
-f_max = c.Kb * 3e13 / c.h
+f_min = c.kb * 1e3 / c.h
+f_max = c.kb * 3e13 / c.h
 f_num = 1_000
 frequencies = np.logspace(np.log10(f_min), np.log10(f_max), f_num)
 
@@ -75,32 +75,67 @@ rossland = np.loadtxt(f'{opac_path}/ross.txt')
 def linearpad(D0,z0):
     factor = 100
     dz = z0[-1] - z0[-2]
-    # print(np.shape(D0))
     dD = D0[:,-1] - D0[:,-2]
     
     z = [zi for zi in z0]
     z.append(z[-1] + factor*dz)
     z = np.array(z)
-    #D = [di for di in D0]
 
     to_stack = np.add(D0[:,-1], factor*dD)
     to_stack = np.reshape(to_stack, (len(to_stack),1) )
     D = np.hstack((D0, to_stack))
-    #D.append(to_stack)
     return np.array(D), z
 
 def pad_interp(x,y,V):
-    Vn, xn = linearpad(V, x)
-    Vn, xn = linearpad(np.fliplr(Vn), np.flip(xn))
+    Vn, xn = new_interp(V, x)
+    Vn, xn = new_interp(np.fliplr(Vn), np.flip(xn))
     Vn = Vn.T
-    Vn, yn = linearpad(Vn, y)
-    Vn, yn = linearpad(np.fliplr(Vn), np.flip(yn))
+    Vn, yn = new_interp(Vn, y)
+    Vn, yn = new_interp(np.fliplr(Vn), np.flip(yn))
     Vn = Vn.T
     return xn, yn, Vn
 
+def new_interp(V, y, extrarows = 60):
+    # Low extrapolation
+    yslope_low = y[1] - y[0]
+    y_extra_low = [y[0] - yslope_low * (i + 1) for i in range(extrarows)]
+    
+    # High extrapolation
+    yslope_h = y[-1] - y[-2]
+    y_extra_high = [y[-1] + yslope_h * (i + 1) for i in range(extrarows)]
+    
+    # Stack, reverse low to stack properly
+    yn = np.concatenate([y_extra_low[::-1], y, y_extra_high])
+    
+    # 2D low
+    elad = 5
+    Vslope_low = V[1, :] - V[0, :]
+    Vextra_low = [V[0, :] - elad*Vslope_low * (i + 1) for i in range(extrarows)]
+    
+    # 2D high
+    Vslope_high = V[-1, :] - V[-2, :]  # Linear difference
+    Vextra_high = [V[-1, :] + Vslope_high * (i + 1) for i in range(extrarows)]
+
+    Vn = np.vstack([Vextra_low[::-1], V, Vextra_high]) 
+
+    return Vn, yn
 T_cool2, Rho_cool2, rossland2 = pad_interp(T_cool, Rho_cool, rossland.T)
 _, _, plank2 = pad_interp(T_cool, Rho_cool, plank.T)
 
+import matplotlib.pyplot as plt
+import matplotlib.colors as colors
+img = plt.pcolormesh(np.log10(np.exp(T_cool2)), np.log10(np.exp(Rho_cool2)), 
+                     np.exp(rossland2), cmap = 'cet_CET_L1_r', 
+                     norm = colors.LogNorm(vmin = 1e-9, vmax = 1e-6))
+plt.axhline(np.log10(np.exp(np.min(Rho_cool))))
+plt.axhline(np.log10(np.exp(np.max(Rho_cool))))
+plt.axvline(np.log10(np.exp(np.min(T_cool))))
+plt.axvline(np.log10(np.exp(np.max(T_cool))))
+plt.colorbar(img)
+plt.xlabel('logT')
+plt.ylabel(r'log $ \rho $')
+
+#%%
 # MATLAB GOES WHRRRR, thanks Cindy.
 eng = matlab.engine.start_matlab()
 
@@ -142,10 +177,10 @@ for idx_s, snap in enumerate(fixes):
 
     Rad = Rad[denmask]
     Vol = Vol[denmask]
-    Rad_den = np.multiply(Rad,Den)
+    Rad_den = np.multiply(Rad, Den)
     del Rad            
     R = np.sqrt(X**2 + Y**2 + Z**2)
-    #%% Cross dot -----------------------------------------------------------------
+    # Cross dot -----------------------------------------------------------------
     observers_xyz = hp.pix2vec(c.NSIDE, range(c.NPIX))
     # Line 17, * is matrix multiplication, ' is .T
     observers_xyz = np.array(observers_xyz).T
@@ -153,13 +188,14 @@ for idx_s, snap in enumerate(fixes):
     cross_dot[cross_dot<0] = 0
     cross_dot *= 4/c.NPIX
 
-    #%% Tree ----------------------------------------------------------------------
+    # Tree ----------------------------------------------------------------------
     xyz = np.array([X, Y, Z]).T
     N_ray = 5_000
     time_start = 0
     colorsphere = []
     photosphere = []
     for i in range(c.NPIX):
+        i = 100
         # Progress 
         time_end = time.time()
         print(f'Snap: {snap}, Obs: {i}', flush=False)
@@ -208,8 +244,8 @@ for idx_s, snap in enumerate(fixes):
         idx = [ int(idx[i][0]) for i in range(len(idx))] # no -1 because we start from 0
         d = Den[idx] * c.den_converter
         t = T[idx]
-
-        # Interpolate ----------------------------------------------------------
+        R = np.sqrt(X**2 + Y**2 + Z**2)[idx]
+        # Interpolate ---------------------------------------------------------
         sigma_rossland = eng.interp2(T_cool2,Rho_cool2,rossland2,np.log(t),np.log(d),'linear',0)
         sigma_rossland = [sigma_rossland[0][i] for i in range(N_ray)]
         sigma_rossland_eval = np.exp(sigma_rossland) 
@@ -220,7 +256,7 @@ for idx_s, snap in enumerate(fixes):
         del sigma_rossland, sigma_plank 
         gc.collect()
 
-        # Optical Depth ---------------------------------------------------------------
+        # Optical Depth -------------------------------------------------------
         # Okay, line 232, this is the hard one.
         r_fuT = np.flipud(r.T)
         kappa_rossland = np.flipud(sigma_rossland_eval) 
@@ -228,7 +264,7 @@ for idx_s, snap in enumerate(fixes):
         k_effective = np.sqrt(3 * np.flipud(sigma_plank_eval) * np.flipud(sigma_rossland_eval)) 
         los_effective = - np.flipud(sci.cumulative_trapezoid(k_effective, r_fuT, initial = 0)) * c.Rsol_to_cm
 
-        # Red -----------------------------------------------------------------------
+        # Red -----------------------------------------------------------------
         # Get 20 unique, nearest neighbors
         xyz3 = np.array([X[idx], Y[idx], Z[idx]]).T
         xyz3 = np.array([X[idx], Y[idx], Z[idx]]).T
@@ -277,20 +313,20 @@ for idx_s, snap in enumerate(fixes):
         R_lamda[R_lamda < 1e-10] = 1e-10
         fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
         smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) # i have remov
-        # Spectra --------------------------------------------------------------
+        # Spectra -------------------------------------------------------------
         try:
             b = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0] 
         except IndexError:
             b = 3117 # elad_b = 3117
-
-        # Colorsphere ---------------------------------------------------------------------
+        print(b)
+        # Colorsphere ---------------------------------------------------------
         los_effective[los_effective>30] = 30
         b2 = np.argmin(np.abs(los_effective-5))
         
         # Save
         photosphere.append(r[b])
         colorsphere.append(r[b2])
-
+        break
     #%% Save data ------------------------------------------------------------------
     if save:
         if alice:

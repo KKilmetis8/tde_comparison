@@ -88,20 +88,20 @@ tidal_scatter = go.Scatter3d(z=z_rt, y=y_rt, x=x_rt,
                               marker=dict(color='black', size=2))
 # funnel_scatter = go.Scatter3d(z=funnel_xyz[0], y=funnel_xyz[1], x=funnel_xyz[2],
 #                                     marker=dict(color='blue', size=5))
-# fig = go.Figure(data=[ photosphere_surface, 
-#                       photosphere_scatter, tidal_s/catter,
+fig = go.Figure(data=[ photosphere_surface, 
+                      photosphere_scatter, tidal_scatter,
                         
-#                       ])
-# fig.update_layout(title='3D Surface Plot', 
-#                   autosize=False,
-#                   width=1000, height=1000,
-#                   margin=dict(l=65, r=50, b=65, t=90))
-# plot(fig, auto_open=True)
-# fig.show()
+                      ])
+fig.update_layout(title='3D Surface Plot', 
+                  autosize=False,
+                  width=1000, height=1000,
+                  margin=dict(l=65, r=50, b=65, t=90))
+plot(fig, auto_open=True)
+fig.show()
 #%%
-ax = plt.figure(figsize=(4,4), dpi = 300).add_subplot(111, projection='mollweide')
-ax.scatter(not_funnel[1], not_funnel[0], c ='k', marker = 'h', s = 20)
-ax.scatter(, x_ray[0], c ='skyblue', marker = 'h', s = 20)
+# ax = plt.figure(figsize=(4,4), dpi = 300).add_subplot(111, projection='mollweide')
+# ax.scatter(not_funnel[1], not_funnel[0], c ='k', marker = 'h', s = 20)
+# ax.scatter(, x_ray[0], c ='skyblue', marker = 'h', s = 20)
 #%%
 
 x_mask = np.zeros(192)

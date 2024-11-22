@@ -50,15 +50,15 @@ for Mbh, co in zip(Mbhs, cols):
     ax.axhline(Leddington(10**Mbh), ls = '--', c = co)
     
     # Text
-    ax.text(0.9, Leddington(10**Mbh) * 0.35, f'$10^{Mbh}$ $M_\odot$', color = co,
+    ax.text(0.9, Leddington(10**Mbh) * 0.4, f'$10^{Mbh}$ $M_\odot$', color = co,
                 fontsize = 14)
     ax.text(1.6, Leddington(10**Mbh) * 1.3,'$L_\mathrm{Edd}$', color = co,
                 fontsize = 14 )
 
 # Make nice
 ax.set_yscale('log')
-ax.set_xlim(0)
-ax.set_ylim(5e39)
+ax.set_xlim(0.685)
+ax.set_ylim(2.5e41)
 
 ax.set_xlabel('Time $[t_\mathrm{FB}]$', fontsize = 16)
 ax.set_ylabel('$L_\mathrm{FLD}$ [erg/s]', fontsize = 16)

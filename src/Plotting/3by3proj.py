@@ -32,7 +32,7 @@ def maker(m, pixel_num, fix, plane, thing, how, star = 'half'):
         rstar = 1
     Rt = rstar * (Mbh/mstar)**(1/3) 
     apocenter = 2 * Rt * (Mbh/mstar)**(1/3)
-    pre = f'{m}{star}/{fix}'
+    pre = f'{m}/{fix}'
     
     # Mass = np.load(pre + '/Mass_' + fix + '.npy')
     Den = np.load(pre + '/Den_' + fix + '.npy')
@@ -103,20 +103,23 @@ def maker(m, pixel_num, fix, plane, thing, how, star = 'half'):
     return xs/apocenter, ys/apocenter, den_cast, apocenter# , days
 
 
-def photo_plot(m, num, snap, opacity_kind, beta, star = 'half'): 
-    filename = f"{m}{star}/{snap}/snap_full_{snap}.h5"
-    thetas, phis, stops, _ = ray_finder(filename)
-    check = ''
-    rays = ray_maker_forest(snap, m, star, check, thetas, phis, stops, num, 
-                            opacity_kind, beta)
+def photo_plot(m, num, snap, opacity_kind, beta, star = 'half', photo = None):
+    if type(photo) == type(None):
+        filename = f"{m}/{snap}/snap_{snap}.h5"
+        thetas, phis, stops, _ = ray_finder(filename)
+        check = ''
+        rays = ray_maker_forest(snap, m, star, check, thetas, phis, stops, num, 
+                                opacity_kind, beta)
+        
     
-
-    _, _, rays_photo, _, _ = get_specialr(rays.T, rays.den, rays.radii, 
-                                          rays.tree_indexes, opacity_kind, 
-                                          select = 'photo' )
-    
-    rays_photo = rays_photo/c.Rsol_to_cm # to solar unit to plot
-    
+        _, _, rays_photo, _, _ = get_specialr(rays.T, rays.den, rays.radii, 
+                                              rays.tree_indexes, opacity_kind, 
+                                              select = 'photo' )        
+        rays_photo = rays_photo/c.Rsol_to_cm # to solar unit to plot
+    else:
+        rays_photo = photo
+        print('new')
+    print(rays_photo)
     # Make zs
     Zs = []
     for iobs in range(0,192):
@@ -178,7 +181,7 @@ plane = 'XY'
 thing = 'Den' # Den or T
 when = 'trial' # early mid late last
 if when == 'trial':
-    fixes4 = ['348'] # 0.65
+    fixes4 = ['297'] # 0.65
     fixes5 = ['365'] # 0.55
     fixes6 = ['683'] # 0.5
     title_txt = 'Time: Trial t/t$_{FB}$'
@@ -202,16 +205,16 @@ if when == 'trial':
 i = 0
 how = 'tree'
 if how == 'tree':
-    res = 50
+    res = 200
 else:
     res = 1000
     
-photo_x4, photo_y4 = photo_plot(4, res, fixes4[i], 'LTE', 1)
-photo_x5, photo_y5 = photo_plot(5, res, fixes5[i], 'LTE', 1)
+photo_x4, photo_y4 = photo_plot(4, res, fixes4[i], 'LTE', 1,   photo = photosphere)
+# photo_x5, photo_y5 = photo_plot(5, res, fixes5[i], 'LTE', 1)
 # photo_x6, photo_y6 = photo_plot(6, res, fixes6[i], 'cloudy', 1)
 #%%
 x4, y4, d4, apo4 = maker(4, res, fixes4[i], plane, thing, how)
-x5, y5, d5, apo5 = maker(5, res, fixes5[i], plane, thing, how)
+# x5, y5, d5, apo5 = maker(5, res, fixes5[i], plane, thing, how)
 # x6, y6, d6, apo6 = maker(6, res, fixes6[i], plane, thing, how)
 
 #%% Plotting
@@ -269,7 +272,7 @@ x5, y5, d5, apo5 = maker(5, res, fixes5[i], plane, thing, how)
 rate = 1.5
 y = 5
 x = y * rate
-fig, ax = plt.subplots(2, 1, clear = True, tight_layout = True, 
+fig, ax = plt.subplots(1, 1, clear = True, tight_layout = True, 
                        figsize = (x,y), sharex=True, sharey=True)
 if how == 'tree':
     vmax = 5
@@ -277,17 +280,17 @@ else:
     vmax = 8
 # Image making ----------------------------------------------------------------
 width = 0.035
-ax[0].pcolormesh(x4, y4, d4, cmap='cet_fire', vmin = 0, vmax = vmax)
-img2 = ax[1].pcolormesh(x5, y5, d5, cmap='cet_fire', vmin = 0, vmax = vmax)
+ax.pcolormesh(x4, y4, d4, cmap='cet_fire', vmin = 0, vmax = vmax)
+# img2 = ax[1].pcolormesh(x5, y5, d5, cmap='cet_fire', vmin = 0, vmax = vmax)
 # ax[2].pcolormesh(x6, y6, d6, cmap='cet_fire', vmin = 0, vmax = vmax)
 
 # Photosphere -----------------------------------------------------------------
-ax[0].plot(photo_x4 / apo4, photo_y4 / apo4, 
+img1 = ax.plot(photo_x4 / apo4, photo_y4 / apo4, 
         marker = 'o', color = 'cyan', ls = '-',
         linewidth = 2, markersize = 10)
-ax[1].plot(photo_x5 / apo5, photo_y5 / apo5, 
-        marker = 'o', color = 'cyan', ls = '-',
-        linewidth = 2, markersize = 10)
+# ax[1].plot(photo_x5 / apo5, photo_y5 / apo5, 
+#         marker = 'o', color = 'cyan', ls = '-',
+#         linewidth = 2, markersize = 10)
 # ax[2].plot(photo_x6 / apo6, photo_y6 / apo6, 
 #         marker = '', color = 'cyan', ls = '-',
 #         linewidth = 1)
@@ -298,15 +301,15 @@ ax[1].plot(photo_x5 / apo5, photo_y5 / apo5,
 # Colorbar --------------------------------------------------------------------
 left, bottom, width, height = 1, 0.14, 0.035, 0.82
 cax = fig.add_axes([left, bottom, width, height]) 
-cb = fig.colorbar(img2, cax=cax)  
+cb = fig.colorbar(img1, cax=cax)  
 cb.ax.tick_params(labelsize=25, pad = 5)
 cb.set_label(r'Density $\log_{10}(\rho)$ [g/cm$^2$]', fontsize = 20, labelpad = 15)
 # Axis labels
-ax[0].text(-1.55, 0.2, r'10$^4 M_\odot$', ha='right', fontsize = 25, color = 'white')
-ax[1].text(-1.55, 0.2, r'10$^5 M_\odot$', ha='right', fontsize = 25, color = 'white')
-ax[1].set_xlabel(plane[0] + r' [x/R$_a$]', ha='center', fontsize = 25 )
-ax[1].set_ylabel(plane[1] + r' [y/R$_a$]', ha='center', fontsize = 25 )
-ax[0].set_ylabel(plane[1] + r' [y/R$_a$]', ha='center', fontsize = 25 )
+ax.text(-1.55, 0.2, r'10$^4 M_\odot$', ha='right', fontsize = 25, color = 'white')
+# ax[1].text(-1.55, 0.2, r'10$^5 M_\odot$', ha='right', fontsize = 25, color = 'white')
+# ax[1].set_xlabel(plane[0] + r' [x/R$_a$]', ha='center', fontsize = 25 )
+# ax[1].set_ylabel(plane[1] + r' [y/R$_a$]', ha='center', fontsize = 25 )
+ax.set_ylabel(plane[1] + r' [y/R$_a$]', ha='center', fontsize = 25 )
 
 #plt.savefig('xyproj.png')#, format = 'pdf', dpi = 400)
     

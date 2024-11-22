@@ -16,6 +16,8 @@ import csv
 
 alice, plot = isalice()
 import src.Utilities.prelude as c
+plt.rcParams['text.usetex'] = False
+
 from src.Utilities.parser import parse
 #%% Choose parameters -----------------------------------------------------------------
 if alice:
@@ -26,10 +28,14 @@ if alice:
     rstar = args.radius
     Mbh = args.blackhole
     fixes = np.arange(args.first, args.last + 1)
-    opac_kind = 'LTE'
     m = int(np.log10(float(Mbh)))
-    deltaE = 2 * mstar/rstar * ((float(Mbh)/mstar)**(1/3) + 1)
-
+    deltaE = mstar/rstar * ((float(Mbh)/mstar)**(1/3) + 1)
+    if m == 4:
+        change = 80
+    if m == 5:
+        change = 131
+    if m == 6:
+        change = 180
 else:
     m = 4
     Mbh = 10**m
@@ -37,7 +43,7 @@ else:
     fixes = [50]
     mstar = 0.5
     rstar = 0.47
-    deltaE = 2 * mstar/rstar * ((Mbh/mstar)**(1/3) + 1)
+    deltaE = mstar/rstar * ((Mbh/mstar)**(1/3) + 1)
 
 #%% Do it --- -----------------------------------------------------------------
 rg = 2*float(Mbh)/(c.c * c.t/c.Rsol_to_cm)**2
@@ -45,7 +51,10 @@ Rt = rstar * (Mbh/mstar)**(1/3)
 for idx_s, snap in enumerate(fixes):
     # Load data
     if alice:
-        X = np.load(f'{pre}{sim}/snap_{snap}/CMx_{snap}.npy')
+        try:
+            X = np.load(f'{pre}{sim}/snap_{snap}/CMx_{snap}.npy')
+        except:
+            continue
         Y = np.load(f'{pre}{sim}/snap_{snap}/CMy_{snap}.npy')
         Z = np.load(f'{pre}{sim}/snap_{snap}/CMz_{snap}.npy')
         VX = np.load(f'{pre}{sim}/snap_{snap}/Vx_{snap}.npy')
@@ -72,11 +81,12 @@ for idx_s, snap in enumerate(fixes):
                                      delimiter = ',')
 
     #
-    index = np.argmin(np.abs(day - Parabolic_CM.T[0]))
-    X += Parabolic_CM.T[1][index]
-    Y += Parabolic_CM.T[2][index]
-    VX += Parabolic_CM.T[3][index]
-    VY += Parabolic_CM.T[4][index]
+    if snap<change:
+        index = np.argmin(np.abs(day - Parabolic_CM.T[0]))
+        X += Parabolic_CM.T[1][index]
+        Y += Parabolic_CM.T[2][index]
+        VX += Parabolic_CM.T[3][index]
+        VY += Parabolic_CM.T[4][index]
 
     R = np.sqrt(X**2 + Y**2 + Z**2)
     V = np.sqrt(VX**2 + VY**2 + VZ**2)
@@ -84,27 +94,27 @@ for idx_s, snap in enumerate(fixes):
     Mass = np.multiply(Vol, Den)
     del X, Y, Z, VX, VY, VZ,
     
-    fig, axs = plt.subplots(1, 2, figsize = (6,3), dpi = 300, tight_layout = True)
-    axs[0].hist(Orb/deltaE, color='k', bins = 100, 
+    fig, axs = plt.subplots(1, 1, figsize = (4,4), dpi = 300,)# tight_layout = True)
+    axs.hist(Orb/deltaE, color='k', bins = 100, 
              range = (-5, 5), weights = Mass,)
-    axs[0].axvline(1, c = c.AEK, ls ='--')
-    axs[0].axvline(-1, c = c.AEK, ls ='--')
-    axs[0].axvline(0, c = 'white', ls =':')
+    axs.axvline(1, c = c.AEK, ls ='--')
+    axs.axvline(-1, c = c.AEK, ls ='--')
+    axs.axvline(0, c = 'white', ls =':')
 
-    axs[0].set_ylim(1e-4, 3e-2)
+    axs.set_ylim(1e-10, 1e-1)
 
-    axs[1].hist(Orb/deltaE, color='k', bins = 1000, 
-             range = (-1000, 1000),  weights = Mass,)
-    axs[1].text(100, 1e-2, f'Min: {np.min(Orb/deltaE):.0f}', 
-             bbox = dict(boxstyle='square', facecolor='white', alpha=0.5))
-    axs[1].set_ylim(1e-15, 2)
+    # axs[1].hist(Orb/deltaE, color='k', bins = 1000, 
+    #          range = (-1000, 1000),  weights = Mass,)
+    # axs[1].text(100, 1e-2, f'Min: {np.min(Orb/deltaE):.0f}', 
+    #          bbox = dict(boxstyle='square', facecolor='white', alpha=0.5))
+    # axs[1].set_ylim(1e-15, 2)
 
     # Make pretty 
-    axs[0].set_yscale('log')
-    axs[1].set_yscale('log')
-    axs[0].set_xlabel('Orbital Energy $[\Delta E_\mathrm{min}]$')
-    axs[0].set_ylabel('Mass weighted Counts')
-    fig.suptitle(f'$10^{m} M_\odot$ $|$ {day:.3f} $t_\mathrm{{FB}}$', y = 0.97)
+    # axs[0].set_yscale('log')
+    axs.set_yscale('log')
+    axs.set_xlabel('Orbital Energy [DeltaE]')
+    axs.set_ylabel('Mass weighted Counts')
+    axs.set_title(f'logMbh : {m}  - time: {day:.3f} t_fb')
 
     if alice:
         # Save plot
@@ -120,3 +130,4 @@ for idx_s, snap in enumerate(fixes):
             writer = csv.writer(file)
             writer.writerow(data)
         file.close()
+

@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 if alice:
-    realpre = '/home/s3745597/data1/TDE/'
+    realpre = '/home/kilmetisk/data1/TDE/'
 else:
     import sys
     sys.path.append('/Users/paolamartire/tde_comparison')

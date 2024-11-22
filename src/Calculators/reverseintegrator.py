@@ -16,7 +16,7 @@ from tqdm import tqdm
 mstar = 0.5  #* c.Msol_to_g     
 rstar = 0.47 #* c.Rsol_to_cm
 G = 1 #c.Gcgs    
-M = 1e6 #* c.Msol_to_g
+M = 1e4 #* c.Msol_to_g
 rg = 2*G*M/(c.c * c.t/c.Rsol_to_cm)**2  
 Rt = rstar * (M/mstar)**(1/3)
 tfb = np.pi/np.sqrt(2) * np.sqrt(rstar**3/(G*mstar)) * np.sqrt(M/mstar) 
@@ -25,12 +25,14 @@ tfb = np.pi/np.sqrt(2) * np.sqrt(rstar**3/(G*mstar)) * np.sqrt(M/mstar)
 # Most Bound
 Rp = Rt * 1
 delta_e = G*M*rstar/Rp**2
-energies = np.arange(-1, 1, step = 0.05) * -delta_e
+# delta_e = mstar/rstar * ( (M/mstar)**(1/3) - 1 )
+
+energies = np.arange(-1, 1.1, step = 0.25/2) * -delta_e
 v0s_ecc = np.sqrt(2 * (energies + G*M/(Rp-rg))) 
 
 # Center of Mass
 v0_par = np.sqrt(2*G*M/(Rt-rg))
-timesteps = np.linspace(0, 0.01*tfb, int(1e5))
+timesteps = np.linspace(0, -0.1*tfb, int(1e5))
 @numba.njit
 def solver(r0, v0, timesteps, what):
     dt = timesteps[1] - timesteps[0]
@@ -93,29 +95,28 @@ rpar, vpar, energy_par = solver(Rt, v0_par, timesteps, 'leapfrog')
 rpar_mag = np.linalg.norm(rpar, axis = 1)
 #%%
 # Save
-import csv
-m = int(np.log10(M))
-filepath =  f'data/parabolic_orbit_{m}.csv'
-with open(filepath, 'a', newline='') as file:
-    writer = csv.writer(file)
-    for time, r, v in zip(timesteps, rpar, vpar):
-        writer.writerow([time, r[0], r[1], v[0], v[1]])
-file.close()
+# import csv
+# m = int(np.log10(M))
+# filepath =  f'data/parabolic_orbit_{m}.csv'
+# with open(filepath, 'a', newline='') as file:
+#     writer = csv.writer(file)
+#     for time, r, v in zip(timesteps, rpar, vpar):
+#         writer.writerow([time/tfb, r[0], r[1], v[0], v[1]])
+# file.close()
 #%%
 # Plot results
 fig, ax = plt.subplots(1,1, figsize=(7, 7), tight_layout = True)
 step = 10 # int(len(timesteps)*1e-5)
-# ax[1].plot(rpar.T[0][::step]/Rt, rpar.T[1][::step]/Rt, c='k', label = '0')
-# ax[0].plot(timesteps[::step]/tfb, energy_par[::step]/delta_e, c='k',
-#            ls = '-', lw = 2)
-for ecc, v0_ecc, col in tqdm(zip(energies, v0s_ecc, c.c40_palette)):
-    recc, _, _ = solver(Rt, v0_ecc,timesteps, 'leapfrog')
+ax.plot(rpar.T[0][::step]/Rt, rpar.T[1][::step]/Rt, c='k', label = '0')
+#ax[0].plot(timesteps[::step]/tfb, energy_par[::step]/delta_e, c='k',
+#           ls = '-', lw = 2)
+#
+for ecc, v0_ecc, col in tqdm(zip(energies, v0s_ecc, c.r20_palette)):
+    recc, _, energy = solver(Rt, v0_ecc,timesteps, 'leapfrog')
     recc_mag = np.linalg.norm(recc, axis = 1)
-    #ax[2].plot(timesteps[::step]/tfb, recc_mag[::step]/Rt, c=col)
-    ax.plot(recc.T[0][::step], recc.T[1][::step], 
+    ax.plot(recc.T[0][::step]/Rt, recc.T[1][::step]/Rt, 
                c=col, label = f'{ecc/delta_e:.2f}', ls = '-', lw = 2)
-    # ax[0].plot(timesteps[::step]/tfb, energy[::step]/delta_e, 
-    #            c=col, ls = '-', lw = 2)
+
 
 ax.plot(0,0, 'o', c='k', markersize = 5, markeredgecolor='k', ls = '')
 ax.legend(ncol = 2, bbox_to_anchor = (1,1))

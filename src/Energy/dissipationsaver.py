@@ -65,9 +65,9 @@ for idx_s, snap in enumerate(fixes):
         VY = np.load(f'{pre}{sim}/snap_{snap}/Vy_{snap}.npy')
         VZ = np.load(f'{pre}{sim}/snap_{snap}/Vz_{snap}.npy')
         # T = np.load(f'{pre}{sim}/snap_{snap}/T_{snap}.npy')
+        Diss = np.load(f'{pre}{sim}/snap_{snap}/Diss_{snap}.npy')
+        # Rad = np.load(f'{pre}{sim}/snap_{snap}/Rad_{snap}.npy')
         Den = np.load(f'{pre}{sim}/snap_{snap}/Den_{snap}.npy')
-        Rad = np.load(f'{pre}{sim}/snap_{snap}/Rad_{snap}.npy')
-        IE = np.load(f'{pre}{sim}/snap_{snap}/IE_{snap}.npy')
         Vol = np.load(f'{pre}{sim}/snap_{snap}/Vol_{snap}.npy')
         day = np.loadtxt(f'{pre}{sim}/snap_{snap}/tbytfb_{snap}.txt')
         Parabolic_CM = np.genfromtxt(f'{pre}/tde_comparison/data/parabolic_orbit_{m}.csv'
@@ -81,10 +81,10 @@ for idx_s, snap in enumerate(fixes):
         VY = np.load(f'{pre}{snap}/Vy_{snap}.npy')
         VZ = np.load(f'{pre}{snap}/Vz_{snap}.npy')
         # T = np.load(f'{pre}{snap}/T_{snap}.npy')
+        Diss = np.load(f'{pre}{snap}/Diss_{snap}.npy')
         Den = np.load(f'{pre}{snap}/Den_{snap}.npy')
-        Rad = np.load(f'{pre}{snap}/Rad_{snap}.npy')
-        IE = np.load(f'{pre}{snap}/IE_{snap}.npy')
-        Vol = np.load(f'{pre}{snap}/Vol_{snap}.npy')
+        # IE = np.load(f'{pre}{snap}/IE_{snap}.npy')
+        # Vol = np.load(f'{pre}{snap}/Vol_{snap}.npy')
         day = np.loadtxt(f'{pre}{snap}/tbytfb_{snap}.txt')
         days.append(day)
 
@@ -102,19 +102,17 @@ for idx_s, snap in enumerate(fixes):
     Orb = 0.5*V**2 - Mbh/(R - rg) 
     hascomeback_mask = Orb < Earr
     Orb *= Mass
-    Rad *= Mass
-    IE *= Mass
     bound_mask = Orb < 0
-    del X, Y, Z, VX, VY, VZ, Vol, Den, R, V
+    del X, Y, Z, VX, VY, VZ, Den, R, V
+    Diss *= Vol
     mask = bound_mask * hascomeback_mask
-    sum_orb = np.sum(Orb[mask])
-    sum_rad = np.sum(Rad[mask])
-    sum_IE = np.sum(IE[mask])
+    sum_diss_masked = np.sum(Diss[mask])
+    sum_diss = np.sum(Diss[bound_mask])
     
     if alice:
         pre_saving = f'/home/kilmetisk/data1/TDE/tde_comparison/data/'
-        filepath =  f'{pre_saving}/energyhist/sum{m}notspecmasked.csv'
-        data = [day, sum_orb, sum_rad, sum_IE]
+        filepath =  f'{pre_saving}/energyhist/sum{m}diss.csv'
+        data = [day, sum_diss, sum_diss_masked]
         with open(filepath, 'a', newline='') as file:
             writer = csv.writer(file)
             writer.writerow(data)

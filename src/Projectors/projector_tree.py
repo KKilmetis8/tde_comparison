@@ -23,7 +23,7 @@ alice, plot = isalice()
 #%%
 alice, plot = isalice()
 if alice:
-    pre = '/home/s3745597/data1/TDE/'
+    pre = '/home/kilmetisk/data1/TDE/'
 else:
     pre = ''
 # Constants & Converter
@@ -94,7 +94,7 @@ if __name__ == '__main__':
 
         if save:
             if alice:
-                pre = f'/home/s3745597/data1/TDE/tde_comparison/data/denproj/{sim}'
+                pre = f'/home/kilmetisk/data1/TDE/tde_comparison/data/denproj/{sim}'
                 np.savetxt(f'{pre}/denproj{sim}{fix}.txt', flat_den)
                 np.savetxt(f'{pre}/xarray{sim}.txt', xs)
                 np.savetxt(f'{pre}/yarray{sim}.txt', ys)
@@ -143,3 +143,4 @@ if __name__ == '__main__':
             ax.set_title('XY Projection', fontsize = 16)
             plt.savefig(f'{snap}T.png')
             plt.show()
+
