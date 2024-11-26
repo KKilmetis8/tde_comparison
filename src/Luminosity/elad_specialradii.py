@@ -17,6 +17,7 @@ import csv
 # of comments though. 
 import numpy as np
 import healpy as hp
+import matplotlib.pyplot as plt
 import scipy.integrate as sci
 from scipy.interpolate import griddata
 import matlab.engine
@@ -25,9 +26,8 @@ from sklearn.neighbors import KDTree
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 import src.Utilities.prelude as c
-c.NSIDE = 4 # remove that at some point
-c.NPIX = 192
-from scipy.ndimage import uniform_filter1d # does moving mean without fucking the shape up
+from src.Opacity.linextrapolator import extrapolator_flipper
+from scipy.ndimage import uniform_filter1d # does moving mean without fucking the shape upn
 from src.Utilities.parser import parse
 
 # Okay, import the constants. Do not be absolutely terrible'''
@@ -71,69 +71,23 @@ Rho_cool = np.loadtxt(f'{opac_path}/rho.txt')
 plank = np.loadtxt(f'{opac_path}/planck.txt')
 rossland = np.loadtxt(f'{opac_path}/ross.txt')
 
-# Fill value none extrapolates
-def linearpad(D0,z0):
-    factor = 100
-    dz = z0[-1] - z0[-2]
-    dD = D0[:,-1] - D0[:,-2]
-    
-    z = [zi for zi in z0]
-    z.append(z[-1] + factor*dz)
-    z = np.array(z)
+T_cool2, Rho_cool2, rossland2 = extrapolator_flipper(T_cool, Rho_cool, rossland.T)
+_, _, plank2 = extrapolator_flipper(T_cool, Rho_cool, plank.T)
 
-    to_stack = np.add(D0[:,-1], factor*dD)
-    to_stack = np.reshape(to_stack, (len(to_stack),1) )
-    D = np.hstack((D0, to_stack))
-    return np.array(D), z
-
-def pad_interp(x,y,V):
-    Vn, xn = new_interp(V, x)
-    Vn, xn = new_interp(np.fliplr(Vn), np.flip(xn))
-    Vn = Vn.T
-    Vn, yn = new_interp(Vn, y)
-    Vn, yn = new_interp(np.fliplr(Vn), np.flip(yn))
-    Vn = Vn.T
-    return xn, yn, Vn
-
-def new_interp(V, y, extrarows = 60):
-    # Low extrapolation
-    yslope_low = y[1] - y[0]
-    y_extra_low = [y[0] - yslope_low * (i + 1) for i in range(extrarows)]
-    
-    # High extrapolation
-    yslope_h = y[-1] - y[-2]
-    y_extra_high = [y[-1] + yslope_h * (i + 1) for i in range(extrarows)]
-    
-    # Stack, reverse low to stack properly
-    yn = np.concatenate([y_extra_low[::-1], y, y_extra_high])
-    
-    # 2D low
-    elad = 5
-    Vslope_low = V[1, :] - V[0, :]
-    Vextra_low = [V[0, :] - elad*Vslope_low * (i + 1) for i in range(extrarows)]
-    
-    # 2D high
-    Vslope_high = V[-1, :] - V[-2, :]  # Linear difference
-    Vextra_high = [V[-1, :] + Vslope_high * (i + 1) for i in range(extrarows)]
-
-    Vn = np.vstack([Vextra_low[::-1], V, Vextra_high]) 
-
-    return Vn, yn
-T_cool2, Rho_cool2, rossland2 = pad_interp(T_cool, Rho_cool, rossland.T)
-_, _, plank2 = pad_interp(T_cool, Rho_cool, plank.T)
-
-import matplotlib.pyplot as plt
-import matplotlib.colors as colors
-img = plt.pcolormesh(np.log10(np.exp(T_cool2)), np.log10(np.exp(Rho_cool2)), 
-                     np.exp(rossland2), cmap = 'cet_CET_L1_r', 
-                     norm = colors.LogNorm(vmin = 1e-9, vmax = 1e-6))
-plt.axhline(np.log10(np.exp(np.min(Rho_cool))))
-plt.axhline(np.log10(np.exp(np.max(Rho_cool))))
-plt.axvline(np.log10(np.exp(np.min(T_cool))))
-plt.axvline(np.log10(np.exp(np.max(T_cool))))
-plt.colorbar(img)
-plt.xlabel('logT')
-plt.ylabel(r'log $ \rho $')
+# import matplotlib.pyplot as plt
+# plt.figure()
+# img = plt.pcolormesh(np.log10(np.exp(T_cool2)), np.log10(np.exp(Rho_cool2)), 
+#                      np.log10(np.exp(rossland2)), cmap = 'cet_CET_L1_r', 
+#                      vmin = - 20, vmax = -10)
+# plt.axhline(np.log10(np.exp(np.min(Rho_cool))))
+# plt.axhline(np.log10(np.exp(np.max(Rho_cool))))
+# plt.axvline(np.log10(np.exp(np.min(T_cool))))
+# plt.axvline(np.log10(np.exp(np.max(T_cool))))
+# plt.colorbar(img)
+# plt.ylim(-15, -7)
+# plt.xlim(4,10)
+# plt.xlabel('logT')
+# plt.ylabel(r'log $ \rho $')
 
 #%%
 # MATLAB GOES WHRRRR, thanks Cindy.

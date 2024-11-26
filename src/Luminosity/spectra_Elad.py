@@ -19,16 +19,12 @@ from scipy.interpolate import griddata
 import matlab.engine
 from tqdm import tqdm
 
-
+from src.Opacity.linextrapolator import extrapolator_flipper
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 import src.Utilities.prelude as c
 import src.Utilities.selectors as s
 from src.Utilities.parser import parse
-
-# Okay, import the constants. Do not be absolutely terrible'''
-    # n_start = snap_no_start
-    # n_end = snap_no_end
 
 #%% Choose parameters -----------------------------------------------------------------
 save = True
@@ -68,8 +64,8 @@ else:
 
 #%% Opacities -----------------------------------------------------------------
 # Freq range
-f_min = c.Kb * 1e3 / c.h
-f_max = c.Kb * 3e13 / c.h
+f_min = c.kb * 1e3 / c.h
+f_max = c.kb * 3e13 / c.h
 f_num = 1_000
 frequencies = np.logspace(np.log10(f_min), np.log10(f_max), f_num)
 
@@ -80,42 +76,8 @@ Rho_cool = np.loadtxt(f'{opac_path}/rho.txt')
 plank = np.loadtxt(f'{opac_path}/planck.txt')
 rossland = np.loadtxt(f'{opac_path}/ross.txt')
 
-# Opacity Interpolation
-# T_interp, Rho_interp = np.meshgrid(T_cool,Rho_cool) all commented out
-# rossland = np.reshape(rossland, (len(T_cool), len(Rho_cool)))
-# plank = np.reshape(plank, (len(T_cool), len(Rho_cool)))
-
-# Fill value none extrapolates
-def linearpad(D0,z0):
-    factor = 100
-    dz = z0[-1] - z0[-2]
-    # print(np.shape(D0))
-    dD = D0[:,-1] - D0[:,-2]
-    
-    z = [zi for zi in z0]
-    z.append(z[-1] + factor*dz)
-    
-    z = np.array(z)
-    
-    #D = [di for di in D0]
-
-    to_stack = np.add(D0[:,-1], factor*dD)
-    to_stack = np.reshape(to_stack, (len(to_stack),1) )
-    D = np.hstack((D0, to_stack))
-    #D.append(to_stack)
-    return np.array(D), z
-
-def pad_interp(x,y,V):
-    Vn, xn = linearpad(V, x)
-    Vn, xn = linearpad(np.fliplr(Vn), np.flip(xn))
-    Vn = Vn.T
-    Vn, yn = linearpad(Vn, y)
-    Vn, yn = linearpad(np.fliplr(Vn), np.flip(yn))
-    Vn = Vn.T
-    return xn, yn, Vn
-
-T_cool2, Rho_cool2, rossland2 = pad_interp(T_cool, Rho_cool, rossland.T)
-_, _, plank2 = pad_interp(T_cool, Rho_cool, plank.T)
+T_cool2, Rho_cool2, rossland2 = extrapolator_flipper(T_cool, Rho_cool, rossland.T)
+_, _, plank2 = extrapolator_flipper(T_cool, Rho_cool, plank.T)
 
 # MATLAB GOES WHRRRR, thanks Cindy.
 eng = matlab.engine.start_matlab()
