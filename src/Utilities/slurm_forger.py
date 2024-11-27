@@ -5,7 +5,6 @@ Created on Wed Oct 9
 
 @author: konstantinos
 """
-
 import numpy as np
 pre = '/home/kilmetisk/data1/TDE/'
 
@@ -50,7 +49,7 @@ if Mbh == '1e+06':
 
 for runno, first, last in zip(runnos, firsts, lasts):
     # Open file and read it
-    f = open(f'{pre}slurms/proto_elad_photo.sh', 'r')
+    f = open(f'{pre}slurms/proto_eladython.slurm', 'r')
     g = f.read()
     f.close()
 
@@ -63,8 +62,9 @@ for runno, first, last in zip(runnos, firsts, lasts):
     g = g.replace('<last>', str(last))
     g = g.replace('<suffix>', str(suffix))
     g = g.replace('<res>', str(res))
+
     # Write
-    name = f'{pre}slurms/forged/Elad_photo_{m}_{res}_{runno}.slurm'
+    name = f'{pre}slurms/forged/Eladython_{m}_{res}_{runno}.slurm'
     h = open(name, 'w')
     h.write(g)
     h.close()

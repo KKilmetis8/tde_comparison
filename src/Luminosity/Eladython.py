@@ -277,12 +277,6 @@ for idx_s, snap in enumerate(fixes):
         reds[i] = Lphoto
         del smoothed_flux, R_lamda, fld_factor, EEr, los,
         gc.collect()
-        
-        if single:
-            Lphoto_this = np.mean(reds) # divides by 192
-            print(Lphoto_this)
-        else:
-            Lphoto_all[idx_s] = np.mean(reds) # save red
             
         # Spectra -------------------------------------------------------------
         los_effective[los_effective>30] = 30
@@ -290,7 +284,7 @@ for idx_s, snap in enumerate(fixes):
         for k in range(b2, len(r)): 
             dr = r[k]-r[k-1]
             Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
-            wien = np.exp( c.h * frequencies / (c.Kb * t[k])) - 1 # Elad: min to avoid overflow
+            wien = np.exp( c.h * frequencies / (c.kb * t[k])) - 1 # Elad: min to avoid overflow
             black_body = frequencies**3 / (c.c**2 * wien)
             F_photo_temp[i,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body # there should be a 4*np.pi*, but doesn't matter because we normalize
 
@@ -301,6 +295,11 @@ for idx_s, snap in enumerate(fixes):
         photosphere.append(r[b])
         colorsphere.append(r[b2])
 
+    if single:
+        Lphoto_this = np.mean(reds) # divides by 192
+        print(Lphoto_this)
+    else:
+        Lphoto_all[idx_s] = np.mean(reds) # save red
     # Lphoto = Lphoto2
     
 if save:
