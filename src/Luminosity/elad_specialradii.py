@@ -32,7 +32,7 @@ from src.Utilities.parser import parse
 
 # Okay, import the constants. Do not be absolutely terrible'''
 
-#%% Choose parameters -----------------------------------------------------------------
+# Choose parameters -----------------------------------------------------------------
 save = True
 if alice:
     pre = '/home/kilmetisk/data1/TDE/'
@@ -57,7 +57,7 @@ else:
     opac_kind = 'LTE'
     mstar = 0.5
     rstar = 0.47
-#%% Opacities -----------------------------------------------------------------
+# Opacities -----------------------------------------------------------------
 # Freq range
 f_min = c.kb * 1e3 / c.h
 f_max = c.kb * 3e13 / c.h
@@ -74,20 +74,50 @@ rossland = np.loadtxt(f'{opac_path}/ross.txt')
 T_cool2, Rho_cool2, rossland2 = extrapolator_flipper(T_cool, Rho_cool, rossland.T)
 _, _, plank2 = extrapolator_flipper(T_cool, Rho_cool, plank.T)
 
-# import matplotlib.pyplot as plt
-# plt.figure()
-# img = plt.pcolormesh(np.log10(np.exp(T_cool2)), np.log10(np.exp(Rho_cool2)), 
-#                      np.log10(np.exp(rossland2)), cmap = 'cet_CET_L1_r', 
-#                      vmin = - 20, vmax = -10)
-# plt.axhline(np.log10(np.exp(np.min(Rho_cool))))
-# plt.axhline(np.log10(np.exp(np.max(Rho_cool))))
-# plt.axvline(np.log10(np.exp(np.min(T_cool))))
-# plt.axvline(np.log10(np.exp(np.max(T_cool))))
-# plt.colorbar(img)
-# plt.ylim(-15, -7)
-# plt.xlim(4,10)
-# plt.xlabel('logT')
-# plt.ylabel(r'log $ \rho $')
+import matplotlib.pyplot as plt
+plt.figure()
+img = plt.pcolormesh(np.log10(np.exp(T_cool)), np.log10(np.exp(Rho_cool)), 
+                     np.log10(np.exp(rossland.T)), cmap = 'cet_CET_CBL2', 
+                     vmin = -12, vmax = -9, edgecolors = 'k', lw = 0.01)
+plt.colorbar(img)
+plt.ylim(-10.1, -8)
+plt.xlim(7.5, 7.8)
+plt.xlabel('logT')
+plt.ylabel(r'log $ \rho $')
+
+for y_index in range(0, 20): # len(rossland.T)):
+    for x_index in range(120, 128):
+        label = np.log10(np.exp(rossland.T[y_index, x_index]))
+        text_x = np.log10(np.exp(T_cool[x_index]))
+        text_y = np.log10(np.exp(Rho_cool[y_index]))
+        plt.text(text_x, text_y, f'{label:.2f}', color='k', 
+                fontsize = 3,
+                ha='center', va='center')
+
+
+#%%
+plt.figure(figsize=(10,10))
+img = plt.pcolormesh(np.log10(np.exp(T_cool2)), np.log10(np.exp(Rho_cool2)), 
+                     np.log10(np.exp(rossland2)), cmap = 'cet_CET_CBL1_r', 
+                     vmin = - 15, vmax = 4)# , edgecolors = 'r', lw = 0.1)
+plt.axhline(np.log10(np.exp(np.min(Rho_cool))), c = 'green', ls = '--')
+plt.axhline(np.log10(np.exp(np.max(Rho_cool))), c = 'green', ls = '--')
+plt.axvline(np.log10(np.exp(np.min(T_cool))), c = 'green', ls = '--')
+plt.axvline(np.log10(np.exp(np.max(T_cool))), c = 'green', ls = '--')
+plt.colorbar(img)
+# plt.ylim(-12, -8.5)
+# plt.xlim(7.3, 8.5)
+plt.xlabel('logT')
+plt.ylabel(r'log $ \rho $')
+
+# for y_index in range(0, 20): # len(rossland.T)):
+#     for x_index in range(120, 138):
+#         label = np.log10(np.exp(rossland2[y_index, x_index]))
+#         text_x = np.log10(np.exp(T_cool2[x_index]))
+#         text_y = np.log10(np.exp(Rho_cool2[y_index]))
+#         plt.text(text_x, text_y, f'{label:.2f}', color='r', 
+#                 fontsize = 3, rotation = 45, 
+#                 ha='center', va='center')
 
 #%%
 # MATLAB GOES WHRRRR, thanks Cindy.

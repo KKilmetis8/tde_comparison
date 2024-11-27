@@ -25,22 +25,19 @@ def peak_finder(red, t, lim = 0.4):
 def Leddington(M):
     return 1.26e38 * M
 pre = 'data/red/'
-Mbhs = [4, 5, 6]
+Mbhs = [4] # , 5, 6]
 cols = ['k', c.AEK, 'maroon']
 extra = 'beta1S60n1.5Compton'
 
 fig, ax = plt.subplots(1,1, figsize = (5,4), tight_layout = True, sharex=True)
 for Mbh, co in zip(Mbhs, cols):
     #DeltaE = mstar/rstar * ( (Mbh/mstar)**(1/3) - 1 )
-    data = np.genfromtxt(f'{pre}eladred{Mbh}_opac10.csv', delimiter = ',').T
+    data = np.genfromtxt(f'{pre}/5ex_eladred{Mbh}.csv', delimiter = ',').T
     days = data[1]
     sorter = np.argsort(days)
     
-    L = data[2] / (4*np.pi)
-    # L = data[2] / (4*np.pi) # CAREFUL
-    # if Mbh == 6:
-    #     L[163:] *= 4*np.pi
-    
+    L = data[2]
+
     peak4, peaktime4 = peak_finder(L[sorter], days[sorter])
     # Plot    
     ax.plot(days[sorter], L[sorter], color=co, lw = 0.5,

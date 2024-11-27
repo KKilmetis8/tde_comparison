@@ -42,7 +42,7 @@ def equator_photo(rays_photo):
     # Sort and keep 16 closest to equator
     idx_z_sorted = np.argsort(np.abs(Zs))
     
-    size = 16
+    size = 14
     plus_x = []
     neg_x = []
     plus_y = []
@@ -83,8 +83,8 @@ def equator_photo(rays_photo):
     photo_y = np.concatenate((plus_y[psort],  np.flip(neg_y[nsort], )))
     
     # Close the loop
-    #photo_x = np.append(photo_x, photo_x[0])
-    #photo_y = np.append(photo_y, photo_y[0])
+    # photo_x = np.append(photo_x, photo_x[0])
+    # photo_y = np.append(photo_y, photo_y[0])
     
     return photo_x, photo_y
 
@@ -95,7 +95,7 @@ when = 'test' # choices: early mid late test
 plane = 'XY'
 if when == 'test':
     # 0.42, 0.82, 1.22
-    fixes4 = [160, 237, 297] 
+    fixes4 = [180, 297, 348] 
     fixes5 = [205, 285, 346] # 0.5, 1, 1.4
     fixes6 = [295, 376, 412] # 0.5, should be 376 and 414 but ok
     title_txt = 'Time: Trial t/t$_{FB}$'
@@ -116,7 +116,7 @@ for f4, f5, f6, i in zip(fixes4, fixes5, fixes6, range(3)):
     y6 = np.loadtxt(f'{prepre}{pre}1e+06{suf}/yarray{pre}1e+06{suf}.txt')
     
     # Load photosphere
-    photodata4 = np.genfromtxt('data/photosphere/photocolor4.csv', delimiter = ',')
+    photodata4 = np.genfromtxt('data/photosphere/5ex_photocolor4.csv', delimiter = ',')
     photodata5 = np.genfromtxt('data/photosphere/photocolor5.csv', delimiter = ',')
     photodata6 = np.genfromtxt('data/photosphere/photocolor6.csv', delimiter = ',')
     
@@ -149,14 +149,19 @@ for f4, f5, f6, i in zip(fixes4, fixes5, fixes6, range(3)):
                                 color = 'c', fill = False, lw = 1))
     
     if i == 0:
-        ax[i,0].set_title('0.42 $t_\mathrm{FB}$', fontsize = 17)
-        ax[i,1].set_title('0.82 $t_\mathrm{FB}$', fontsize = 17)
-        ax[i,2].set_title('1.22 $t_\mathrm{FB}$', fontsize = 17)
+        ax[i,0].set_title('$10^4 M_\odot$', fontsize = 17)
+        ax[i,1].set_title('$10^5 M_\odot$', fontsize = 17)
+        ax[i,2].set_title('$10^6 M_\odot$', fontsize = 17)
+
+        # ax[i,0].set_title('0.42 $t_\mathrm{FB}$', fontsize = 17)
+        # ax[i,1].set_title('0.82 $t_\mathrm{FB}$', fontsize = 17)
+        # ax[i,2].set_title('1.22 $t_\mathrm{FB}$', fontsize = 17)
 
     # Plot photosphere
+    ax[i,0].plot(photo_x4 /Rt4, photo_y4/Rt4, '-o', 
+                 c = 'magenta', markersize = 3)
     if i == 3:
-        # ax[i,0].plot(photo_x4 /Rt4, photo_y4/Rt4, '-o', 
-        #              c = 'magenta', markersize = 1)
+
         # ax[i,1].plot(photo_x5/Rt5, photo_y5/Rt5, '-o', 
         #              c = 'magenta', markersize = 1)
         # ax[i,2].plot(photo_x6/Rt6, photo_y6/Rt6, '-o', 
@@ -184,7 +189,7 @@ for f4, f5, f6, i in zip(fixes4, fixes5, fixes6, range(3)):
 ax[2,1].set_xlabel('X $[R_\mathrm{T}]$', fontsize = 17)
 ax[1,0].set_ylabel('Y $[R_\mathrm{T}]$', fontsize = 17)
 cb = fig.colorbar(img, cax=fig.add_axes([0.93, 0.11, 0.03, 0.78]))
-cb.set_label('$\log_{10} (\sigma) $ [g/cm$^2$]', fontsize = 17)
+cb.set_label('$\log_{10} (\Sigma) $ [g/cm$^2$]', fontsize = 17)
 # ax[3,2].set_xlabel('Y Coordinate')
 
     
