@@ -8,7 +8,7 @@ Created on Wed Oct 9
 import numpy as np
 pre = '/home/kilmetisk/data1/TDE/'
 
-Mbh = '1e+06' # 10000, 100000, 1e+06
+Mbh = '10000' # 10000, 100000, 1e+06
 suffix = 'beta1S60n1.5Compton'
 res = 'f'  # 'f' for fiducial, 'h' for HiRes, 's' for super high res,
            # 'd' double rad

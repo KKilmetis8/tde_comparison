@@ -316,7 +316,7 @@ if save:
             
         # Save spectrum
         np.savetxt(f'{pre_saving}blue/{sim}/freqs.txt', frequencies)
-        np.savetxt(f'{pre_saving}blue/{sim}/5ex_{m}spectra{snap}.txt', F_photo)
+        np.savetxt(f'{pre_saving}blue/{sim}/fitex_{m}spectra{snap}.txt', F_photo)
         
         # Save photocolor
         filepath =  f'{pre_saving}photosphere/5ex_photocolor{m}.csv'
