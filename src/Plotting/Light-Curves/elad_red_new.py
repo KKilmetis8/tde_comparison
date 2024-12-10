@@ -32,7 +32,7 @@ extra = 'beta1S60n1.5Compton'
 fig, ax = plt.subplots(1,1, figsize = (5,4), tight_layout = True, sharex=True)
 for Mbh, co in zip(Mbhs, cols):
     #DeltaE = mstar/rstar * ( (Mbh/mstar)**(1/3) - 1 )
-    data = np.genfromtxt(f'{pre}/5ex_eladred{Mbh}.csv', delimiter = ',').T
+    data = np.genfromtxt(f'{pre}/fitex_eladred{Mbh}.csv', delimiter = ',').T
     days = data[1]
     sorter = np.argsort(days)
     

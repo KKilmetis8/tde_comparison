@@ -20,7 +20,7 @@ else:
     realpre = ''
 
 import numba
-
+from tqdm import tqdm
 # @numba.njit
 # def masker(Den, X, Y, Z):
 #     denmask = np.where((Den > 1e-12))[0]
@@ -54,11 +54,10 @@ def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False
         else: 
             pre = f'{m}/{fix}'
             # CM Position Data
-        X = np.load(f'{realpre}{pre}/CMx_{fix}.npy')
-        Y = np.load(f'{realpre}{pre}/CMy_{fix}.npy')
-        Z = np.load(f'{realpre}{pre}/CMz_{fix}.npy')
-        Den = np.load(f'{realpre}{pre}/Den_{fix}.npy')
-
+        X = np.load(f'{pre}/CMx_{fix}.npy')
+        Y = np.load(f'{pre}/CMy_{fix}.npy')
+        Z = np.load(f'{pre}/CMz_{fix}.npy')
+        Den = np.load(f'{pre}/Den_{fix}.npy')
 
     else:
         sim = parsed.name
@@ -72,12 +71,13 @@ def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False
         Z = np.load(f'{realpre}{sim}/snap_{fix}/CMz_{fix}.npy')
         Den = np.load(f'{realpre}{sim}/snap_{fix}/Den_{fix}.npy')
 
-    x_start = -apocenter
-    x_stop = 0.2 * apocenter
+    WOW = 1
+    x_start = -apocenter * WOW
+    x_stop = 0.2 * apocenter * WOW
     # x_num = pixel_num # np.abs(x_start - x_stop)
     xs = np.linspace(x_start, x_stop, num = x_num )
-    y_start = -0.2 * apocenter 
-    y_stop = 0.2 * apocenter
+    y_start = -0.2 * apocenter  * WOW
+    y_stop = 0.2 * apocenter * WOW
     # y_num = pixel_num # np.abs(y_start - y_stop)
     ys = np.linspace(y_start, y_stop, num = y_num)
     z_start = -2 * Rt
@@ -101,7 +101,7 @@ def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False
     gridded_indexes =  np.zeros(( len(xs), len(ys), len(zs) ))
     gridded_den =  np.zeros(( len(xs), len(ys), len(zs) ))
     gridded_mass =  np.zeros(( len(xs), len(ys), len(zs) ))
-    for i in range(len(xs)):
+    for i in tqdm(range(len(xs))):
         for j in range(len(ys)):
             for k in range(len(zs)):
                 queried_value = [xs[i], ys[j], zs[k]]
@@ -133,9 +133,12 @@ if __name__ == '__main__':
     Mbh = 10**m 
     Rt =  Mbh**(1/3) # Msol = 1, Rsol = 1
     check = 'fid'
-    what = 'temperature'
-    gridded_indexes, grid_den, grid_mass, xs, ys, zs = grid_maker(394, m, check, what,
-                                                                  False, 200, 200, 100)
+    what = 'density'
+    gridded_indexes, grid_den, grid_mass, xs, ys, zs = grid_maker(297, m,
+                                                                  'half', check, 
+                                                                  50, 50, 
+                                                                  z_num = 10, 
+                                                                  mass_weight=True)
 #%% Plot
     plot = True
     if plot:
@@ -172,7 +175,7 @@ if __name__ == '__main__':
         cb = plt.colorbar(img)
         cb.set_label(cb_text, fontsize = 14)
         ax.set_title('Midplane', fontsize = 16)
-        ax.set_xlim(-40,)
-        ax.set_ylim(-30,)
-        ax.plot(np.array(photo_x) / Rt, np.array(photo_y) / Rt, 
-                marker = 'o', color = 'springgreen', linewidth = 3)
+        
+        # ax.set_xlim(-40,)
+        # ax.set_ylim(-30,)
+

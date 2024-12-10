@@ -52,12 +52,21 @@ numden_converter = 1/Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 day_to_sec = 60*60*24
 sec_to_yr = 1 / (60*60*24*365)
+kEv_to_K = 11604525.00617
 
 # Healpy
 import healpy as hp
 NSIDE = 4
-NPIX = hp.nside2npix(NSIDE )#  int(NSIDE * 96)
+NPIX = hp.nside2npix(NSIDE)#  int(NSIDE * 96)
 
+# MATLAB shit
+mat_eq_obs = np.array([71, 70, 91, 90, 87, 86, 107, 106, 103, 
+                       102, 123, 87, 119, 118, 75, 74,]) - 1
+python_eq_obs = np.arange(88, 104)
+# i = 6
+# steart = i * 16
+# stop = (i+1) * 16 
+# mat_eq_obs = np.arange(steart, stop)
 # Select opacity
 def select_opacity(m):
     if m==6:

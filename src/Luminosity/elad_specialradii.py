@@ -26,7 +26,7 @@ from sklearn.neighbors import KDTree
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 import src.Utilities.prelude as c
-from src.Opacity.linextrapolator import extrapolator_flipper
+from src.Opacity.linextrapolator import extrapolator_flipper, pad_interp
 from scipy.ndimage import uniform_filter1d # does moving mean without fucking the shape upn
 from src.Utilities.parser import parse
 
@@ -51,9 +51,9 @@ if alice:
     m = 'AEK'
     check = 'MONO AEK'
 else:
-    m = 4
+    m = 5
     pre = f'{m}/'
-    fixes = [297]
+    fixes = [308]
     opac_kind = 'LTE'
     mstar = 0.5
     rstar = 0.47
@@ -70,55 +70,39 @@ T_cool = np.loadtxt(f'{opac_path}/T.txt')
 Rho_cool = np.loadtxt(f'{opac_path}/rho.txt')
 plank = np.loadtxt(f'{opac_path}/planck.txt')
 rossland = np.loadtxt(f'{opac_path}/ross.txt')
+scattering = np.loadtxt(f'{opac_path}/scatter.txt')
+# T_cool2, Rho_cool2, rossland2 = extrapolator_flipper(T_cool, Rho_cool, rossland.T,
+#                                                      slope_length = 5, extrarows = 100,
+#                                                      what = 'rich')
+# _, _, plank2 = extrapolator_flipper(T_cool, Rho_cool, plank.T, extrarows = 100,
+#                                     what = 'rich')
+T_cool2, Rho_cool2, rossland2 = pad_interp(T_cool, Rho_cool, rossland.T)
+_, _, plank2 = pad_interp(T_cool, Rho_cool, plank.T)
+# plt.figure(plt.figure(figsize=(6,6
+#                                ))
+# )
+# img = plt.pcolormesh(np.log10(np.exp(T_cool)), np.log10(np.exp(Rho_cool)), 
+#                      np.log10(np.exp(rossland.T)), cmap = 'cet_CET_CBL2', 
+#                      vmin = -10, vmax = 4)#, edgecolors = 'k', lw = 0.01)
+# plt.colorbar(img)
+# # plt.ylim(-10.1, -8.5)
+# # plt.xlim(3.8, 4.6)
+# plt.xlabel('logT')
+# plt.ylabel(r'log $ \rho $')
 
-T_cool2, Rho_cool2, rossland2 = extrapolator_flipper(T_cool, Rho_cool, rossland.T)
-_, _, plank2 = extrapolator_flipper(T_cool, Rho_cool, plank.T)
-
-import matplotlib.pyplot as plt
-plt.figure()
-img = plt.pcolormesh(np.log10(np.exp(T_cool)), np.log10(np.exp(Rho_cool)), 
-                     np.log10(np.exp(rossland.T)), cmap = 'cet_CET_CBL2', 
-                     vmin = -12, vmax = -9, edgecolors = 'k', lw = 0.01)
-plt.colorbar(img)
-plt.ylim(-10.1, -8)
-plt.xlim(7.5, 7.8)
-plt.xlabel('logT')
-plt.ylabel(r'log $ \rho $')
-
-for y_index in range(0, 20): # len(rossland.T)):
-    for x_index in range(120, 128):
-        label = np.log10(np.exp(rossland.T[y_index, x_index]))
-        text_x = np.log10(np.exp(T_cool[x_index]))
-        text_y = np.log10(np.exp(Rho_cool[y_index]))
-        plt.text(text_x, text_y, f'{label:.2f}', color='k', 
-                fontsize = 3,
-                ha='center', va='center')
-
-
-#%%
-plt.figure(figsize=(10,10))
-img = plt.pcolormesh(np.log10(np.exp(T_cool2)), np.log10(np.exp(Rho_cool2)), 
-                     np.log10(np.exp(rossland2)), cmap = 'cet_CET_CBL1_r', 
-                     vmin = - 15, vmax = 4)# , edgecolors = 'r', lw = 0.1)
-plt.axhline(np.log10(np.exp(np.min(Rho_cool))), c = 'green', ls = '--')
-plt.axhline(np.log10(np.exp(np.max(Rho_cool))), c = 'green', ls = '--')
-plt.axvline(np.log10(np.exp(np.min(T_cool))), c = 'green', ls = '--')
-plt.axvline(np.log10(np.exp(np.max(T_cool))), c = 'green', ls = '--')
-plt.colorbar(img)
-# plt.ylim(-12, -8.5)
-# plt.xlim(7.3, 8.5)
-plt.xlabel('logT')
-plt.ylabel(r'log $ \rho $')
-
-# for y_index in range(0, 20): # len(rossland.T)):
-#     for x_index in range(120, 138):
-#         label = np.log10(np.exp(rossland2[y_index, x_index]))
-#         text_x = np.log10(np.exp(T_cool2[x_index]))
-#         text_y = np.log10(np.exp(Rho_cool2[y_index]))
-#         plt.text(text_x, text_y, f'{label:.2f}', color='r', 
-#                 fontsize = 3, rotation = 45, 
-#                 ha='center', va='center')
-
+# plt.figure(figsize=(8,8))
+# img = plt.pcolormesh(np.log10(np.exp(T_cool2)), np.log10(np.exp(Rho_cool2)), 
+#                      np.log10(np.exp(rossland2)), cmap = 'cet_CET_CBL2', 
+#                      vmin = -15, vmax = -8)# , edgecolors = 'r', lw = 0.1)
+# plt.axhline(np.log10(np.exp(np.min(Rho_cool))), c = 'green', ls = '--')
+# plt.axhline(np.log10(np.exp(np.max(Rho_cool))), c = 'green', ls = '--')
+# plt.axvline(np.log10(np.exp(np.min(T_cool))), c = 'green', ls = '--')
+# plt.axvline(np.log10(np.exp(np.max(T_cool))), c = 'green', ls = '--')
+# plt.colorbar(img)
+# plt.ylim(-15, -9)
+# plt.xlim(3, 8.5)
+# plt.xlabel('logT')
+# plt.ylabel(r'log $ \rho $')
 #%%
 # MATLAB GOES WHRRRR, thanks Cindy.
 eng = matlab.engine.start_matlab()
@@ -152,15 +136,15 @@ for idx_s, snap in enumerate(fixes):
         day = np.loadtxt(f'{pre}/{snap}/tbytfb_{snap}.txt')
         box = np.load(f'{pre}{snap}/box_{snap}.npy')
         #days.append(day)
-    denmask = Den > 1e-19
-    X = X[denmask]
-    Y = Y[denmask]
-    Z = Z[denmask]
-    T = T[denmask]
-    Den = Den[denmask]
+    # denmask = Den > 1e-19
+    # X = X[denmask]
+    # Y = Y[denmask]
+    # Z = Z[denmask]
+    # T = T[denmask]
+    # Den = Den[denmask]
 
-    Rad = Rad[denmask]
-    Vol = Vol[denmask]
+    # Rad = Rad[denmask]
+    # Vol = Vol[denmask]
     Rad_den = np.multiply(Rad, Den)
     del Rad            
     R = np.sqrt(X**2 + Y**2 + Z**2)
@@ -171,16 +155,15 @@ for idx_s, snap in enumerate(fixes):
     cross_dot = np.matmul(observers_xyz,  observers_xyz.T)
     cross_dot[cross_dot<0] = 0
     cross_dot *= 4/c.NPIX
-
+    F_photo = np.zeros((c.NPIX, f_num))
+    F_photo_temp = np.zeros((c.NPIX, f_num))
     # Tree ----------------------------------------------------------------------
     xyz = np.array([X, Y, Z]).T
     N_ray = 5_000
     time_start = 0
     colorsphere = []
     photosphere = []
-    for i in range(c.NPIX):
-        i = 100
-        # Progress 
+    for i in range(0, 10): #c.NPIX):
         time_end = time.time()
         print(f'Snap: {snap}, Obs: {i}', flush=False)
         print(f'Time for prev. Obs: {(time_end - time_start)/60} min', flush = False)
@@ -215,8 +198,6 @@ for idx_s, snap in enumerate(fixes):
 
         # This naming is so bad
         r = np.logspace( -0.25, np.log10(rmax), N_ray)
-        alpha = (r[1] - r[0]) / (0.5 * ( r[0] + r[1]))
-        dr = alpha * r
 
         x = r*mu_x
         y = r*mu_y
@@ -237,6 +218,9 @@ for idx_s, snap in enumerate(fixes):
         sigma_plank = eng.interp2(T_cool2,Rho_cool2,plank2,np.log(t),np.log(d),'linear',0)
         sigma_plank = [sigma_plank[0][i] for i in range(N_ray)]
         sigma_plank_eval = np.exp(sigma_plank)
+        
+        
+        kappa_rossland = np.flipud(sigma_rossland_eval) 
         del sigma_rossland, sigma_plank 
         gc.collect()
 
@@ -245,6 +229,7 @@ for idx_s, snap in enumerate(fixes):
         r_fuT = np.flipud(r.T)
         kappa_rossland = np.flipud(sigma_rossland_eval) 
         los = - np.flipud(sci.cumulative_trapezoid(kappa_rossland, r_fuT, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
+        
         k_effective = np.sqrt(3 * np.flipud(sigma_plank_eval) * np.flipud(sigma_rossland_eval)) 
         los_effective = - np.flipud(sci.cumulative_trapezoid(k_effective, r_fuT, initial = 0)) * c.Rsol_to_cm
 
@@ -297,20 +282,57 @@ for idx_s, snap in enumerate(fixes):
         R_lamda[R_lamda < 1e-10] = 1e-10
         fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
         smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) # i have remov
-        # Spectra -------------------------------------------------------------
+        
+        # Bolo -------------------------------------------------------------
         try:
             b = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0] 
         except IndexError:
             b = 3117 # elad_b = 3117
-        print(b)
+        Lphoto2 = 4*np.pi*c.c*smoothed_flux[b] * c.Msol_to_g / (c.t**2)
+        EEr = Rad_den[idx]
+        if Lphoto2 < 0:
+            Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives
+        max_length = 4*np.pi*c.c*EEr[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
+        Lphoto = np.min( [Lphoto2, max_length])
         # Colorsphere ---------------------------------------------------------
         los_effective[los_effective>30] = 30
         b2 = np.argmin(np.abs(los_effective-5))
-        
+        F_photo_temp = np.zeros((c.NPIX, f_num))
+        for k in range(b2, len(r)): 
+            dr = r[k]-r[k-1]
+            Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
+            wien = np.exp( c.h * frequencies / (c.kb * t[k])) - 1 # Elad: min to avoid overflow
+            black_body = frequencies**3 / (c.c**2 * wien)
+            F_photo_temp[i,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body # there should be a 4*np.pi*, but doesn't matter because we normalize
+
+        norm = Lphoto / np.trapz(F_photo_temp[i,:], frequencies)
+        F_photo_temp[i,:] *= norm
+        F_photo[i,:] = np.matmul(cross_dot[i,:], F_photo_temp[:,:])      
+
         # Save
         photosphere.append(r[b])
         colorsphere.append(r[b2])
-        break
+        
+
+#%% Plot
+# plt.figure()
+# plt.figure(figsize=(5,5))
+# img = plt.pcolormesh(np.log10(np.exp(T_cool2)), np.log10(np.exp(Rho_cool2)), 
+#                      np.log10(np.exp(rossland2)), cmap = 'cet_CET_CBL2', 
+#                      vmin = -15, vmax = -9)# , edgecolors = 'r', lw = 0.1)
+# plt.axhline(np.log10(np.exp(np.min(Rho_cool))), c = 'green', ls = '--')
+# plt.axhline(np.log10(np.exp(np.max(Rho_cool))), c = 'green', ls = '--')
+# plt.axvline(np.log10(np.exp(np.min(T_cool))), c = 'green', ls = '--')
+# plt.axvline(np.log10(np.exp(np.max(T_cool))), c = 'green', ls = '--')
+# plt.colorbar(img)
+# plt.ylim(-14, -7)
+# plt.xlim(3, 9)
+# plt.xlabel('logT')
+# plt.ylabel(r'log $ \rho $')
+# img2 = plt.scatter(np.log10(t), np.log10(d), marker = 'o', c = np.log10(R), cmap = 'cet_fire', s = 1)
+# plt.plot(np.log10(t[b]), np.log10(d[b]), c = 'hotpink', marker = 'X', markersize = 10,
+#          markeredgecolor = 'k', markeredgewidth = 0.2)
+# plt.colorbar(img2)
     #%% Save data ------------------------------------------------------------------
     if save:
         if alice:
@@ -328,17 +350,23 @@ for idx_s, snap in enumerate(fixes):
             file.close()
         else:
             pre_saving = 'data/photosphere'
-            filepath =  f'{pre_saving}/photocolor{m}.csv'
+            filepath =  f'{pre_saving}/photocolor{m}_arbnocut.csv'
             data = [snap, day, np.mean(photosphere), np.mean(colorsphere),
                     c.NPIX]
-            [ data.append(photosphere[i]) for i in range(c.NPIX)]
-            [ data.append(colorsphere[i]) for i in range(c.NPIX)]
+            [ data.append(photosphere[i]) for i in range(10)] #c.NPIX)]
+            [ data.append(colorsphere[i]) for i in range(10)] #c.NPIX)]
             with open(filepath, 'a', newline='') as file:
                 file.write('# snap, time [tfb], photo [Rsol], color [Rsol], NPIX, NPIX cols with photo for each observer, NPIX cols with color for each observer \n')
 
                 writer = csv.writer(file)
                 writer.writerow(data)
             file.close()
+            
+            # Save spectrum
+            pre_saving = 'data/blue2'
+            np.savetxt(f'{pre_saving}/freqs.txt', frequencies)
+            np.savetxt(f'{pre_saving}/{m}spectra{snap}_test.txt', F_photo)
+            
 
 eng.exit()
 

@@ -42,7 +42,7 @@ def equator_photo(rays_photo):
     # Sort and keep 16 closest to equator
     idx_z_sorted = np.argsort(np.abs(Zs))
     
-    size = 14
+    size = 16
     plus_x = []
     neg_x = []
     plus_y = []
@@ -116,7 +116,7 @@ for f4, f5, f6, i in zip(fixes4, fixes5, fixes6, range(3)):
     y6 = np.loadtxt(f'{prepre}{pre}1e+06{suf}/yarray{pre}1e+06{suf}.txt')
     
     # Load photosphere
-    photodata4 = np.genfromtxt('data/photosphere/5ex_photocolor4.csv', delimiter = ',')
+    photodata4 = np.genfromtxt('data/photosphere/tube_photo1.csv', delimiter = ',')
     photodata5 = np.genfromtxt('data/photosphere/photocolor5.csv', delimiter = ',')
     photodata6 = np.genfromtxt('data/photosphere/photocolor6.csv', delimiter = ',')
     

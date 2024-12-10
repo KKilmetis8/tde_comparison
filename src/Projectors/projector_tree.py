@@ -9,16 +9,83 @@ Project quantities.
 import sys
 sys.path.append('/Users/paolamartire/tde_comparison')
 
-
 import numpy as np
 import matplotlib.pyplot as plt
 import numba
+import healpy as hp
+
 
 from src.Calculators.THREE_tree_caster import grid_maker
 import src.Utilities.selectors as s
 from src.Utilities.parser import parse
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
+
+def find_sph_coord(r, theta, phi):
+    x = r * np.sin(np.pi-theta) * np.cos(phi) #Elad has just theta
+    y = r * np.sin(np.pi-theta) * np.sin(phi)
+    z = r * np.cos(np.pi-theta)
+    return [x,y,z]
+
+def equator_photo(rays_photo): 
+    # rays_photo = rays_photo/c.Rsol_to_cm # to solar unit to plot
+    
+    # Make zs
+    Zs = []
+    for iobs in range(0,192):
+        theta, phi = hp.pix2ang(4, iobs) # theta in [0,pi], phi in [0,2pi]
+        r_ph = rays_photo[iobs]
+        xyz_ph = find_sph_coord(r_ph, theta, phi)
+        Zs.append(xyz_ph[2])
+    
+    # Sort and keep 16 closest to equator
+    idx_z_sorted = np.argsort(np.abs(Zs))
+    print(idx_z_sorted)
+    size = 16
+    plus_x = []
+    neg_x = []
+    plus_y = []
+    neg_y = []
+    photo_x = []
+    photo_y = []
+    
+    for j, iz in enumerate(idx_z_sorted):
+        if j == size:
+            break
+        theta, phi = hp.pix2ang(4, iz) # theta in [0,pi], phi in [0,2pi]
+        r_ph = rays_photo[iz]
+        xyz_ph = find_sph_coord(r_ph, theta, phi)
+        if xyz_ph[1]>0:
+            plus_x.append(xyz_ph[0])
+            plus_y.append(xyz_ph[1])
+        else:
+            neg_x.append(xyz_ph[0])
+            neg_y.append(xyz_ph[1])
+    
+    # Arrays so they can be indexed
+    plus_x = np.array(plus_x)
+    plus_y = np.array(plus_y)
+    neg_x = np.array(neg_x)
+    neg_y = np.array(neg_y)
+    
+    # Sort to untangle
+    theta_plus = np.arctan2(plus_y,plus_x)
+    cos_plus = np.cos(theta_plus)
+    psort = np.argsort(cos_plus)
+    
+    theta_neg = np.arctan2(neg_y,neg_x)
+    cos_neg = np.cos(theta_neg)
+    nsort = np.argsort(cos_neg)
+
+    # Combine correct
+    photo_x = np.concatenate((plus_x[psort],  np.flip(neg_x[nsort],  )))
+    photo_y = np.concatenate((plus_y[psort],  np.flip(neg_y[nsort], )))
+    
+    # Close the loop
+    photo_x = np.append(photo_x, photo_x[0])
+    photo_y = np.append(photo_y, photo_y[0])
+    
+    return photo_x, photo_y
 
 #%%
 alice, plot = isalice()
@@ -80,14 +147,14 @@ if __name__ == '__main__':
         rstar = 0.47
         beta = 1
         what = 'density' # temperature or density
-        save = True
-        fixes, days = s.select_snap(m, mstar, rstar, check, time = True)
+        save = False
+        fixes = [308]
         args = None
 
     for fix in fixes:
         print(fix)
         _, grid_den, grid_mass, xs, ys, zs = grid_maker(fix, m, star, check,
-                                                        500, 500, 100, False,
+                                                        100, 100, 10, False,
                                                         args)
         flat_den = projector(grid_den, grid_mass, False,
                             xs, ys, zs, what)
@@ -122,7 +189,7 @@ if __name__ == '__main__':
             if what == 'density':
                 cb_text = r'Density [g/cm$^2$]'
                 vmin = 0
-                vmax = 6
+                vmax = 5
             elif what == 'temperature':
                 cb_text = r'Temperature [K]'
                 vmin = 2
@@ -135,12 +202,20 @@ if __name__ == '__main__':
             # ax.set_ylim(-0.2, 0.2)
             ax.set_xlabel(r' X [$R_\odot$]', fontsize = 14)
             ax.set_ylabel(r' Y [$R_\odot$]', fontsize = 14)
-            img = ax.pcolormesh(xs, ys, den_plot.T, cmap = 'cet_fire')
-                                #vmin = vmin, vmax = vmax)
+            img = ax.pcolormesh(xs, ys, den_plot.T, cmap = 'cet_fire',
+                                vmin = vmin, vmax = vmax)
             cb = plt.colorbar(img)
             cb.set_label(cb_text, fontsize = 14)
-
+            
+            photo_x4, photo_y4 = equator_photo(photo_elad)
+            ax.plot(np.array(photo_x4), np.array(photo_y4), 
+                ':o', color = 'm', linewidth = 3)
+            # ax.plot(np.array(photos_dir_X[88:104]), np.array(photos_dir_Y[88:104]), 
+            #     ':o', color = 'm', linewidth = 3)
+            ax.text(-1500, 0, '100', c = 'c', fontsize = 16)
             ax.set_title('XY Projection', fontsize = 16)
-            plt.savefig(f'{snap}T.png')
-            plt.show()
+            # ax.set_xlim(-2000, 500)
+            # ax.set_ylim(-300, 300)
+            #plt.savefig(f'{snap}T.png')
+            #plt.show()
 
