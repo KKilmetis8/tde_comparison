@@ -122,7 +122,7 @@ elif clean and opac == 'TOP':
     rhos = unique_densities
 
 opac_kind = 'LTE'
-opac_path = f'src/Opacity/{opac_kind}_data/'
+opac_path = f'src/Opacity/{opac_kind}_data'
 T_cool = np.loadtxt(f'{opac_path}/T.txt')
 Rho_cool = np.loadtxt(f'{opac_path}/rho.txt')
 rossland = np.loadtxt(f'{opac_path}/ross.txt')
@@ -133,8 +133,8 @@ ross_us = np.log10(np.exp(rossland) / np.exp(Rho_cool)) # 1/cm / g/cm3 = cm2/g
 
 #%% Plot
 fig, ax = plt.subplots(1,2, sharex = True, sharey = True)
-cmin = -3
-cmax = 5
+cmin = -1
+cmax = 6
 cmap = cc.m_CET_CBL2_r
 new_cmap = cmap(np.linspace(0, 1, 256))  # 256 levels of the original colormap
 from matplotlib.colors import ListedColormap
@@ -152,7 +152,7 @@ new_cmap.colors[specific_index] = specific_color
 
 img = ax[0].pcolormesh(Ts, rhos, kappa, shading = 'gouraud',
                      cmap = new_cmap, vmin = cmin, vmax = cmax)
-img2 = ax[1].pcolormesh(T_us, rho_us, rossland.T,
+img2 = ax[1].pcolormesh(T_us, rho_us, ross_us.T,
                      cmap = new_cmap, vmin = cmin, vmax = cmax)
 ax[1].axhline(np.min(rho_us), c = 'k', ls ='--')
 ax[1].axhline(np.max(rho_us), c = 'k', ls ='--')
@@ -186,7 +186,7 @@ ax[1].set_title('STA')
 #%% Rho plot
 fig, axs = plt.subplots(2,3, figsize = (7,7), 
                         tight_layout = True, sharey = True)
-target_rhos = [1e-10, 1e-8, 1e-6, 1e-4, 1e-2, 1e0]
+target_rhos = [1e-10, 1e-9, 1e-6, 1e-4, 1e-2, 1e0]
 for target_rho, ax in zip(target_rhos, axs.flatten()):
     rho_idx = np.argmin( np.abs(rhos - np.log10(target_rho)))
     if opac == 'TOP':
@@ -201,10 +201,11 @@ for target_rho, ax in zip(target_rhos, axs.flatten()):
     ax.plot(T_us, sliced_kappa_us, c='r', label = 'STA')
     ax.axhline(specific_value, c = 'b', ls = '--' )
     ax.set_title(f'Log Density {np.log10(target_rho)} g/cm$^3$')
-
+    # ax.set_ylim(-2,2)
+    # ax.set_xlim(1, 7)
 axs[1,0].text(3.6, -0.3, 'log(0.2(1+X))', c='b', fontsize = 9)
 axs[1,0].set_xlabel('$\log ( T ) $ [K]')
-axs[1,0].set_ylabel('$\log( \kappa_\mathrm{Ross}$ ) [cm$^2$/g]')
+axs[1,0].set_ylabel('$\log( \kappa_\mathrm{Planck}$ ) [cm$^2$/g]')
 plt.legend()
 #%% T plot
 fig, axs = plt.subplots(2,2, figsize = (5,5), 
@@ -217,7 +218,7 @@ for target_T, ax in zip(target_Ts, axs.flatten()):
     else:
         sliced_kappa = kappa[T_idx,:]
     
-    T_idx_us = np.argmin(np.abs( T_cool - np.log10(target_T)))
+    T_idx_us = np.argmin(np.abs( T_us - np.log10(target_T)))
     sliced_kappa_us = ross_us[T_idx_us,:]
     
     ax.plot(rhos, sliced_kappa, c='k' , label = opac)
@@ -225,5 +226,5 @@ for target_T, ax in zip(target_Ts, axs.flatten()):
     ax.set_title(f'Log T {np.log10(target_T)} K')
 
 axs[1,0].set_xlabel(r'$\log ( \rho ) $ g/cm$^3$')
-axs[1,0].set_ylabel('$\log( \kappa_\mathrm{Ross}$ ) [cm$^2$/g]')
+axs[1,0].set_ylabel('$\log( \kappa_\mathrm{Planck}$ ) [cm$^2$/g]')
 plt.legend()

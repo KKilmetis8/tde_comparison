@@ -17,7 +17,7 @@ from src.Opacity.LTE_loader import T_opac_ex, Rho_opac_ex, rossland_ex, plank_ex
 import src.Utilities.prelude as c
 #%% Load data -----------------------------------------------------------------
 pre = '4/'
-fix = '164'
+fix = '272'
 X = np.load(pre + fix + '/CMx_' + fix + '.npy')
 Y = np.load(pre + fix + '/CMy_' + fix + '.npy')
 Z = np.load(pre + fix + '/CMz_' + fix + '.npy')
@@ -110,10 +110,14 @@ plank2 = plank_ex
 #%% Tree ----------------------------------------------------------------------
 import matlab.engine
 eng = matlab.engine.start_matlab()
-from scipy.spatial import KDTree
+# from scipy.spatial import KDTree
+from sklearn.neighbors import KDTree
 xyz = np.array([X, Y, Z]).T
+# ------- bulshit zone begins
 # tree = KDTree(xyz, leafsize=50)
-tree = eng.KDTreeSearcher(xyz)
+# tree = eng.KDTreeSearcher(xyz)
+# ---- bulshit zone ends
+
 N_ray = 5_000
 
 # Flux?
@@ -157,9 +161,15 @@ for i in tqdm(range(192)): #range(88,104)):
     y = r*mu_y
     z = r*mu_z
     xyz2 = np.array([x, y, z]).T
-    # _ , idx = tree.query(xyz2)
-    idx = eng.knnsearch(tree, xyz2)
-    idx = [ int(idx[i][0] - 1) for i in range(len(idx))] # -1 because we start from 0
+    
+    # ------- bulshit zone begins
+    # idx = eng.knnsearch(tree, xyz2, 'LeafSize', 50)
+    # idx = [ int(idx[i][0] - 1) for i in range(len(idx))] # -1 because we start from 0
+    tree = KDTree(xyz, leaf_size=50)
+    _, idx = tree.query(xyz2, k=1)
+    idx = [ int(idx[i][0]) for i in range(len(idx))] # no -1 because we start from 0
+    # ---- bulshit zone ends
+    
     d = Den[idx] * c.den_converter
     t = T[idx]
     ray_x = X[idx]
@@ -209,13 +219,19 @@ for i in tqdm(range(192)): #range(88,104)):
     
     # Get 20 unique, nearest neighbors
     xyz3 = np.array([X[idx], Y[idx], Z[idx]]).T
+    # ---- bulshit zone begins
     # _, idxnew = tree.query(xyz3, k=20) # 20 nearest neighbors
-    idxnew = eng.knnsearch(tree, xyz3, 'K', 20)
+    # idxnew = eng.knnsearch(tree, xyz3, 'K', 20)
     #
     
     #idxnew = np.array([idxnew], dtype = int).T #np.reshape(idxnew, (1, len(idxnew))) #.T
+    # idxnew = np.unique(idxnew).T
+    # idxnew = [ int(idxnew[i] -1) for i in range(len(idxnew))]
+    xyz3 = np.array([X[idx], Y[idx], Z[idx]]).T
+    _, idxnew = tree.query(xyz3, k=20)
     idxnew = np.unique(idxnew).T
-    idxnew = [ int(idxnew[i] -1) for i in range(len(idxnew))]
+    # ---- bulshit zone ends
+
     # Cell radius
     dx = 0.5 * Vol[idx]**(1/3)
     
