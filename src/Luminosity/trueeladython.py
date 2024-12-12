@@ -34,7 +34,7 @@ if alice:
     realpre = '/home/kilmetisk/data1/TDE/'
     args = parse()
     sim = args.name
-    pre = f'{realpre}{sim}/'
+    pre = f'{realpre}{sim}/snap_'
     mstar = args.mass
     rstar = args.radius
     Mbh = args.blackhole
@@ -42,7 +42,7 @@ if alice:
     fixes = np.arange(args.first, args.last + 1)
     single = args.single
     if single:
-        fix = [args.only]
+        fix = args.only
     else:
         raise NameError('You need to set the single flag for this to run \n it is much faster')
 else:
@@ -247,8 +247,8 @@ for i in range(c.NPIX):
     los_effective[los_effective>30] = 30
     b2 = np.argmin(np.abs(los_effective-5))
     
-    photosphere.append(ray_x[b], ray_y[b], ray_z[b])
-    colorsphere.append(ray_x[b2], ray_y[b2], ray_z[b2]) 
+    photosphere.append((ray_x[b], ray_y[b], ray_z[b]))
+    colorsphere.append((ray_x[b2], ray_y[b2], ray_z[b2])) 
     
     Lphoto2 = 4*np.pi*c.c*smoothed_flux[b] * c.Msol_to_g / (c.t**2)
     EEr = Rad_den[idx]

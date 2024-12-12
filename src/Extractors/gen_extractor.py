@@ -95,18 +95,3 @@ for fix in fixes:
 # mstar = 0.5
 # rstar = 0.47
 # time_extractor(m, fix, mstar,  rstar, f'{m}/{fix}/')
-
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
