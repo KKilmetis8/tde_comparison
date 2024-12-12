@@ -113,13 +113,24 @@ eng = matlab.engine.start_matlab()
 xyz = np.array([X, Y, Z]).T
 
 # Flux
-F_photo = np.zeros((192, f_num))
-F_photo_temp = np.zeros((192, f_num))
+F_photo = np.zeros((c.NPIX, f_num))
+F_photo_temp = np.zeros((c.NPIX, f_num))
 photosphere = []
 colorsphere = []
+time_start = 0
+reds = np.zeros(c.NPIX)
 
 # Iterate over observers
-for i in range(192):
+for i in range(c.NPIX):
+    # Progress 
+    time_end = time.time()
+    print(f'Snap: {fix}, Obs: {i}', 
+          flush=False)
+    print(f'Time for prev. Obs: {(time_end - time_start)/60} min', 
+          flush = False)
+    time_start = time.time()
+    sys.stdout.flush()
+    
     mu_x = observers_xyz[i][0]
     mu_y = observers_xyz[i][1]
     mu_z = observers_xyz[i][2]
@@ -148,7 +159,8 @@ for i in range(192):
     tree = KDTree(xyz, leaf_size=50)
     _, idx = tree.query(xyz2, k=1)
     idx = [ int(idx[i][0]) for i in range(len(idx))] # no -1 because we start from 0
-    
+    del x, y, z
+
     d = Den[idx] * c.den_converter
     t = T[idx]
     ray_x = X[idx]
@@ -165,6 +177,8 @@ for i in range(192):
                               np.log(t),np.log(d),'linear',0)
     sigma_plank = np.array(sigma_plank)[0]
     sigma_plank_eval = np.exp(sigma_plank)
+    del sigma_rossland, sigma_plank 
+    gc.collect()
     
     # Optical Depth ---.    
     r_fuT = np.flipud(r.T)
@@ -195,23 +209,28 @@ for i in range(192):
                         xi = np.array([ X[idx]-dx, Y[idx], Z[idx]]).T )
     gradx = (gradx_p - gradx_m)/ (2*dx)
     gradx = np.nan_to_num(gradx, nan =  0)
-    
+    del gradx_p, gradx_m
+
     grady_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                         xi = np.array([ X[idx], Y[idx]+dx, Z[idx]]).T )
     grady_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                         xi = np.array([ X[idx], Y[idx]-dx, Z[idx]]).T )
     grady = (grady_p - grady_m)/ (2*dx)
     grady = np.nan_to_num(grady, nan =  0)
-    
+    del grady_p, grady_m
+
     gradz_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                         xi = np.array([ X[idx], Y[idx], Z[idx]+dx]).T )
     gradz_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
                         xi = np.array([ X[idx], Y[idx], Z[idx]-dx]).T )
     gradz_m = np.nan_to_num(gradz_m, nan =  0)
     gradz = (gradz_p - gradz_m)/ (2*dx)
-    
+    del gradz_p, gradz_m
+
     grad = np.sqrt(gradx**2 + grady**2 + gradz**2)
     gradr = (mu_x * gradx) + (mu_y*grady) + (mu_z*gradz)
+    del gradx, grady, gradz
+    gc.collect()
     
     R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx])
     R_lamda[R_lamda < 1e-10] = 1e-10
@@ -236,31 +255,31 @@ for i in range(192):
     if Lphoto2 < 0:
         Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
     max_length = 4*np.pi*c.c*EEr[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
-    Lphoto = np.min( [Lphoto2, max_length])
-    
+    reds[i] = np.min( [Lphoto2, max_length])
+    del smoothed_flux, R_lamda, fld_factor, EEr, los,
+    gc.collect()
     # Spectra ---
     los_effective[los_effective>30] = 30
     b2 = np.argmin(np.abs(los_effective-5))
 
     for k in range(b2, len(r)):
+        dr = r[k]-r[k-1]
+        Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
         wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
         black_body = frequencies**3 / (c.c**2 * wien)
-        F_photo_temp[i,:] += sigma_plank_eval[k] * np.exp(-los_effective[k]) * black_body
+        F_photo_temp[i,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
     
-    norm = Lphoto / np.trapz(F_photo_temp[i,:], frequencies)
+    norm = reds[i] / np.trapz(F_photo_temp[i,:], frequencies)
     F_photo_temp[i,:] *= norm
     F_photo[i,:] = np.dot(cross_dot[i,:], F_photo_temp)      
 eng.exit()
 
 ### Bolometric ---
-red = 0
-for i in range(c.NPIX):
-    red += Lphoto[i]
-red *= 4*np.pi/c.NPIX
+red = 4 * np.pi * np.mean(reds)
 
 ### Saving ---
 if save and alice: # Save red
-        pre_saving = f'/home/kilmetisk/data1/TDE/tde_comparison/data/'
+        pre_saving = '/home/kilmetisk/data1/TDE/tde_comparison/data/'
         if single:
             filepath =  f'{pre_saving}red/red_richex{m}.csv'
             data = [fix, day, red]

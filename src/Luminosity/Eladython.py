@@ -297,10 +297,8 @@ for idx_s, snap in enumerate(fixes):
 
     if single:
         Lphoto_this = np.mean(reds) # divides by 192
-        print(Lphoto_this)
     else:
         Lphoto_all[idx_s] = np.mean(reds) # save red
-    # Lphoto = Lphoto2
     
 if save:
     if alice:
