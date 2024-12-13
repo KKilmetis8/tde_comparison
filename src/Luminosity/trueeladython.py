@@ -68,8 +68,7 @@ R = np.sqrt(X**2 + Y**2 + Z**2)
 
 # Cross dot ---
 observers_xyz = hp.pix2vec(c.NSIDE, range(192))
-observers_xyz = np.array([observers_xyz])
-observers_xyz = np.reshape(observers_xyz, (192,3))
+observers_xyz = np.array([observers_xyz]).T
 # Line 17, * is matrix multiplication, ' is .T
 cross_dot = np.matmul(observers_xyz,  observers_xyz.T )
 cross_dot[cross_dot<0] = 0
@@ -268,7 +267,7 @@ for i in range(c.NPIX):
         wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
         black_body = frequencies**3 / (c.c**2 * wien)
         F_photo_temp[i,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
-    
+
     norm = reds[i] / np.trapz(F_photo_temp[i,:], frequencies)
     F_photo_temp[i,:] *= norm
     F_photo[i,:] = np.dot(cross_dot[i,:], F_photo_temp)      
