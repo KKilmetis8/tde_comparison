@@ -54,17 +54,17 @@ def extractor(filename):
     
     # Use lists for clarity
     X = []
-
+    keys = ['box']
     # Iterate over ranks
     for key in keys:
-        if key in not_ranks:
+        # if key in not_ranks:
             # Skip whatever is not a mpi rank
-            continue
-        else:
+        #    continue
+        #else:
             # For some reason, having the collumns into variables is way faster.
-            x_data = f[key]['Dissipation']
-            for i in range(len(x_data)):
-                X.append(x_data[i])
+        x_data = f[key]
+        for i in range(len(x_data)):
+            X.append(x_data[i])
 
     # Close the file
     f.close()
@@ -108,7 +108,7 @@ def main():
         except FileNotFoundError:
             continue
         #%% Save to another file.
-        np.save(pre + 'Diss' + suf, Diss)   
+        np.save(pre + 'box' + suf, Diss)   
         
         #%% Do time
         # time_extractor(mbh, fix, m,  r, pre)

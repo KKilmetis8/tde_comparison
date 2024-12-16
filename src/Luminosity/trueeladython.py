@@ -67,8 +67,8 @@ Rad_den = np.multiply(Rad,Den)
 R = np.sqrt(X**2 + Y**2 + Z**2)
 
 # Cross dot ---
-observers_xyz = hp.pix2vec(c.NSIDE, range(192))
-observers_xyz = np.array([observers_xyz]).T
+observers_xyz = hp.pix2vec(c.NSIDE, range(c.NPIX))
+observers_xyz = np.array([observers_xyz]).T[:,:,0]
 # Line 17, * is matrix multiplication, ' is .T
 cross_dot = np.matmul(observers_xyz,  observers_xyz.T )
 cross_dot[cross_dot<0] = 0
@@ -274,7 +274,7 @@ for i in range(c.NPIX):
 eng.exit()
 
 ### Bolometric ---
-red = 4 * np.pi * np.mean(reds)
+red = 4 * np.pi * np.mean(reds) # this 4pi here shouldn't exist, leaving it for posterity
 
 ### Saving ---
 if save and alice: # Save red
