@@ -9,6 +9,7 @@ Test how healpy divide the space in solid angles
 """
 import matplotlib.pyplot as plt
 import numpy as np
+import src.Utilities.prelude as c
 import healpy as hp
 plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
@@ -26,7 +27,7 @@ print(
 m = np.arange(NPIX)
 hp.mollview(m, title="Mollview image RING")
 hp.graticule()
-plt.savefig('Figs/mollview.png')
+# plt.savefig('Figs/mollview.png')
 
 # Healpix and my plots
 thetas_hp = np.zeros(192)

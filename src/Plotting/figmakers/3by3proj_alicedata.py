@@ -19,133 +19,89 @@ import src.Utilities.prelude as c
 rstar = 0.47
 mstar = 0.5
 Rt4 = rstar * (1e4/mstar)**(1/3)
+amin4 = Rt4 * (1e4/mstar)**(1/3)
 Rt5 = rstar * (1e5/mstar)**(1/3)
+amin5 = Rt5 * (1e5/mstar)**(1/3)
 Rt6 = rstar * (1e6/mstar)**(1/3)
- 
+amin6 = Rt6 * (1e6/mstar)**(1/3)
 def find_sph_coord(r, theta, phi):
     x = r * np.sin(np.pi-theta) * np.cos(phi) #Elad has just theta
     y = r * np.sin(np.pi-theta) * np.sin(phi)
     z = r * np.cos(np.pi-theta)
     return [x,y,z]
 
-def equator_photo(rays_photo): 
-    # rays_photo = rays_photo/c.Rsol_to_cm # to solar unit to plot
-    
-    # Make zs
-    Zs = []
-    for iobs in range(0,192):
-        theta, phi = hp.pix2ang(4, iobs) # theta in [0,pi], phi in [0,2pi]
-        r_ph = rays_photo[iobs]
-        xyz_ph = find_sph_coord(r_ph, theta, phi)
-        Zs.append(xyz_ph[2])
-    
-    # Sort and keep 16 closest to equator
-    idx_z_sorted = np.argsort(np.abs(Zs))
-    
-    size = 16
-    plus_x = []
-    neg_x = []
-    plus_y = []
-    neg_y = []
-    photo_x = []
-    photo_y = []
-    
-    for j, iz in enumerate(idx_z_sorted):
-        if j == size:
-            break
-        theta, phi = hp.pix2ang(4, iz) # theta in [0,pi], phi in [0,2pi]
-        r_ph = rays_photo[iz]
-        xyz_ph = find_sph_coord(r_ph, theta, phi)
-        if xyz_ph[1]>0:
-            plus_x.append(xyz_ph[0])
-            plus_y.append(xyz_ph[1])
-        else:
-            neg_x.append(xyz_ph[0])
-            neg_y.append(xyz_ph[1])
-    
-    # Arrays so they can be indexed
-    plus_x = np.array(plus_x)
-    plus_y = np.array(plus_y)
-    neg_x = np.array(neg_x)
-    neg_y = np.array(neg_y)
-    
-    # Sort to untangle
-    theta_plus = np.arctan2(plus_y,plus_x)
-    cos_plus = np.cos(theta_plus)
-    psort = np.argsort(cos_plus)
-    
-    theta_neg = np.arctan2(neg_y,neg_x)
-    cos_neg = np.cos(theta_neg)
-    nsort = np.argsort(cos_neg)
+def tuple_parse(strings):
+    ''' parses "(1,2,3)" '''
+    xs = np.zeros(len(strings))
+    ys = np.zeros(len(strings))
+    for i, string in enumerate(strings):
+        values = string.strip("()").split(", ")
+        tuple_values = tuple(np.float64(value.split("(")[-1].strip(")")) for value in values)
+        xs[i] = tuple_values[0]
+        ys[i] = tuple_values[1]
+    return xs, ys
 
-    # Combine correct
-    photo_x = np.concatenate((plus_x[psort],  np.flip(neg_x[nsort],  )))
-    photo_y = np.concatenate((plus_y[psort],  np.flip(neg_y[nsort], )))
-    
-    # Close the loop
-    # photo_x = np.append(photo_x, photo_x[0])
-    # photo_y = np.append(photo_y, photo_y[0])
-    
-    return photo_x, photo_y
-
-prepre = 'data/denproj/'
-pre = 'R0.47M0.5BH'
+pre = 'data/denproj/paper/'
 suf = 'beta1S60n1.5Compton'
 when = 'test' # choices: early mid late test
 plane = 'XY'
+photo = False
 if when == 'test':
     # 0.42, 0.82, 1.22
-    fixes4 = [180, 297, 348] 
-    fixes5 = [205, 285, 346] # 0.5, 1, 1.4
-    fixes6 = [295, 376, 412] # 0.5, should be 376 and 414 but ok
+    fixes4 = [179, 240, 300] 
+    fixes5 = [227, 288, 349] # 0.5, 1, 1.4
+    fixes6 = [315, 379, 444] # 0.5, should be 376 and 414 but ok
     title_txt = 'Time: Trial t/t$_{FB}$'
 
-fig, ax = plt.subplots(3,3, figsize = (12,4))
+size = 8
+fig, ax = plt.subplots(3,3, figsize = (1*1.4*size, size), sharex = True, sharey = True)
 for f4, f5, f6, i in zip(fixes4, fixes5, fixes6, range(3)):
     # Load projection data
-    den4 = np.loadtxt(f'{prepre}{pre}10000{suf}/denproj{pre}10000{suf}{f4}.txt')
-    x4 = np.loadtxt(f'{prepre}{pre}10000{suf}/xarray{pre}10000{suf}.txt')
-    y4 = np.loadtxt(f'{prepre}{pre}10000{suf}/yarray{pre}10000{suf}.txt')
+    den4 = np.loadtxt(f'{pre}4normal{f4}.txt')
+    x4 = np.loadtxt(f'{pre}4normalx.txt')
+    y4 = np.loadtxt(f'{pre}4normaly.txt')
     
-    den5 = np.loadtxt(f'{prepre}{pre}100000{suf}/denproj{pre}100000{suf}{f5}.txt')
-    x5 = np.loadtxt(f'{prepre}{pre}100000{suf}/xarray{pre}100000{suf}.txt')
-    y5 = np.loadtxt(f'{prepre}{pre}100000{suf}/yarray{pre}100000{suf}.txt')
+    den5 = np.loadtxt(f'{pre}5normal{f5}.txt')
+    x5 = np.loadtxt(f'{pre}5normalx.txt')
+    y5 = np.loadtxt(f'{pre}5normaly.txt')
     
-    den6 = np.loadtxt(f'{prepre}{pre}1e+06{suf}/denproj{pre}1e+06{suf}{f6}.txt')
-    x6 = np.loadtxt(f'{prepre}{pre}1e+06{suf}/xarray{pre}1e+06{suf}.txt')
-    y6 = np.loadtxt(f'{prepre}{pre}1e+06{suf}/yarray{pre}1e+06{suf}.txt')
+    den6 = np.loadtxt(f'{pre}6normal{f6}.txt')
+    x6 = np.loadtxt(f'{pre}6normalx.txt')
+    y6 = np.loadtxt(f'{pre}6normaly.txt')
     
-    # Load photosphere
-    photodata4 = np.genfromtxt('data/photosphere/tube_photo1.csv', delimiter = ',')
-    photodata5 = np.genfromtxt('data/photosphere/photocolor5.csv', delimiter = ',')
-    photodata6 = np.genfromtxt('data/photosphere/photocolor6.csv', delimiter = ',')
+    reddata4 = np.genfromtxt(f'data/red/red_richex{4}.csv', delimiter = ',').T
+    tidx4 = np.argmin(np.abs(f4 - reddata4[0]))
+    time4 = reddata4[1][tidx4]
+    reddata4 = np.genfromtxt(f'data/red/red_richex{5}.csv', delimiter = ',').T
+    tidx5 = np.argmin(np.abs(f5 - reddata4[0]))
+    time5 = reddata4[1][tidx5]
+    reddata6 = np.genfromtxt(f'data/red/red_richex{6}.csv', delimiter = ',').T
+    tidx6 = np.argmin(np.abs(f6 - reddata6[0]))
+    time6 = reddata6[1][tidx6]
     
-    # Find snap in photodata
-    idx4 = np.argmin(np.abs(f4 - photodata4.T[0]))
-    idx5 = np.argmin(np.abs(f5 - photodata5.T[0]))
-    idx6 = np.argmin(np.abs(f6 - photodata6.T[0]))
-    
-    # snap time photo color obs_num
-    photo_x4, photo_y4 = equator_photo(photodata4[idx4][4:4+192])
-    photo_x5, photo_y5 = equator_photo(photodata5[idx5][4:4+192])
-    photo_x6, photo_y6 = equator_photo(photodata6[idx6][4:4+192])
+    # ax[i,0].text(0.78, 0.8, f'{time4:.2f} $t_\mathrm{{FB}}$', 
+    #              fontsize = 12, c = 'white', transform = ax[i,0].transAxes)
+    # ax[i,1].text(0.78, 0.8, f'{time4:.2f} $t_\mathrm{{FB}}$',
+    #              fontsize = 12, c = 'white', transform = ax[i,1].transAxes)
+    ax[i,2].text(0.1, 0.1, f'{time4:.2f} $t_\mathrm{{FB}}$',
+                 fontsize = 12, c = 'white', transform = ax[i,2].transAxes)
 
     # Plot projection data
     dmin = 0.1
     dmax = 5
-    img = ax[i,0].pcolormesh(x4/Rt4, y4/Rt4, np.log10(den4.T), cmap = 'cet_fire',
+    img = ax[i,0].pcolormesh(x4/amin4, y4/amin4, den4.T, cmap = 'cet_fire',
                              vmin = dmin, vmax = dmax)
-    ax[i,1].pcolormesh(x5/Rt5, y5/Rt5, np.log10(den5.T), cmap = 'cet_fire',
+    ax[i,1].pcolormesh(x5/amin5, y5/amin5, den5.T, cmap = 'cet_fire',
                              vmin = dmin, vmax = dmax)
-    ax[i,2].pcolormesh(x6/Rt6, y6/Rt6, np.log10(den6.T), cmap = 'cet_fire',
+    ax[i,2].pcolormesh(x6/amin6, y6/amin6, den6.T, cmap = 'cet_fire',
                              vmin = dmin, vmax = dmax)
     
     # Plot Rt
-    ax[i,0].add_patch(mp.Circle((0,0), Rt4/Rt4, ls = '-', 
+    ax[i,0].add_patch(mp.Circle((0,0), Rt4/amin4, ls = '-', 
                                 color = 'c', fill = False, lw = 1))
-    ax[i,1].add_patch(mp.Circle((0,0), Rt5/Rt5, ls = '-', 
+    ax[i,1].add_patch(mp.Circle((0,0), Rt5/amin5, ls = '-', 
                                 color = 'c', fill = False, lw = 1))
-    ax[i,2].add_patch(mp.Circle((0,0), Rt6/Rt6, ls = '-',
+    ax[i,2].add_patch(mp.Circle((0,0), Rt6/amin6, ls = '-',
                                 color = 'c', fill = False, lw = 1))
     
     if i == 0:
@@ -158,36 +114,72 @@ for f4, f5, f6, i in zip(fixes4, fixes5, fixes6, range(3)):
         # ax[i,2].set_title('1.22 $t_\mathrm{FB}$', fontsize = 17)
 
     # Plot photosphere
-    ax[i,0].plot(photo_x4 /Rt4, photo_y4/Rt4, '-o', 
-                 c = 'magenta', markersize = 3)
-    if i == 3:
 
-        # ax[i,1].plot(photo_x5/Rt5, photo_y5/Rt5, '-o', 
-        #              c = 'magenta', markersize = 1)
-        # ax[i,2].plot(photo_x6/Rt6, photo_y6/Rt6, '-o', 
-        #              c = 'magenta', markersize = 1)
+    if photo:
+        import pandas as pd
+        df4 = pd.read_csv('data/photosphere/richex2_photocolor4.csv', sep = ',',
+                           comment = '#', header = None)
         
-        ax[i,0].add_patch(mp.Circle((0,0), photodata4[idx4][2]/Rt4, ls = '-', 
-                                    color = 'm', fill = False, lw = 1))
-        ax[i,1].add_patch(mp.Circle((0,0), photodata5[idx4][2]/Rt5, ls = '-', 
-                                    color = 'm', fill = False, lw = 1))
-        ax[i,2].add_patch(mp.Circle((0,0), photodata6[idx4][2]/Rt6, ls = '-',
-                                    color = 'm', fill = False, lw = 1))
-
+        photodata5 = np.genfromtxt('data/photosphere/photocolor5.csv', delimiter = ',')
+        df6 = pd.read_csv('data/photosphere/richex_photocolor6.csv', sep = ',',
+                          comment = '#', header = None)
+        
+        # Find snap in photodata
+        idx4 = np.argmin(np.abs(f4 - df4.iloc[:,0]))
+        idx5 = np.argmin(np.abs(f5 - photodata5.T[0]))
+        idx6 = np.argmin(np.abs(f6 - df6.iloc[:,0]))
+        
+        # snap time photo color obs_num
+        # Photosphere data is a 3-tuple for each observer
+        # The equatorial observers are 88:104
+        # good_obs = [90, 91, 92, 93, 94, 95, 96, 97, 98, 99]
+        # photo_x4, photo_y4 = tuple_parse(df4.iloc[idx4][good_obs])
+        # ax[i,0].plot(photo_x4 /amin4, photo_y4/amin4, '-o', 
+        #              c = 'magenta', markersize = 3)
+        # ax[i,1].plot(photo_x5/amin5, photo_y5/amin5, '-o', 
+        #              c = 'magenta', markersize = 1)
+        # ax[i,2].plot(photo_x6/amin6, photo_y6/amin6, '-o', 
+        #              c = 'magenta', markersize = 1)
+    
     # Set x-lims
     # 4
-    
-    
+    xmin = -1.1
+    xmax = 0.3
+    ymin = -0.5
+    ymax = 0.5
+    ax[0,0].set_xlim(xmin, xmax)
+    ax[1,0].set_xlim(xmin, xmax)
+    ax[2,0].set_xlim(xmin, xmax)
+    ax[0,0].set_ylim(ymin, ymax)
+    ax[1,0].set_ylim(ymin, ymax)
+    ax[2,0].set_ylim(ymin, ymax)
     
     # 5
-    
+    xmin = -1.1
+    xmax = 0.3
+    ymin = -0.5
+    ymax = 0.5
+    ax[0,1].set_xlim(xmin, xmax)
+    ax[1,1].set_xlim(xmin, xmax)
+    ax[2,1].set_xlim(xmin, xmax)
+    ax[0,1].set_ylim(ymin, ymax)
+    ax[1,1].set_ylim(ymin, ymax)
+    ax[2,1].set_ylim(ymin, ymax)
     
     # 6
-    ax[1,1].set_xlim(-50, 10)
-    ax[1,1].set_ylim(-10, 20)
+    xmin = -1.1
+    xmax = 0.3
+    ymin = -0.5
+    ymax = 0.5
+    ax[0,2].set_xlim(xmin, xmax)
+    ax[1,2].set_xlim(xmin, xmax)
+    ax[2,2].set_xlim(xmin, xmax)
+    ax[0,2].set_ylim(ymin, ymax)
+    ax[1,2].set_ylim(ymin, ymax)
+    ax[2,2].set_ylim(ymin, ymax)
 
-ax[2,1].set_xlabel('X $[R_\mathrm{T}]$', fontsize = 17)
-ax[1,0].set_ylabel('Y $[R_\mathrm{T}]$', fontsize = 17)
+ax[2,1].set_xlabel(r'X $[\alpha_\mathrm{min}]$', fontsize = 17)
+ax[1,0].set_ylabel(r'Y $[\alpha_\mathrm{min}]$', fontsize = 17)
 cb = fig.colorbar(img, cax=fig.add_axes([0.93, 0.11, 0.03, 0.78]))
 cb.set_label('$\log_{10} (\Sigma) $ [g/cm$^2$]', fontsize = 17)
 # ax[3,2].set_xlabel('Y Coordinate')

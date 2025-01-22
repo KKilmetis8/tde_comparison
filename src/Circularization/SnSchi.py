@@ -45,16 +45,15 @@ def SnS_chi(m, which, mstar=0.5, rstar=0.47):
         sorter = np.argsort(time)
         time = time[sorter]
         E_diss_bound = data.T[2][sorter] 
-        Edot = E_diss_bound
+        Edot = -E_diss_bound # * tfb
         
     if which == 'orbdot':
         data = np.genfromtxt(f'data/tcirc/sum{m}notspecmasked.csv', delimiter = ',')
-        tfb = np.pi/np.sqrt(2) * np.sqrt(rstar**3/mstar * Mbh/mstar)
         time = data.T[0]
         sorter = np.argsort(time)
         time = time[sorter]
         Eorb = data.T[1][sorter]
-        Edot = np.gradient(Eorb, time) # E_fb/s
+        Edot = np.gradient(Eorb, time) / tfb # E_fb/s
         Edot = uniform_filter1d(Edot, 3)
         
     tcirc = np .zeros_like(time)
@@ -66,6 +65,7 @@ def SnS_chi(m, which, mstar=0.5, rstar=0.47):
         dEdt = Edot_fb(time[i] * tfb, Mbh)
         dMdts[i] =  M_calli[arr_idx] * dEdt # Mdot_fb(time[i]*tfb, tfb)#  dMdE_avg * dEdt
         chi = - Edot[i] / (Ecirc * dMdts[i])
+        # print(chi)
         chis[i] = chi
         tcirc_temp = time[i] / chi
         if Edot[i] > 0:
@@ -138,6 +138,7 @@ if __name__ == '__main__':
     ax.set_title('$\dot{E}_\mathrm{orb}$')
     ax.plot(my_t6, my_chis, '-o', c = 'royalblue', 
               lw = 0.75, markersize = 1.5, label = '$\chi$')
+    ax.set_yscale('log')
     ax2 = ax.twinx()
     
     ax2.axhline(Leddington(10**6), ls = '--', c = 'k')
@@ -164,5 +165,5 @@ if __name__ == '__main__':
     ax2.set_yscale('log')
     ax2.set_ylim(1e37, 1e48)
     ax.set_xlim(0.2)
-    ax.set_ylim(10, 3000)
+    # ax.set_ylim(10, 3000)
     # ax.set_yscale('log')

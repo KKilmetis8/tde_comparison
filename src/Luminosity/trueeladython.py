@@ -46,9 +46,9 @@ if alice:
     else:
         raise NameError('You need to set the single flag for this to run \n it is much faster')
 else:
-    m = 4
+    m = 5
     pre = f'{m}/'
-    fix = 272
+    fix = 288
     sim = ''
     mstar = 0.5
     rstar = 0.47
@@ -120,7 +120,11 @@ time_start = 0
 reds = np.zeros(c.NPIX)
 
 # Iterate over observers
-for i in range(c.NPIX):
+zsweep = [104, 136, 152, 167, 
+          168, 179, 
+          180, 187, 
+          188, 191, 140]
+for i in zsweep: # range(0, c.NPIX, 1):
     # Progress 
     time_end = time.time()
     print(f'Snap: {fix}, Obs: {i}', 
@@ -155,10 +159,10 @@ for i in range(c.NPIX):
     y = r*mu_y
     z = r*mu_z
     xyz2 = np.array([x, y, z]).T
-    tree = KDTree(xyz, leaf_size=50)
+    tree = KDTree(xyz, leaf_size=25)
     _, idx = tree.query(xyz2, k=1)
     idx = [ int(idx[i][0]) for i in range(len(idx))] # no -1 because we start from 0
-    del x, y, z
+    # del x, y, z
 
     d = Den[idx] * c.den_converter
     t = T[idx]
@@ -175,7 +179,7 @@ for i in range(c.NPIX):
     sigma_plank = eng.interp2(T_cool2,Rho_cool2,plank2.T, 
                               np.log(t),np.log(d),'linear',0)
     sigma_plank = np.array(sigma_plank)[0]
-    sigma_plank_eval = np.exp(sigma_plank)
+    sigma_plank_eval = np.exp(sigma_plank) # for sanity
     del sigma_rossland, sigma_plank 
     gc.collect()
     
@@ -255,7 +259,7 @@ for i in range(c.NPIX):
         Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
     max_length = 4*np.pi*c.c*EEr[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
     reds[i] = np.min( [Lphoto2, max_length])
-    del smoothed_flux, R_lamda, fld_factor, EEr, los,
+    del smoothed_flux, R_lamda, fld_factor, EEr,
     gc.collect()
     # Spectra ---
     los_effective[los_effective>30] = 30
@@ -267,16 +271,16 @@ for i in range(c.NPIX):
         wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
         black_body = frequencies**3 / (c.c**2 * wien)
         F_photo_temp[i,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
-
+        # print(t[k], sigma_plank_eval[k])
     norm = reds[i] / np.trapz(F_photo_temp[i,:], frequencies)
     F_photo_temp[i,:] *= norm
-    F_photo[i,:] = np.dot(cross_dot[i,:], F_photo_temp)      
+    F_photo[i,:] = np.dot(cross_dot[i,:], F_photo_temp)    
 eng.exit()
 
 ### Bolometric ---
 red = 4 * np.pi * np.mean(reds) # this 4pi here shouldn't exist, leaving it for posterity
 
-### Saving ---
+#%% Saving ---
 if save and alice: # Save red
         pre_saving = '/home/kilmetisk/data1/TDE/tde_comparison/data/'
         if single:
@@ -296,6 +300,20 @@ if save and alice: # Save red
         data = [fix, day, np.mean(photosphere), np.mean(colorsphere), c.NPIX]
         [ data.append(photosphere[i]) for i in range(c.NPIX)]
         [ data.append(colorsphere[i]) for i in range(c.NPIX)]
+        
+        with open(filepath, 'a', newline='') as file:
+            file.write('# snap, time [tfb], photo [Rsol], color [Rsol], NPIX, NPIX cols with photo for each observer, NPIX cols with color for each observer \n')
+            writer = csv.writer(file)
+            writer.writerow(data)
+        file.close()
+if save and not alice:
+        # Save photocolor
+        pre_saving = 'data/'
+
+        filepath =  f'{pre_saving}photosphere/sanity_extra2_{fix}_{m}.csv'
+        data = [fix, day, np.mean(photosphere), np.mean(colorsphere), c.NPIX]
+        [ data.append(np.linalg.norm(photosphere[i])) for i in range(len(photosphere))]
+        [ data.append(np.linalg.norm(colorsphere[i])) for i in range(len(photosphere))]
         
         with open(filepath, 'a', newline='') as file:
             file.write('# snap, time [tfb], photo [Rsol], color [Rsol], NPIX, NPIX cols with photo for each observer, NPIX cols with color for each observer \n')

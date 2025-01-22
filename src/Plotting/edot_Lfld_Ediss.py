@@ -75,7 +75,7 @@ def t_circ_dmde(m, mstar=0.5, rstar=0.47):
     return time, tcirc, aris1, aris2, E_dot, E_orb, Ecirc
 
 pre = 'data/red/'
-Mbh = 6
+Mbh = 4
 # cols = ['k', c.AEK, 'maroon']
 extra = 'beta1S60n1.5Compton'
 tfb6 = np.pi/np.sqrt(2) * np.sqrt(0.47**3/0.5 * 1e6/0.5)
@@ -91,40 +91,47 @@ ax.plot(t6[Edot6_neg], -Edot6[Edot6_neg]*power_converter/tfb6, color = 'k',
         label = '$\dot{E}$')
 
 #--- FLD
-data = np.genfromtxt(f'{pre}eladred{Mbh}_d19.csv', delimiter = ',').T
+data = np.genfromtxt(f'{pre}red_richex{Mbh}.csv', delimiter = ',').T
 days = data[1]
 sorter = np.argsort(days)
 
 L = data[2] / (4*np.pi) # CAREFUL
-if Mbh == 6:
-    L[163:] *= 4*np.pi
 
 peak4, peaktime4 = peak_finder(L, days)
 # Plot    
-ax.plot(days[sorter], L[sorter], color='maroon', lw = 0.5, marker = 'o', 
+ax.plot(days[sorter], L[sorter], color=c.reddish, lw = 0.5, marker = 'o', 
         markersize = 2, label = 'FLD')
 ax.plot(peaktime4, peak4, c = 'white', marker = 'X', markersize = 8, 
-        markeredgecolor = 'maroon', markeredgewidth = 0.65, alpha = 0.75)
+        markeredgecolor = c.reddish, markeredgewidth = 0.65, alpha = 0.75)
 
 #--- Diss
 data = np.genfromtxt(f'data/tcirc/sum{Mbh}diss.csv', delimiter = ',')
 time = data.T[0]
 sorter = np.argsort(time)
 time = time[sorter]
-E_diss_bound = -data.T[2][sorter]
-ax.plot(time, E_diss_bound*power_converter, c.cyan, lw = 0.5, marker = 'o', 
-        markersize = 2, label = '$E_\mathrm{diss}$' )
+E_diss_bound = data.T[2][sorter]
+E_diss_bound_neg = E_diss_bound < 0
+E_diss_bound_pos = E_diss_bound > 0
+
+ax.plot(time[E_diss_bound_neg], -E_diss_bound[E_diss_bound_neg]*power_converter, 
+        c.cyan, lw = 0.5, marker = 'o', 
+        markersize = 2, label = '$E_\mathrm{diss} < 0$' )
+ax.plot(time[E_diss_bound_pos], E_diss_bound[E_diss_bound_pos]*power_converter, 
+        c.c98, lw = 0.5, marker = 's', 
+        markersize = 2, label = '$E_\mathrm{diss} > 0$' )
 
 # Eddington Text
-ax.axhline(Leddington(10**Mbh), ls = '--', c = 'maroon')
-ax.text(0.22, Leddington(10**Mbh) * 2,'$L_\mathrm{Edd}$', color = 'maroon',
+ax.axhline(Leddington(10**Mbh), ls = '--', c = c.reddish)
+ax.text(0.47, Leddington(10**Mbh) * 2,'$L_\mathrm{Edd}$', color = c.reddish,
             fontsize = 14 )
 
 # Make nice
 ax.set_yscale('log')
-ax.set_xlim(0.2)
-ax.set_ylim(7e36, 1e45)
+ax.set_xlim(0.15)
+ax.set_ylim(1e39)
 
 ax.set_xlabel('Time $[t_\mathrm{FB}]$', fontsize = 16)
 ax.set_ylabel('Power [erg/s]', fontsize = 16)
 ax.legend(loc = 'lower right', ncol = 1)
+
+ax.set_title(f'$M_\mathrm{{BH}}$ = 10$^{Mbh}$$M_\odot$', fontsize = 14)

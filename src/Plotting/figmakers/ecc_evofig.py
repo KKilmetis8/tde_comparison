@@ -69,6 +69,6 @@ axs[2].text(9e-3, 0.2, '$R_\mathrm{T}$', c = 'goldenrod', fontsize = labelfontsi
 axs[2].text(9e-3, 0.4, '$R_\mathrm{smoothing}$',  c = 'crimson', fontsize = labelfontsize)
 
 axs[2].set_ylabel('Time $[t/t_\mathrm{FB}]$', fontsize = labelfontsize)
-cb.set_label('Eccentricity', fontsize = labelfontsize, labelpad = 5)
+cb.set_label('1 - Eccentricity', fontsize = labelfontsize, labelpad = 5)
 axs[2].set_xlabel('Radial Coordinate [$r/R_\mathrm{a}$]', fontsize = labelfontsize)
 

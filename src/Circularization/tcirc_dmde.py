@@ -41,7 +41,7 @@ def t_circ_dmde(m, which, mstar=0.5, rstar=0.47):
         sorter = np.argsort(time)
         time = time[sorter]
         E_diss_bound = data.T[2][sorter] 
-        Edot = E_diss_bound
+        Edot = - E_diss_bound  * tfb
     if which == 'orbdot':
         Edot = np.gradient(Eorb, time) # E_fb/s
         Edot = uniform_filter1d(Edot, 3)

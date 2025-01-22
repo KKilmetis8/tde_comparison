@@ -42,9 +42,11 @@ xhe2 = 54.416 * ev_to_erg # erg
 prefactor_he2 = 1
 vib = 5984.48 # [K]
 rot = 170.64 # [K]
- 
+
+
 # Converters
 Rsol_to_cm = 6.957e10 # [cm]
+Rsol_to_au = 0.00465047 # [AU]
 Msol_to_g = 2e33 # 1.989e33 # [g]
 Gcgs = 6.6743e-8 # cgs
 den_converter = Msol_to_g / Rsol_to_cm**3
@@ -53,11 +55,17 @@ en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
 day_to_sec = 60*60*24
 sec_to_yr = 1 / (60*60*24*365)
 kEv_to_K = 11604525.00617
+Hz_to_ev = 4.1357e-15
 
 # Healpy
 import healpy as hp
 NSIDE = 4
 NPIX = hp.nside2npix(NSIDE)#  int(NSIDE * 96)
+
+f_min = kb * 1e3 / h
+f_max = kb * 3e13 / h
+f_num = 1_000
+freqs = np.logspace(np.log10(f_min), np.log10(f_max), f_num)
 
 # MATLAB shit
 mat_eq_obs = np.array([71, 70, 91, 90, 87, 86, 107, 106, 103, 

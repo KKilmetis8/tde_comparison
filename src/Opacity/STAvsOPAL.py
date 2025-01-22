@@ -12,6 +12,7 @@ import matplotlib.pyplot as plt
 import colorcet as cc
 
 import src.Utilities.prelude as c
+from src.Opacity.LTE_loader import T_opac_ex, Rho_opac_ex, rossland_ex, plank_ex
 opac = 'TOP'
 path = f'src/Opacity/{opac}_data/'
 table = 'top2'
@@ -131,10 +132,13 @@ T_us = np.log10(np.exp(T_cool))
 rho_us = np.log10(np.exp(Rho_cool))
 ross_us = np.log10(np.exp(rossland) / np.exp(Rho_cool)) # 1/cm / g/cm3 = cm2/g
 
+T_us_big = np.log10(np.exp(T_opac_ex))
+rho_us_big = np.log10(np.exp(Rho_opac_ex))
+ross_us_big = np.log10(np.exp(rossland_ex) / np.exp(Rho_opac_ex)) # 1/cm / g/cm3 = cm2/g 
 #%% Plot
 fig, ax = plt.subplots(1,2, sharex = True, sharey = True)
-cmin = -1
-cmax = 6
+cmin = -8
+cmax = 8
 cmap = cc.m_CET_CBL2_r
 new_cmap = cmap(np.linspace(0, 1, 256))  # 256 levels of the original colormap
 from matplotlib.colors import ListedColormap
@@ -143,46 +147,51 @@ new_cmap = ListedColormap(new_cmap)
 # Modify the color for a specific value
 X = 0.9082339738214822  # 0.7381
 specific_value = np.log10(0.2*(1+X))
-specific_color = [1.0, 0.0, 0.0, 1.0]  # Red in RGBA
-norm = plt.Normalize(vmin=cmin, vmax=cmax)
-# Find the normalized index of the specific value
-specific_index = int(norm(specific_value) * (len(new_cmap.colors) - 1))
-new_cmap.colors[specific_index] = specific_color
+# specific_color = [1.0, 0.0, 0.0, 1.0]  # Red in RGBA
+# norm = plt.Normalize(vmin=cmin, vmax=cmax)
+# # Find the normalized index of the specific value
+# specific_index = int(norm(specific_value) * (len(new_cmap.colors) - 1))
+# new_cmap.colors[specific_index] = specific_color
 
 
 img = ax[0].pcolormesh(Ts, rhos, kappa, shading = 'gouraud',
                      cmap = new_cmap, vmin = cmin, vmax = cmax)
 img2 = ax[1].pcolormesh(T_us, rho_us, ross_us.T,
                      cmap = new_cmap, vmin = cmin, vmax = cmax)
-ax[1].axhline(np.min(rho_us), c = 'k', ls ='--')
-ax[1].axhline(np.max(rho_us), c = 'k', ls ='--')
-ax[1].axvline(np.min(T_us), c = 'k', ls ='--')
-ax[1].axvline(np.max(T_us), c = 'k', ls ='--')
+img2 = ax[1].pcolormesh(T_us_big, rho_us_big, ross_us_big.T,
+                     cmap = new_cmap, vmin = cmin, vmax = cmax)
+ax[1].axhline(np.min(rho_us), c = 'r', ls ='--')
+ax[1].axhline(np.max(rho_us), c = 'r', ls ='--')
+ax[1].axvline(np.min(T_us), c = 'r', ls ='--')
+ax[1].axvline(np.max(T_us), c = 'r', ls ='--')
 
 # plt.xlim(3.8, 7.42)
 # plt.ylim(-15, 1)
 cb = fig.colorbar(img2)
+cb.set_label( '$\log(\kappa_\mathrm{Ross}$) [cm$^2$/g]')
 cbax = cb.ax
-cbax.text(4, 1, '$\log(\kappa_\mathrm{Ross}$) [cm$^2$/g]', rotation = 90)
+# cbax.text(4, 1, '$\log(\kappa_\mathrm{Ross}$) [cm$^2$/g]', rotation = 90)
 # Get existing ticks and add a new one
-existing_ticks = cb.get_ticks()
-new_tick = specific_value # 'log(0.2(1+X))'  # Example of an extra tick
-new_ticks = np.append(existing_ticks, new_tick)
-cb.set_ticks(new_ticks)
+# existing_ticks = cb.get_ticks()
+# new_tick = specific_value # 'log(0.2(1+X))'  # Example of an extra tick
+# new_ticks = np.append(existing_ticks, new_tick)
+# cb.set_ticks(new_ticks)
 
-# Format labels
-new_labels = []
-for tick in new_ticks:
-    if tick !=specific_value:
-        new_labels.append(f"{tick:.1f}")
-    else:
-        new_labels.append("log(0.2(1+X))")
-cb.ax.set_yticklabels(new_labels)
+# # Format labels
+# new_labels = []
+# for tick in new_ticks:
+#     if tick !=specific_value:
+#         new_labels.append(f"{tick:.1f}")
+#     else:
+#         new_labels.append("log(0.2(1+X))")
+# cb.ax.set_yticklabels(new_labels)
 
 ax[0].set_xlabel('$\log (T) $ [K]')
 ax[0].set_ylabel(r'$\log (\rho ) $ g/cm$^3$')
 ax[0].set_title('TOP')
 ax[1].set_title('STA')
+ax[0].set_ylim(-15, 4)
+ax[0].set_xlim(3.5, 8)
 #%% Rho plot
 fig, axs = plt.subplots(2,3, figsize = (7,7), 
                         tight_layout = True, sharey = True)

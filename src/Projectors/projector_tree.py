@@ -17,6 +17,8 @@ import healpy as hp
 
 from src.Calculators.THREE_tree_caster import grid_maker
 import src.Utilities.selectors as s
+import src.Utilities.prelude as c
+
 from src.Utilities.parser import parse
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
@@ -94,20 +96,18 @@ if alice:
 else:
     pre = ''
 # Constants & Converter
-Rsol_to_cm = 6.957e10 # [cm]
 
 @numba.njit
 def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii, what):
     """ Project density on XY plane. NB: to plot you have to transpose the saved data"""
     # Make the 3D grid 
     flat_den =  np.zeros(( len(x_radii), len(y_radii) ))
-    # flat_mass =  np.zeros(( len(x_radii), len(y_radii) ))
     for i in range(len(x_radii)):
         for j in range(len(y_radii)):
             mass_zsum = 0
             step = 0
             for k in range(len(z_radii) - 1): # NOTE SKIPPING LAST Z PLANE
-                dz = (z_radii[k+1] - z_radii[k]) * Rsol_to_cm
+                dz = (z_radii[k+1] - z_radii[k]) # * Rsol_to_cm
                 if mass_weigh:
                     mass_zsum += gridded_mass[i,j,k]
                     flat_den[i,j] += gridded_den[i,j,k] * dz * gridded_mass[i,j,k]
@@ -127,44 +127,50 @@ if __name__ == '__main__':
 
     if alice:
         args = parse()
-        fixes = np.arange(args.first, args.last + 1)
-        sim = args.name
+        if args.single:
+            fixes = [args.only]
+        else:
+            fixes = np.arange(args.first, args.last + 1)
         save = True
-        m = 'AEK'
+        picset = 'normal'
+        m = int(np.log10(float(args.blackhole)))
         star = 'MONO AEK'
         check = 'OPOIOS SAS GAMAEI EINAI AEK'
         what = 'density'
     else:
         # Choose simulation
-        m = 5
+        m = 4
+        picset = '5zoomout'
         opac_kind = 'LTE'
         check = 'fid'
         mstar = 0.5
-        if mstar == 0.5:
-            star = 'half'
-        else:
-            star = ''
         rstar = 0.47
+        Rt = rstar * (10**m/mstar)**(1/3) 
         beta = 1
         what = 'density' # temperature or density
         save = False
-        fixes = [308]
+        fixes = [348]
         args = None
 
     for fix in fixes:
-        print(fix)
-        _, grid_den, grid_mass, xs, ys, zs = grid_maker(fix, m, star, check,
-                                                        100, 100, 10, False,
-                                                        args)
+        _, grid_den, grid_mass, xs, ys, zs = grid_maker(fix, m, 
+                                                        200, 200, 10, 
+                                                        picturesetting = picset,
+                                                        parsed = args)
         flat_den = projector(grid_den, grid_mass, False,
                             xs, ys, zs, what)
+        
+        den_plot = np.nan_to_num(flat_den, nan = -5, neginf = -5)
+        den_plot *= c.Msol_to_g / c.Rsol_to_cm**2
+        den_plot = np.log10(den_plot)
+        den_plot = np.nan_to_num(den_plot, neginf= 0)
 
         if save:
             if alice:
-                pre = f'/home/kilmetisk/data1/TDE/tde_comparison/data/denproj/{sim}'
-                np.savetxt(f'{pre}/denproj{sim}{fix}.txt', flat_den)
-                np.savetxt(f'{pre}/xarray{sim}.txt', xs)
-                np.savetxt(f'{pre}/yarray{sim}.txt', ys)
+                pre = f'/home/kilmetisk/data1/TDE/tde_comparison/data/denproj/paper'
+                np.savetxt(f'{pre}/{m}{picset}{fix}.txt', den_plot)
+                np.savetxt(f'{pre}/{m}{picset}x.txt', xs)
+                np.savetxt(f'{pre}/{m}{picset}y.txt', ys)
             else:
                 np.savetxt(f'data/denproj{m}_{fix}.txt', flat_den) 
                 np.savetxt(f'data/xarray{m}.txt', xs) 
@@ -174,22 +180,19 @@ if __name__ == '__main__':
         if plot:
             import colorcet
             fig, ax = plt.subplots(1,1)
-            plt.rcParams['text.usetex'] = True
-            plt.rcParams['figure.dpi'] = 300
-            plt.rcParams['font.family'] = 'Times New Roman'
-            plt.rcParams['figure.figsize'] = [6, 4]
-            plt.rcParams['axes.facecolor']=     'whitesmoke'
+            plt.rcParams['figure.figsize'] = [8, 4]
             
             # Clean
-            den_plot = np.nan_to_num(flat_den, nan = -1, neginf = -1)
+            den_plot = np.nan_to_num(flat_den, nan = -3, neginf = -3)
+            den_plot *= c.Msol_to_g / c.Rsol_to_cm**2
             den_plot = np.log10(den_plot)
             den_plot = np.nan_to_num(den_plot, neginf= 0)
             
             # Specify
             if what == 'density':
                 cb_text = r'Density [g/cm$^2$]'
-                vmin = 0
-                vmax = 5
+                vmin = -5
+                vmax = 2
             elif what == 'temperature':
                 cb_text = r'Temperature [K]'
                 vmin = 2
@@ -198,24 +201,49 @@ if __name__ == '__main__':
                 raise ValueError('Hate to break it to you champ \n \
                                 but we don\'t have that quantity')
                     
-            # ax.set_xlim(-1, 10/20_000)
-            # ax.set_ylim(-0.2, 0.2)
-            ax.set_xlabel(r' X [$R_\odot$]', fontsize = 14)
-            ax.set_ylabel(r' Y [$R_\odot$]', fontsize = 14)
-            img = ax.pcolormesh(xs, ys, den_plot.T, cmap = 'cet_fire',
+
+            ax.set_xlabel(r' X [AU]', fontsize = 14)
+            ax.set_ylabel(r' Y [AU]', fontsize = 14)
+            img = ax.pcolormesh(xs * c.Rsol_to_au, 
+                                ys * c.Rsol_to_au, 
+                                den_plot.T, 
+                                cmap = 'cet_fire',
                                 vmin = vmin, vmax = vmax)
             cb = plt.colorbar(img)
             cb.set_label(cb_text, fontsize = 14)
             
-            photo_x4, photo_y4 = equator_photo(photo_elad)
-            ax.plot(np.array(photo_x4), np.array(photo_y4), 
-                ':o', color = 'm', linewidth = 3)
-            # ax.plot(np.array(photos_dir_X[88:104]), np.array(photos_dir_Y[88:104]), 
-            #     ':o', color = 'm', linewidth = 3)
-            ax.text(-1500, 0, '100', c = 'c', fontsize = 16)
-            ax.set_title('XY Projection', fontsize = 16)
-            # ax.set_xlim(-2000, 500)
-            # ax.set_ylim(-300, 300)
-            #plt.savefig(f'{snap}T.png')
-            #plt.show()
+
+            # time = np.loadtxt(f'{m}/{fixes[0]}/tbytfb_{fixes[0]}.txt')
+            # ax.set_title(f'10$^{m} M_\odot$ - {time:.2f} $t_\mathrm{{FB}}$',
+            #              fontsize = 16)
+            import pandas as pd
+            df = pd.read_csv(f'data/photosphere/richex_photocolor{m}.csv', sep = ',',
+                              comment = '#', header = None)
+            
+            # Find snap in photodata
+            idx = np.argmin(np.abs(fix - df.iloc[:,0]))
+            
+            # snap time photo color obs_num
+            # Photosphere data is a 3-tuple for each observer
+            # The equatorial observers are 88:104
+            def tuple_parse(strings):
+                ''' parses "(1,2,3)" '''
+                xs = np.zeros(len(strings))
+                ys = np.zeros(len(strings))
+                for i, string in enumerate(strings):
+                    values = string.strip("()").split(", ")
+                    tuple_values = tuple(np.float64(value.split("(")[-1].strip(")")) for value in values)
+                    xs[i] = tuple_values[0]
+                    ys[i] = tuple_values[1]
+                return xs, ys
+            good_obs = np.array([89, 90, 91, 92, 102, 103, 104, 89, 94]) + 4
+            good_obs = np.arange(88, 104+1) + 4 + 192
+            good_obs = np.arange(88, 104) + 4# + 192
+            photo_x4, photo_y4 = tuple_parse(df.iloc[idx][good_obs])
+            ax.plot(photo_x4 * c.Rsol_to_au, photo_y4 * c.Rsol_to_au, 
+                    '-o', c = 'c', markersize = 3, label = 'Photosphere')
+            ax.set_title(f'{m} Snap {fix}')
+            # ax.set_ylim(-100,100)
+            # ax.set_xlim(-200, 100)
+
 

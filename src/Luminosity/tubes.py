@@ -63,9 +63,9 @@ def cartesian_gradients(X, Y, Z, Rad, cell_radius, rhat, neigh_num = 20):
 
 #%% Load & Clean
 # Specify snap
-m = 4
+m = 5
 pre = f'{m}/'
-snap = 164
+snap = 349
 
 # Data load
 X = np.load(f'{pre}{snap}/CMx_{snap}.npy')
@@ -241,6 +241,7 @@ class ray:
 rays = []
 
 for observer, corner, iobs in tqdm(zip(observers, corners, range(0, 192))):
+    iobs = 188
     corner_theta = corner[0] # 0.332 / 2 
     corner_phi = corner[1] # 0.339 / 2 
     
@@ -260,6 +261,7 @@ for observer, corner, iobs in tqdm(zip(observers, corners, range(0, 192))):
     ray_temp.calc_colorsphere()
     # ray_temp.calc_spectra(freqs, cross_dot)
     rays.append(ray_temp)
+    break
     # Do the cross dot bit
 #%%
 red = 0

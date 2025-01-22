@@ -98,7 +98,7 @@ def fitline(x, V, slope_length = 2 ,extrarows = 3):
     
     return xn, Vn
 
-def extrapolator_flipper(x ,y, V, slope_length = 5, extrarows = 25,
+def extrapolator_flipper(x ,y, V, slope_length = 26, extrarows = 25,
                          what = 'rich'):
     if what == 'rich':
         xn, Vn = rich_grabapoint(x, V, slope_length, extrarows)
@@ -108,14 +108,25 @@ def extrapolator_flipper(x ,y, V, slope_length = 5, extrarows = 25,
         yn, Vn = fitline(y, Vn.T, slope_length, extrarows)
     return xn, yn, Vn.T
 
-def nouveau_rich(x, y, K, slope_length = 5, extrarowsx = 99, 
+def nouveau_rich(x, y, K, what = 'scatter', slope_length = 26, extrarowsx = 100, 
                  extrarowsy = 100, highT_slope = -3.5):
+    ''' 
+    what, str: either scattering or absorption
+    
+    should be linear in log for absorption, everywhere,
+    for scattering/density should be linear, irregardless of temperature,
+    +opacity should never be below thompson'''
+    
+    X = 0.9082339738214822 # From table prescription
+    thompson = 0.2 * (1 + X)
+    
     # Extend x and y, adding data equally space (this suppose x,y as array equally spaced)
     # Low extrapolation
     deltaxn_low = x[1] - x[0]
     deltayn_low = y[1] - y[0] 
     x_extra_low = [x[0] - deltaxn_low * (i + 1) for i in range(extrarowsx)]
     y_extra_low = [y[0] - deltayn_low * (i + 1) for i in range(extrarowsy)]
+    
     # High extrapolation
     deltaxn_high = x[-1] - x[-2]
     deltayn_high = y[-1] - y[-2]
@@ -126,61 +137,75 @@ def nouveau_rich(x, y, K, slope_length = 5, extrarowsx = 99,
     xn = np.concatenate([x_extra_low[::-1], x, x_extra_high])
     yn = np.concatenate([y_extra_low[::-1], y, y_extra_high])
     
-    # 2D low
     Kn = np.zeros((len(xn), len(yn)))
     for ix, xsel in enumerate(xn):
         for iy, ysel in enumerate(yn):
+            
+            # Too cold
             if xsel < x[0]:
                 deltax = x[slope_length - 1] - x[0]
-                if ysel < y[0]:
+                if ysel < y[0]: # Too rarefied
+                    # slope_length = 2
                     deltay = y[slope_length - 1] - y[0]
                     Kxslope = (K[slope_length - 1, 0] - K[0, 0]) / deltax
                     Kyslope = (K[0, slope_length - 1] - K[0, 0]) / deltay
                     Kn[ix][iy] = K[0, 0] + Kxslope * (xsel - x[0]) + Kyslope * (ysel - y[0])
-                elif ysel > y[-1]: #this cover the extrapolation from Elad's code
+                    # if what == 'abs':
+                    #    Kn[ix][iy] = K[0, 0] + Kxslope * (x[0] - xsel) + Kyslope * (y[0]-ysel)
+                elif ysel > y[-1]: # Too dense
                     deltay = y[-1] - y[-slope_length] 
                     Kxslope = (K[slope_length - 1, -1] - K[0, -1]) / deltax
                     Kyslope = (K[0, -1] - K[0, -slope_length]) / deltay
-                    Kn[ix][iy] = K[0, -1] + Kxslope * (xsel - x[0]) + Kyslope * (ysel - y[-1])
-                else:
+                    Kn[ix][iy] = K[0, -1] + Kxslope * (xsel - x[0]) + Kyslope * (ysel - y[-1]) 
+                else: # Density is inside the table
                     iy_inK = np.argmin(np.abs(y - ysel))
                     Kxslope = (K[slope_length - 1, iy_inK] - K[0, iy_inK]) / deltax
                     Kn[ix][iy] = K[0, iy_inK] + Kxslope * (xsel - x[0])
-                continue
-            if xsel > x[-1]:
-                # deltax = x[-1] - x[-slope_length]
-                if ysel < y[0]:
+                #continue
+            
+            # Too hot
+            elif xsel > x[-1]: 
+                if ysel < y[0]: # Too rarefied
                     deltay = y[slope_length - 1] - y[0]
                     Kxslope = highT_slope #(K[-1, 0] - K[-slope_length, 0]) / deltax
                     Kyslope = (K[-1, slope_length - 1] - K[-1, 0]) / deltay
-                    Kn[ix][iy] = K[-1, 0] + Kxslope * (xsel - x[-1]) + Kyslope * (ysel - y[0])
-                elif ysel > y[-1]: # this cover the interpolation in Elad's code
+                    Kn[ix][iy] = K[-1, 0] + Kxslope * (xsel - x[-1]) + Kyslope * (ysel - y[0])        
+                elif ysel > y[-1]: # Too dense
                     deltay = y[-1] - y[-slope_length] 
                     Kxslope = highT_slope #(K[-1, -1] - K[-slope_length, -1]) / deltax
                     Kyslope = (K[-1, -1] - K[-1, -slope_length]) / deltay
                     Kn[ix][iy] = K[-1, -1] + Kxslope * (xsel - x[-1]) + Kyslope * (ysel - y[-1])
-                else:
+                else: # Density is inside the table
                     iy_inK = np.argmin(np.abs(y - ysel))
                     Kxslope = highT_slope #(K[-1, iy_inK] - K[-slope_length, iy_inK]) / deltax
                     Kn[ix][iy] = K[-1, iy_inK] + Kxslope * (xsel - x[-1])
-                continue
-            if ysel < y[0]: # x is in the ranege of the table, check y
+                
+                if what == 'scattering':
+                    thompson_this_den = np.log(thompson * np.exp(ysel)) # 1/cm
+                    if Kn[ix][iy] < thompson_this_den:
+                        # print(Kn[ix][iy], thompson_this_den)
+                        Kn[ix][iy] = thompson_this_den
+                #continue
+            else: 
                 ix_inK = np.argmin(np.abs(x - xsel))
-                deltay = y[slope_length - 1] - y[0]
-                Kyslope = (K[ix_inK, slope_length - 1] - K[ix_inK, 0]) / deltay
-                Kn[ix][iy] = K[ix_inK, 0] + Kyslope * (ysel - y[0])
-                continue
+                if ysel < y[0]: # Too rarefied, Temperature is inside table
+                    # Something fucky is going on here
+                    # BS change i make to avoid the line
+                    # slope_length = 25
+                    deltay = y[slope_length - 1] - y[0]
+                    Kyslope = (K[ix_inK, slope_length - 1] - K[ix_inK, 0]) / deltay
+                    Kn[ix][iy] = K[ix_inK, 0] + Kyslope * (ysel - y[0])
+                    #continue
+                elif ysel > y[-1]:  # Too dense, Temperature is inside table
+                    deltay = y[-1] - y[-slope_length]
+                    Kyslope = (K[ix_inK, -1] - K[ix_inK, -slope_length]) / deltay
+                    Kn[ix][iy] = K[ix_inK, -1] + Kyslope * (ysel - y[-1])
+                    #continue
+                else:
+                    iy_inK = np.argmin(np.abs(y - ysel))
+                    Kn[ix][iy] = K[ix_inK, iy_inK]
+                    # continue
 
-            ix_inK = np.argmin(np.abs(x - xsel))
-            if ysel > y[-1]:
-                deltay = y[-1] - y[-slope_length]
-                Kyslope = (K[ix_inK, -1] - K[ix_inK, -slope_length]) / deltay
-                Kn[ix][iy] = K[ix_inK, -1] + Kyslope * (ysel - y[-1])
-                continue
-    
-            iy_inK = np.argmin(np.abs(y - ysel))
-            Kn[ix][iy] = K[ix_inK, iy_inK]
-    
     return xn, yn, Kn
 if __name__ == '__main__':
     # Test data
@@ -204,21 +229,23 @@ if __name__ == '__main__':
     plt.colorbar(img, )
     
     # Extrapol
-    what = 'fit'
-    xn, yn, Vn = extrapolator_flipper(x, y, V, slope_length = 5, extrarows = 10,
-                                      what = what)
+    what = 'scattering'
+    xn, yn, Vn = nouveau_rich(x, y, V, what)
     
     # Plot
     plt.figure()
     plt.title(what)
-    img = plt.pcolormesh(xn, yn, Vn, 
-                         cmap = 'cet_rainbow4', vmin = -5, vmax = 15, 
-                         edgecolor = 'k', lw = 0.1)
+    img = plt.pcolormesh(xn, yn, Vn.T, 
+                         cmap = 'cet_rainbow4', vmin = -5, vmax = 10, 
+                         edgecolor = 'k', lw = 0.1, shading = 'gouraud')
     plt.axvline(np.min(x), c = 'white', ls = '--')
     plt.axvline(np.max(x), c = 'white', ls = '--')
     plt.axhline(np.min(y), c = 'white', ls = '--')
     plt.axhline(np.max(y), c = 'white', ls = '--')
     plt.colorbar(img, )
+    plt.xlim(-1, 15)
+    plt.ylim(-15, 15)
+
 
     
     

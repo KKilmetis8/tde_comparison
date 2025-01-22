@@ -21,21 +21,22 @@ from src.Circularization.tcirc_dmde import t_circ_dmde
 from src.Circularization.taehoryucirc import taeho_circ
 from src.Circularization.SnSchi import SnS_chi
 
+m = 6
 # M calligraphic
-mcal_t6, mcal_tc6, _, _, _, _, _ = t_circ_dmde(6, 'orbdot')
-diss_mcal_t6, diss_mcal_tc6, _, _, _, _, _ = t_circ_dmde(6, 'diss')
+mcal_t6, mcal_tc6, _, _, _, _, _ = t_circ_dmde(m, 'orbdot')
+diss_mcal_t6, diss_mcal_tc6, _, _, _, _, _ = t_circ_dmde(m, 'diss')
 
 # Taeho Ryu
-ryu_t5, ryu_tc5, = taeho_circ(6, 'orbdot')
-diss_ryu_t5, diss_ryu_tc5, = taeho_circ(6, 'diss')
+ryu_t5, ryu_tc5, = taeho_circ(m, 'orbdot')
+diss_ryu_t5, diss_ryu_tc5, = taeho_circ(m, 'diss')
 
 # Steinberg & Stone χ
-sns_t6, sns_tc6, _, _, _, _= SnS_chi(6, 'diss')
-my_sns_t6, my_sns_tc6, _, _ , _ ,_ = SnS_chi(6, 'orbdot')
+sns_t6, sns_tc6, _, _, _, _= SnS_chi(m, 'diss')
+my_sns_t6, my_sns_tc6, _, _ , _ ,_ = SnS_chi(m, 'orbdot')
 
 # Time plot
 plt.figure(figsize = (4,3), dpi = 300)
-plt.title('Gran Comparison, $10^6 M_\odot$')
+plt.title(f'Gran Comparison, $10^{m} M_\odot$')
 
 plt.plot(diss_mcal_t6[diss_mcal_tc6 > 0], diss_mcal_tc6[diss_mcal_tc6 > 0], 
          '-o', c = c.reddish, lw = 0.75, markersize = 1.5, 
@@ -56,9 +57,9 @@ plt.plot(sns_t6, sns_tc6, '-o', c = c.cyan,
           lw = 0.75, markersize = 1.5, label = 'SnS $\chi$ $E_\mathrm{diss}$')
 plt.plot(my_sns_t6, my_sns_tc6, '--s', c = c.darkb, 
          lw = 0.75, markersize = 1.5, label = 'SnS $\chi$ $\dot{E}_\mathrm{orb}$')
-plt.ylabel('Circularization Timescale $[t_\mathrm{FB}]$, $10^6, M_\odot$')
+plt.ylabel(f'Circularization Timescale $[t_\mathrm{{FB}}]$, $10^{m}, M_\odot$')
 plt.xlabel('Time $[t_\mathrm{FB}]$')
 plt.legend(ncols = 1, fontsize = 8, bbox_to_anchor = [1,1,0,0])
 plt.yscale('log')
 plt.xlim(0.8)
-plt.ylim(1e-4,1e6) 
+plt.ylim(1e-2, 3e1) 

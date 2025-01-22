@@ -9,7 +9,7 @@ Created on Tue Oct 10 10:19:34 2023
 import numpy as np
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
-
+import src.Utilities.prelude as c
 from src.Utilities.isalice import isalice
 alice, plot = isalice()
 if alice:
@@ -35,30 +35,26 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 
-def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False,
+def grid_maker(fix, m, x_num, y_num, z_num = 100, 
+               picturesetting = 'normal', WOW = 1,
+               mass_weight=False,
                parsed = None):
     """ ALL outputs are in in solar units """
 
     if type(parsed) == type(None):
         Mbh = 10**m
-        if 'star' == 'half':
-            mstar = 0.5
-            rstar = 0.47
-        else:
-            mstar = 1
-            rstar = 1
+        mstar = 0.5
+        rstar = 0.47
         Rt = rstar * (Mbh/mstar)**(1/3) 
         apocenter = Rt * (Mbh/mstar)**(1/3)
-        if alice:
-            pre = f'{m}{star}-{check}/snap_{fix}'
-        else: 
-            pre = f'{m}/{fix}'
-            # CM Position Data
+        pre = f'{m}/{fix}'
+        # CM Position Data
         X = np.load(f'{pre}/CMx_{fix}.npy')
         Y = np.load(f'{pre}/CMy_{fix}.npy')
         Z = np.load(f'{pre}/CMz_{fix}.npy')
         Den = np.load(f'{pre}/Den_{fix}.npy')
-
+        Vol = np.load(f'{pre}/Vol_{fix}.npy')
+        Mass = Vol * Den
     else:
         sim = parsed.name
         mstar = parsed.mass
@@ -70,24 +66,40 @@ def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False
         Y = np.load(f'{realpre}{sim}/snap_{fix}/CMy_{fix}.npy')
         Z = np.load(f'{realpre}{sim}/snap_{fix}/CMz_{fix}.npy')
         Den = np.load(f'{realpre}{sim}/snap_{fix}/Den_{fix}.npy')
+        Vol = np.load(f'{realpre}{sim}/snap_{fix}/Vol_{fix}.npy')
+        Mass = Vol * Den
 
-    WOW = 1
-    x_start = -apocenter * WOW
-    x_stop = 0.2 * apocenter * WOW
-    # x_num = pixel_num # np.abs(x_start - x_stop)
-    xs = np.linspace(x_start, x_stop, num = x_num )
-    y_start = -0.2 * apocenter  * WOW
-    y_stop = 0.2 * apocenter * WOW
-    # y_num = pixel_num # np.abs(y_start - y_stop)
-    ys = np.linspace(y_start, y_stop, num = y_num)
+    if picturesetting == 'normal':
+        x_start = - 1.5 * apocenter * WOW
+        x_stop =  0.3 * apocenter * WOW
+        y_start = - 0.5 * apocenter  * WOW
+        y_stop = 0.5 * apocenter  * WOW
+        
+    elif picturesetting == '6zoomout':
+        x_start = - 200 / c.Rsol_to_au # * apocenter * WOW
+        x_stop =  220 / c.Rsol_to_au # 0.25 * apocenter * WOW
+        y_start = - 300 / c.Rsol_to_au # * apocenter  * WOW
+        y_stop = 175 / c.Rsol_to_au # * apocenter * WOW
+
+    elif picturesetting == '5zoomout':
+        x_start = - 50 / c.Rsol_to_au
+        x_stop =  20 / c.Rsol_to_au 
+        y_start = - 25 / c.Rsol_to_au 
+        y_stop = 10 / c.Rsol_to_au 
+
+    elif picturesetting == '4zoomout':
+        x_start = - 50 / c.Rsol_to_au
+        x_stop =  20 / c.Rsol_to_au 
+        y_start = - 25 / c.Rsol_to_au 
+        y_stop = 10 / c.Rsol_to_au 
+            
     z_start = -2 * Rt
     z_stop = 2 * Rt
+    xs = np.linspace(x_start, x_stop, num = x_num)
+    ys = np.linspace(y_start, y_stop, num = y_num)
     zs = np.linspace(z_start, z_stop, z_num) #simulator units
-
-
     # Density cut
-    # denmask = np.where((Den > 1e-12))[0]
-    denmask = ne.evaluate("Den > 1e-12")
+    denmask = Den > 1e-19
     X = X[denmask]
     Y = Y[denmask]
     Z = Z[denmask]
@@ -110,8 +122,8 @@ def grid_maker(fix, m, star, check, x_num, y_num, z_num = 100, mass_weight=False
                 # Store
                 gridded_indexes[i, j, k] = idx
                 gridded_den[i, j, k] = Den[idx]
-    #             gridded_mass[i,j, k] = Mass[idx]
-    # den_cast = np.divide(den_cast, gridded_mass)
+                gridded_mass[i,j, k] = Mass[idx]
+    # den_cast = np.divide(gridded_den, gridded_mass)
     # den_cast = np.sum(gridded_den, axis=2) / 100
 
     # # Remove bullshit and fix things

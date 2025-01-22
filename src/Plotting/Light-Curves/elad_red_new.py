@@ -25,18 +25,18 @@ def peak_finder(red, t, lim = 0.4):
 def Leddington(M):
     return 1.26e38 * M
 pre = 'data/red/'
-Mbhs = [4] # , 5, 6]
+Mbhs = [4, 5, 6]
 cols = ['k', c.AEK, 'maroon']
 extra = 'beta1S60n1.5Compton'
 
 fig, ax = plt.subplots(1,1, figsize = (5,4), tight_layout = True, sharex=True)
 for Mbh, co in zip(Mbhs, cols):
     #DeltaE = mstar/rstar * ( (Mbh/mstar)**(1/3) - 1 )
-    data = np.genfromtxt(f'{pre}/fitex_eladred{Mbh}.csv', delimiter = ',').T
+    data = np.genfromtxt(f'{pre}/red_richex{Mbh}.csv', delimiter = ',').T
     days = data[1]
     sorter = np.argsort(days)
     
-    L = data[2]
+    L = data[2] / (4 * np.pi)
 
     peak4, peaktime4 = peak_finder(L[sorter], days[sorter])
     # Plot    
@@ -51,14 +51,16 @@ for Mbh, co in zip(Mbhs, cols):
     # Text
     # ax.text(0.9, Leddington(10**Mbh) * 0.1, f'$10^{Mbh}$ $M_\odot$', color = co,
     #             fontsize = 14)
-    ax.text(0.3, Leddington(10**Mbh) * 1.8,'$L_\mathrm{Edd}$', color = co,
+    ax.text(1.7, Leddington(10**Mbh) * 1.2,'$L_\mathrm{Edd}$', color = co,
                 fontsize = 14 )
+    ax.text(0.9, 4e41 * 10**(Mbh - 4), f'10$^{Mbh} M_\odot$', color = co, 
+            fontsize = 14)
 
 # Make nice
 ax.set_yscale('log')
-ax.set_xlim(0.25)
-# ax.set_ylim(2.5e41)
-ax.legend()
+ax.set_xlim(0.69)
+ax.set_ylim(1e41, 7e44)
+# ax.legend(ncols = 3)
 ax.set_xlabel('Time $[t_\mathrm{FB}]$', fontsize = 16)
 ax.set_ylabel('$L_\mathrm{FLD}$ [erg/s]', fontsize = 16)
 
