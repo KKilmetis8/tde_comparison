@@ -168,9 +168,11 @@ for i in range(0, c.NPIX, 1):
     ray_z = Z[idx]
     
     # Interpolate ---
+    # Interpolate ---
     sigma_rossland = eng.interp2(T_cool2,Rho_cool2,rossland2.T # needs T for the new RICH extrapol
                                  ,np.log(t), np.log(d),'linear',0)
     sigma_rossland = np.array(sigma_rossland)[0]
+    sigma_rossland = sigma_rossland[sigma_rossland != 1.0] 
     sigma_rossland_eval = np.exp(sigma_rossland) 
     
     sigma_plank = eng.interp2(T_cool2,Rho_cool2,plank2.T, 
@@ -181,12 +183,32 @@ for i in range(0, c.NPIX, 1):
     sigma_scattering = eng.interp2(T_cool2,Rho_cool2,scattering2.T, 
                               np.log(t),np.log(d),'linear',0)
     sigma_scattering = np.array(sigma_scattering)[0]
+
     sigma_scattering_eval = np.exp(sigma_scattering)
+    
+    # Check that we didnt underflow
+    plank_is_ok_mask = sigma_plank_eval != 1.0
+    scatter_is_ok_mask = sigma_scattering_eval != 1.0
+    both_are_ok_mask = plank_is_ok_mask * scatter_is_ok_mask
+    sigma_plank_eval = sigma_plank_eval[both_are_ok_mask]
+    sigma_scattering_eval = sigma_scattering_eval[both_are_ok_mask]
+    r = r[both_are_ok_mask]
+    t = t[both_are_ok_mask]
+    d = d[both_are_ok_mask]
+    sigma_rossland_eval = sigma_rossland_eval[both_are_ok_mask]
     del sigma_rossland, sigma_plank 
     gc.collect()
-    
     # Optical Depth ---.    
     r_fuT = np.flipud(r.T)
+    # kappa_rossland = np.flipud(sigma_rossland_eval) 
+    # los = - np.flipud(sci.cumulative_trapezoid(kappa_rossland, r_fuT, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
+    
+    # kappa_plank = np.flipud(sigma_plank_eval) 
+    # los_abs = - np.flipud(sci.cumulative_trapezoid(kappa_plank, r_fuT, initial = 0)) * c.Rsol_to_cm
+    # k_effective = np.sqrt(3 * np.flipud(sigma_plank_eval) * np.flipud(sigma_rossland_eval)) 
+    # los_effective = - np.flipud(sci.cumulative_trapezoid(k_effective, r_fuT, initial = 0)) * c.Rsol_to_cm
+    
+    # Try out elads scattering + rosseland
     kappa_rossland = np.flipud(sigma_scattering_eval) + np.flipud(sigma_plank_eval)
     los = - np.flipud(sci.cumulative_trapezoid(kappa_rossland, r_fuT, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
     
@@ -237,9 +259,13 @@ for i in range(0, c.NPIX, 1):
     del gradx, grady, gradz
     gc.collect()
     
-    R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx])
+    grad = grad[both_are_ok_mask]
+    R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx][both_are_ok_mask])
     R_lamda[R_lamda < 1e-10] = 1e-10
     fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
+    
+    gradr = gradr[both_are_ok_mask]
+    # fld_factor = fld_factor[both_are_ok_mask]
     smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) 
     
     # Spectra
@@ -257,6 +283,7 @@ for i in range(0, c.NPIX, 1):
     
     Lphoto2 = 4*np.pi*c.c*smoothed_flux[b] * c.Msol_to_g / (c.t**2)
     EEr = Rad_den[idx]
+    EEr = EEr[both_are_ok_mask]
     if Lphoto2 < 0:
         Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
     max_length = 4*np.pi*c.c*EEr[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
