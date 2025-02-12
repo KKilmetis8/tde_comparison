@@ -21,7 +21,7 @@ from src.Circularization.tcirc_dmde import t_circ_dmde
 from src.Circularization.taehoryucirc import taeho_circ
 from src.Circularization.SnSchi import SnS_chi
 
-m = 6
+m = 5
 # M calligraphic
 mcal_t6, mcal_tc6, _, _, _, _, _ = t_circ_dmde(m, 'orbdot')
 diss_mcal_t6, diss_mcal_tc6, _, _, _, _, _ = t_circ_dmde(m, 'diss')
@@ -59,7 +59,7 @@ plt.plot(my_sns_t6, my_sns_tc6, '--s', c = c.darkb,
          lw = 0.75, markersize = 1.5, label = 'SnS $\chi$ $\dot{E}_\mathrm{orb}$')
 plt.ylabel(f'Circularization Timescale $[t_\mathrm{{FB}}]$, $10^{m}, M_\odot$')
 plt.xlabel('Time $[t_\mathrm{FB}]$')
-plt.legend(ncols = 1, fontsize = 8, bbox_to_anchor = [1,1,0,0])
+plt.legend(ncols = 2, fontsize = 8, frameon = False)
 plt.yscale('log')
 plt.xlim(0.8)
-plt.ylim(1e-2, 3e1) 
+plt.ylim(1e-2, 7e2) 

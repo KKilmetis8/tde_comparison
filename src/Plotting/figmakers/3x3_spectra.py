@@ -103,6 +103,7 @@ ax[0,0].text(1.5e17 * Hz_to_ev, ypos, 'Soft X', fontsize = 9)
 ax[0,0].text(5.1e18 * Hz_to_ev, ypos, 'Hard X', fontsize = 9)
 rightside = [2,5,8]
 bottomside = [6,7,8]
+lowy = 1e39
 for i, oneax in enumerate(ax.flatten()):
     oneax.axvspan(4e14 * Hz_to_ev, 7e14 * Hz_to_ev, alpha=0.2, color='gold')
     oneax.axvspan(7e14 * Hz_to_ev, 7e16 * Hz_to_ev, alpha=0.2, color='purple')
@@ -110,7 +111,7 @@ for i, oneax in enumerate(ax.flatten()):
     oneax.axvspan(5e18 * Hz_to_ev, 5.3e19 * Hz_to_ev, alpha=0.2, color='b')
     oneax.set_xscale('log')
     oneax.set_yscale('log')
-    oneax.set_ylim(1e38, 3e44)
+    oneax.set_ylim(lowy, 3e44)
     oneax.set_xlim(2e13 * Hz_to_ev, 5.3e19 * Hz_to_ev)
     oneax.set_xticks(xticks1)
     oneax.set_yticks(yticks)
@@ -123,8 +124,8 @@ for i, oneax in enumerate(ax.flatten()):
         ax3.set_yscale('log')
         ax3.yaxis.tick_right()  
         # ax3.yaxis.set_label_position("right")
-        ax3.set_yticks(yticks)
-        ax3.set_ylim(1e38, 3e45)
+        # ax3.set_yticks(yticks)
+        ax3.set_ylim(lowy, 3e44)
     if i not in bottomside:
         oneax.set_xticks([])
 plt.tight_layout(w_pad=1)

@@ -52,6 +52,9 @@ Gcgs = 6.6743e-8 # cgs
 den_converter = Msol_to_g / Rsol_to_cm**3
 numden_converter = 1/Rsol_to_cm**3
 en_den_converter = Msol_to_g / (Rsol_to_cm  * t**2 ) # Energy Density converter
+power_converter = Msol_to_g * Rsol_to_cm**2 * t**(-3)
+energy_converter = Msol_to_g * Rsol_to_cm**2 * t**(-2)
+
 day_to_sec = 60*60*24
 sec_to_yr = 1 / (60*60*24*365)
 kEv_to_K = 11604525.00617

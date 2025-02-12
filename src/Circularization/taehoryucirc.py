@@ -19,7 +19,7 @@ def E_arrive(t, Mbh):
     E = 0.5 * np.pi**2 * Mbh**2 / t**2    
     return -E**(1/3)
 
-def taeho_circ(m, which, mstar=0.5, rstar=0.47):
+def taeho_circ(m, mstar=0.5, rstar=0.47):
     ''' '''
     Mbh = 10**m
     Rt = rstar * (Mbh/mstar)**(1/3) 

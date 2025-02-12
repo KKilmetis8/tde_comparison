@@ -53,21 +53,24 @@ if when == 'test':
     fixes6 = [315, 379, 444] # 0.5, should be 376 and 414 but ok
     title_txt = 'Time: Trial t/t$_{FB}$'
 
-size = 8
-fig, ax = plt.subplots(3,3, figsize = (1*1.4*size, size), sharex = True, sharey = True)
+size = 7
+step = 1
+fontsize = 17
+fig, ax = plt.subplots(3,3, figsize = (1*1.4*size, size), sharex = True, sharey = True,
+                       tight_layout = True)
 for f4, f5, f6, i in zip(fixes4, fixes5, fixes6, range(3)):
     # Load projection data
-    den4 = np.loadtxt(f'{pre}4normal{f4}.txt')
-    x4 = np.loadtxt(f'{pre}4normalx.txt')
-    y4 = np.loadtxt(f'{pre}4normaly.txt')
+    den4 = np.loadtxt(f'{pre}4normal{f4}.txt')[::step].T[::step].T
+    x4 = np.loadtxt(f'{pre}4normalx.txt')[::step]
+    y4 = np.loadtxt(f'{pre}4normaly.txt')[::step]
     
-    den5 = np.loadtxt(f'{pre}5normal{f5}.txt')
-    x5 = np.loadtxt(f'{pre}5normalx.txt')
-    y5 = np.loadtxt(f'{pre}5normaly.txt')
+    den5 = np.loadtxt(f'{pre}5normal{f5}.txt')[::step].T[::step].T
+    x5 = np.loadtxt(f'{pre}5normalx.txt')[::step]
+    y5 = np.loadtxt(f'{pre}5normaly.txt')[::step]
     
-    den6 = np.loadtxt(f'{pre}6normal{f6}.txt')
-    x6 = np.loadtxt(f'{pre}6normalx.txt')
-    y6 = np.loadtxt(f'{pre}6normaly.txt')
+    den6 = np.loadtxt(f'{pre}6normal{f6}.txt')[::step].T[::step].T
+    x6 = np.loadtxt(f'{pre}6normalx.txt')[::step]
+    y6 = np.loadtxt(f'{pre}6normaly.txt')[::step]
     
     reddata4 = np.genfromtxt(f'data/red/red_richex{4}.csv', delimiter = ',').T
     tidx4 = np.argmin(np.abs(f4 - reddata4[0]))
@@ -105,9 +108,9 @@ for f4, f5, f6, i in zip(fixes4, fixes5, fixes6, range(3)):
                                 color = 'c', fill = False, lw = 1))
     
     if i == 0:
-        ax[i,0].set_title('$10^4 M_\odot$', fontsize = 17)
-        ax[i,1].set_title('$10^5 M_\odot$', fontsize = 17)
-        ax[i,2].set_title('$10^6 M_\odot$', fontsize = 17)
+        ax[i,0].set_title('10$^4$ M$_\odot$', fontsize = fontsize)
+        ax[i,1].set_title('10$^5$ M$_\odot$', fontsize = fontsize)
+        ax[i,2].set_title('10$^6$ M$_\odot$', fontsize = fontsize)
 
         # ax[i,0].set_title('0.42 $t_\mathrm{FB}$', fontsize = 17)
         # ax[i,1].set_title('0.82 $t_\mathrm{FB}$', fontsize = 17)
@@ -178,11 +181,16 @@ for f4, f5, f6, i in zip(fixes4, fixes5, fixes6, range(3)):
     ax[1,2].set_ylim(ymin, ymax)
     ax[2,2].set_ylim(ymin, ymax)
 
-ax[2,1].set_xlabel(r'X $[\alpha_\mathrm{min}]$', fontsize = 17)
-ax[1,0].set_ylabel(r'Y $[\alpha_\mathrm{min}]$', fontsize = 17)
-cb = fig.colorbar(img, cax=fig.add_axes([0.93, 0.11, 0.03, 0.78]))
-cb.set_label('$\log_{10} (\Sigma) $ [g/cm$^2$]', fontsize = 17)
-# ax[3,2].set_xlabel('Y Coordinate')
+ax[2,1].set_xlabel(r'X $[\alpha_\mathrm{min}]$', fontsize = fontsize)
+ax[1,0].set_ylabel(r'Y $[\alpha_\mathrm{min}]$', fontsize = fontsize)
+cb = fig.colorbar(img, cax=fig.add_axes([1.02, 0.095, 0.04, 0.845]))
+cb.set_label('$\log_{10} (\Sigma) $ [g/cm$^2$]', fontsize = fontsize)
+cb.ax.tick_params(labelsize = fontsize-2)
+for oneax in ax.flatten():
+    oneax.tick_params(top=True, right=True, colors = 'whitesmoke',  
+                      labelcolor = 'k', labelsize = fontsize - 2)
+
+# plt.savefig('paperplots/denproj.eps')
 
     
     

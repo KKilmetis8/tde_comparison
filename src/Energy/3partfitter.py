@@ -30,7 +30,12 @@ from src.Utilities.parser import parse
 m = 4
 Mbh = 10**m
 pre = f'{m}/'
-snap = 65 # 65 80 145
+if m == 4:
+    snap = 65 # 65 80 145
+if m == 5:
+    snap = 80
+if m == 6:
+    snap = 145
 mstar = 0.5
 rstar = 0.47
 deltaE = mstar/rstar * ((Mbh/mstar)**(1/3) + 1)

@@ -21,7 +21,7 @@ import matlab.engine
 from sklearn.neighbors import KDTree
 from scipy.ndimage import uniform_filter1d
 
-from src.Opacity.LTE_loader import T_opac_ex, Rho_opac_ex, rossland_ex, plank_ex
+from src.Opacity.LTE_loader import T_opac_ex, Rho_opac_ex, rossland_ex, plank_ex, scattering_ex
 import src.Utilities.prelude as c
 from src.Utilities.parser import parse
 from src.Utilities.isalice import isalice
@@ -106,6 +106,7 @@ T_cool2 = T_opac_ex
 Rho_cool2 = Rho_opac_ex
 rossland2 = rossland_ex
 plank2 = plank_ex
+scattering2 = scattering_ex
 
 ### Do it --- --- ---
 eng = matlab.engine.start_matlab()
@@ -119,12 +120,8 @@ colorsphere = []
 time_start = 0
 reds = np.zeros(c.NPIX)
 
-# Iterate over observers
-zsweep = [104, 136, 152, 167, 
-          168, 179, 
-          180, 187, 
-          188, 191, 140]
-for i in zsweep: # range(0, c.NPIX, 1):
+
+for i in range(0, c.NPIX, 1):
     # Progress 
     time_end = time.time()
     print(f'Snap: {fix}, Obs: {i}', 
@@ -179,18 +176,23 @@ for i in zsweep: # range(0, c.NPIX, 1):
     sigma_plank = eng.interp2(T_cool2,Rho_cool2,plank2.T, 
                               np.log(t),np.log(d),'linear',0)
     sigma_plank = np.array(sigma_plank)[0]
-    sigma_plank_eval = np.exp(sigma_plank) # for sanity
+    sigma_plank_eval = np.exp(sigma_plank)
+    
+    sigma_scattering = eng.interp2(T_cool2,Rho_cool2,scattering2.T, 
+                              np.log(t),np.log(d),'linear',0)
+    sigma_scattering = np.array(sigma_scattering)[0]
+    sigma_scattering_eval = np.exp(sigma_scattering)
     del sigma_rossland, sigma_plank 
     gc.collect()
     
     # Optical Depth ---.    
     r_fuT = np.flipud(r.T)
-    kappa_rossland = np.flipud(sigma_rossland_eval) 
+    kappa_rossland = np.flipud(sigma_scattering_eval) + np.flipud(sigma_plank_eval)
     los = - np.flipud(sci.cumulative_trapezoid(kappa_rossland, r_fuT, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
     
     kappa_plank = np.flipud(sigma_plank_eval) 
     los_abs = - np.flipud(sci.cumulative_trapezoid(kappa_plank, r_fuT, initial = 0)) * c.Rsol_to_cm
-    k_effective = np.sqrt(3 * np.flipud(sigma_plank_eval) * np.flipud(sigma_rossland_eval)) 
+    k_effective = np.sqrt(3 * np.flipud(sigma_plank_eval) * kappa_rossland) 
     los_effective = - np.flipud(sci.cumulative_trapezoid(k_effective, r_fuT, initial = 0)) * c.Rsol_to_cm
     
     # Red ---
@@ -262,29 +264,34 @@ for i in zsweep: # range(0, c.NPIX, 1):
     del smoothed_flux, R_lamda, fld_factor, EEr,
     gc.collect()
     # Spectra ---
-    los_effective[los_effective>30] = 30
-    b2 = np.argmin(np.abs(los_effective-5))
-
-    for k in range(b2, len(r)):
-        dr = r[k]-r[k-1]
-        Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
-        wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
-        black_body = frequencies**3 / (c.c**2 * wien)
-        F_photo_temp[i,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
-        # print(t[k], sigma_plank_eval[k])
+    # Spectra ---
+    if los_effective[b2-1] >= 29:
+        wall_cell  = 4 * np.pi * c.stefan * t[b2-1]**4 * ( r[b2-1] * c.Rsol_to_cm)**2
+        bubble_temp = 0
+        for k in range(b2-1, len(r)):
+            dr = r[k]-r[k-1]
+            Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
+            wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
+            black_body = frequencies**3 / (c.c**2 * wien)
+            if k == b2-1:
+                # wall_norm = 
+                F_photo_temp[i,:] += wall_cell* black_body / np.trapz(black_body, frequencies)
+            else:
+                bubble_temp += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
+                F_photo_temp[i,:] += bubble_temp
     norm = reds[i] / np.trapz(F_photo_temp[i,:], frequencies)
     F_photo_temp[i,:] *= norm
     F_photo[i,:] = np.dot(cross_dot[i,:], F_photo_temp)    
 eng.exit()
 
 ### Bolometric ---
-red = 4 * np.pi * np.mean(reds) # this 4pi here shouldn't exist, leaving it for posterity
+red = np.mean(reds) # DO NOT put a 4pi here
 
 #%% Saving ---
 if save and alice: # Save red
         pre_saving = '/home/kilmetisk/data1/TDE/tde_comparison/data/'
         if single:
-            filepath =  f'{pre_saving}red/red_richex{m}.csv'
+            filepath =  f'{pre_saving}red/red_sumthomp{m}.csv'
             data = [fix, day, red]
             with open(filepath, 'a', newline='') as file:
                 writer = csv.writer(file)
@@ -293,13 +300,16 @@ if save and alice: # Save red
             
         # Save spectrum
         np.savetxt(f'{pre_saving}blue/{sim}/freqs.txt', frequencies)
-        np.savetxt(f'{pre_saving}blue/{sim}/richex_{m}spectra{fix}.txt', F_photo)
+        np.savetxt(f'{pre_saving}blue/{sim}/sumthomp_{m}spectra{fix}.txt', F_photo)
         
         # Save photocolor
-        filepath =  f'{pre_saving}photosphere/richex_photocolor{m}.csv'
-        data = [fix, day, np.mean(photosphere), np.mean(colorsphere), c.NPIX]
-        [ data.append(photosphere[i]) for i in range(c.NPIX)]
-        [ data.append(colorsphere[i]) for i in range(c.NPIX)]
+        filepath =  f'{pre_saving}photosphere/sumthomp_photocolor{m}.csv'
+        data = [fix, day, 
+                np.mean( np.linalg.norm(photosphere, axis = 1)), 
+                np.mean( np.linalg.norm(colorsphere, axis = 1)), 
+                c.NPIX]
+        data.append( np.linalg.norm(photosphere, axis = 1))
+        data.append( np.linalg.norm(colorsphere, axis = 1))
         
         with open(filepath, 'a', newline='') as file:
             file.write('# snap, time [tfb], photo [Rsol], color [Rsol], NPIX, NPIX cols with photo for each observer, NPIX cols with color for each observer \n')
@@ -308,15 +318,19 @@ if save and alice: # Save red
         file.close()
 if save and not alice:
         # Save photocolor
-        pre_saving = 'data/'
+        pre_saving = 'data/bluepaper/'
+        np.savetxt(f'{pre_saving}localbig_{m}spectra{fix}.txt', F_photo)
 
-        filepath =  f'{pre_saving}photosphere/sanity_extra2_{fix}_{m}.csv'
-        data = [fix, day, np.mean(photosphere), np.mean(colorsphere), c.NPIX]
-        [ data.append(np.linalg.norm(photosphere[i])) for i in range(len(photosphere))]
-        [ data.append(np.linalg.norm(colorsphere[i])) for i in range(len(photosphere))]
+        filepath =  f'{pre_saving}/localbig_{m}photocolor{fix}.csv'
+        data = [fix, day, 
+                np.mean( np.linalg.norm(photosphere, axis = 1)), 
+                np.mean( np.linalg.norm(colorsphere, axis = 1)), 
+                c.NPIX]
+        data.append( np.linalg.norm(photosphere, axis = 1))
+        data.append( np.linalg.norm(colorsphere, axis = 1))
         
         with open(filepath, 'a', newline='') as file:
-            file.write('# snap, time [tfb], photo [Rsol], color [Rsol], NPIX, NPIX cols with photo for each observer, NPIX cols with color for each observer \n')
+            # file.write('# snap, time [tfb], photo [Rsol], color [Rsol], NPIX, NPIX cols with photo for each observer, NPIX cols with color for each observer \n')
             writer = csv.writer(file)
             writer.writerow(data)
         file.close()

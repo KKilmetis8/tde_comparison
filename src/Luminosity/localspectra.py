@@ -28,6 +28,7 @@ from scipy.interpolate import griddata
 import matlab.engine
 from sklearn.neighbors import KDTree
 from scipy.ndimage import uniform_filter1d
+from tqdm import tqdm
 
 from src.Opacity.LTE_loader import T_opac_ex, Rho_opac_ex, rossland_ex, plank_ex, scattering_ex
 import src.Utilities.prelude as c
@@ -61,7 +62,7 @@ if alice:
         raise NameError('You need to set the single flag for this to run \n it is much faster')
 else:
     eng = matlab.engine.start_matlab()
-    ms = [4,5,6]
+    ms = [4, 5, 6]
     ms = [6]
     mstar = 0.5
     rstar = 0.47
@@ -88,14 +89,14 @@ for m in ms:
         box = np.load(f'{pre}{fix}/box_{fix}.npy')
         day = np.loadtxt(f'{pre}{fix}/tbytfb_{fix}.txt')
         
-        # lowT = T < 1e6
-        # X = X[lowT]
-        # Y = Y[lowT]
-        # Z = Z[lowT]
-        # T = T[lowT]
-        # Den = Den[lowT]
-        # Rad = Rad[lowT]
-        # Vol = Vol[lowT]
+        # lowrho = Den < 1e-16
+        # X = X[lowrho]
+        # Y = Y[lowrho]
+        # Z = Z[lowrho]
+        # T = T[lowrho]
+        # Den = Den[lowrho]
+        # Rad = Rad[lowrho]
+        # Vol = Vol[lowrho]
         
         Rad_den = np.multiply(Rad,Den)
         
@@ -166,15 +167,15 @@ for m in ms:
         # zsweep = [72, 80, 76, ] # 84, 188, 0]
         # zsweep_nside2 = [47]
         wall_counter = 0
-        for i in zsweep: # range(0, c.NPIX, 1):
+        for i in tqdm(range(109, 111,1)): #c.NPIX, 10)):
             # Progress 
-            time_end = time.time()
-            print(f'Snap: {fix}, Obs: {i}', 
-                  flush=False)
-            print(f'Time for prev. Obs: {(time_end - time_start)/60} min', 
-                  flush = False)
-            time_start = time.time()
-            sys.stdout.flush()
+            # time_end = time.time()
+            # print(f'Snap: {fix}, Obs: {i}', 
+            #       flush=False)
+            # print(f'Time for prev. Obs: {(time_end - time_start)/60} min', 
+            #       flush = False)
+            # time_start = time.time()
+            # sys.stdout.flush()
             
             mu_x = observers_xyz[i][0]
             mu_y = observers_xyz[i][1]
@@ -219,6 +220,7 @@ for m in ms:
             sigma_rossland = eng.interp2(T_cool2,Rho_cool2,rossland2.T # needs T for the new RICH extrapol
                                          ,np.log(t), np.log(d),'linear',0)
             sigma_rossland = np.array(sigma_rossland)[0]
+            sigma_rossland = sigma_rossland[sigma_rossland != 1.0] 
             sigma_rossland_eval = np.exp(sigma_rossland) 
             
             sigma_plank = eng.interp2(T_cool2,Rho_cool2,plank2.T, 
@@ -229,10 +231,21 @@ for m in ms:
             sigma_scattering = eng.interp2(T_cool2,Rho_cool2,scattering2.T, 
                                       np.log(t),np.log(d),'linear',0)
             sigma_scattering = np.array(sigma_scattering)[0]
+
             sigma_scattering_eval = np.exp(sigma_scattering)
+            
+            # Check that we didnt underflow
+            plank_is_ok_mask = sigma_plank_eval != 1.0
+            scatter_is_ok_mask = sigma_scattering_eval != 1.0
+            both_are_ok_mask = plank_is_ok_mask * scatter_is_ok_mask
+            sigma_plank_eval = sigma_plank_eval[both_are_ok_mask]
+            sigma_scattering_eval = sigma_scattering_eval[both_are_ok_mask]
+            r = r[both_are_ok_mask]
+            t = t[both_are_ok_mask]
+            d = d[both_are_ok_mask]
+            sigma_rossland_eval = sigma_rossland_eval[both_are_ok_mask]
             del sigma_rossland, sigma_plank 
             gc.collect()
-            
             # Optical Depth ---.    
             r_fuT = np.flipud(r.T)
             # kappa_rossland = np.flipud(sigma_rossland_eval) 
@@ -294,9 +307,13 @@ for m in ms:
             del gradx, grady, gradz
             gc.collect()
             
-            R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx])
+            grad = grad[both_are_ok_mask]
+            R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx][both_are_ok_mask])
             R_lamda[R_lamda < 1e-10] = 1e-10
             fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
+            
+            gradr = gradr[both_are_ok_mask]
+            # fld_factor = fld_factor[both_are_ok_mask]
             smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) 
             
             # Spectra
@@ -314,6 +331,7 @@ for m in ms:
             
             Lphoto2 = 4*np.pi*c.c*smoothed_flux[b] * c.Msol_to_g / (c.t**2)
             EEr = Rad_den[idx]
+            EEr = EEr[both_are_ok_mask]
             if Lphoto2 < 0:
                 Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
             max_length = 4*np.pi*c.c*EEr[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
@@ -335,11 +353,11 @@ for m in ms:
                     else:
                         bubble_temp += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
                         F_photo_temp[i,:] += bubble_temp
-                bubble = np.trapz(bubble_temp, frequencies)
-                bubbles[wall_counter] = bubble
-                walls[wall_counter] = wall_cell
-                wall_counter += 1
-                print('hi')
+                # bubble = np.trapz(bubble_temp, frequencies)
+                # bubbles[wall_counter] = bubble
+                # walls[wall_counter] = wall_cell
+                # wall_counter += 1
+                # print('hi')
                     # if t[k] > 1e8:
                     #     bubble += c.c * sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
             else:
@@ -353,36 +371,37 @@ for m in ms:
             norm = reds[i] / np.trapz(F_photo_temp[i,:], frequencies)
             F_photo_temp[i,:] *= norm
             F_photo[i,:] = np.dot(cross_dot[i,:], F_photo_temp)   
-            
             #
             import matplotlib.pyplot as plt
-            # plt.ioff()
-            # plt.figure()
-            # plt.plot(r / amin, np.log10(t), '-o', c='k', 
-            #          lw = 0.3, markersize = 0.4, label = 'logT [K]')
-            # plt.plot(r/amin, np.log10( np.sqrt(3 * sigma_plank_eval * (sigma_plank_eval + sigma_scattering_eval))), 
-            #          '-o', c='skyblue', lw = 0.3, markersize = 0.4, 
-            #          label = r'$\sqrt{ 3\sigma_\mathrm{abs} \left( \sigma_\mathrm{sca} + \sigma_\mathrm{abs} \right)}$')
-            # plt.plot(r/amin, np.log10(sigma_scattering_eval + sigma_plank_eval), 
-            #          '-o', c='r', lw = 0.3, markersize = 0.4, 
-            #           label = r'$\sigma_\mathrm{sca} + \sigma_\mathrm{abs}$')
-            # plt.plot(r / amin, np.log10(d * c.den_converter), 
-            #          '-o', c='darkorange', lw = 0.3, markersize = 0.4, 
-            #          label = r'log $\rho$ [cgs]')
-            # plt.plot(r/ amin, los_effective, c = 'darkgreen', label = 'tau effective')
-            # # plt.axhline(1, c = 'tomato', ls = ':')
+            plt.ioff()
+            plt.figure()
+            plt.plot(r / amin, np.log10(t), '-o', c='k', 
+                     lw = 1.3, markersize = 0.4, label = 'logT [K]', zorder = 10)
+            plt.plot(r/amin, np.log10( np.sqrt(3 * sigma_plank_eval * (sigma_plank_eval + sigma_scattering_eval))), 
+                     '-o', c='skyblue', lw = 0.3, markersize = 0.4, 
+                     label = r'$\sqrt{ 3\sigma_\mathrm{abs} \left( \sigma_\mathrm{sca} + \sigma_\mathrm{abs} \right)}$')
+            plt.plot(r/amin, np.log10(sigma_scattering_eval + sigma_plank_eval), 
+                     '-o', c='r', lw = 0.3, markersize = 0.4, 
+                      label = r'$\sigma_\mathrm{sca} + \sigma_\mathrm{abs}$')
+            plt.plot(r / amin, np.log10(d * c.den_converter), 
+                     '-o', c='darkorange', lw = 0.3, markersize = 0.4, 
+                     label = r'log $\rho$ [cgs]')
+            plt.plot(r/ amin, los_effective, c = 'darkgreen', label = 'tau effective')
+            # plt.axhline(1, c = 'tomato', ls = ':')
             # plt.axhline(5, c = 'maroon', ls = ':')
-            # plt.axvline(r[b] / amin, 
-            #             c = c.AEK, ls = '--', label = 'photosphere')
-            # plt.axvline(r[b2] / amin, 
-            #             c = 'slateblue', ls = '--', label = 'colorsphere')
-            # plt.legend(fontsize =5)
-            # plt.xscale('log')
-            # plt.xlabel('r [amin]')
-            # plt.ylabel('logT [K]')
-            # plt.title(f'MBH {m} - {fix} - Obs {i}')
-            # plt.ylim(-16, 13)
-            # plt.savefig(f'data/bluepaper/{m}ray{fix}{i}.png')
+            plt.axhline(7.7634, c = 'r', ls = '--')
+            plt.axhline(np.log10(5802.243894044859), c = 'r', ls = '--', label = 'table edge')
+            plt.axvline(r[b] / amin, 
+                        c = c.AEK, ls = '--', label = 'photosphere')
+            plt.axvline(r[b2] / amin, 
+                        c = 'slateblue', ls = '--', label = 'colorsphere')
+            plt.legend(fontsize =5, frameon = False)
+            plt.xscale('log')
+            plt.xlabel('r [amin]')
+            plt.ylabel('logT [K]')
+            plt.title(f'MBH {m} - {fix} - Obs {i}')
+            plt.ylim(-19, 10)
+            plt.savefig(f'data/bluepaper/{m}ray{fix}{i}.png')
         ### Bolometric ---
         red = 4 * np.pi * np.mean(reds) # this 4pi here shouldn't exist, leaving it for posterity
         
@@ -415,9 +434,9 @@ for m in ms:
         if save and not alice:
                 # Save photocolor
                 pre_saving = 'data/bluepaper/'
-                np.savetxt(f'{pre_saving}local_{m}spectra{fix}.txt', F_photo)
+                np.savetxt(f'{pre_saving}localbig_{m}spectra{fix}.txt', F_photo)
     
-                filepath =  f'{pre_saving}/local_{m}photocolor{fix}.csv'
+                filepath =  f'{pre_saving}/localbig_{m}photocolor{fix}.csv'
                 data = [fix, day, 
                         np.mean( np.linalg.norm(photosphere, axis = 1)), 
                         np.mean( np.linalg.norm(colorsphere, axis = 1)), 

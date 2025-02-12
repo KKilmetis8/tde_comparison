@@ -42,16 +42,24 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     import colorcet
     plt.figure()
+    tplot0 = np.log10(np.exp(T_cool))
+    dplot0 = np.log10(np.exp(Rho_cool))
+    splot0 = np.log10(np.exp(plank))# / np.exp(Rho_cool))
+    cb = plt.pcolormesh(tplot0, dplot0, splot0.T, 
+                        cmap = 'cet_CET_CBL2_r', vmin = -1, vmax = 7)
+    plt.figure()
     tplot = np.log10(np.exp(T_opac_ex))
     dplot = np.log10(np.exp(Rho_opac_ex))
-    splot = np.log10(np.exp(plank_ex))
+    splot = np.log10(np.exp(plank_ex))#  / np.exp(Rho_opac_ex))
     # splot = np.log10(np.subtract( np.exp(scattering_ex), np.exp(scattering_ex2)))
 
     cb = plt.pcolormesh(tplot, dplot, splot.T, 
-                        cmap = 'cet_CET_CBL2_r', vmin = -9, vmax = -6)
+                        cmap = 'cet_CET_CBL2_r', vmin = -17, vmax = 1)
     plt.colorbar(cb)
     plt.xlabel(r'Temperature, $\log_\mathrm{10} T$ [K]')
     plt.ylabel(r'Density, $\log_\mathrm{10} \rho $ [g/cm$^3]$')
+    
+    
     
     plt.axvline(np.log10(np.exp(T_cool))[0], c = 'r', ls = '--')
     plt.axvline(np.log10(np.exp(T_cool))[-1], c = 'r', ls = '--')

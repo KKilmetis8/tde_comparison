@@ -26,6 +26,7 @@ def Leddington(M):
     return 1.26e38 * M
 pre = 'data/red/'
 Mbhs = [4, 5, 6]
+# Mbhs = [6]
 cols = ['k', c.AEK, 'maroon']
 extra = 'beta1S60n1.5Compton'
 
@@ -63,4 +64,5 @@ ax.set_ylim(1e41, 7e44)
 # ax.legend(ncols = 3)
 ax.set_xlabel('Time $[t_\mathrm{FB}]$', fontsize = 16)
 ax.set_ylabel('$L_\mathrm{FLD}$ [erg/s]', fontsize = 16)
+plt.savefig('paperplots/lightcurves.pdf', dpi = 300)
 

@@ -22,12 +22,13 @@ fixes6 = [315, 379, 444] # 420->444
 zsweep = [104, 136, (152, 167), (168, 179), (180, 187), (188, 191)]#, 140]
 #zsweep =  [ (20, 27), 28, (29, 35), (36, 43), (37, 42), (44, 47) ] # nside2
 colors = [c.darkb, c.cyan, c.prasinaki, c.yellow, c.kroki, c.reddish, c.c99]
-labels = [ r'9.6°', '30°', '42.4°', '55.3°', '68°', '81°', '90°',]
+labels = [ r'10°', '30°', '42°', '55°', '68°', '81°', '90°',]
 #labels =  [ r'0°', '19.4°', '26.6°', '44.1°', '66.8°', '72.9°',] #  '90°',] # nside2
 #labels = ['x', '-x', 'y', '-y', 'z', '-z']
 reddata4 = np.genfromtxt(f'data/red/red_richex{4}.csv', delimiter = ',').T
 lowx = 2e13
 highx = 7e16
+lowy = 1e38
 highy = 5e43
 xticks1 = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5]
 xticks2 = [1e4, 1e3, 1e2, 1e1, 1e0, 1e-1] # 1e3]
@@ -98,7 +99,7 @@ for i, oneax in enumerate(ax.flatten()):
     # oneax.axvspan(5e18 * Hz_to_ev, 5.3e19 * Hz_to_ev, alpha=0.2, color='b')
     oneax.set_xscale('log')
     oneax.set_yscale('log')
-    oneax.set_ylim(1e38, highy)
+    oneax.set_ylim(lowy, highy)
     oneax.set_xlim(lowx * Hz_to_ev, highx * Hz_to_ev)
     oneax.set_xticks(xticks1)
     oneax.set_yticks(yticks)
@@ -113,7 +114,7 @@ for i, oneax in enumerate(ax.flatten()):
         ax3.yaxis.tick_right()  
         # ax3.yaxis.set_label_position("right")
         ax3.set_yticks(yticks)
-        ax3.set_ylim(1e38, highy)
+        ax3.set_ylim(lowy, highy)
     if i not in botside:
         oneax.set_xticklabels([])
     oneax.set_xlim(lowx * Hz_to_ev, highx * Hz_to_ev)
@@ -122,13 +123,16 @@ plt.tight_layout(w_pad=0.75)
 
 ax[2,1].set_xlabel('Energy [eV]', fontsize = 17)
 ax[1,0].set_ylabel(r'Luminosity $\nu L_\nu$ [erg/s]', fontsize = 17)
-ax[0,0].set_title('$10^4 M_\odot$', fontsize = 17, y = 1.45)
-ax[0,1].set_title('$10^5 M_\odot$', fontsize = 17)
-ax[0,2].set_title('$10^6 M_\odot$', fontsize = 17, y = 1.45)
+ax[0,0].set_title('10$^4$ M$_\odot$', fontsize = 17, y = 1.45)
+ax[0,1].set_title('10$^5$ M$_\odot$', fontsize = 17)
+ax[0,2].set_title('10$^6$ M$_\odot$', fontsize = 17, y = 1.45)
     # oneax.set_title(f'Spectrum {m} {fix}')
     # plt.xlabel('Frequency [Hz]', fontsize = 14)
     # plt.ylabel('Luminosity [erg/s]', fontsize = 14)
-ax[1,2].legend(bbox_to_anchor = (1.2, -0.55, 1, 1), ncols = 1, fontsize = 17)
+# ax[1,2].legend(bbox_to_anchor = (1.2, -0.55, 1, 1), ncols = 1, fontsize = 17,
+#                frameon = False)
+ax[0,0].legend(ncols = 1, fontsize = 7, frameon = False, loc = 'lower left')
+plt.savefig('paperplots/spectra.pdf', dpi = 300, bbox_inches = 'tight')
 
 
 

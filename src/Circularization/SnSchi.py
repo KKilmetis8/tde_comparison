@@ -45,7 +45,7 @@ def SnS_chi(m, which, mstar=0.5, rstar=0.47):
         sorter = np.argsort(time)
         time = time[sorter]
         E_diss_bound = data.T[2][sorter] 
-        Edot = -E_diss_bound # * tfb
+        Edot = -E_diss_bound
         
     if which == 'orbdot':
         data = np.genfromtxt(f'data/tcirc/sum{m}notspecmasked.csv', delimiter = ',')

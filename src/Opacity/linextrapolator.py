@@ -108,7 +108,7 @@ def extrapolator_flipper(x ,y, V, slope_length = 26, extrarows = 25,
         yn, Vn = fitline(y, Vn.T, slope_length, extrarows)
     return xn, yn, Vn.T
 
-def nouveau_rich(x, y, K, what = 'scatter', slope_length = 26, extrarowsx = 100, 
+def nouveau_rich(x, y, K, what = 'scatter', slope_length = 5, extrarowsx = 100, 
                  extrarowsy = 100, highT_slope = -3.5):
     ''' 
     what, str: either scattering or absorption
@@ -116,6 +116,9 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 26, extrarowsx = 100,
     should be linear in log for absorption, everywhere,
     for scattering/density should be linear, irregardless of temperature,
     +opacity should never be below thompson'''
+    
+    # Idea. What if we extrapolated in cm2/g space and then converted back?
+    # K = np.log(np.divide(np.exp(K),np.exp(y)))
     
     X = 0.9082339738214822 # From table prescription
     thompson = 0.2 * (1 + X)
@@ -149,7 +152,7 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 26, extrarowsx = 100,
                     deltay = y[slope_length - 1] - y[0]
                     Kxslope = (K[slope_length - 1, 0] - K[0, 0]) / deltax
                     Kyslope = (K[0, slope_length - 1] - K[0, 0]) / deltay
-                    Kn[ix][iy] = K[0, 0] + Kxslope * (xsel - x[0]) + Kyslope * (ysel - y[0])
+                    Kn[ix][iy] = K[0, 0] + Kxslope * (xsel - x[0]) # + Kyslope * (ysel - y[0])
                     # if what == 'abs':
                     #    Kn[ix][iy] = K[0, 0] + Kxslope * (x[0] - xsel) + Kyslope * (y[0]-ysel)
                 elif ysel > y[-1]: # Too dense
@@ -168,13 +171,13 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 26, extrarowsx = 100,
                 if ysel < y[0]: # Too rarefied
                     deltay = y[slope_length - 1] - y[0]
                     Kxslope = highT_slope #(K[-1, 0] - K[-slope_length, 0]) / deltax
-                    Kyslope = (K[-1, slope_length - 1] - K[-1, 0]) / deltay
+                    Kyslope = 1 # Kramers ##(K[-1, slope_length - 1] - K[-1, 0]) / deltay
                     Kn[ix][iy] = K[-1, 0] + Kxslope * (xsel - x[-1]) + Kyslope * (ysel - y[0])        
                 elif ysel > y[-1]: # Too dense
                     deltay = y[-1] - y[-slope_length] 
                     Kxslope = highT_slope #(K[-1, -1] - K[-slope_length, -1]) / deltax
                     Kyslope = (K[-1, -1] - K[-1, -slope_length]) / deltay
-                    Kn[ix][iy] = K[-1, -1] + Kxslope * (xsel - x[-1]) + Kyslope * (ysel - y[-1])
+                    Kn[ix][iy] = K[-1, -1] + Kxslope * (xsel - x[-1]) # + Kyslope * (ysel - y[-1])
                 else: # Density is inside the table
                     iy_inK = np.argmin(np.abs(y - ysel))
                     Kxslope = highT_slope #(K[-1, iy_inK] - K[-slope_length, iy_inK]) / deltax
@@ -190,22 +193,21 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 26, extrarowsx = 100,
                 ix_inK = np.argmin(np.abs(x - xsel))
                 if ysel < y[0]: # Too rarefied, Temperature is inside table
                     # Something fucky is going on here
-                    # BS change i make to avoid the line
-                    # slope_length = 25
                     deltay = y[slope_length - 1] - y[0]
                     Kyslope = (K[ix_inK, slope_length - 1] - K[ix_inK, 0]) / deltay
-                    Kn[ix][iy] = K[ix_inK, 0] + Kyslope * (ysel - y[0])
+                    Kn[ix][iy] = K[ix_inK, 0] #+ Kyslope * (ysel - y[0])
                     #continue
                 elif ysel > y[-1]:  # Too dense, Temperature is inside table
                     deltay = y[-1] - y[-slope_length]
                     Kyslope = (K[ix_inK, -1] - K[ix_inK, -slope_length]) / deltay
-                    Kn[ix][iy] = K[ix_inK, -1] + Kyslope * (ysel - y[-1])
+                    Kn[ix][iy] = K[ix_inK, -1] #+ Kyslope * (ysel - y[-1])
                     #continue
                 else:
                     iy_inK = np.argmin(np.abs(y - ysel))
                     Kn[ix][iy] = K[ix_inK, iy_inK]
                     # continue
-
+    # Idea
+    # Kn = np.log(np.multiply(np.exp(Kn), np.exp(yn)))
     return xn, yn, Kn
 if __name__ == '__main__':
     # Test data
@@ -236,14 +238,14 @@ if __name__ == '__main__':
     plt.figure()
     plt.title(what)
     img = plt.pcolormesh(xn, yn, Vn.T, 
-                         cmap = 'cet_rainbow4', vmin = -5, vmax = 10, 
+                         cmap = 'cet_rainbow4', vmin = -25, vmax = 10, 
                          edgecolor = 'k', lw = 0.1, shading = 'gouraud')
     plt.axvline(np.min(x), c = 'white', ls = '--')
     plt.axvline(np.max(x), c = 'white', ls = '--')
     plt.axhline(np.min(y), c = 'white', ls = '--')
     plt.axhline(np.max(y), c = 'white', ls = '--')
     plt.colorbar(img, )
-    plt.xlim(-1, 15)
+    plt.xlim(-10, 15)
     plt.ylim(-15, 15)
 
 

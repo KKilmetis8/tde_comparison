@@ -78,18 +78,22 @@ ax3.scatter(0,0, marker = 's', color = 'k')
 
 colors = [c.darkb, c.cyan, c.prasinaki, c.yellow, c.kroki, c.reddish]
 wanted_indices = np.arange(0, c.NPIX)
+zsweep = [104, 136, 152, 167, 168, 179, 180, 187, 188, 191]#, 140]
+
 # zsweep = [72, 104, 136, 168, 180, 188]
 # idea = [188, 180, 168, 152, 
 #         136, 104,
 #         191, 187, 179, 167, 
 #         140]
-for i in zip(wanted_indices):#, colors):
+angles = []
+for i in zip(zsweep):#, colors):
     x, y, z = find_sph_coord(thetas[i], phis[i])
     # if i[0] in zsweep:
     if np.sqrt(x**2 + z**2) > 0.5 and x > 0 and z > 0: # and i[0] in idea:
         i = int(i[0])
         angle = np.arctan2(z,x) * 180 / np.pi
         print(i, angle)
+        angles.append(angle)
         ax1.scatter(x,y,z, marker = f'${i}$', s = 200)#, color = col)
         ax2.scatter(x, z, marker = f'${i}$', s = 500, c = 'k')#, color = col)
         ax3.scatter(x, y, marker = f'${i}$', s = 500, c = 'k')#, color = col)
@@ -102,6 +106,5 @@ ax3.set_xlabel('x')
 ax3.set_ylabel('y')
 plt.tight_layout()
 
-zsweep_nside2 = [ (20, 27), 28, (29, 35), (36, 43) (37, 42), (44, 47) ]
 
 

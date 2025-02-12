@@ -193,8 +193,8 @@ plt.plot(T, xH, c='k', ls =':',lw=2, label='Tomida')
 # plt.plot(T, xHe1, c = c.AEK, lw = 2)
 # plt.plot(T, xHe2, c='maroon', lw = 2)
 plt.ylim(-0.1, 1.1)
-plt.xscale('log')
-
+# plt.xscale('log')
+plt.xlim(5000, 7000)
 # Mathematica
 numden = nH[0] * 1e6
 if numden < 1e10:

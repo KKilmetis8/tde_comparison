@@ -12,8 +12,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 import src.Utilities.prelude as c
-from src.Opacity.linextrapolator import extrapolator_flipper
-
 
 # Opacity Input
 opac_path = f'src/Opacity/LTE_data/'
@@ -51,6 +49,29 @@ Rho2_n = np.exp(Rho_cool2).T
 ross2_n = np.exp(rossland2)
 abs2_n = np.exp(plank2)
 scattering2_n = np.exp(scattering2)
+#%% Many densities, one plot
+plt.figure(figsize = (3,3))
+target_densities = [Rho_n[4],  Rho_n[0], 1e-11, 1e-12, 1e-13, 1e-14]#, Rho_n[25]]
+cols = [c.c91, c.c92, c.c93, c.c94, c.c95, c.c96, c.c97, c.c98, c.c99]
+for target_density, col in zip(target_densities, cols):
+    if target_density < np.min(Rho_n):
+        ls = '--'
+    else:
+        ls = '-'
+    ridx = np.argmin(np.abs(Rho2_n - target_density))
+    plt.plot(T2_n, abs2_n.T[ridx]/ target_density,
+             c = col, ls = ls, 
+            lw = 0.75, markersize = 1,
+             label = f'{target_density:.1e}')
+plt.yscale('log')
+plt.legend(frameon = False, ncols = 2, fontsize = 9)
+plt.axvline(np.max(T_n), c = 'forestgreen', ls = '--')
+plt.axvline(np.min(T_n), c = 'forestgreen', ls = '--', alpha = 0.2)
+#plt.ylim(1e-1, 1e15)
+plt.xlim(4000, 10500)
+#plt.xscale('log')
+plt.xlabel('Temperature [K]')
+plt.ylabel('Opacity [cm$^2$/g]')
 #%%
 X = 0.9082339738214822 # From table prescription
 thompson = 0.2 * (1 + X)#%%
@@ -145,7 +166,7 @@ for target_density, ax in zip(target_densities, axs.flatten()):
     ax.text(2e2, thompson*1e1, 'Thompson', c='k')
     ax.loglog()
     ax.axvline(np.max(T_n), c = 'forestgreen', ls = '--')
-    ax.axvline(np.min(T_n), c = 'forestgreen', ls = '--', alpha = 0.1)
+    ax.axvline(np.min(T_n), c = 'forestgreen', ls = '--', alpha = 0.6)
     ax.set_title(rf'{txt} - $\rho$ = {target_density:.0e} g/cm$^3$')
     ax.set_ylim(1e-5, 1e10)
     ax.set_xlim(1e2, 1e5)
@@ -153,24 +174,4 @@ for target_density, ax in zip(target_densities, axs.flatten()):
     ax.set_ylabel('Opacity [cm$^2$/g]')
 plt.legend(loc = 'lower center', fontsize = 6, ncols = 3)
 
-#%% Many densities, one plot
-plt.figure(figsize = (3,3))
-target_densities = [Rho_n[4],  Rho_n[0], 1e-11, 1e-12, 1e-13, 1e-14, Rho_n[25]]
-cols = [c.c91, c.c92, c.c93, c.c94, c.c95, c.c96, c.c97, c.c98, c.c99]
-for target_density, col in zip(target_densities, cols):
-    if target_density < np.min(Rho_n):
-        ls = '--'
-    else:
-        ls = '-'
-    ridx = np.argmin(np.abs(Rho2_n - target_density))
-    plt.plot(T2_n, abs2_n.T[ridx] / target_density,c = col, ls = ls, 
-            lw = 0.75, markersize = 1,
-             label = f'{target_density:.2e}')
-plt.yscale('log')
-plt.legend(bbox_to_anchor = [1,0.25,0.5,0.5])
-plt.axvline(np.max(T_n), c = 'forestgreen', ls = '--')
-plt.axvline(np.min(T_n), c = 'forestgreen', ls = '--', alpha = 0.1)
-plt.ylim(1e0, 1e5)
-plt.xlim(5e3, 1e4)
-plt.xlabel('Temperature [K]')
-plt.ylabel('Opacity [cm$^2$/g]')
+
