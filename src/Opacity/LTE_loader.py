@@ -44,13 +44,13 @@ if __name__ == '__main__':
     plt.figure()
     tplot0 = np.log10(np.exp(T_cool))
     dplot0 = np.log10(np.exp(Rho_cool))
-    splot0 = np.log10(np.exp(plank))# / np.exp(Rho_cool))
+    splot0 = np.log10(np.exp(rossland))# / np.exp(Rho_cool))
     cb = plt.pcolormesh(tplot0, dplot0, splot0.T, 
-                        cmap = 'cet_CET_CBL2_r', vmin = -1, vmax = 7)
+                        cmap = 'cet_CET_CBL2_r', vmin = -7, vmax = 0)
     plt.figure()
     tplot = np.log10(np.exp(T_opac_ex))
     dplot = np.log10(np.exp(Rho_opac_ex))
-    splot = np.log10(np.exp(plank_ex))#  / np.exp(Rho_opac_ex))
+    splot = np.log10(np.exp(rossland_ex))#  / np.exp(Rho_opac_ex))
     # splot = np.log10(np.subtract( np.exp(scattering_ex), np.exp(scattering_ex2)))
 
     cb = plt.pcolormesh(tplot, dplot, splot.T, 

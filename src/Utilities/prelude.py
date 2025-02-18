@@ -138,3 +138,21 @@ r10_palette = [
     "#0097A7", "#1976D2", "#512DA8", "#7B1FA2", "#4A148C"   # Blues to Purples
 ]
 
+r16_palette = [
+    "#D73027",  # Deep Red
+    "#E65532",  # Reddish Orange
+    "#F67E4B",  # Orange
+    "#FCA55D",  # Light Orange
+    "#FED976",  # Yellow-Orange
+    "#F8EE73",  # Yellow
+    "#C5E675",  # Yellow-Green
+    "#78C679",  # Green
+    "#41AB5D",  # Teal-Green
+    "#2B8CBE",  # Cyan
+    "#2683C6",  # Light Blue
+    "#1361A8",  # Medium Blue
+    "#5E4FA2",  # Deep Blue
+    "#7D3F99",  # Purple-Blue
+    "#9C2F97",  # Purple
+    "#BC1A7A",  # Magenta
+]

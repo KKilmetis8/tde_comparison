@@ -18,17 +18,32 @@ import healpy as hp
 import scipy.integrate as sci
 from scipy.interpolate import griddata
 import matlab.engine
+eng = matlab.engine.start_matlab()
 from sklearn.neighbors import KDTree
 from scipy.ndimage import uniform_filter1d
 
+# Chocolate
 from src.Opacity.LTE_loader import T_opac_ex, Rho_opac_ex, rossland_ex, plank_ex, scattering_ex
+# Opacity Input
+T_cool2 = T_opac_ex
+Rho_cool2 = Rho_opac_ex
+rossland2 = rossland_ex
+plank2 = plank_ex
+scattering2 = scattering_ex
+        
 import src.Utilities.prelude as c
 from src.Utilities.parser import parse
 from src.Utilities.isalice import isalice
+from src.Utilities.loaders import local_loader, boxer, alice_loader
 alice, plot = isalice()
-
 save = True # WATCH OUT    WATCH OUT    WATCH OUT    WATCH OUT    WATCH OUT
+
 ### Load data ---
+def masker(mask, list_of_quantities):
+    new_list = []
+    for quantity in list_of_quantities:
+        new_list.append(quantity[mask])
+    return (*new_list,)
 
 if alice:
     realpre = '/home/kilmetisk/data1/TDE/'
@@ -45,6 +60,7 @@ if alice:
         fix = args.only
     else:
         raise NameError('You need to set the single flag for this to run \n it is much faster')
+    X, Y, Z, Den, T, Rad, Vol, box, day = alice_loader(m, fix, 'thermodynamics')
 else:
     m = 5
     pre = f'{m}/'
@@ -52,27 +68,23 @@ else:
     sim = ''
     mstar = 0.5
     rstar = 0.47
+    X, Y, Z, Den, T, Rad, Vol, box, day = local_loader(m, fix, 'thermodynamics')  
 
-X = np.load(f'{pre}{fix}/CMx_{fix}.npy')
-Y = np.load(f'{pre}{fix}/CMy_{fix}.npy')
-Z = np.load(f'{pre}{fix}/CMz_{fix}.npy')
-T = np.load(f'{pre}{fix}/T_{fix}.npy')
-Den = np.load(f'{pre}{fix}/Den_{fix}.npy')
-Rad = np.load(f'{pre}{fix}/Rad_{fix}.npy')
-Vol = np.load(f'{pre}{fix}/Vol_{fix}.npy')
-box = np.load(f'{pre}{fix}/box_{fix}.npy')
-day = np.loadtxt(f'{pre}{fix}/tbytfb_{fix}.txt')
-
-Rad_den = np.multiply(Rad,Den)
+Rad_den = np.multiply(Rad, Den)
 R = np.sqrt(X**2 + Y**2 + Z**2)
 
-# Cross dot ---
+# Observers initialization ---
+observers = np.arange(0,c.NPIX)
 observers_xyz = hp.pix2vec(c.NSIDE, range(c.NPIX))
 observers_xyz = np.array([observers_xyz]).T[:,:,0]
-# Line 17, * is matrix multiplication, ' is .T
 cross_dot = np.matmul(observers_xyz,  observers_xyz.T )
 cross_dot[cross_dot<0] = 0
 cross_dot *= 4/192
+
+# Freq range
+reds = np.zeros(c.NPIX)
+N_ray = 5_000
+frequencies = c.freqs
 
 # <dubious code>  -----
 # Correction!
@@ -88,40 +100,20 @@ cross_dot *= 4/192
 # cross_dot = cross_dot2
 # <\dubious code>  -----
 
-# Freq range
-N_ray = 5_000
-f_min = c.kb * 1e3 / c.h
-f_max = c.kb * 3e13 / c.h
-f_num = 1_000
-frequencies = np.logspace(np.log10(f_min), np.log10(f_max), f_num)
-
-# Opacity Input
-opac_kind = 'LTE'
-opac_path = f'src/Opacity/{opac_kind}_data/'
-T_cool = np.loadtxt(f'{opac_path}/T.txt')
-Rho_cool = np.loadtxt(f'{opac_path}/rho.txt')
-plank = np.loadtxt(f'{opac_path}/planck.txt')
-rossland = np.loadtxt(f'{opac_path}/ross.txt')
-T_cool2 = T_opac_ex
-Rho_cool2 = Rho_opac_ex
-rossland2 = rossland_ex
-plank2 = plank_ex
-scattering2 = scattering_ex
 
 ### Do it --- --- ---
-eng = matlab.engine.start_matlab()
 xyz = np.array([X, Y, Z]).T
 
 # Flux
-F_photo = np.zeros((c.NPIX, f_num))
-F_photo_temp = np.zeros((c.NPIX, f_num))
+F_photo = np.zeros((c.NPIX, len(frequencies)))
+F_photo_temp = np.zeros((c.NPIX, len(frequencies)))
 photosphere = []
 colorsphere = []
 time_start = 0
 reds = np.zeros(c.NPIX)
+observers = np.arange(0,c.NPIX)
 
-
-for i in range(0, c.NPIX, 1):
+for i, obs in enumerate(observers):
     # Progress 
     time_end = time.time()
     print(f'Snap: {fix}, Obs: {i}', 
@@ -131,27 +123,13 @@ for i in range(0, c.NPIX, 1):
     time_start = time.time()
     sys.stdout.flush()
     
-    mu_x = observers_xyz[i][0]
-    mu_y = observers_xyz[i][1]
-    mu_z = observers_xyz[i][2]
-    
-    # Box is for dynamic ray making
-    if mu_x < 0:
-        rmax = box[0] / mu_x
-    else:
-        rmax = box[3] / mu_x
-    if mu_y < 0:
-        rmax = min(rmax, box[1] / mu_y)
-    else:
-        rmax = min(rmax, box[4] / mu_y)
-    
-    if mu_z < 0:
-        rmax = min(rmax, box[2] / mu_z)
-    else:
-        rmax = min(rmax, box[5] / mu_z)
 
     # Make the ray
+    rmax = boxer(obs, observers_xyz, box)
     r = np.logspace( -0.25, np.log10(rmax), N_ray)
+    mu_x = observers_xyz[obs][0]
+    mu_y = observers_xyz[obs][1]
+    mu_z = observers_xyz[obs][2]
     x = r*mu_x
     y = r*mu_y
     z = r*mu_z
@@ -159,97 +137,79 @@ for i in range(0, c.NPIX, 1):
     tree = KDTree(xyz, leaf_size=25)
     _, idx = tree.query(xyz2, k=1)
     idx = [ int(idx[i][0]) for i in range(len(idx))] # no -1 because we start from 0
-    # del x, y, z
+    del x, y, z
 
     d = Den[idx] * c.den_converter
     t = T[idx]
     ray_x = X[idx]
     ray_y = Y[idx]
     ray_z = Z[idx]
-    
+    rad_den = Rad_den[idx]
+
     # Interpolate ---
-    # Interpolate ---
-    sigma_rossland = eng.interp2(T_cool2,Rho_cool2,rossland2.T # needs T for the new RICH extrapol
-                                 ,np.log(t), np.log(d),'linear',0)
-    sigma_rossland = np.array(sigma_rossland)[0]
-    sigma_rossland = sigma_rossland[sigma_rossland != 1.0] 
-    sigma_rossland_eval = np.exp(sigma_rossland) 
-    
     sigma_plank = eng.interp2(T_cool2,Rho_cool2,plank2.T, 
                               np.log(t),np.log(d),'linear',0)
     sigma_plank = np.array(sigma_plank)[0]
-    sigma_plank_eval = np.exp(sigma_plank)
-    
+    underflow_mask_plank = sigma_plank != 0.0
+
     sigma_scattering = eng.interp2(T_cool2,Rho_cool2,scattering2.T, 
                               np.log(t),np.log(d),'linear',0)
     sigma_scattering = np.array(sigma_scattering)[0]
-
-    sigma_scattering_eval = np.exp(sigma_scattering)
+    underflow_mask_scattering = sigma_scattering != 0.0
+    underflow_mask = underflow_mask_scattering * underflow_mask_plank
     
-    # Check that we didnt underflow
-    plank_is_ok_mask = sigma_plank_eval != 1.0
-    scatter_is_ok_mask = sigma_scattering_eval != 1.0
-    both_are_ok_mask = plank_is_ok_mask * scatter_is_ok_mask
-    sigma_plank_eval = sigma_plank_eval[both_are_ok_mask]
-    sigma_scattering_eval = sigma_scattering_eval[both_are_ok_mask]
-    r = r[both_are_ok_mask]
-    t = t[both_are_ok_mask]
-    d = d[both_are_ok_mask]
-    sigma_rossland_eval = sigma_rossland_eval[both_are_ok_mask]
-    del sigma_rossland, sigma_plank 
-    gc.collect()
+    d, t, r, sigma_plank, sigma_scattering, ray_x, ray_y, ray_z, rad_den = masker(underflow_mask, 
+    [d, t, r, sigma_plank, sigma_scattering, ray_x, ray_y, ray_z, rad_den])
+    sigma_plank_eval = np.exp(sigma_plank)
+    sigma_scattering_eval = np.exp(sigma_scattering)
+    sigma_rossland_eval = sigma_plank_eval + sigma_scattering_eval
+
     # Optical Depth ---.    
     r_fuT = np.flipud(r.T)
-    # kappa_rossland = np.flipud(sigma_rossland_eval) 
-    # los = - np.flipud(sci.cumulative_trapezoid(kappa_rossland, r_fuT, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
-    
-    # kappa_plank = np.flipud(sigma_plank_eval) 
-    # los_abs = - np.flipud(sci.cumulative_trapezoid(kappa_plank, r_fuT, initial = 0)) * c.Rsol_to_cm
-    # k_effective = np.sqrt(3 * np.flipud(sigma_plank_eval) * np.flipud(sigma_rossland_eval)) 
-    # los_effective = - np.flipud(sci.cumulative_trapezoid(k_effective, r_fuT, initial = 0)) * c.Rsol_to_cm
     
     # Try out elads scattering + rosseland
     kappa_rossland = np.flipud(sigma_scattering_eval) + np.flipud(sigma_plank_eval)
-    los = - np.flipud(sci.cumulative_trapezoid(kappa_rossland, r_fuT, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
+    los = - np.flipud(sci.cumulative_trapezoid(kappa_rossland, 
+                                               r_fuT, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
     
     kappa_plank = np.flipud(sigma_plank_eval) 
-    los_abs = - np.flipud(sci.cumulative_trapezoid(kappa_plank, r_fuT, initial = 0)) * c.Rsol_to_cm
+    los_abs = - np.flipud(sci.cumulative_trapezoid(kappa_plank,
+                                                   r_fuT, initial = 0)) * c.Rsol_to_cm
     k_effective = np.sqrt(3 * np.flipud(sigma_plank_eval) * kappa_rossland) 
-    los_effective = - np.flipud(sci.cumulative_trapezoid(k_effective, r_fuT, initial = 0)) * c.Rsol_to_cm
-    
+    los_effective = - np.flipud(sci.cumulative_trapezoid(k_effective, 
+                                                         r_fuT, initial = 0)) * c.Rsol_to_cm
     # Red ---
     # Get 20 unique, nearest neighbors
-    xyz3 = np.array([X[idx], Y[idx], Z[idx]]).T
-    xyz3 = np.array([X[idx], Y[idx], Z[idx]]).T
+    xyz3 = np.array([ray_x, ray_y, ray_z]).T
     _, idxnew = tree.query(xyz3, k=20)
     idxnew = np.unique(idxnew).T
 
     # Cell radius
-    dx = 0.5 * Vol[idx]**(1/3)
+    dx = 0.5 * Vol[idx][underflow_mask]**(1/3)
     
     # Get the Grads    
     f_inter_input = np.array([ X[idxnew], Y[idxnew], Z[idxnew] ]).T
 
     gradx_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
-                        xi = np.array([ X[idx]+dx, Y[idx], Z[idx]]).T )
+                        xi = np.array([ ray_x+dx, ray_y, ray_z]).T )
     gradx_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
-                        xi = np.array([ X[idx]-dx, Y[idx], Z[idx]]).T )
+                        xi = np.array([ ray_x-dx, ray_y, ray_z]).T )
     gradx = (gradx_p - gradx_m)/ (2*dx)
     gradx = np.nan_to_num(gradx, nan =  0)
     del gradx_p, gradx_m
 
     grady_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
-                        xi = np.array([ X[idx], Y[idx]+dx, Z[idx]]).T )
+                        xi = np.array([ ray_x, ray_y+dx, ray_z]).T )
     grady_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
-                        xi = np.array([ X[idx], Y[idx]-dx, Z[idx]]).T )
+                        xi = np.array([ ray_x, ray_y-dx, ray_z]).T )
     grady = (grady_p - grady_m)/ (2*dx)
     grady = np.nan_to_num(grady, nan =  0)
     del grady_p, grady_m
 
     gradz_p = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
-                        xi = np.array([ X[idx], Y[idx], Z[idx]+dx]).T )
+                        xi = np.array([ ray_x, ray_y, ray_z+dx]).T )
     gradz_m = griddata( f_inter_input, Rad_den[idxnew], method = 'linear',
-                        xi = np.array([ X[idx], Y[idx], Z[idx]-dx]).T )
+                        xi = np.array([ ray_x, ray_y, ray_z-dx]).T )
     gradz_m = np.nan_to_num(gradz_m, nan =  0)
     gradz = (gradz_p - gradz_m)/ (2*dx)
     del gradz_p, gradz_m
@@ -259,53 +219,34 @@ for i in range(0, c.NPIX, 1):
     del gradx, grady, gradz
     gc.collect()
     
-    grad = grad[both_are_ok_mask]
-    R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* Rad_den[idx][both_are_ok_mask])
+    R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval * rad_den)
     R_lamda[R_lamda < 1e-10] = 1e-10
+    
     fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
-    
-    gradr = gradr[both_are_ok_mask]
-    # fld_factor = fld_factor[both_are_ok_mask]
     smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) 
+    photo_idx = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0]
     
-    # Spectra
-    try:
-        b = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0]
-    except:
-        print(f'\n {i}, elad b')
-        b = 3117
-        
-    los_effective[los_effective>30] = 30
-    b2 = np.argmin(np.abs(los_effective-5))
-    
-    photosphere.append((ray_x[b], ray_y[b], ray_z[b]))
-    colorsphere.append((ray_x[b2], ray_y[b2], ray_z[b2])) 
-    
-    Lphoto2 = 4*np.pi*c.c*smoothed_flux[b] * c.Msol_to_g / (c.t**2)
-    EEr = Rad_den[idx]
-    EEr = EEr[both_are_ok_mask]
+    Lphoto2 = 4*np.pi*c.c*smoothed_flux[photo_idx] * c.Msol_to_g / (c.t**2)
     if Lphoto2 < 0:
         Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
-    max_length = 4*np.pi*c.c*EEr[b]*r[b]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
+    max_length = 4*np.pi*c.c*rad_den[photo_idx]*r[photo_idx]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
     reds[i] = np.min( [Lphoto2, max_length])
-    del smoothed_flux, R_lamda, fld_factor, EEr,
-    gc.collect()
+        
+    # Spectra
+    los_effective[los_effective>30] = 30
+    color_idx = np.argmin(np.abs(los_effective-5))
+    
+    photosphere.append((ray_x[photo_idx], ray_y[photo_idx], ray_z[photo_idx]))
+    colorsphere.append((ray_x[color_idx], ray_y[color_idx], ray_z[color_idx])) 
+    
     # Spectra ---
-    # Spectra ---
-    if los_effective[b2-1] >= 29:
-        wall_cell  = 4 * np.pi * c.stefan * t[b2-1]**4 * ( r[b2-1] * c.Rsol_to_cm)**2
-        bubble_temp = 0
-        for k in range(b2-1, len(r)):
-            dr = r[k]-r[k-1]
-            Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
-            wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
-            black_body = frequencies**3 / (c.c**2 * wien)
-            if k == b2-1:
-                # wall_norm = 
-                F_photo_temp[i,:] += wall_cell* black_body / np.trapz(black_body, frequencies)
-            else:
-                bubble_temp += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
-                F_photo_temp[i,:] += bubble_temp
+    for k in range(color_idx, len(r)):
+        dr = r[k]-r[k-1]
+        Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
+        wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
+        black_body = frequencies**3 / (c.c**2 * wien)
+        F_photo_temp[i,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
+    
     norm = reds[i] / np.trapz(F_photo_temp[i,:], frequencies)
     F_photo_temp[i,:] *= norm
     F_photo[i,:] = np.dot(cross_dot[i,:], F_photo_temp)    
@@ -318,7 +259,7 @@ red = np.mean(reds) # DO NOT put a 4pi here
 if save and alice: # Save red
         pre_saving = '/home/kilmetisk/data1/TDE/tde_comparison/data/'
         if single:
-            filepath =  f'{pre_saving}red/red_sumthomp{m}.csv'
+            filepath =  f'{pre_saving}red/red_fromsum{m}.csv'
             data = [fix, day, red]
             with open(filepath, 'a', newline='') as file:
                 writer = csv.writer(file)
@@ -327,10 +268,10 @@ if save and alice: # Save red
             
         # Save spectrum
         np.savetxt(f'{pre_saving}blue/{sim}/freqs.txt', frequencies)
-        np.savetxt(f'{pre_saving}blue/{sim}/sumthomp_{m}spectra{fix}.txt', F_photo)
+        np.savetxt(f'{pre_saving}blue/{sim}/walljump_{m}spectra{fix}.txt', F_photo)
         
         # Save photocolor
-        filepath =  f'{pre_saving}photosphere/sumthomp_photocolor{m}.csv'
+        filepath =  f'{pre_saving}photosphere/walljump_photocolor{m}.csv'
         data = [fix, day, 
                 np.mean( np.linalg.norm(photosphere, axis = 1)), 
                 np.mean( np.linalg.norm(colorsphere, axis = 1)), 

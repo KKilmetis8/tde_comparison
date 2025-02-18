@@ -152,7 +152,7 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 5, extrarowsx = 100,
                     deltay = y[slope_length - 1] - y[0]
                     Kxslope = (K[slope_length - 1, 0] - K[0, 0]) / deltax
                     Kyslope = (K[0, slope_length - 1] - K[0, 0]) / deltay
-                    Kn[ix][iy] = K[0, 0] + Kxslope * (xsel - x[0]) # + Kyslope * (ysel - y[0])
+                    Kn[ix][iy] = K[0, 0] + Kxslope * (xsel - x[0])  + Kyslope * (ysel - y[0])
                     # if what == 'abs':
                     #    Kn[ix][iy] = K[0, 0] + Kxslope * (x[0] - xsel) + Kyslope * (y[0]-ysel)
                 elif ysel > y[-1]: # Too dense
@@ -177,7 +177,7 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 5, extrarowsx = 100,
                     deltay = y[-1] - y[-slope_length] 
                     Kxslope = highT_slope #(K[-1, -1] - K[-slope_length, -1]) / deltax
                     Kyslope = (K[-1, -1] - K[-1, -slope_length]) / deltay
-                    Kn[ix][iy] = K[-1, -1] + Kxslope * (xsel - x[-1]) # + Kyslope * (ysel - y[-1])
+                    Kn[ix][iy] = K[-1, -1] + Kxslope * (xsel - x[-1])  + Kyslope * (ysel - y[-1])
                 else: # Density is inside the table
                     iy_inK = np.argmin(np.abs(y - ysel))
                     Kxslope = highT_slope #(K[-1, iy_inK] - K[-slope_length, iy_inK]) / deltax
@@ -195,18 +195,20 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 5, extrarowsx = 100,
                     # Something fucky is going on here
                     deltay = y[slope_length - 1] - y[0]
                     Kyslope = (K[ix_inK, slope_length - 1] - K[ix_inK, 0]) / deltay
-                    Kn[ix][iy] = K[ix_inK, 0] #+ Kyslope * (ysel - y[0])
+                    Kn[ix][iy] = K[ix_inK, 0] + Kyslope * (ysel - y[0])
                     #continue
                 elif ysel > y[-1]:  # Too dense, Temperature is inside table
                     deltay = y[-1] - y[-slope_length]
                     Kyslope = (K[ix_inK, -1] - K[ix_inK, -slope_length]) / deltay
-                    Kn[ix][iy] = K[ix_inK, -1] #+ Kyslope * (ysel - y[-1])
+                    Kn[ix][iy] = K[ix_inK, -1] + Kyslope * (ysel - y[-1])
                     #continue
                 else:
                     iy_inK = np.argmin(np.abs(y - ysel))
                     Kn[ix][iy] = K[ix_inK, iy_inK]
                     # continue
     # Idea
+    wallmask = Kn > 1e-5
+    Kn[wallmask] = 1e-19
     # Kn = np.log(np.multiply(np.exp(Kn), np.exp(yn)))
     return xn, yn, Kn
 if __name__ == '__main__':

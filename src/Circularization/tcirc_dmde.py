@@ -97,33 +97,33 @@ if __name__ == '__main__':
     plt.text(0.9, 5, 
              f'Mean \n 4 {np.mean(tc4[-10:]):.2f} $t_\mathrm{{FB}}$ \n 5 {np.mean(tc5[-10:]):.2f} $t_\mathrm{{FB}}$ \n 6 {np.mean(tc6[-10:]):.2f} $t_\mathrm{{FB}}$')
     
-    #%% m calli diag
-    fig, ax = plt.subplots(1,1, figsize = (4,4), dpi = 300, tight_layout=True,
-                           sharex = True)
-    ax.set_xlim(0,2)
-    ax.plot(t4, a14/Ec4, '-', c = 'k', 
-             lw = 2.75, markersize = 1.5, label = '4')
-    ax.plot(t5, a15/Ec5, '-', c = c.AEK, 
-             lw = 1.75, markersize = 1.5, label = '5')
-    ax.plot(t6, a16/Ec6, '-', c = 'maroon', 
-              lw = 0.75, markersize = 1.5, label = '6')
-    ax.set_yscale('log')
-    ax.set_ylim(1e-10, 5e-1)
+    # m calli diag
+    # fig, ax = plt.subplots(1,1, figsize = (4,4), dpi = 300, tight_layout=True,
+    #                        sharex = True)
+    # ax.set_xlim(0,2)
+    # ax.plot(t4, a14/Ec4, '-', c = 'k', 
+    #          lw = 2.75, markersize = 1.5, label = '4')
+    # ax.plot(t5, a15/Ec5, '-', c = c.AEK, 
+    #          lw = 1.75, markersize = 1.5, label = '5')
+    # ax.plot(t6, a16/Ec6, '-', c = 'maroon', 
+    #           lw = 0.75, markersize = 1.5, label = '6')
+    # ax.set_yscale('log')
+    # ax.set_ylim(1e-10, 5e-1)
     
-    ax.axhline(0.25, c = 'k', ls = ':')
-    ax.text(0.2, 0.25 / 2.5, '$m_*/2$', c = 'k', va = 'center', fontsize = 12)
-    # ax.text(0.2, -Ec5 * 0.25 * 1, '$m_*/2$ \n $10^5 M_\odot$', c = c.AEK, va = 'center', fontsize = 12)
-    # ax.text(0.2, -Ec6 * 0.25 * 1, '$m_*/2$ \n $10^6 M_\odot$', c = 'maroon', va = 'center', fontsize = 12)
+    # ax.axhline(0.25, c = 'k', ls = ':')
+    # ax.text(0.2, 0.25 / 2.5, '$m_*/2$', c = 'k', va = 'center', fontsize = 12)
+    # # ax.text(0.2, -Ec5 * 0.25 * 1, '$m_*/2$ \n $10^5 M_\odot$', c = c.AEK, va = 'center', fontsize = 12)
+    # # ax.text(0.2, -Ec6 * 0.25 * 1, '$m_*/2$ \n $10^6 M_\odot$', c = 'maroon', va = 'center', fontsize = 12)
     
-    # ax.axhline(-Ec5 * 0.25, c = c.AEK, ls = ':')
-    # ax.axhline(-Ec6 * 0.25, c = 'maroon', ls = ':')
-    ax.set_title('$\int_0^{E_\mathrm{arrive}(t)} \mathcal{M}(E) dE$')
-    ax.set_ylabel('$\int_0^{E_\mathrm{arrive}(t)} \mathcal{M}(E) dE$')
-    ax.set_xlabel('Time [$t_\mathrm{FB}$]')
+    # # ax.axhline(-Ec5 * 0.25, c = c.AEK, ls = ':')
+    # # ax.axhline(-Ec6 * 0.25, c = 'maroon', ls = ':')
+    # ax.set_title('$\int_0^{E_\mathrm{arrive}(t)} \mathcal{M}(E) dE$')
+    # ax.set_ylabel('$\int_0^{E_\mathrm{arrive}(t)} \mathcal{M}(E) dE$')
+    # ax.set_xlabel('Time [$t_\mathrm{FB}$]')
     # test_t = np.linspace(0,2)
     # powerlaw_5over3 = test_t**(5/3) 
     # ax.plot(test_t, powerlaw_5over3, c = 'royalblue')
-    #%% Show what the numerator does
+    #  Show what the numerator does
     def tc_EMR(m, rstar = 0.47, mstar = 0.5):
         # Go to CGS
         rstar *= c.Rsol_to_cm
@@ -152,8 +152,28 @@ if __name__ == '__main__':
                            sharex = True, sharey = True)
     
     # 4
+    specific = True
+    if specific == True:
+        a14 /= 1e4 #* c.Msol_to_g
+        a24 /= 1e4 #* c.Msol_to_g
+        Ec4 /= 1e4 #* c.Msol_to_g
+        p4  /= 1e4 #* c.Msol_to_g
+        Ledd4 /= 1e4 #* c.Msol_to_g
+        a15 /= 1e5 #* c.Msol_to_g
+        a25 /= 1e5 #* c.Msol_to_g
+        Ec5 /= 1e5 #* c.Msol_to_g
+        p5  /= 1e5 #* c.Msol_to_g
+        Ledd5 /= 1e5 #* c.Msol_to_g
+
+        a16 /= 1e6 #* c.Msol_to_g
+        a26 /= 1e6 #* c.Msol_to_g
+        Ec6 /= 1e6 #* c.Msol_to_g
+        p6  /= 1e6 #* c.Msol_to_g
+        Ledd6 /= 1e6 #* c.Msol_to_g
+
+
+
     ax[0].set_xlim(1, 1.8)
-    ax[0].set_ylim(1e44, 1e52)
     ax[0].set_title('$10^4 M_\odot$')
     ax[0].set_yscale('log')
     ax[0].plot(t4, -a14, '-o', c='k', lw = 0.75, markersize = 1, 
@@ -163,7 +183,6 @@ if __name__ == '__main__':
     ax[0].axhline(Ec4, c = 'k', ls = '--')
     ax24 = ax[0].twinx()
     ax24.set_yscale('log')
-    ax24.set_ylim(1e38, 1e46)
     ax24.plot(t4, -p4, '-o', c='darkorange', lw = 1,  markersize = 1, 
                label = r'$\dot{E}$')
     ax24.axhline(Ledd4, c = c.AEK, ls = '--')
@@ -181,7 +200,6 @@ if __name__ == '__main__':
     ax25 = ax[1].twinx()
     ax25.set_yscale('log')
     ax25.plot(t5, -p5, '-o', c='darkorange', lw = 2, markersize = 1)
-    ax25.set_ylim(1e38, 1e46)
     ax25.axhline(Ledd5, c = c.AEK, ls = '--')
     ax25.tick_params(which = 'both', axis='y', colors='darkorange')  
     ax25.spines['right'].set_color('darkorange')
@@ -195,17 +213,33 @@ if __name__ == '__main__':
     ax[2].axhline(Ec6, c = 'k', ls = '--', label = r'$E_\mathrm{circ}$')
 
     ax26 = ax[2].twinx()
-    ax26.set_ylim(1e38, 1e46)
     ax26.plot(t6, -p6, '-o', c='darkorange', lw = 2,  markersize = 2, 
                label = r'$\dot{E}$')
     ax26.axhline(Ledd6, c = c.AEK, ls = '--', lw = 2, label = r'$L_\mathrm{Edd}$')
-    ax26.set_ylabel('Power [erg/s]', color = 'darkorange', fontsize = 13)
     ax26.set_yscale('log')
     ax26.tick_params(which = 'both', axis='y', colors='darkorange')  
     ax26.spines['right'].set_color('darkorange')
     
     # Labeles
-    ax[0].set_ylabel('Energy [erg]', fontsize = 13)
+    if specific == True:
+        ax[0].set_ylabel('Energy/$M_\mathrm{BH}$ [erg/$\mathrm{M}_\odot$]', fontsize = 13)
+        ax26.set_ylabel('Power/$M_\mathrm{BH}$ [erg $\mathrm{M}_\odot^{-1}$ $s^{-1}$]', color = 'darkorange', fontsize = 13)
+        y2min = 1e35
+        y2max = 1e42
+        ax[0].set_ylim(1e42, 1e47)
+
+    else:
+        ax[0].set_ylabel('Energy [erg]', fontsize = 13)
+        ax26.set_ylabel('Power [erg/s]', color = 'darkorange', fontsize = 13)
+        y2min = 1e38
+        y2max = 1e46
+        ax[0].set_ylim(1e44, 1e52)
+
+    ax24.set_ylim(y2min, y2max)
+    ax25.set_ylim(y2min, y2max)
+    ax26.set_ylim(y2min, y2max)
+
+        
     ax[2].set_title('$10^6 M_\odot$')
     ax[1].set_xlabel('Time [$t_\mathrm{FB}$]', fontsize = 13)
     ax[1].legend(loc = 'lower left', frameon = False, fontsize = 8)
