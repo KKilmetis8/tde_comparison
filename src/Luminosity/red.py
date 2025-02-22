@@ -215,7 +215,7 @@ for fix in fixes:
     if save and alice: # Save red
         pre_saving = '/home/kilmetisk/data1/TDE/tde_comparison/data/'
         if single:
-            filepath =  f'{pre_saving}red/red_walljumper{m}.csv'
+            filepath =  f'{pre_saving}red/red_walljumper2{m}.csv'
             data = [fix, day, red]
             with open(filepath, 'a', newline='') as file:
                 writer = csv.writer(file)

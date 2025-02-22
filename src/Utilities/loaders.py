@@ -42,19 +42,6 @@ def local_loader(m, fix, what):
         box = np.load(f'{m}/{fix}/box_{fix}.npy')
         day = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
         return X, Y, Z, Den, T, Rad, Vol, box, day
-    if what == 'PdV':
-        X = np.load(f'{m}/{fix}/CMx_{fix}.npy')
-        Y = np.load(f'{m}/{fix}/CMy_{fix}.npy')
-        Z = np.load(f'{m}/{fix}/CMz_{fix}.npy')
-        Den = np.load(f'{m}/{fix}/Den_{fix}.npy')
-        T = np.load(f'{m}/{fix}/T_{fix}.npy')
-        Vol = np.load(f'{m}/{fix}/Vol_{fix}.npy')
-        Rad = np.load(f'{m}/{fix}/Rad_{fix}.npy')
-        divV = np.load(f'{m}/{fix}/divV_{fix}.npy')
-        P = np.load(f'{m}/{fix}/P_{fix}.npy')
-        time = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
-        return X, Y, Z, Den, T, Rad, Vol, divV, P, time
-
     
 def boxer(i, observers_xyz, box):
     ''' Gets you the maximum box size, for a given solid angle, 
