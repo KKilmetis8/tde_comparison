@@ -44,12 +44,12 @@ peaktimes = []
 fig, ax = plt.subplots(1,2, figsize = (5,4), tight_layout = True, sharey=True)
 for Mbh, co in zip(Mbhs, cols):
     #DeltaE = mstar/rstar * ( (Mbh/mstar)**(1/3) - 1 )
-    data = np.genfromtxt(f'{pre}/red_richex{Mbh}.csv', delimiter = ',').T
+    data = np.genfromtxt(f'{pre}/red_walljumper{Mbh}.csv', delimiter = ',').T
     days = data[1]
     sorter = np.argsort(days)
     days = days[sorter]    
     
-    L = data[2] / (4 * np.pi) # this is for the error
+    L = data[2]# / (4 * np.pi) # this is for the error
     L = L[sorter]
 
     mask = days > 0.69

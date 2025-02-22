@@ -73,7 +73,7 @@ def fitline(x, V, slope_length = 2 ,extrarows = 3):
     xslope_high = (x[-1] - x[-slope_length]) / slope_length
     x_extra_high = [x[-1] + xslope_high * (i + 1) for i in range(extrarows)]
     
-    # Stack, reverse low to stack properlx
+    # Stack, reverse low to stack properl
     xn = np.concatenate([x_extra_low[::-1], x, x_extra_high])
     
     # 2D low
@@ -108,6 +108,9 @@ def extrapolator_flipper(x ,y, V, slope_length = 26, extrarows = 25,
         yn, Vn = fitline(y, Vn.T, slope_length, extrarows)
     return xn, yn, Vn.T
 
+def line(rho, rho_table, kappa_table):
+    A = 1
+    return A*(rho_table - rho) + kappa_table
 def nouveau_rich(x, y, K, what = 'scatter', slope_length = 5, extrarowsx = 100, 
                  extrarowsy = 100, highT_slope = -3.5):
     ''' 
@@ -153,8 +156,6 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 5, extrarowsx = 100,
                     Kxslope = (K[slope_length - 1, 0] - K[0, 0]) / deltax
                     Kyslope = (K[0, slope_length - 1] - K[0, 0]) / deltay
                     Kn[ix][iy] = K[0, 0] + Kxslope * (xsel - x[0])  + Kyslope * (ysel - y[0])
-                    # if what == 'abs':
-                    #    Kn[ix][iy] = K[0, 0] + Kxslope * (x[0] - xsel) + Kyslope * (y[0]-ysel)
                 elif ysel > y[-1]: # Too dense
                     deltay = y[-1] - y[-slope_length] 
                     Kxslope = (K[slope_length - 1, -1] - K[0, -1]) / deltax
@@ -196,6 +197,13 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 5, extrarowsx = 100,
                     deltay = y[slope_length - 1] - y[0]
                     Kyslope = (K[ix_inK, slope_length - 1] - K[ix_inK, 0]) / deltay
                     Kn[ix][iy] = K[ix_inK, 0] + Kyslope * (ysel - y[0])
+                    
+                    # Idea
+                    # if Kn[ix][iy] > K[0][ix_inK]:
+                    #     print(Kn[ix][iy], K[ix_inK,0])
+                    #     print(np.exp(xsel), np.exp(ysel))
+                    #     Kn[ix][iy] = K[ix_inK][0] - 0.5 * (y[0] - ysel)
+
                     #continue
                 elif ysel > y[-1]:  # Too dense, Temperature is inside table
                     deltay = y[-1] - y[-slope_length]
@@ -206,9 +214,29 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 5, extrarowsx = 100,
                     iy_inK = np.argmin(np.abs(y - ysel))
                     Kn[ix][iy] = K[ix_inK, iy_inK]
                     # continue
-    # Idea
-    wallmask = Kn > 1e-5
-    Kn[wallmask] = 1e-19
+                
+    
+    # Idea, correction loop
+    density_edge = np.argmin( np.abs(y[slope_length] - yn))
+    for ix, xsel in enumerate(xn):
+        pivot = Kn[ix][density_edge]
+        for iy, ysel in enumerate(yn):
+            if xsel <= x[0]: # too cold
+                if Kn[ix][iy] > pivot:
+                    Kn[ix][iy] = pivot - 2 * (y[0] - ysel)
+    # wallmask = Kn > np.min([K[0,slope_length], K[0,0]])
+    # lowdenmask =  yn < y[1]
+    # depth_of_fuckery = np.argmax(K[:,0] > K[:slope_length])
+    # lowTmask = xn <= x[slope_length]
+    # lowdenmask_2d = (lowdenmask + np.zeros((len(xn), len(yn)))).T
+    # lowT_2d = (lowTmask + np.zeros((len(xn), len(yn))))
+    # mask = wallmask * lowdenmask_2d * lowT_2d
+    
+    # mask = np.array( mask, dtype = bool)
+    # plt.pcolormesh(xn, yn, wallmask.T)
+    # plt.axvline(x[0], c='r', alpha = 0.1)
+    # plt.axhline(y[0], c='r', alpha = 0.1)
+    # Kn[mask] = np.log(1e-19)
     # Kn = np.log(np.multiply(np.exp(Kn), np.exp(yn)))
     return xn, yn, Kn
 if __name__ == '__main__':

@@ -49,6 +49,19 @@ def extractor(filename):
     
     # Use lists for clarity
     X = []
+    Y = []
+    Z = []
+    Den = []
+    Vx = []
+    Vy = []
+    Vz = []
+    Vol = []
+    Mass = []
+    IE = []
+    Rad = []
+    T = []
+    P = []
+    star = []
     
     # Iterate over ranks
     for key in keys:
@@ -57,24 +70,59 @@ def extractor(filename):
             continue
         else:
             # For some reason, having the collumns into variables is way faster.
-            x_data = f[key]['Diss']
-
+            x_data = f[key]['CMx']
+            y_data = f[key]['CMy']
+            z_data = f[key]['CMz']
+            den_data = f[key]['Density']
+            star_data = f[key]['tracers']['Star']
+            vx_data = f[key]['Vx']
+            vy_data = f[key]['Vy']
+            vz_data = f[key]['Vz']
+            vol_data = f[key]['Volume']
+            ie_data = f[key]['InternalEnergy']
+            rad_data = f[key]['Erad']  #
+            T_data = f[key]['Temperature']
+            P_data = f[key]['Pressure']
             for i in range(len(x_data)):
                 X.append(x_data[i])
+                Y.append(y_data[i])
+                Z.append(z_data[i])
+                Den.append(den_data[i])
+                Vx.append(vx_data[i])
+                Vy.append(vy_data[i])
+                Vz.append(vz_data[i])
+                Vol.append(vol_data[i])
+                IE.append(ie_data[i])
+                Rad.append(rad_data[i])
+                T.append(T_data[i])
+                P.append(P_data[i])
+
 
     # Close the file
     f.close()
-    return X
+    return X, Y, Z, Den, Vx, Vy, Vz, Vol, IE, Rad, T, P,
 #%% Doing the thing
-fixes = [50]
+fixes = [350]
 for fix in fixes:
-    m = 4
+    m = 6
     snapshot = f'{m}/{fix}/snap_{fix}.h5'
-    X, Y, Z, Den, Vx, Vy, Vz, Vol, = extractor(snapshot)   
+    X, Y, Z, Den, Vx, Vy, Vz, Vol, IE, Rad, T, P  = extractor(snapshot)   
     # Save to another file.
     pre = f'{m}/{fix}/'
     suf = f'_{fix}'
-    np.save(pre + 'Diss' + suf, X)   
+    np.save(pre + 'CMx' + suf, X)   
+    np.save(pre + 'CMy' + suf, Y) 
+    np.save(pre + 'CMz' + suf, Z) 
+    np.save(pre + 'Den' + suf, Den)
+    np.save(pre + 'Vx' + suf, Vx)   
+    np.save(pre + 'Vy' + suf, Vy) 
+    np.save(pre + 'Vz' + suf, Vz)
+    np.save(pre + 'Vol' + suf, Vol)
+    # np.save(pre + 'Mass' + suf, Mass)   
+    np.save(pre + 'IE' + suf, IE) 
+    np.save(pre + 'Rad' + suf, Rad)
+    np.save(pre + 'T' + suf, T)
+    np.save(pre + 'P' + suf, P)  
 
 #%%
 # def time_extractor(mbh, snapno, mass, radius, pre):

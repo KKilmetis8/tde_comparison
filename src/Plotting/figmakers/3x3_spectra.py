@@ -6,14 +6,6 @@ Created on Tue Jan  7 11:19:07 2025
 @author: konstantinos
 """
 
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Tue Jan  7 09:13:46 2025
-
-@author: konstantinos
-"""
-
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as col

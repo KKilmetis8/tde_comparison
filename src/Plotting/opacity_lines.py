@@ -49,7 +49,7 @@ Rho2_n = np.exp(Rho_cool2).T
 ross2_n = np.exp(rossland2)
 abs2_n = np.exp(plank2)
 scattering2_n = np.exp(scattering2)
-#%% Many densities, one plot
+# Many densities, one plot
 plt.figure(figsize = (3,3))
 target_densities = [Rho_n[4],  Rho_n[0], 1e-11, 1e-12, 1e-13, 1e-14]#, Rho_n[25]]
 cols = [c.c91, c.c92, c.c93, c.c94, c.c95, c.c96, c.c97, c.c98, c.c99]
@@ -59,19 +59,19 @@ for target_density, col in zip(target_densities, cols):
     else:
         ls = '-'
     ridx = np.argmin(np.abs(Rho2_n - target_density))
-    plt.plot(T2_n, abs2_n.T[ridx]/ target_density,
-             c = col, ls = ls, 
+    plt.plot(T2_n, abs2_n.T[ridx],# / target_density,
+             c = col, ls = ls, marker = 'o',
             lw = 0.75, markersize = 1,
-             label = f'{target_density:.1e}')
+             label = f'10$^{{ {int(np.log10(target_density))} }}$ g/cm$^3$')
 plt.yscale('log')
-plt.legend(frameon = False, ncols = 2, fontsize = 9)
-plt.axvline(np.max(T_n), c = 'forestgreen', ls = '--')
+plt.legend(frameon = False, ncols = 2, fontsize = 4)
+plt.axvline(np.max(T_n), c = 'forestgreen', ls = '--', alpha = 0.2)
 plt.axvline(np.min(T_n), c = 'forestgreen', ls = '--', alpha = 0.2)
-#plt.ylim(1e-1, 1e15)
-plt.xlim(4000, 10500)
-#plt.xscale('log')
+plt.ylim(1e-27, 1e-4)
+plt.xlim(1e3, 1e9)
+plt.xscale('log')
 plt.xlabel('Temperature [K]')
-plt.ylabel('Opacity [cm$^2$/g]')
+plt.ylabel('Opacity [1/cm]')#'[cm$^2$/g]')
 #%%
 X = 0.9082339738214822 # From table prescription
 thompson = 0.2 * (1 + X)#%%

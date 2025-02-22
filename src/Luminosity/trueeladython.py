@@ -60,7 +60,7 @@ if alice:
         fix = args.only
     else:
         raise NameError('You need to set the single flag for this to run \n it is much faster')
-    X, Y, Z, Den, T, Rad, Vol, box, day = alice_loader(m, fix, 'thermodynamics')
+    X, Y, Z, Den, T, Rad, Vol, box, day = alice_loader(sim, fix, 'thermodynamics')
 else:
     m = 5
     pre = f'{m}/'

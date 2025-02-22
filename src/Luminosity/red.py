@@ -23,6 +23,7 @@ import healpy as hp
 import scipy.integrate as sci
 from scipy.interpolate import griddata
 import matlab.engine
+eng = matlab.engine.start_matlab()
 from sklearn.neighbors import KDTree
 from scipy.ndimage import uniform_filter1d
 from tqdm import tqdm
@@ -62,13 +63,12 @@ if alice:
     else:
         raise NameError('You need to set the single flag for this to run \n it is much faster')
 else:
-    eng = matlab.engine.start_matlab()
     m = 4
     mstar = 0.5
     rstar = 0.47
     if m == 4:
         fixes = [116, 136, 164, 179, 199, 218, 240, 272, 297, 300, 348]
-        fixes = [348]
+        fixes = [348]+
     if m == 5:
         fixes = [227, 236, 288, 301, 308, 349]
         fixes = [349]
@@ -89,7 +89,7 @@ amin = Rt * (10**m/mstar)**(1/3)
 for fix in fixes:
     try:
         if alice:
-            X, Y, Z, Den, T, Rad, Vol, box, day = alice_loader(m, fix,
+            X, Y, Z, Den, T, Rad, Vol, box, day = alice_loader(sim, fix,
                                                                'thermodynamics')
         else:
             X, Y, Z, Den, T, Rad, Vol, box, day = local_loader(m, fix,
@@ -208,8 +208,8 @@ for fix in fixes:
         if Lphoto2 < 0:
             Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
         max_length = 4*np.pi*c.c*rad_den[photosphere]*r[photosphere]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
-        reds[i] = np.min( [Lphoto2, max_length])
-        print(reds[i])
+        reds[obs] = np.min( [Lphoto2, max_length])
+        print(reds[obs])
         
     red =  np.mean(reds) # DO NOT ADD A 4pi HERE
     if save and alice: # Save red

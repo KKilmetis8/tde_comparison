@@ -15,7 +15,7 @@ res = 'f'  # 'f' for fiducial, 'h' for HiRes, 's' for super high res,
 if Mbh == '10000':
     start = 90
     end = 348
-    jobs = 40
+    jobs = end-start
     edges = np.linspace(start, end, jobs + 1, dtype=int)
     firsts = edges[:-1]
     lasts = edges[1:] - 1  # Ensure last value is included in interval
@@ -26,7 +26,7 @@ if Mbh == '10_000' and res == 'h':
 if Mbh == '100000':
     start = 135
     end = 365
-    jobs = 50
+    jobs = end - start
     edges = np.linspace(start, end, jobs + 1, dtype=int)
     firsts = edges[:-1]
     lasts = edges[1:] - 1  
@@ -35,7 +35,7 @@ if Mbh == '100000':
 if Mbh == '1e+06':
     start = 200
     end = 444
-    jobs = 60
+    jobs = end-start
     edges = np.linspace(start, end, jobs + 1, dtype=int)
     firsts = edges[:-1]
     lasts = edges[1:] - 1  
@@ -44,7 +44,7 @@ if Mbh == '1e+06':
 
 for runno, first, last in zip(runnos, firsts, lasts):
     # Open file and read it
-    f = open(f'{pre}slurms/proto_eladython.sh', 'r')
+    f = open(f'{pre}slurms/proto_red.slurm', 'r')
     g = f.read()
     f.close()
 
@@ -59,7 +59,7 @@ for runno, first, last in zip(runnos, firsts, lasts):
     g = g.replace('<res>', str(res))
 
     # Write
-    name = f'{pre}slurms/forged/Eladython_{m}_{res}_{runno}.slurm'
+    name = f'{pre}slurms/forged/red_{m}_{first}.slurm'
     h = open(name, 'w')
     h.write(g)
     h.close()

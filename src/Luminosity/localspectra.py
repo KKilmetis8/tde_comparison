@@ -47,9 +47,9 @@ def masker(mask, list_of_quantities):
 
 eng = matlab.engine.start_matlab()
 ms = [4, 5, 6]
+# ms = [4]
 mstar = 0.5
 rstar = 0.47
-
 for m in ms:
     Rt = rstar * (10**m/mstar)**(1/3)
     amin = Rt * (10**m/mstar)**(1/3)
@@ -61,7 +61,6 @@ for m in ms:
         fixes = [227, 288, 349]
     elif m == 6:
         fixes = [315, 379, 444] # 420->444
-        # fixes = [444]
     for fix in fixes:
         X, Y, Z, Den, T, Rad, Vol, box, day = local_loader(m, fix, 
                                                            'thermodynamics')  
@@ -108,11 +107,11 @@ for m in ms:
         
         # Iterate over observers
         zsweep = [104, 136, 152, 167, 168, 179, 180, 187, 188, 191,]# 140]
-
-        for i, obs in tqdm(enumerate(zsweep)): 
-            mu_x = observers_xyz[i][0]
-            mu_y = observers_xyz[i][1]
-            mu_z = observers_xyz[i][2]
+        # zsweep = [104]
+        for obs in tqdm(zsweep): 
+            mu_x = observers_xyz[obs][0]
+            mu_y = observers_xyz[obs][1]
+            mu_z = observers_xyz[obs][2]
             
             # Make the ray
             rmax = boxer(obs, observers_xyz, box)
@@ -217,7 +216,7 @@ for m in ms:
             if Lphoto2 < 0:
                 Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
             max_length = 4*np.pi*c.c*rad_den[photo_idx]*r[photo_idx]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
-            reds[i] = np.min( [Lphoto2, max_length])
+            reds[obs] = np.min( [Lphoto2, max_length])
             
             # Spectra
             los_effective[los_effective>30] = 30
@@ -228,47 +227,50 @@ for m in ms:
             
             # Spectra ---
             for k in range(color_idx, len(r)):
-                dr = r[k]-r[k-1]
-                Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
-                wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
-                black_body = frequencies**3 / (c.c**2 * wien)
-                F_photo_temp[i,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
+                tlim = 58002693
+                if t[k] < tlim:
+                    dr = r[k]-r[k-1]
+                    Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
+                    wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
+                    black_body = frequencies**3 / (c.c**2 * wien)
+                # print(sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body )
+                    F_photo_temp[obs,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
             
-            norm = reds[i] / np.trapz(F_photo_temp[i,:], frequencies)
-            F_photo_temp[i,:] *= norm
-            F_photo[i,:] = np.dot(cross_dot[i,:], F_photo_temp)    
+            norm = reds[obs] / np.trapz(F_photo_temp[obs,:], frequencies)
+            F_photo_temp[obs,:] *= norm
+            F_photo[obs,:] = np.dot(cross_dot[obs,:], F_photo_temp)    
 
-        # import matplotlib.pyplot as plt
-        # plt.ioff()
-        # plt.figure()
-        # plt.plot(r / amin, np.log10(t), '-o', c='k', 
-        #          lw = 1.3, markersize = 0.4, label = 'logT [K]', zorder = 10)
-        # plt.plot(r/amin, np.log10( np.sqrt(3 * sigma_plank_eval * (sigma_plank_eval + sigma_scattering_eval))), 
-        #          '-o', c='skyblue', lw = 0.3, markersize = 0.4, 
-        #          label = r'$\sqrt{ 3\sigma_\mathrm{abs} \left( \sigma_\mathrm{sca} + \sigma_\mathrm{abs} \right)}$')
-        # plt.plot(r/amin, np.log10(sigma_scattering_eval + sigma_plank_eval), 
-        #          '-o', c='r', lw = 0.3, markersize = 0.4, 
-        #           label = r'$\sigma_\mathrm{sca} + \sigma_\mathrm{abs}$')
-        # plt.plot(r / amin, np.log10(d * c.den_converter), 
-        #          '-o', c='darkorange', lw = 0.3, markersize = 0.4, 
-        #          label = r'log $\rho$ [cgs]')
-        # plt.plot(r/ amin, los_effective, c = 'darkgreen', label = 'tau effective')
-        # # plt.axhline(1, c = 'tomato', ls = ':')
-        # # plt.axhline(5, c = 'maroon', ls = ':')
-        # plt.axhline(7.7634, c = 'r', ls = '--')
-        # plt.axhline(np.log10(5802.243894044859), c = 'r', ls = '--', label = 'table edge')
-        # plt.axvline(r[b] / amin, 
-        #             c = c.AEK, ls = '--', label = 'photosphere')
-        # plt.axvline(r[b2] / amin, 
-        #             c = 'slateblue', ls = '--', label = 'colorsphere')
-        # plt.legend(fontsize =5, frameon = False)
-        # plt.xscale('log')
-        # plt.xlabel('r [amin]')
-        # plt.ylabel('logT [K]')
-        # plt.title(f'MBH {m} - {fix} - Obs {i}')
-        # plt.ylim(-19, 10)
-        # plt.savefig(f'data/bluepaper/{m}ray{fix}{i}.png')
-        
+            import matplotlib.pyplot as plt
+            plt.ioff()
+            plt.figure()
+            plt.plot(r / amin, np.log10(t), '-o', c='k', 
+                     lw = 1.3, markersize = 0.4, label = 'logT [K]', zorder = 10)
+            plt.plot(r/amin, np.log10( np.sqrt(3 * sigma_plank_eval * (sigma_plank_eval + sigma_scattering_eval))), 
+                     '-o', c='skyblue', lw = 0.3, markersize = 0.4, 
+                     label = r'$\sqrt{ 3\sigma_\mathrm{abs} \left( \sigma_\mathrm{sca} + \sigma_\mathrm{abs} \right)}$')
+            plt.plot(r/amin, np.log10(sigma_scattering_eval + sigma_plank_eval), 
+                     '-o', c='r', lw = 0.3, markersize = 0.4, 
+                      label = r'$\sigma_\mathrm{sca} + \sigma_\mathrm{abs}$')
+            plt.plot(r / amin, np.log10(d * c.den_converter), 
+                     '-o', c='darkorange', lw = 0.3, markersize = 0.4, 
+                     label = r'log $\rho$ [cgs]')
+            plt.plot(r/ amin, los_effective, c = 'darkgreen', label = 'tau effective')
+            # plt.axhline(1, c = 'tomato', ls = ':')
+            # plt.axhline(5, c = 'maroon', ls = ':')
+            plt.axhline(7.7634, c = 'r', ls = '--')
+            plt.axhline(np.log10(5802.243894044859), c = 'r', ls = '--', label = 'table edge')
+            plt.axvline(r[photo_idx] / amin, 
+                        c = c.AEK, ls = '--', label = 'photosphere')
+            plt.axvline(r[color_idx] / amin, 
+                        c = 'slateblue', ls = '--', label = 'colorsphere')
+            plt.legend(fontsize =5, frameon = False)
+            plt.xscale('log')
+            plt.xlabel('r [amin]')
+            plt.ylabel('logT [K]')
+            plt.title(f'MBH {m} - {fix} - Obs {obs}')
+            plt.ylim(-19, 10)
+            plt.savefig(f'data/bluepaper/{m}ray{fix}{obs}.png')
+            plt.close()
         if save:
             # Save photocolor
             pre_saving = 'data/bluepaper/'

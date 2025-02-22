@@ -42,6 +42,19 @@ def local_loader(m, fix, what):
         box = np.load(f'{m}/{fix}/box_{fix}.npy')
         day = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
         return X, Y, Z, Den, T, Rad, Vol, box, day
+    if what == 'PdV':
+        X = np.load(f'{m}/{fix}/CMx_{fix}.npy')
+        Y = np.load(f'{m}/{fix}/CMy_{fix}.npy')
+        Z = np.load(f'{m}/{fix}/CMz_{fix}.npy')
+        Den = np.load(f'{m}/{fix}/Den_{fix}.npy')
+        T = np.load(f'{m}/{fix}/T_{fix}.npy')
+        Vol = np.load(f'{m}/{fix}/Vol_{fix}.npy')
+        Rad = np.load(f'{m}/{fix}/Rad_{fix}.npy')
+        divV = np.load(f'{m}/{fix}/divV_{fix}.npy')
+        P = np.load(f'{m}/{fix}/P_{fix}.npy')
+        time = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
+        return X, Y, Z, Den, T, Rad, Vol, divV, P, time
+
     
 def boxer(i, observers_xyz, box):
     ''' Gets you the maximum box size, for a given solid angle, 
@@ -73,33 +86,33 @@ def alice_loader(sim, fix, what):
     pre = f'{realpre}{sim}/snap_'
     if what == 'orbital':
         X = np.load(f'{pre}{fix}/CMx_{fix}.npy')
-        Y = np.load(f'{pre}/{fix}/CMy_{fix}.npy')
-        Z = np.load(f'{pre}/{fix}/CMz_{fix}.npy')
-        VX = np.load(f'{pre}/{fix}/Vx_{fix}.npy')
-        VY = np.load(f'{pre}/{fix}/Vy_{fix}.npy')
-        VZ = np.load(f'{pre}/{fix}/Vz_{fix}.npy')
-        time = np.loadtxt(f'{pre}/{fix}/tbytfb_{fix}.txt')
+        Y = np.load(f'{pre}{fix}/CMy_{fix}.npy')
+        Z = np.load(f'{pre}{fix}/CMz_{fix}.npy')
+        VX = np.load(f'{pre}{fix}/Vx_{fix}.npy')
+        VY = np.load(f'{pre}{fix}/Vy_{fix}.npy')
+        VZ = np.load(f'{pre}{fix}/Vz_{fix}.npy')
+        time = np.loadtxt(f'{pre}{fix}/tbytfb_{fix}.txt')
         return X, Y, Z, VX, VY, VZ, time
     if what == 'orbital+mass':
-        X = np.load(f'{pre}/{fix}/CMx_{fix}.npy')
-        Y = np.load(f'{pre}/{fix}/CMy_{fix}.npy')
-        Z = np.load(f'{pre}/{fix}/CMz_{fix}.npy')
-        VX = np.load(f'{pre}/{fix}/Vx_{fix}.npy')
-        VY = np.load(f'{pre}/{fix}/Vy_{fix}.npy')
-        VZ = np.load(f'{pre}/{fix}/Vz_{fix}.npy')
-        Den = np.load(f'{pre}/{fix}/Den_{fix}.npy')
-        Vol = np.load(f'{pre}/{fix}/Vol_{fix}.npy')
+        X = np.load(f'{pre}{fix}/CMx_{fix}.npy')
+        Y = np.load(f'{pre}{fix}/CMy_{fix}.npy')
+        Z = np.load(f'{pre}{fix}/CMz_{fix}.npy')
+        VX = np.load(f'{pre}{fix}/Vx_{fix}.npy')
+        VY = np.load(f'{pre}{fix}/Vy_{fix}.npy')
+        VZ = np.load(f'{pre}{fix}/Vz_{fix}.npy')
+        Den = np.load(f'{pre}{fix}/Den_{fix}.npy')
+        Vol = np.load(f'{pre}{fix}/Vol_{fix}.npy')
         Mass = Den * Vol
-        time = np.loadtxt(f'{pre}/{fix}/tbytfb_{fix}.txt')
+        time = np.loadtxt(f'{pre}{fix}/tbytfb_{fix}.txt')
         return X, Y, Z, VX, VY, VZ, Mass, time
     if what == 'thermodynamics':
-        X = np.load(f'{pre}/{fix}/CMx_{fix}.npy')
-        Y = np.load(f'{pre}/{fix}/CMy_{fix}.npy')
-        Z = np.load(f'{pre}/{fix}/CMz_{fix}.npy')
-        Den = np.load(f'{pre}/{fix}/Den_{fix}.npy')
-        T = np.load(f'{pre}/{fix}/T_{fix}.npy')
-        Rad = np.load(f'{pre}/{fix}/Rad_{fix}.npy')
-        Vol = np.load(f'{pre}/{fix}/Vol_{fix}.npy')
-        box = np.load(f'{pre}/{fix}/box_{fix}.npy')
-        day = np.loadtxt(f'{pre}/{fix}/tbytfb_{fix}.txt')
+        X = np.load(f'{pre}{fix}/CMx_{fix}.npy')
+        Y = np.load(f'{pre}{fix}/CMy_{fix}.npy')
+        Z = np.load(f'{pre}{fix}/CMz_{fix}.npy')
+        Den = np.load(f'{pre}{fix}/Den_{fix}.npy')
+        T = np.load(f'{pre}{fix}/T_{fix}.npy')
+        Rad = np.load(f'{pre}{fix}/Rad_{fix}.npy')
+        Vol = np.load(f'{pre}{fix}/Vol_{fix}.npy')
+        box = np.load(f'{pre}{fix}/box_{fix}.npy')
+        day = np.loadtxt(f'{pre}{fix}/tbytfb_{fix}.txt')
         return X, Y, Z, Den, T, Rad, Vol, box, day

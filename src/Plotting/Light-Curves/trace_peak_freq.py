@@ -41,7 +41,7 @@ def peakfinder(simname, fix, what, color, plot = False):
 
         return (percentile_20, percentile_50, percentile_80)
 
-ms = [4, 6]
+ms = [4, 5, 6]
 colors = ['k', c.AEK, 'maroon']
 all_days = []
 all_peaks = []
@@ -56,23 +56,23 @@ for Mbh in ms:
     # if Mbh == 5:
     #     fixes = np.arange(132, 361+1)
     # if Mbh == 6:
-    fixesstr = pd.read_csv(f'data/photosphere/sumthomp3_photocolor{Mbh}.csv').iloc[:,0][::2]
+    fixesstr = pd.read_csv(f'data/photosphere/walljump_single_photocolor{Mbh}.csv').iloc[:,0][::2]
     fixes = [ int(i) for i in fixesstr]
     fixes = np.sort(fixes)
 
-    daysstr = pd.read_csv(f'data/photosphere/sumthomp3_photocolor{Mbh}.csv').iloc[:,1][::2]
+    daysstr = pd.read_csv(f'data/photosphere/walljump_single_photocolor{Mbh}.csv').iloc[:,1][::2]
     days = [ float(i) for i in daysstr]
     days = np.sort(days)
     
     peaks20 = []
     peaks136 = []
     peaks188 = []
-    colorframe = pd.read_csv(f'data/photosphere/sumthomp3_photocolor{Mbh}.csv').iloc[:,-1][::2]
+    colorframe = pd.read_csv(f'data/photosphere/walljump_single_photocolor{Mbh}.csv').iloc[:,-1][::2]
     for ifix, fix in enumerate(fixes):
-        pre = f'data/blue2/spectra{Mbh}new/sumthomp3_{Mbh}'
+        pre = f'data/blue2/spectra{Mbh}new2/walljump_single_{Mbh}'
         color = np.array(list(map(float, colorframe.iloc[ifix].strip("[] \n").split())))
         peaks = peakfinder(pre, fix, 'nick', color)
-        print(peaks)
+        # print(peaks)
         peaks20.append(peaks[0])
         peaks136.append(peaks[1])
         peaks188.append(peaks[2])
@@ -96,9 +96,9 @@ fig, ax = plt.subplots(1,1, figsize = (3,3))
 # labels = [ ('10$^4$M$_\odot$ 10°', '10$^4$M$_\odot$ 81°'), 
 #            ('10$^5$M$_\odot$ 10°', '10$^5$M$_\odot$ 81°'),
 #            ('10$^6$M$_\odot$ 10°', '10$^6$M$_\odot$ 81°')]
-colors = ['k', 'maroon'] # c.AEK, 'maroon']
+colors = ['k', c.AEK, 'maroon']
 
-labels = [ '10$^4$M$_\odot$',   '10$^6$M$_\odot$',] #'10$^5$M$_\odot$', '10$^6$M$_\odot$',]
+labels = [ '10$^4$M$_\odot$', '10$^5$M$_\odot$', '10$^6$M$_\odot$',]
 ax.axhspan(1.65, 3.26, alpha=0.2, color='gold') # 380 - 750 nm
 ax.axhspan(3.26, 7e16 * c.Hz_to_ev, alpha=0.2, color='purple')
 ax.axhspan(7e16 * c.Hz_to_ev, 5e18 * c.Hz_to_ev, alpha=0.2, color='cyan')
@@ -115,7 +115,7 @@ for days, peaks20, peaks136, peaks188, co, label in zip(all_days, all20,
                     peaks188[nonzeromask] * c.Hz_to_ev, 
                     color = co, alpha = 0.3)
 ev_low = 1.45
-ev_high = 13
+ev_high = 12
 ax.set_ylim(ev_low, ev_high)
 
 ax.set_xlabel('Time $[t_\mathrm{FB}]$')
