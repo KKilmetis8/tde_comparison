@@ -35,7 +35,7 @@ def tfb(m, mstar = 0.5, rstar = 0.47,):
     return np.pi * np.sqrt(Mbh / (2 * c.Gcgs)) * rstar**(3/2) / mstar
 
 pre = 'data/red/'
-Mbhs = [4, 5, 6]
+Mbhs = [4,]# 5, 6]
 # Mbhs = [6]
 cols = ['k', c.AEK, 'maroon']
 extra = 'beta1S60n1.5Compton'

@@ -241,11 +241,14 @@ for i, obs in enumerate(observers):
     
     # Spectra ---
     for k in range(color_idx, len(r)):
-        dr = r[k]-r[k-1]
-        Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
-        wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
-        black_body = frequencies**3 / (c.c**2 * wien)
-        F_photo_temp[i,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
+        tlim = 58002693
+        if t[k] < tlim:
+            dr = r[k]-r[k-1]
+            Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
+            wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
+            black_body = frequencies**3 / (c.c**2 * wien)
+        # print(sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body )
+            F_photo_temp[obs,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
     
     norm = reds[i] / np.trapz(F_photo_temp[i,:], frequencies)
     F_photo_temp[i,:] *= norm
@@ -268,10 +271,10 @@ if save and alice: # Save red
             
         # Save spectrum
         np.savetxt(f'{pre_saving}blue/{sim}/freqs.txt', frequencies)
-        np.savetxt(f'{pre_saving}blue/{sim}/walljump_{m}spectra{fix}.txt', F_photo)
+        np.savetxt(f'{pre_saving}blue/{sim}/walljump_s3_{m}spectra{fix}.txt', F_photo)
         
         # Save photocolor
-        filepath =  f'{pre_saving}photosphere/walljump_photocolor{m}.csv'
+        filepath =  f'{pre_saving}photosphere/walljump_s3_photocolor{m}.csv'
         data = [fix, day, 
                 np.mean( np.linalg.norm(photosphere, axis = 1)), 
                 np.mean( np.linalg.norm(colorsphere, axis = 1)), 
