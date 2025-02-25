@@ -23,7 +23,8 @@ scattering = np.loadtxt(f'{opac_path}/scatter.txt')
 
 
 _, _, plank_ex = nouveau_rich(T_cool, Rho_cool, plank, what = 'abs', slope_length=5)
-T_opac_ex, Rho_opac_ex, rossland_ex = nouveau_rich(T_cool, Rho_cool, rossland, what = 'scattering')
+T_opac_ex, Rho_opac_ex, rossland_ex = nouveau_rich(T_cool, Rho_cool, rossland, what = 'scattering',
+                                                   slope_length = 5)
 _, _, rossland_ex2 = nouveau_rich(T_cool, Rho_cool, rossland, what = 'abs')
 
 _, _, scattering_ex = nouveau_rich(T_cool, Rho_cool, scattering, what = 'scattering')

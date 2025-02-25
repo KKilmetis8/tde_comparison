@@ -222,7 +222,7 @@ for i, obs in enumerate(observers):
     R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval * rad_den)
     R_lamda[R_lamda < 1e-10] = 1e-10
     
-    fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
+    fld_factor = (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
     smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) 
     photo_idx = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0]
     
@@ -241,14 +241,14 @@ for i, obs in enumerate(observers):
     
     # Spectra ---
     for k in range(color_idx, len(r)):
-        tlim = 58002693
-        if t[k] < tlim:
-            dr = r[k]-r[k-1]
-            Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
-            wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
-            black_body = frequencies**3 / (c.c**2 * wien)
-        # print(sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body )
-            F_photo_temp[obs,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
+        # tlim = 1e20
+        # if t[k] < tlim:
+        dr = r[k]-r[k-1]
+        Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize
+        wien = np.exp(c.h * frequencies / (c.kb * t[k])) - 1
+        black_body = frequencies**3 / (c.c**2 * wien)
+    # print(sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body )
+        F_photo_temp[obs,:] += sigma_plank_eval[k] * Vcell * np.exp(-los_effective[k]) * black_body
     
     norm = reds[i] / np.trapz(F_photo_temp[i,:], frequencies)
     F_photo_temp[i,:] *= norm

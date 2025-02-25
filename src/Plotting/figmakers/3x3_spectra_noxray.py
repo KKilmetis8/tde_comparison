@@ -31,7 +31,9 @@ highx = 7e16
 lowy = 1e38
 highy = 5e43
 xticks1 = [1e0, 1e1, 1e2, 1e3, 1e4, 1e5]
-xticks2 = [1e4, 1e3, 1e2, 1e1, 1e0, 1e-1] # 1e3]
+ev_ticks = np.array([1.65, 2.3, 3.26, 4.7, 6.5, 8.8, 12])
+# wavelength_ticks = 1239.8 / ev_ticks
+xticks2 = 1239.8/np.array(xticks1)# [1e4, 1e3, 1e2, 1e1, 1e0, 1e-1] # 1e3]
 # yticks = [1e38, 1e40, 1e42, 1e44]
 yticks = [1e39, 1e41, 1e43, ]#1e45]
 yticklabels = [ str(ytick) for ytick in yticks]
@@ -71,7 +73,7 @@ for f4, f5, f6, i in zip(fixes4, fixes5, fixes6, range(3)):
                      np.ones(len(c.freqs)), c=colors[obs], lw=4)
             ax2.set_xscale('log')
             ax2.set_xlim( 1e7 * c.c  / highx, 1e7 * c.c / lowx)
-            ax2.set_xticks(xticks2)
+            ax2.set_yticklabels([f'{tick:.0e}' for tick in xticks2])
             ax2.invert_xaxis()
             if i != 0:
                 ax2.set_xticklabels([])

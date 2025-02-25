@@ -99,7 +99,7 @@ def fitline(x, V, slope_length = 2 ,extrarows = 3):
     return xn, Vn
 
 def extrapolator_flipper(x ,y, V, slope_length = 26, extrarows = 25,
-                         what = 'rich'):
+                         what = 'rich', correction = -2):
     if what == 'rich':
         xn, Vn = rich_grabapoint(x, V, slope_length, extrarows)
         yn, Vn = rich_grabapoint(y, Vn.T, slope_length, extrarows)
@@ -112,7 +112,7 @@ def line(rho, rho_table, kappa_table):
     A = 1
     return A*(rho_table - rho) + kappa_table
 def nouveau_rich(x, y, K, what = 'scatter', slope_length = 5, extrarowsx = 100, 
-                 extrarowsy = 100, highT_slope = -3.5):
+                 extrarowsy = 100, highT_slope = -3.5, correction = -2):
     ''' 
     what, str: either scattering or absorption
     
@@ -172,7 +172,7 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 5, extrarowsx = 100,
                 if ysel < y[0]: # Too rarefied
                     deltay = y[slope_length - 1] - y[0]
                     Kxslope = highT_slope #(K[-1, 0] - K[-slope_length, 0]) / deltax
-                    Kyslope = 1 # Kramers ##(K[-1, slope_length - 1] - K[-1, 0]) / deltay
+                    Kyslope = (K[-1, slope_length - 1] - K[-1, 0]) / deltay
                     Kn[ix][iy] = K[-1, 0] + Kxslope * (xsel - x[-1]) + Kyslope * (ysel - y[0])        
                 elif ysel > y[-1]: # Too dense
                     deltay = y[-1] - y[-slope_length] 
@@ -223,7 +223,7 @@ def nouveau_rich(x, y, K, what = 'scatter', slope_length = 5, extrarowsx = 100,
         for iy, ysel in enumerate(yn):
             if xsel <= x[0]: # too cold
                 if Kn[ix][iy] > pivot:
-                    Kn[ix][iy] = pivot - 2 * (y[0] - ysel)
+                    Kn[ix][iy] = pivot + correction * (y[0] - ysel)
     # wallmask = Kn > np.min([K[0,slope_length], K[0,0]])
     # lowdenmask =  yn < y[1]
     # depth_of_fuckery = np.argmax(K[:,0] > K[:slope_length])

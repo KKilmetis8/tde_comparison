@@ -8,7 +8,7 @@ Created on Thu Feb 13 12:14:15 2025
 
 import numpy as np
 
-def local_loader(m, fix, what):
+def local_loader(m, fix, what, substep = 1):
     'Loads extracted .npy data from my local machine'
     if what == 'orbital':
         X = np.load(f'{m}/{fix}/CMx_{fix}.npy')
@@ -42,6 +42,19 @@ def local_loader(m, fix, what):
         box = np.load(f'{m}/{fix}/box_{fix}.npy')
         day = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
         return X, Y, Z, Den, T, Rad, Vol, box, day
+    if what == 'PdV':
+        X = np.load(f'{m}/{fix}/CMx_{fix}.npy')[::substep]
+        Y = np.load(f'{m}/{fix}/CMy_{fix}.npy')[::substep]
+        Z = np.load(f'{m}/{fix}/CMz_{fix}.npy')[::substep]
+        Den = np.load(f'{m}/{fix}/Den_{fix}.npy')[::substep]
+        T = np.load(f'{m}/{fix}/T_{fix}.npy')[::substep]
+        Rad = np.load(f'{m}/{fix}/Rad_{fix}.npy')[::substep]
+        Vol = np.load(f'{m}/{fix}/Vol_{fix}.npy')[::substep]
+        P = np.load(f'{m}/{fix}/P_{fix}.npy')[::substep]
+        divV = np.load(f'{m}/{fix}/divV_{fix}.npy')[::substep]
+        box = np.load(f'{m}/{fix}/box_{fix}.npy')[::substep]
+        day = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
+        return X, Y, Z, Den, T, Rad, Vol, divV, P, day
     
 def boxer(i, observers_xyz, box):
     ''' Gets you the maximum box size, for a given solid angle, 

@@ -46,8 +46,7 @@ def masker(mask, list_of_quantities):
     return (*new_list,)
 
 eng = matlab.engine.start_matlab()
-ms = [4, 5, 6]
-# ms = [4]
+ms = [5, 6]
 mstar = 0.5
 rstar = 0.47
 for m in ms:
@@ -56,7 +55,7 @@ for m in ms:
     pre = f'{m}/'
     if m == 4:
         fixes = [179, 240, 300] 
-        # fixes = [300]
+        # vfixes = [300]
     elif m == 5:
         fixes = [227, 288, 349]
     elif m == 6:
@@ -143,13 +142,19 @@ for m in ms:
                                       np.log(t),np.log(d),'linear',0)
             sigma_scattering = np.array(sigma_scattering)[0]
             underflow_mask_scattering = sigma_scattering != 0.0
-            underflow_mask = underflow_mask_scattering * underflow_mask_plank
             
-            d, t, r, sigma_plank, sigma_scattering, ray_x, ray_y, ray_z, rad_den = masker(underflow_mask, 
-            [d, t, r, sigma_plank, sigma_scattering, ray_x, ray_y, ray_z, rad_den])
+            sigma_rossland = eng.interp2(T_cool2,Rho_cool2,scattering2.T, 
+                                      np.log(t),np.log(d),'linear',0)
+            sigma_rossland = np.array(sigma_rossland)[0]
+            underflow_mask_rossland = sigma_rossland != 0.0
+            underflow_mask = underflow_mask_scattering * underflow_mask_plank * underflow_mask_rossland
+            
+            d, t, r, sigma_plank, sigma_scattering, sigma_rossland, ray_x, ray_y, ray_z, rad_den = masker(underflow_mask, 
+            [d, t, r, sigma_plank, sigma_scattering, sigma_rossland, ray_x, ray_y, ray_z, rad_den])
             sigma_plank_eval = np.exp(sigma_plank)
             sigma_scattering_eval = np.exp(sigma_scattering)
             sigma_rossland_eval = sigma_plank_eval + sigma_scattering_eval
+            sigma_rossland_FLD_eval = np.exp(sigma_rossland)
 
             # Optical Depth ---.    
             r_fuT = np.flipud(r.T)
@@ -158,6 +163,10 @@ for m in ms:
             kappa_rossland = np.flipud(sigma_scattering_eval) + np.flipud(sigma_plank_eval)
             los = - np.flipud(sci.cumulative_trapezoid(kappa_rossland, 
                                                        r_fuT, initial = 0)) * c.Rsol_to_cm # dont know what it do but this is the conversion
+            
+            kappa_FLD_rossland = np.flipud(sigma_scattering_eval) + np.flipud(sigma_plank_eval)
+            losFLD = - np.flipud(sci.cumulative_trapezoid(kappa_FLD_rossland, 
+                                                          r_fuT, initial = 0)) * c.Rsol_to_cm 
             
             kappa_plank = np.flipud(sigma_plank_eval) 
             los_abs = - np.flipud(sci.cumulative_trapezoid(kappa_plank,
@@ -208,14 +217,15 @@ for m in ms:
             R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval * rad_den)
             R_lamda[R_lamda < 1e-10] = 1e-10
             
-            fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
+            fld_factor = (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
             smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) 
             photo_idx = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0]
+            photo_FLD_idx = np.where( ((smoothed_flux>0) & (losFLD<2/3) ))[0][0]
             
-            Lphoto2 = 4*np.pi*c.c*smoothed_flux[photo_idx] * c.Msol_to_g / (c.t**2)
+            Lphoto2 = 4*np.pi*c.c*smoothed_flux[photo_FLD_idx] * c.Msol_to_g / (c.t**2)
             if Lphoto2 < 0:
                 Lphoto2 = 1e100 # it means that it will always pick max_length for the negatives, maybe this is what we are getting wrong
-            max_length = 4*np.pi*c.c*rad_den[photo_idx]*r[photo_idx]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
+            max_length = 4*np.pi*c.c*rad_den[photo_FLD_idx]*r[photo_FLD_idx]**2 * c.Msol_to_g * c.Rsol_to_cm / (c.t**2)
             reds[obs] = np.min( [Lphoto2, max_length])
             
             # Spectra
@@ -227,7 +237,7 @@ for m in ms:
             
             # Spectra ---
             for k in range(color_idx, len(r)):
-                tlim = 58002693
+                tlim = 1e20 # 58002693
                 if t[k] < tlim:
                     dr = r[k]-r[k-1]
                     Vcell =  r[k]**2 * dr # there should be a (4 * np.pi / 192)*, but doesn't matter because we normalize

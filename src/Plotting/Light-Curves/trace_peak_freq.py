@@ -41,7 +41,7 @@ def peakfinder(simname, fix, what, color, plot = False):
 
         return (percentile_20, percentile_50, percentile_80)
 
-ms = [5, 6]
+ms = [4, 5, 6]
 colors = ['k', c.AEK, 'maroon']
 all_days = []
 all_peaks = []
@@ -56,20 +56,20 @@ for Mbh in ms:
     # if Mbh == 5:
     #     fixes = np.arange(132, 361+1)
     # if Mbh == 6:
-    fixesstr = pd.read_csv(f'data/photosphere/walljump_photocolor{Mbh}.csv').iloc[:,0][::2]
+    fixesstr = pd.read_csv(f'data/photosphere/walljump_s3_photocolor{Mbh}.csv').iloc[:,0][::2]
     fixes = [ int(i) for i in fixesstr]
     fixes = np.sort(fixes)
 
-    daysstr = pd.read_csv(f'data/photosphere/walljump_photocolor{Mbh}.csv').iloc[:,1][::2]
+    daysstr = pd.read_csv(f'data/photosphere/walljump_s3_photocolor{Mbh}.csv').iloc[:,1][::2]
     days = [ float(i) for i in daysstr]
     days = np.sort(days)
     
     peaks20 = []
     peaks136 = []
     peaks188 = []
-    colorframe = pd.read_csv(f'data/photosphere/walljump_photocolor{Mbh}.csv').iloc[:,-1][::2]
+    colorframe = pd.read_csv(f'data/photosphere/walljump_s3_photocolor{Mbh}.csv').iloc[:,-1][::2]
     for ifix, fix in enumerate(fixes):
-        pre = f'data/blue2/spectra{Mbh}new2/walljump_{Mbh}'
+        pre = f'data/blue2/spectra{Mbh}new2/walljump_s3_{Mbh}'
         color = np.array(list(map(float, colorframe.iloc[ifix].strip("[] \n").split())))
         peaks = peakfinder(pre, fix, 'nick', color)
         # print(peaks)
@@ -114,9 +114,9 @@ for days, peaks20, peaks136, peaks188, co, label in zip(all_days, all20,
     ax.fill_between(days[nonzeromask], peaks20[nonzeromask] * c.Hz_to_ev, 
                     peaks188[nonzeromask] * c.Hz_to_ev, 
                     color = co, alpha = 0.3)
-ev_low = 1.45
-ev_high = 12
-#ax.set_ylim(ev_low, ev_high)
+ev_low = 1.65
+ev_high = 13
+ax.set_ylim(ev_low, ev_high)
 
 ax.set_xlabel('Time $[t_\mathrm{FB}]$')
 ax.set_ylabel('Energy [eV]')

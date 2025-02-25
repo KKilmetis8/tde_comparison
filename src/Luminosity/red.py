@@ -68,7 +68,7 @@ else:
     rstar = 0.47
     if m == 4:
         fixes = [116, 136, 164, 179, 199, 218, 240, 272, 297, 300, 348]
-        fixes = [348]+
+        fixes = [348]
     if m == 5:
         fixes = [227, 236, 288, 301, 308, 349]
         fixes = [349]
@@ -106,7 +106,7 @@ for fix in fixes:
     # Freq range
     reds = np.zeros(c.NPIX)
     N_ray = 5_000
-    observers = np.arange(0,c.NPIX)
+    observers = np.arange(0,c.NPIX, 10)
 
     ### Do it --- --- ---
     xyz = np.array([X, Y, Z]).T
@@ -199,7 +199,7 @@ for fix in fixes:
         R_lamda = grad / ( c.Rsol_to_cm * sigma_rossland_eval* rad_den)
         R_lamda[R_lamda < 1e-10] = 1e-10
         
-        fld_factor = 3 * (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
+        fld_factor = (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda 
         smoothed_flux = -uniform_filter1d(r.T**2 * fld_factor * gradr / sigma_rossland_eval, 7) 
         photosphere = np.where( ((smoothed_flux>0) & (los<2/3) ))[0][0]
 
