@@ -46,7 +46,7 @@ def masker(mask, list_of_quantities):
     return (*new_list,)
 
 eng = matlab.engine.start_matlab()
-ms = [5, 6]
+ms = [4,]
 mstar = 0.5
 rstar = 0.47
 for m in ms:

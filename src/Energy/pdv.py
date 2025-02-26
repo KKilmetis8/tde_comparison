@@ -37,11 +37,20 @@ def masker(mask, list_of_quantities):
 mstar = 0.5
 rstar = 0.47
 m = 6
+Mbh = 10**m
+rg = 2*Mbh/c.c**2
 Rt = rstar * (10**m/mstar)**(1/3)
 amin = Rt * (10**m/mstar)**(1/3)
 fix = 350
-subsample = 10
-X, Y, Z, Den, T, Rad, Vol, divV, P, day = local_loader(6, 350, 'PdV', subsample)
+subsample = 100
+X, Y, Z, Den, T, Rad, Vol, divV, P, VX, VY, VZ, day = local_loader(m, fix,
+                                                                   'PdV', 
+                                                                   subsample)
+Orb = 0.5 * np.sqrt(VX**2+VY**2+VZ**2) - Mbh / (np.sqrt(X**2+Y**2+Z**2) - rg)
+bound_mask = Orb < 0
+
+X, Y, Z, Den, T, Rad, Vol, divV, P, = masker(bound_mask, 
+[X, Y, Z, Den, T, Rad, Vol, divV, P,])
 
 # convert EVERYTHING to cgs
 X *= c.Rsol_to_cm
@@ -147,41 +156,44 @@ R_lamda = np.abs(grad) / (sigma_rossland_eval * Rad_den)
 R_lamda[R_lamda < 1e-10] = 1e-10
 lamda = (1/np.tanh(R_lamda) - 1/R_lamda) / R_lamda
 R2 = lamda + lamda**2 * R_lamda
-P_rad = Rad_den/2 * (1 - R2) * np.eye(len(R2))
+P_rad = 0.5 * Rad_den * (1 - R2) #* np.eye(len(R2))
 P_rad = np.nan_to_num(P_rad)
-P_rad = np.diag(P_rad)
+#P_rad = np.diag(P_rad)
 
 #%% Plot
 fig, ax = plt.subplots(1,1, figsize = (3,3))
 
 densort = np.argsort(Den)
-posmask = P_rad > 0
-negmask = P_rad < 0
+posY = X > 0
+extreme_negmask = X < - 2*amin *c.Rsol_to_cm
 
-ax.plot(Den[densort][posmask], P_rad[densort][posmask], c = 'k', ls = '', 
-         marker = 'o', markersize = 1)
-ax.plot(Den[densort][negmask], P_rad[densort][negmask], c = c.AEK, ls = '', 
-         marker = 'o', markersize = 1)
-ax.plot(Den[densort], P[densort], c = 'maroon', ls = '', 
-         marker = 'o', markersize = 1)
+import colorcet
+img = ax.scatter(Den[densort], P_rad[densort], 
+                 c = np.log10(Rad_den[densort]), vmin = -7, vmax = 7,
+                 s = 0.1, cmap = 'cet_rainbow4')
+cb = plt.colorbar(img)
+cb.set_label(r'log $E_\mathrm{rad}$')
+
+# ax.plot(T[densort][negmask], P_rad[densort][negmask], c = c.AEK, ls = '', 
+#          marker = 'o', markersize = 1)
+# ax.plot(T[densort], P[densort], c = 'maroon', ls = '', 
+#          marker = 'o', markersize = 1)
 
 # Pretty
 ax.set_xlabel('Density [g/cm$^3$]')
-ax.set_ylabel('Pressure [erg/cm$^3$]')
+ax.set_ylabel('Rad Pressure [erg/cm$^3$]')
 # ax.set_ylabel('Flux Limiter $\lambda$')
 ax.set_yscale('log')
 ax.set_xscale('log')
 
-ax.plot([], [], c = 'k', ls = '', 
-         marker = 'o', markersize = 3, label = '$P_\mathrm{rad}>0$')
-ax.plot([], [], c = c.AEK, ls = '', 
-         marker = 'o', markersize = 3, label = '$P_\mathrm{rad}<0$')
-ax.plot([], [], c = 'maroon', ls = '', 
-         marker = 'o', markersize = 3, label = '$P_\mathrm{gas}$')
+# ax.plot([], [], c = 'k', ls = '', 
+#          marker = 'o', markersize = 3, label = '$P_\mathrm{rad}>0$')
+# ax.plot([], [], c = c.AEK, ls = '', 
+#          marker = 'o', markersize = 3, label = '$P_\mathrm{rad}<0$')
+# ax.plot([], [], c = 'maroon', ls = '', 
+#          marker = 'o', markersize = 3, label = '$P_\mathrm{gas}$')
 
 ax.legend(frameon = 0)
-
-
 #%%
 # DO IT
 dV = divV * Vol
