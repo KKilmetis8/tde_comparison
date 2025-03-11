@@ -56,20 +56,20 @@ for Mbh in ms:
     # if Mbh == 5:
     #     fixes = np.arange(132, 361+1)
     # if Mbh == 6:
-    fixesstr = pd.read_csv(f'data/photosphere/walljump_s3_photocolor{Mbh}.csv').iloc[:,0][::2]
+    fixesstr = pd.read_csv(f'data/photosphere/walljump_s4_photocolor{Mbh}.csv').iloc[:,0][::2]
     fixes = [ int(i) for i in fixesstr]
     fixes = np.sort(fixes)
 
-    daysstr = pd.read_csv(f'data/photosphere/walljump_s3_photocolor{Mbh}.csv').iloc[:,1][::2]
+    daysstr = pd.read_csv(f'data/photosphere/walljump_s4_photocolor{Mbh}.csv').iloc[:,1][::2]
     days = [ float(i) for i in daysstr]
     days = np.sort(days)
     
     peaks20 = []
     peaks136 = []
     peaks188 = []
-    colorframe = pd.read_csv(f'data/photosphere/walljump_s3_photocolor{Mbh}.csv').iloc[:,-1][::2]
+    colorframe = pd.read_csv(f'data/photosphere/walljump_s4_photocolor{Mbh}.csv').iloc[:,-1][::2]
     for ifix, fix in enumerate(fixes):
-        pre = f'data/blue2/spectra{Mbh}new2/walljump_s3_{Mbh}'
+        pre = f'data/blue2/spectra{Mbh}_take4/walljump_s4_{Mbh}'
         color = np.array(list(map(float, colorframe.iloc[ifix].strip("[] \n").split())))
         peaks = peakfinder(pre, fix, 'nick', color)
         # print(peaks)
@@ -99,9 +99,9 @@ fig, ax = plt.subplots(1,1, figsize = (3,3))
 colors = ['k', c.AEK, 'maroon']
 
 labels = [ '10$^4$M$_\odot$', '10$^5$M$_\odot$', '10$^6$M$_\odot$',]
-ax.axhspan(1.65, 3.26, alpha=0.2, color='gold') # 380 - 750 nm
-ax.axhspan(3.26, 7e16 * c.Hz_to_ev, alpha=0.2, color='purple')
-ax.axhspan(7e16 * c.Hz_to_ev, 5e18 * c.Hz_to_ev, alpha=0.2, color='cyan')
+ax.axhspan(1.65, 3.26, alpha=0.15, color='greenyellow') # 380 - 750 nm
+ax.axhspan(3.26, 7e16 * c.Hz_to_ev, alpha=0.15, color='purple')
+# ax.axhspan(7e16 * c.Hz_to_ev, 5e18 * c.Hz_to_ev, alpha=0.2, color='cyan')
 ev_ticks = np.array([1.65, 2.3, 3.26, 4.7, 6.5, 8.8, 12])
 wavelength_ticks = 1239.8 / ev_ticks
 
@@ -122,8 +122,8 @@ ax.set_xlabel('Time $[t_\mathrm{FB}]$')
 ax.set_ylabel('Energy [eV]')
 
 ax.set_xlim(0.8)
-ax.text(0.815, 2.6, 'Visible', fontsize = 10)
-ax.text(0.815, 3.45, 'UV', fontsize = 10)
+ax.text(0.815, 2.85, 'Visible', fontsize = 10)
+ax.text(0.825, 3.35, 'UV', fontsize = 10)
 ax.legend(frameon = False, fontsize = 7, ncols = 1)
 ax.set_title('Peak evolution')
 
@@ -144,7 +144,7 @@ ax2.yaxis.set_minor_locator(ticker.NullLocator())
 
 ax.set_yticks(ev_ticks)
 ax2.set_yticks(wavelength_ticks)
-ax2.axhspan(750, 380, alpha=0.2, color='gold') 
+# ax2.axhspan(750, 380, alpha=0.2, color='gold') 
 
 ax.set_yticklabels([f'{tick:.1f}' for tick in ev_ticks])
 ax2.set_yticklabels([f'{tick:.0f}' for tick in wavelength_ticks])

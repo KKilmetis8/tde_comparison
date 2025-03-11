@@ -95,9 +95,9 @@ rightside = [2,5,8]
 topside = [0,1,2]
 botside = [6,7,8]
 for i, oneax in enumerate(ax.flatten()):
-    oneax.axvspan(4e14 * Hz_to_ev, 7e14 * Hz_to_ev, alpha=0.2, color='gold')
-    oneax.axvspan(7e14 * Hz_to_ev, 7e16 * Hz_to_ev, alpha=0.2, color='purple')
-    oneax.axvspan(7e16 * Hz_to_ev, 5e18 * Hz_to_ev, alpha=0.2, color='cyan')
+    oneax.axvspan(4e14 * Hz_to_ev, 7e14 * Hz_to_ev, alpha=0.15, color='greenyellow')
+    oneax.axvspan(7e14 * Hz_to_ev, 7e16 * Hz_to_ev, alpha=0.15, color='purple')
+    oneax.axvspan(7e16 * Hz_to_ev, 5e18 * Hz_to_ev, alpha=0.15, color='cyan')
     # oneax.axvspan(5e18 * Hz_to_ev, 5.3e19 * Hz_to_ev, alpha=0.2, color='b')
     oneax.set_xscale('log')
     oneax.set_yscale('log')

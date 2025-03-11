@@ -36,6 +36,7 @@ def tfb(m, mstar = 0.5, rstar = 0.47,):
 
 pre = 'data/red/'
 Mbhs = [4, 5, 6]
+Mbhs = [4, 5, 6]
 # Mbhs = [6]
 cols = ['k', c.AEK, 'maroon']
 extra = 'beta1S60n1.5Compton'
@@ -44,7 +45,7 @@ peaktimes = []
 fig, ax = plt.subplots(1,2, figsize = (5,4), tight_layout = True, sharey=True)
 for Mbh, co in zip(Mbhs, cols):
     #DeltaE = mstar/rstar * ( (Mbh/mstar)**(1/3) - 1 )
-    data = np.genfromtxt(f'{pre}/red_walljumper{Mbh}.csv', delimiter = ',').T
+    data = np.genfromtxt(f'{pre}/red_walljumper2{Mbh}.csv', delimiter = ',').T
     days = data[1]
     sorter = np.argsort(days)
     days = days[sorter]    
@@ -83,7 +84,7 @@ for Mbh, co in zip(Mbhs, cols):
     # ax[0].text(0.9, Leddington(10**Mbh) * 0.1, f'$10^{Mbh}$ $M_\odot$', color = co,
     #             fontsize = 14)
     ax[0].text(1.5, Leddington(10**Mbh) * 1.2,'$L_\mathrm{Edd}$', color = co,
-                fontsize = 14 )
+               fontsize = 14 )
     # ax.text(0.9, 4e41 * 10**(Mbh - 4), f'10$^{Mbh} M_\odot$', color = co, 
     #         fontsize = 14)
 
@@ -91,14 +92,14 @@ for Mbh, co in zip(Mbhs, cols):
 # Make nice
 ax[0].set_yscale('log')
 ax[0].set_xlim(0.69)
-ax[0].set_ylim(1e41, 7e44)
-ax[1].legend(frameon = False)
+ax[0].set_ylim(5e40, 7e44)
+ax[1].legend(frameon = False, ncols = 1,  fontsize = 12)
 # ax.legend(ncols = 3)
 ax[0].set_xlabel('Time $[t_\mathrm{FB}]$', fontsize = 16)
 ax[1].set_xlabel('Time [days]', fontsize = 16)
 ax[0].set_ylabel('$L_\mathrm{FLD}$ [erg/s]', fontsize = 16)
 
-# peaks fit
+#%% peaks fit
 peak_mass = curve_fit(powerlaw, 10**np.array(Mbhs), peaks, p0=[1e42, 1])[0]
 fit = [ powerlaw(10**Mbh, peak_mass[0], peak_mass[1]) for Mbh in Mbhs ]
 plt.figure(figsize = (3,3))

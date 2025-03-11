@@ -139,8 +139,8 @@ if __name__ == '__main__':
         what = 'density'
     else:
         # Choose simulation
-        m = 4
-        picset = '5zoomout'
+        m = 5
+        picset = 'normal'
         opac_kind = 'LTE'
         check = 'fid'
         mstar = 0.5
@@ -148,13 +148,13 @@ if __name__ == '__main__':
         Rt = rstar * (10**m/mstar)**(1/3) 
         beta = 1
         what = 'density' # temperature or density
-        save = False
-        fixes = [348]
+        save = True
+        fixes = [175]
         args = None
 
     for fix in fixes:
         _, grid_den, grid_mass, xs, ys, zs = grid_maker(fix, m, 
-                                                        200, 200, 10, 
+                                                        1000, 1000, 10, 
                                                         picturesetting = picset,
                                                         parsed = args)
         flat_den = projector(grid_den, grid_mass, False,
@@ -164,7 +164,7 @@ if __name__ == '__main__':
         den_plot *= c.Msol_to_g / c.Rsol_to_cm**2
         den_plot = np.log10(den_plot)
         den_plot = np.nan_to_num(den_plot, neginf= 0)
-
+#%%
         if save:
             if alice:
                 pre = f'/home/kilmetisk/data1/TDE/tde_comparison/data/denproj/paper'
@@ -172,9 +172,9 @@ if __name__ == '__main__':
                 np.savetxt(f'{pre}/{m}{picset}x.txt', xs)
                 np.savetxt(f'{pre}/{m}{picset}y.txt', ys)
             else:
-                np.savetxt(f'data/denproj{m}_{fix}.txt', flat_den) 
-                np.savetxt(f'data/xarray{m}.txt', xs) 
-                np.savetxt(f'data/yarray{m}.txt', ys) 
+                np.savetxt(f'data/denproj/paper/{m}{picset}{fix}.txt', den_plot) 
+                # np.savetxt(f'data/xarray{m}.txt', xs) 
+                # np.savetxt(f'data/yarray{m}.txt', ys) 
 
 #%% Plot
         if plot:
@@ -191,8 +191,8 @@ if __name__ == '__main__':
             # Specify
             if what == 'density':
                 cb_text = r'Density [g/cm$^2$]'
-                vmin = -5
-                vmax = 2
+                vmin = 0
+                vmax = 5
             elif what == 'temperature':
                 cb_text = r'Temperature [K]'
                 vmin = 2
@@ -202,20 +202,27 @@ if __name__ == '__main__':
                                 but we don\'t have that quantity')
                     
 
-            ax.set_xlabel(r' X [AU]', fontsize = 14)
-            ax.set_ylabel(r' Y [AU]', fontsize = 14)
-            img = ax.pcolormesh(xs * c.Rsol_to_au, 
-                                ys * c.Rsol_to_au, 
+            ax.set_xlabel(r' X $[R_\odot]$', fontsize = 14)
+            ax.set_ylabel(r' Y $[R_\odot]$', fontsize = 14)
+            img = ax.pcolormesh(xs, #/ Rt,# * c.Rsol_to_au, 
+                                ys, # / Rt,#* c.Rsol_to_au, 
                                 den_plot.T, 
                                 cmap = 'cet_fire',
                                 vmin = vmin, vmax = vmax)
             cb = plt.colorbar(img)
             cb.set_label(cb_text, fontsize = 14)
             
+            # ax.scatter(1,1, c = 'b')
+            # ax.scatter(1,-1, c = 'b')
+            # ax.scatter(-1,1, c = 'b')
+            # ax.scatter(-1, 1, c = 'b')
 
-            # time = np.loadtxt(f'{m}/{fixes[0]}/tbytfb_{fixes[0]}.txt')
-            # ax.set_title(f'10$^{m} M_\odot$ - {time:.2f} $t_\mathrm{{FB}}$',
-            #              fontsize = 16)
+            time = np.loadtxt(f'{m}/{fixes[0]}/tbytfb_{fixes[0]}.txt')
+            Mbh = 10**m
+            tfb =  np.pi/np.sqrt(2) * np.sqrt( (rstar*c.Rsol_to_cm)**3/ (c.Gcgs*mstar*c.Msol_to_g) * Mbh/mstar)
+            
+            ax.set_title(f'10$^{m} M_\odot$ - {time*tfb/c.day_to_sec:.0f} days since disruption', #$t_\mathrm{{FB}}$',
+                         fontsize = 16)
             import pandas as pd
             df = pd.read_csv(f'data/photosphere/richex_photocolor{m}.csv', sep = ',',
                               comment = '#', header = None)
@@ -226,23 +233,23 @@ if __name__ == '__main__':
             # snap time photo color obs_num
             # Photosphere data is a 3-tuple for each observer
             # The equatorial observers are 88:104
-            def tuple_parse(strings):
-                ''' parses "(1,2,3)" '''
-                xs = np.zeros(len(strings))
-                ys = np.zeros(len(strings))
-                for i, string in enumerate(strings):
-                    values = string.strip("()").split(", ")
-                    tuple_values = tuple(np.float64(value.split("(")[-1].strip(")")) for value in values)
-                    xs[i] = tuple_values[0]
-                    ys[i] = tuple_values[1]
-                return xs, ys
-            good_obs = np.array([89, 90, 91, 92, 102, 103, 104, 89, 94]) + 4
-            good_obs = np.arange(88, 104+1) + 4 + 192
-            good_obs = np.arange(88, 104) + 4# + 192
-            photo_x4, photo_y4 = tuple_parse(df.iloc[idx][good_obs])
-            ax.plot(photo_x4 * c.Rsol_to_au, photo_y4 * c.Rsol_to_au, 
-                    '-o', c = 'c', markersize = 3, label = 'Photosphere')
-            ax.set_title(f'{m} Snap {fix}')
+            # def tuple_parse(strings):
+            #     ''' parses "(1,2,3)" '''
+            #     xs = np.zeros(len(strings))
+            #     ys = np.zeros(len(strings))
+            #     for i, string in enumerate(strings):
+            #         values = string.strip("()").split(", ")
+            #         tuple_values = tuple(np.float64(value.split("(")[-1].strip(")")) for value in values)
+            #         xs[i] = tuple_values[0]
+            #         ys[i] = tuple_values[1]
+            #     return xs, ys
+            # good_obs = np.array([89, 90, 91, 92, 102, 103, 104, 89, 94]) + 4
+            # good_obs = np.arange(88, 104+1) + 4 + 192
+            # good_obs = np.arange(88, 104) + 4# + 192
+            # photo_x4, photo_y4 = tuple_parse(df.iloc[idx][good_obs])
+            # ax.plot(photo_x4 * c.Rsol_to_au, photo_y4 * c.Rsol_to_au, 
+            #         '-o', c = 'c', markersize = 3, label = 'Photosphere')
+            # ax.set_title(f'{m} Snap {fix}')
             # ax.set_ylim(-100,100)
             # ax.set_xlim(-200, 100)
 

@@ -42,7 +42,7 @@ cols = ['k', c.AEK, 'maroon']
 extra = 'beta1S60n1.5Compton'
 fig, ax = plt.subplots(2,2, figsize = (4,3), tight_layout = True, sharey=True)
 for Mbh, co in zip(Mbhs, cols):
-    data = np.genfromtxt(f'{pre}/red_richex{Mbh}.csv', delimiter = ',').T
+    data = np.genfromtxt(f'{pre}/red_walljumper2{Mbh}.csv', delimiter = ',').T
     days = data[1]
     sorter = np.argsort(days)
     days = days[sorter]    

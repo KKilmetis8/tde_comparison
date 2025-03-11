@@ -11,7 +11,7 @@ plt.rcParams['text.usetex'] = True
 plt.rcParams['figure.dpi'] = 300
 plt.rcParams['figure.figsize'] = [8.0, 4.0]
 import numba
-
+import src.Utilities.prelude as c
 @numba.njit 
 def e_calc(position, velocity, mu):
     
@@ -41,6 +41,22 @@ def e_calc(position, velocity, mu):
         
     return ecc, ecc_mag
 
+@numba.njit
+def e_calc2(position, velocity, mu):
+    ecc_mag = np.zeros((len(position)))
+    
+    c_codeunits = c.c * (c.t/c.Rsol_to_cm)
+    rg = 2*mu/c_codeunits**2
+    for i in range(len(position)):
+        # Calc. the magnitude of the vectors
+        r_mag = np.linalg.norm(position[i])
+        v_mag = np.linalg.norm(velocity[i])
+        
+        # Energy + ang mom
+        energy = 0.5 * v_mag**2 - mu/(r_mag - rg) # PW
+        ang_mom = np.linalg.norm(np.cross(position[i], velocity[i]))
+        ecc_mag[i] = np.sqrt(1 + 2*energy*ang_mom**2/mu**2)
+    return ecc_mag
 @numba.njit 
 def ta_calc(ecc, position, velocity):
     ta = np.zeros(len(ecc))

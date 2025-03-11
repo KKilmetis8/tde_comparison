@@ -18,7 +18,8 @@ plt.rcParams['figure.figsize'] = [8.0, 4.0]
 from src.Calculators.ONE_TREE_CASTER import BONSAI
 from src.Calculators.casters import THE_SMALL_CASTER
 from src.Extractors.time_extractor import days_since_distruption
-from src.Eccentricity.eccentricity import e_calc
+from src.Eccentricity.eccentricity import e_calc, e_calc2
+from src.Utilities.loaders import local_loader, alice_loader
 from src.Utilities.isalice import isalice
 from src.Utilities.parser import parse
 alice, plot = isalice()
@@ -50,17 +51,13 @@ t = np.sqrt(Rsol**3 / (Msol*G))  # Follows from G=1
 c = 3e8 * t/Rsol  # c in simulator units.
 rg = 2*Mbh/c**2
 t_fall = 40 * (Mbh/1e6)**(0.5)  # days EMR+20 p13
-apocenter = 0.5 * Rt * (Mbh/mstar)**(1/3)  # There is m_* hereeee
-@numba.njit
-def masker(arr, mask):
-    len_bound = np.sum(mask)
-    new_arr = np.zeros(len_bound)
-    k = 0
-    for i in range(len(arr)):
-        if mask[i]:
-            new_arr[k] = arr[i]
-            k += 1
-    return new_arr
+apocenter = 0.5 * Rt * (Mbh/mstar)**(1/3)  #
+
+def masker(mask, list_of_quantities):
+    new_list = []
+    for quantity in list_of_quantities:
+        new_list.append(quantity[mask])
+    return (*new_list,)
 
 # %%
 # MAIN
@@ -131,6 +128,7 @@ for fix in fixes:
 
     # EVOKE eccentricity
     # _, ecc, semi_major_axis = e_calc(position, velocity, Mbh)
+    ecc = e_calc2(position, velocity, Mbh)
     # Cast down to 100 values
     radii = np.logspace(np.log10(0.4*Rt), np.log10(apocenter),
                         num=1000)  # simulator units

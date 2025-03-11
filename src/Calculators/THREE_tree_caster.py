@@ -74,6 +74,12 @@ def grid_maker(fix, m, x_num, y_num, z_num = 100,
         x_stop =  0.3 * apocenter * WOW
         y_start = - 0.5 * apocenter  * WOW
         y_stop = 0.5 * apocenter  * WOW
+    
+    elif picturesetting == 'zoomin':
+        x_start = - 0.1 * apocenter * WOW
+        x_stop =  0.1 * apocenter * WOW
+        y_start = - 0.1 * apocenter  * WOW
+        y_stop = 0.1 * apocenter  * WOW
         
     elif picturesetting == '6zoomout':
         x_start = - 200 / c.Rsol_to_au # * apocenter * WOW

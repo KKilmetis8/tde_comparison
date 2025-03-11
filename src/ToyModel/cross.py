@@ -14,8 +14,8 @@ import numba
 from tqdm import tqdm
 import matplotlib.patches as patches
 # Constants
-mstar = 0.5  #* c.Msol_to_g     
-rstar = 0.47 #* c.Rsol_to_cm
+mstar = 3  #* c.Msol_to_g     
+rstar = 3 #* c.Rsol_to_cm
 G = 1 #c.Gcgs    
 
 @numba.njit
@@ -55,7 +55,7 @@ def solver(r0, v0, M, timesteps, what):
 fig, axs = plt.subplots(1,3, figsize=(8, 5), tight_layout = True)
 axs = axs.flatten()
 step = 10 # int(len(timesteps)*1e-5)
-Ms = [1e4, 1e5, 1e6]
+Ms = [1e3]#, 1e5, 1e6]
 reccs = []
 timestepss = []
 plot_labels = []
@@ -91,12 +91,14 @@ for i, M in enumerate(Ms):
         recc, _, energy = solver(r0, v0_ecc, M, timesteps, 'leapfrog')
         # recc -= rpar for distort
         reccs.append(recc)
+#%%
+
 #%% Rt constant movie movie plot
 ends = np.linspace(0.01, 1, num = 200)
 cols = c.r20_palette * 3
 savepath = '/home/konstantinos/crossfigs/'
 movname = 'constantRT'
-plt.ioff()
+# plt.ioff()
 for i, end in enumerate(ends):
     fig, axs = plt.subplots(1,3, figsize=(11, 5), tight_layout = True, dpi = 300)
     ax.plot(0,0, 'o', c='k', markersize = 5, markeredgecolor='k', ls = '')
@@ -106,7 +108,7 @@ for i, end in enumerate(ends):
     for j, recc in enumerate(reccs):
         axi = int( j // (len(reccs)/len(axs)) )
         ax = axs[axi]
-        idx_end = np.argmin(np.abs(end - timestepss[axi]))
+        idx_end = np.argmin(np.abs(end - timestepss[0][axi]))
         m = int( j // (len(reccs)/len(axs)) + 4 )
         
         ax.plot(recc.T[0][:idx_end:step]/Rt, recc.T[1][:idx_end:step]/Rt,
@@ -122,11 +124,11 @@ for i, end in enumerate(ends):
     axs[2].legend(ncol = 2, bbox_to_anchor = (1.1, 1))
     axs[0].set_xlabel('X Coordinate $[R_\mathrm{T}]$', fontsize = 20)
     axs[0].set_ylabel('Y Coordinate $[R_\mathrm{T}]$', fontsize = 20)
-    plt.savefig(f'{savepath}{movname}{i+1}.png')
-    plt.close()
+    # plt.savefig(f'{savepath}{movname}{i+1}.png')
+    # plt.close()
 
 import os
-os.system(f'ffmpeg -framerate 10 -i {savepath}{movname}%d.png -c:v libx264 -vf "format=yuv420p"  {savepath}mov/{movname}.mp4 -loglevel panic')
+# os.system(f'ffmpeg -framerate 10 -i {savepath}{movname}%d.png -c:v libx264 -vf "format=yuv420p"  {savepath}mov/{movname}.mp4 -loglevel panic')
 #%% Distort movie plot
 ends = np.linspace(0.01, 0.1, num = 200)
 cols = c.r20_palette * 3

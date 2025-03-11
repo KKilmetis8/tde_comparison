@@ -25,7 +25,6 @@ mp = 1.6749286e-24
 mh2 = 2 * mp
 mh = mp 
 mhe = 4 * mp
-# Solar units
 Msol = 2e30 #1.98847e30 # kg
 Rsol = 7e8 #6.957e8 # m
 Lsol_to_ergs = 3.846e33
