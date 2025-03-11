@@ -68,13 +68,13 @@ for fix in fixes:
         fix = str(fix)
         pre = '/home/kilmetisk/data1/TDE/'
         # Import
-        X, Y, Z, Vx, Vy, Vz, Den, day = alice_loader(sim, fix, 'orbital+den',)
+        X, Y, Z, Vx, Vy, Vz, Den, Mass, day = alice_loader(sim, fix, 'orbital+den+mass',)
     else:
         X, Y, Z, Vx, Vy, Vz, Den, day = local_loader(m, fix, 'orbital+den')
 
     # Fluff mask
     denmask = np.where((Den > 1e-12))[0]
-    X, Y, Z, Vx, Vy, Vz, = masker(denmask, [X, Y, Z, Vx, Vy, Vz])
+    X, Y, Z, Vx, Vy, Vz, Mass = masker(denmask, [X, Y, Z, Vx, Vy, Vz, Mass])
     # Make Bound Mask
     R = np.sqrt(np.power(X, 2) + np.power(Y, 2) + np.power(Z, 2))
     V = np.sqrt(np.power(Vx, 2) + np.power(Vy, 2) + np.power(Vz, 2))
@@ -82,7 +82,7 @@ for fix in fixes:
     bound_mask = np.where(Orbital < 0, 1, 0)
 
     # Apply Mask
-    X, Y, Z, Vx, Vy, Vz, R = masker(bound_mask, [X, Y, Z, Vx, Vy, Vz, R])
+    X, Y, Z, Vx, Vy, Vz, R, Mass = masker(bound_mask, [X, Y, Z, Vx, Vy, Vz, R, Mass])
     position = np.array((X, Y, Z)).T  # Transpose for col. vectors
     velocity = np.array((Vx, Vy, Vz)).T
     del X, Y, Z, Vx, Vy, Vz
@@ -95,8 +95,8 @@ for fix in fixes:
                         num=1000)  # simulator units
 
     if method == 'caster':
-        print('hi')
-        # ecc_cast = THE_SMALL_CASTER(radii, R_bound, ecc, weights=M)
+        print(fix)
+        ecc_cast = THE_SMALL_CASTER(radii, R, ecc, weights = Mass)
         # T_cast = THE_SMALL_CASTER(radii, R_bound, T, weights=M)
         # semi_major_axis_cast = THE_SMALL_CASTER(radii, R_bound, 
         #                                       semi_major_axis, weights=M)

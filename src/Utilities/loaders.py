@@ -106,7 +106,7 @@ def alice_loader(sim, fix, what):
         VZ = np.load(f'{pre}{fix}/Vz_{fix}.npy')
         time = np.loadtxt(f'{pre}{fix}/tbytfb_{fix}.txt')
         return X, Y, Z, VX, VY, VZ, time
-    if what == 'orbital+den':
+    if what == 'orbital+den+mass':
         X = np.load(f'{pre}{fix}/CMx_{fix}.npy')
         Y = np.load(f'{pre}{fix}/CMy_{fix}.npy')
         Z = np.load(f'{pre}{fix}/CMz_{fix}.npy')
@@ -114,8 +114,10 @@ def alice_loader(sim, fix, what):
         VY = np.load(f'{pre}{fix}/Vy_{fix}.npy')
         VZ = np.load(f'{pre}{fix}/Vz_{fix}.npy')
         Den = np.load(f'{pre}{fix}/Den_{fix}.npy')
+        Vol = np.load(f'{pre}{fix}/Vol_{fix}.npy')
+        Mass = Den * Vol
         time = np.loadtxt(f'{pre}{fix}/tbytfb_{fix}.txt')
-        return X, Y, Z, VX, VY, VZ, Den, time
+        return X, Y, Z, VX, VY, VZ, Den, Mass, time
     if what == 'orbital+mass':
         X = np.load(f'{pre}{fix}/CMx_{fix}.npy')
         Y = np.load(f'{pre}{fix}/CMy_{fix}.npy')

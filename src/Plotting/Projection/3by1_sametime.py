@@ -42,9 +42,10 @@ def tuple_parse(strings):
         ys[i] = tuple_values[1]
     return xs, ys
 
+
 pre = 'data/denproj/paper/'
 suf = 'beta1S60n1.5Compton'
-when = 'early' # choices: early mid late test
+when = 'late' # choices: early mid late test
 plane = 'XY'
 photo = False
 if when == 'early':
@@ -67,8 +68,14 @@ if when == 'late':
 size = 6
 step = 1
 fontsize = 15
-fig, ax = plt.subplots(3,1, figsize = (0.8*size, size), sharex = True, 
-                       sharey = True, tight_layout = True)
+# fig, ax = plt.subplots(figsize = (0.8*size, size),  constrained_layout = True)
+fig = plt.figure(figsize = (1.2*size, size), constrained_layout=True, dpi = 400)
+import matplotlib.gridspec as gridspec
+spec = gridspec.GridSpec(ncols=2, nrows=2, figure=fig)
+ax4 = fig.add_subplot(spec[0, 0])
+ax6 = fig.add_subplot(spec[1, :])
+ax5 = fig.add_subplot(spec[0, 1])
+
 # Load projection data
 den4 = np.loadtxt(f'{pre}4normal{f4}.txt')[::step].T[::step].T
 x4 = np.loadtxt(f'{pre}4normalx.txt')[::step]
@@ -100,49 +107,54 @@ reddata6 = np.genfromtxt(f'data/red/red_richex{6}.csv', delimiter = ',').T
 tidx6 = np.argmin(np.abs(f6 - reddata6[0]))
 time6 = reddata6[1][tidx6]
 
-# ax[0].text(0.78, 0.8, f'{time4:.2f} $t_\mathrm{{FB}}$', 
-#              fontsize = 12, c = 'white', transform = ax[0].transAxes)
-# ax[1].text(0.78, 0.8, f'{time4:.2f} $t_\mathrm{{FB}}$',
-#              fontsize = 12, c = 'white', transform = ax[1].transAxes)
-ax[2].text(0.1, 0.1, f'{time4:.2f} $t_\mathrm{{FB}}$',
-             fontsize = 12, c = 'white', transform = ax[2].transAxes)
+# ax4.text(0.78, 0.8, f'{time4:.2f} $t_\mathrm{{FB}}$', 
+#              fontsize = 12, c = 'white', transform = ax4.transAxes)
+# ax5.text(0.78, 0.8, f'{time4:.2f} $t_\mathrm{{FB}}$',
+#              fontsize = 12, c = 'white', transform = ax5.transAxes)
+ax6.text(0.1, 0.1, f'{time4:.2f} $t_\mathrm{{FB}}$',
+             fontsize = fontsize + 3, c = 'white', transform = ax6.transAxes)
 
 # Plot projection data
 dmin = -5
 dmax = 0
-img = ax[0].pcolormesh(x4/amin4, y4/amin4, den4.T, cmap = 'cet_fire',
+img = ax4.pcolormesh(x4/amin4, y4/amin4, den4.T, cmap = 'cet_fire',
                        vmin = dmin, vmax = dmax)
-ax[1].pcolormesh(x5/amin5, y5/amin5, den5.T, cmap = 'cet_fire',
+ax5.pcolormesh(x5/amin5, y5/amin5, den5.T, cmap = 'cet_fire',
                          vmin = dmin, vmax = dmax)
-ax[2].pcolormesh(x6/amin6, y6/amin6, den6.T, cmap = 'cet_fire',
+ax6.pcolormesh(x6/amin6, y6/amin6, den6.T, cmap = 'cet_fire',
                          vmin = dmin, vmax = dmax)
 
 # Plot Rt
-ax[0].add_patch(mp.Circle((0,0), Rt4/amin4, ls = '-', 
+ax4.add_patch(mp.Circle((0,0), Rt4/amin4, ls = '-', 
                             color = 'c', fill = False, lw = 1))
-ax[1].add_patch(mp.Circle((0,0), Rt5/amin5, ls = '-', 
+ax5.add_patch(mp.Circle((0,0), Rt5/amin5, ls = '-', 
                             color = 'c', fill = False, lw = 1))
-ax[2].add_patch(mp.Circle((0,0), Rt6/amin6, ls = '-',
+ax6.add_patch(mp.Circle((0,0), Rt6/amin6, ls = '-',
                             color = 'c', fill = False, lw = 1))
 
 xmin = -1.1
 xmax = 0.3
 ymin = -0.4
 ymax = 0.4
-ax[0].set_xlim(xmin, xmax)
-ax[0].set_ylim(ymin, ymax)
+ax4.set_xlim(xmin, xmax)
+ax4.set_ylim(ymin, ymax)
+ax5.sharex(ax4)
+ax5.sharey(ax4)
+ax6.sharex(ax4)
+ax6.sharey(ax4)
 
 
-ax[0].text(0.05, 0.23, '10$^4$ M$_\odot$', fontsize = fontsize, c  = 'white')
-ax[1].text(0.05, 0.23, '10$^5$ M$_\odot$', fontsize = fontsize, c  = 'white')
-ax[2].text(0.05, 0.23, '10$^6$ M$_\odot$', fontsize = fontsize, c  = 'white')
 
-ax[2].set_xlabel(r'X $[\alpha_\mathrm{min}]$', fontsize = fontsize)
-ax[1].set_ylabel(r'Y $[\alpha_\mathrm{min}]$', fontsize = fontsize)
-cb = fig.colorbar(img, cax=fig.add_axes([0.985, 0.1, 0.05, 0.87]))
+ax4.text(-0.1, 0.27, '10$^4$ M$_\odot$', fontsize = fontsize + 4, c  = 'white')
+ax5.text(-0.1, 0.27, '10$^5$ M$_\odot$', fontsize = fontsize + 4, c  = 'white')
+ax6.text(0.05, 0.27, '10$^6$ M$_\odot$', fontsize = fontsize + 4, c  = 'white')
+
+ax6.set_xlabel(r'X $[\alpha_\mathrm{min}]$', fontsize = fontsize)
+ax6.set_ylabel(r'Y $[\alpha_\mathrm{min}]$', fontsize = fontsize)
+cb = fig.colorbar(img, cax=fig.add_axes([1, 0.08, 0.05, 0.905]))
 cb.set_label(r'Normalized surface density, $\log_{10} (\Sigma \frac{\alpha_\mathrm{min}^2}{m_*})$', fontsize = fontsize)
 cb.ax.tick_params(labelsize = fontsize-4)
-for oneax in ax.flatten():
+for oneax in [ax4, ax5, ax6]:#ax.flatten():
     oneax.tick_params(top=True, right=True, colors = 'whitesmoke',  
                       labelcolor = 'k', labelsize = fontsize - 4)
 
