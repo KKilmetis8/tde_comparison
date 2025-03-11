@@ -19,6 +19,16 @@ def local_loader(m, fix, what, substep = 1):
         VZ = np.load(f'{m}/{fix}/Vz_{fix}.npy')
         time = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
         return X, Y, Z, VX, VY, VZ, time
+    if what == 'orbital+den':
+        X = np.load(f'{m}/{fix}/CMx_{fix}.npy')
+        Y = np.load(f'{m}/{fix}/CMy_{fix}.npy')
+        Z = np.load(f'{m}/{fix}/CMz_{fix}.npy')
+        VX = np.load(f'{m}/{fix}/Vx_{fix}.npy')
+        VY = np.load(f'{m}/{fix}/Vy_{fix}.npy')
+        VZ = np.load(f'{m}/{fix}/Vz_{fix}.npy')
+        Den = np.load(f'{m}/{fix}/Den_{fix}.npy')
+        time = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
+        return X, Y, Z, VX, VY, VZ, Den, time
     if what == 'orbital+mass':
         X = np.load(f'{m}/{fix}/CMx_{fix}.npy')
         Y = np.load(f'{m}/{fix}/CMy_{fix}.npy')
@@ -96,6 +106,16 @@ def alice_loader(sim, fix, what):
         VZ = np.load(f'{pre}{fix}/Vz_{fix}.npy')
         time = np.loadtxt(f'{pre}{fix}/tbytfb_{fix}.txt')
         return X, Y, Z, VX, VY, VZ, time
+    if what == 'orbital+den':
+        X = np.load(f'{pre}{fix}/CMx_{fix}.npy')
+        Y = np.load(f'{pre}{fix}/CMy_{fix}.npy')
+        Z = np.load(f'{pre}{fix}/CMz_{fix}.npy')
+        VX = np.load(f'{pre}{fix}/Vx_{fix}.npy')
+        VY = np.load(f'{pre}{fix}/Vy_{fix}.npy')
+        VZ = np.load(f'{pre}{fix}/Vz_{fix}.npy')
+        Den = np.load(f'{pre}{fix}/Den_{fix}.npy')
+        time = np.loadtxt(f'{pre}{fix}/tbytfb_{fix}.txt')
+        return X, Y, Z, VX, VY, VZ, Den, time
     if what == 'orbital+mass':
         X = np.load(f'{pre}{fix}/CMx_{fix}.npy')
         Y = np.load(f'{pre}{fix}/CMy_{fix}.npy')

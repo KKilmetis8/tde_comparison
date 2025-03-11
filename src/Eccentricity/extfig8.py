@@ -59,50 +59,22 @@ def masker(mask, list_of_quantities):
         new_list.append(quantity[mask])
     return (*new_list,)
 
-# %%
-# MAIN
+# Do the thing
 colarr = []
 fixdays = []
-massarr = []
-Tarr = []
-smaarr = []
-orbarr = []
-jsqarr = []
+
 for fix in fixes:
     if alice:
         fix = str(fix)
         pre = '/home/kilmetisk/data1/TDE/'
         # Import
-        X = np.load(pre + sim + '/snap_'  + fix + '/CMx_' + fix + '.npy')
-        Y = np.load(pre + sim + '/snap_'  + fix + '/CMy_' + fix + '.npy')
-        Z = np.load(pre + sim + '/snap_'  + fix + '/CMz_' + fix + '.npy')
-        Vx = np.load(pre + sim + '/snap_'  + fix + '/Vx_' + fix + '.npy')
-        Vy = np.load(pre + sim + '/snap_'  +fix + '/Vy_' + fix + '.npy')
-        Vz = np.load(pre + sim + '/snap_'  +fix + '/Vz_' + fix + '.npy')
-        Den = np.load(pre + sim + '/snap_'  + fix + '/Den_' + fix + '.npy')
-        Vol = np.load(pre + sim + '/snap_'  + fix + '/Vol_' + fix + '.npy')
-        T = np.load(pre + sim + '/snap_'  + fix + '/T_' + fix + '.npy')
-        M = np.multiply(Den, Vol)
-        denmask = np.where((Den > 1e-12))[0]
-        del Den, Vol
-    
-        X = X[denmask]
-        Y = Y[denmask]
-        Z = Z[denmask]
-        Vx = Vx[denmask]
-        Vy = Vy[denmask]
-        Vz = Vz[denmask]
-        M = M[denmask]
-        T = T[denmask]
+        X, Y, Z, Vx, Vy, Vz, Den, day = alice_loader(sim, fix, 'orbital+den',)
     else:
-        X = np.load(str(m) + '/' + fix + '/CMx_' + fix + '.npy')
-        Y = np.load(str(m) + '/' + fix + '/CMy_' + fix + '.npy')
-        Z = np.load(str(m) + '/' + fix + '/CMz_' + fix + '.npy')
-        Vx = np.load(str(m) + '/' + fix + '/Vx_' + fix + '.npy')
-        Vy = np.load(str(m) + '/' + fix + '/Vy_' + fix + '.npy')
-        Vz = np.load(str(m) + '/' + fix + '/Vz_' + fix + '.npy')
-        M = np.load(str(m) + '/' + fix + '/Mass_' + fix + '.npy')
+        X, Y, Z, Vx, Vy, Vz, Den, day = local_loader(m, fix, 'orbital+den')
 
+    # Fluff mask
+    denmask = np.where((Den > 1e-12))[0]
+    X, Y, Z, Vx, Vy, Vz, = masker(denmask, [X, Y, Z, Vx, Vy, Vz])
     # Make Bound Mask
     R = np.sqrt(np.power(X, 2) + np.power(Y, 2) + np.power(Z, 2))
     V = np.sqrt(np.power(Vx, 2) + np.power(Vy, 2) + np.power(Vz, 2))
@@ -110,18 +82,7 @@ for fix in fixes:
     bound_mask = np.where(Orbital < 0, 1, 0)
 
     # Apply Mask
-    X = masker(X, bound_mask)
-    Y = masker(Y, bound_mask)
-    Z = masker(Z, bound_mask)
-    T = masker(T, bound_mask)
-    # Redefine only for bound
-    R_bound = np.sqrt(np.power(X, 2) + np.power(Y, 2) + np.power(Z, 2))
-    Vx = masker(Vx, bound_mask)
-    Vy = masker(Vy, bound_mask)
-    Vz = masker(Vz, bound_mask)
-    M = masker(M, bound_mask)
-    Orbital = masker(Orbital, bound_mask)
-
+    X, Y, Z, Vx, Vy, Vz, R = masker(bound_mask, [X, Y, Z, Vx, Vy, Vz, R])
     position = np.array((X, Y, Z)).T  # Transpose for col. vectors
     velocity = np.array((Vx, Vy, Vz)).T
     del X, Y, Z, Vx, Vy, Vz
@@ -130,7 +91,7 @@ for fix in fixes:
     # _, ecc, semi_major_axis = e_calc(position, velocity, Mbh)
     ecc = e_calc2(position, velocity, Mbh)
     # Cast down to 100 values
-    radii = np.logspace(np.log10(0.4*Rt), np.log10(apocenter),
+    radii = np.logspace(np.log10(0.4*Rt), np.log10(2*apocenter),
                         num=1000)  # simulator units
 
     if method == 'caster':
@@ -142,14 +103,9 @@ for fix in fixes:
         # orbital_cast = THE_SMALL_CASTER(radii, R_bound, Orbital, weights = M)
         # jsq_cast = THE_SMALL_CASTER(radii, R_bound, jsq, weights=M)
     if method == 'tree':
-        ecc_cast = BONSAI(radii, R_bound, ecc)
+        ecc_cast = BONSAI(radii, R, ecc)
 
-    # mw_ecc_casted = np.nan_to_num(mw_ecc_casted)
-    #colarr.append(ecc_cast)
-    #Tarr.append(T_cast)
-    #smaarr.append(semi_major_axis_cast)
-    #orbarr.append(orbital_cast)
-    # jsqarr.append(jsq_cast)
+
     if alice:
         t_by_tfb = np.loadtxt(f'{pre}{sim}/snap_{fix}/tbytfb_{fix}.txt')
         fixdays.append(t_by_tfb)
@@ -162,12 +118,9 @@ for fix in fixes:
 if save:
     if alice:
         print('saving...')
-        #np.savetxt(f'{pre}tde_comparison/data/ecc{sim}.txt', colarr)
+        np.savetxt(f'{pre}tde_comparison/data/ecc2{sim}.txt', colarr)
         np.savetxt(f'{pre}tde_comparison/data/ef8/eccdays{sim}.txt', fixdays)
-        #np.savetxt(f'{pre}tde_comparison/data/eccT{sim}.txt', Tarr)
-        #np.savetxt(f'{pre}tde_comparison/data/eccsemimajoraxis{sim}.txt', smaarr)
-        np.savetxt(f'{pre}tde_comparison/data/ef8/eccenergy{sim}.txt', orbarr)
-        # np.savetxt(f'{pre}tde_comparison/data/eccjsq{sim}.txt', jsqarr)
+
     else:
         with open('data/ecc'+ str(m) + '.txt', 'a') as file:
             for i in range(len(colarr)):
