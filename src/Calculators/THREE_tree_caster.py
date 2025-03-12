@@ -6,6 +6,7 @@ and storing X,Y,Z,Den.
 Created on Tue Oct 10 10:19:34 2023
 @authors: paola, konstantinos
 """
+import copy
 import numpy as np
 from scipy.spatial import KDTree
 import matplotlib.pyplot as plt
@@ -21,15 +22,6 @@ else:
 
 import numba
 from tqdm import tqdm
-# @numba.njit
-# def masker(Den, X, Y, Z):
-#     denmask = np.where((Den > 1e-12))[0]
-#     X = X[denmask]
-#     Y = Y[denmask]
-#     Z = Z[denmask]
-#     Den = Den[denmask]
-#     return Den, X, Y, Z
-import numexpr as ne
 #%% Constants & Converter
 Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
@@ -53,9 +45,14 @@ def grid_maker(fix, m, x_num, y_num, z_num = 100, quantity = 'Density',
         Y = np.load(f'{pre}/CMy_{fix}.npy')
         Z = np.load(f'{pre}/CMz_{fix}.npy')
         Den = np.load(f'{pre}/Den_{fix}.npy')
+        Vol = np.load(f'{pre}/Vol_{fix}.npy')
+
         if quantity == 'Density':
             Q = Den
-        Vol = np.load(f'{pre}/Vol_{fix}.npy')
+        if quantity == 'Temperature':
+            Q = np.load(f'{pre}/T_{fix}.npy')
+        if quantity == 'Dissipation':
+            Q = np.load(f'{pre}/Diss_{fix}.npy')
         Mass = Vol * Den
     else:
         sim = parsed.name
@@ -70,6 +67,13 @@ def grid_maker(fix, m, x_num, y_num, z_num = 100, quantity = 'Density',
         Den = np.load(f'{realpre}{sim}/snap_{fix}/Den_{fix}.npy')
         Vol = np.load(f'{realpre}{sim}/snap_{fix}/Vol_{fix}.npy')
         Mass = Vol * Den
+        if quantity == 'Density':
+            Q = copy.deepcopy(Den)
+        if quantity == 'Temperature':
+            Q = np.load(f'{realpre}{sim}/snap_{fix}/T_{fix}.npy')
+        if quantity == 'Dissipation':
+            Q = np.load(f'{realpre}{sim}/snap_{fix}/Diss_{fix}.npy')
+            Q *= Vol
 
     if picturesetting == 'normal':
         x_start = - 1.5 * apocenter * WOW
@@ -112,7 +116,7 @@ def grid_maker(fix, m, x_num, y_num, z_num = 100, quantity = 'Density',
     Y = Y[denmask]
     Z = Z[denmask]
     Den = Den[denmask]
-    # Den, X, Y, Z = masker(Den, X, Y, Z)
+    Q = Q[denmask]
     
     sim_value = [X, Y, Z] 
     sim_value = np.transpose(sim_value) #array of dim (number_points, 3)

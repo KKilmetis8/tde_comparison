@@ -98,7 +98,8 @@ else:
 # Constants & Converter
 
 @numba.njit
-def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii, what):
+def projector(gridded_den, gridded_mass, mass_weigh, 
+              x_radii, y_radii, z_radii, what):
     """ Project density on XY plane. NB: to plot you have to transpose the saved data"""
     # Make the 3D grid 
     flat_den =  np.zeros(( len(x_radii), len(y_radii) ))
@@ -107,20 +108,17 @@ def projector(gridded_den, gridded_mass, mass_weigh, x_radii, y_radii, z_radii, 
             mass_zsum = 0
             step = 0
             for k in range(len(z_radii) - 1): # NOTE SKIPPING LAST Z PLANE
-                dz = (z_radii[k+1] - z_radii[k]) # * Rsol_to_cm
+                dz = (z_radii[k+1] - z_radii[k]) 
                 if mass_weigh:
-                    mass_zsum += gridded_mass[i,j,k]
+                    mass_zsum += gridded_mass[i,j,k] * dz 
                     flat_den[i,j] += gridded_den[i,j,k] * dz * gridded_mass[i,j,k]
                 else:
-                    if what == 'density':
-                        flat_den[i,j] += gridded_den[i,j,k] * dz
-                    else: 
-                        flat_den[i,j] += gridded_den[i,j,k]
-                        step += 1
+                    flat_den[i,j] += gridded_den[i,j,k] * dz
+                    step += 1
             if mass_weigh:
                 flat_den[i,j] = np.divide(flat_den[i,j], mass_zsum)
-            if what != 'density': 
-                flat_den[i,j] /= step
+            #if what != 'Density': 
+            flat_den[i,j] /= step
     return flat_den
  
 if __name__ == '__main__':
@@ -133,85 +131,93 @@ if __name__ == '__main__':
             fixes = np.arange(args.first, args.last + 1)
         save = True
         picset = 'normal'
+        what = 'Density' # Density, Temperature, Dissipation
         m = int(np.log10(float(args.blackhole)))
-        star = 'MONO AEK'
-        check = 'OPOIOS SAS GAMAEI EINAI AEK'
-        what = 'density'
     else:
         # Choose simulation
         m = 5
         picset = 'normal'
-        opac_kind = 'LTE'
-        check = 'fid'
         mstar = 0.5
         rstar = 0.47
         Rt = rstar * (10**m/mstar)**(1/3) 
-        beta = 1
-        what = 'density' # temperature or density
+        what = 'Dissipation' # Density, Dissipation
         save = True
-        fixes = [175]
+        fixes = [323]
         args = None
+        Mbh = 10**m
+        Rt = rstar * (Mbh/mstar)**(1/3) 
+        apocenter = Rt * (Mbh/mstar)**(1/3)
 
     for fix in fixes:
         _, grid_den, grid_mass, xs, ys, zs = grid_maker(fix, m, 
                                                         1000, 1000, 10, 
+                                                        quantity = what,
                                                         picturesetting = picset,
                                                         parsed = args)
+
         flat_den = projector(grid_den, grid_mass, False,
-                            xs, ys, zs, what)
+                        xs, ys, zs, what)
+            
         
         den_plot = np.nan_to_num(flat_den, nan = -5, neginf = -5)
-        den_plot *= c.Msol_to_g / c.Rsol_to_cm**2
+        if what == 'Density':
+            den_plot *= c.Msol_to_g / c.Rsol_to_cm**2
+        if what == 'Dissipation':
+            den_plot *= c.power_converter / c.Rsol_to_cm**2
         den_plot = np.log10(den_plot)
         den_plot = np.nan_to_num(den_plot, neginf= 0)
-#%%
+
         if save:
             if alice:
                 pre = f'/home/kilmetisk/data1/TDE/tde_comparison/data/denproj/paper'
-                np.savetxt(f'{pre}/{m}{picset}{fix}.txt', den_plot)
+                np.savetxt(f'{pre}/{m}{picset}{what}{fix}.txt', den_plot)
                 np.savetxt(f'{pre}/{m}{picset}x.txt', xs)
                 np.savetxt(f'{pre}/{m}{picset}y.txt', ys)
             else:
                 np.savetxt(f'data/denproj/paper/{m}{picset}{fix}.txt', den_plot) 
-                # np.savetxt(f'data/xarray{m}.txt', xs) 
-                # np.savetxt(f'data/yarray{m}.txt', ys) 
-
+                np.savetxt(f'data/xarray{m}.txt', xs) 
+                np.savetxt(f'data/yarray{m}.txt', ys) 
 #%% Plot
         if plot:
             import colorcet
             fig, ax = plt.subplots(1,1)
             plt.rcParams['figure.figsize'] = [8, 4]
-            
-            # Clean
-            den_plot = np.nan_to_num(flat_den, nan = -3, neginf = -3)
-            den_plot *= c.Msol_to_g / c.Rsol_to_cm**2
-            den_plot = np.log10(den_plot)
-            den_plot = np.nan_to_num(den_plot, neginf= 0)
-            
             # Specify
-            if what == 'density':
+            if what == 'Density':
                 cb_text = r'Density [g/cm$^2$]'
                 vmin = 0
                 vmax = 5
-            elif what == 'temperature':
+                
+                # Clean
+                # den_plot = np.nan_to_num(flat_den, nan = -3, neginf = -3)
+                # den_plot *= c.Msol_to_g / c.Rsol_to_cm**2
+                # den_plot = np.log10(den_plot)
+                # den_plot = np.nan_to_num(den_plot, neginf= 0)
+            elif what == 'Temperature':
                 cb_text = r'Temperature [K]'
-                vmin = 2
+                vmin = 7
                 vmax = 8
+            elif what == 'Dissipation':
+                cb_text = r'Projected lof Dissipated Energy [erg s$^{-1}$ cm$^{-2}$]'
+                vmin = 10
+                vmax = 18
             else:
                 raise ValueError('Hate to break it to you champ \n \
                                 but we don\'t have that quantity')
                     
 
-            ax.set_xlabel(r' X $[R_\odot]$', fontsize = 14)
-            ax.set_ylabel(r' Y $[R_\odot]$', fontsize = 14)
-            img = ax.pcolormesh(xs, #/ Rt,# * c.Rsol_to_au, 
-                                ys, # / Rt,#* c.Rsol_to_au, 
+            ax.set_xlabel(r' X $[a_\mathrm{min}]$', fontsize = 14)
+            ax.set_ylabel(r' Y $[a_\mathrm{min}]$', fontsize = 14)
+            img = ax.pcolormesh(xs / apocenter,# * c.Rsol_to_au, 
+                                ys / apocenter,#* c.Rsol_to_au, 
                                 den_plot.T, 
                                 cmap = 'cet_fire',
                                 vmin = vmin, vmax = vmax)
             cb = plt.colorbar(img)
-            cb.set_label(cb_text, fontsize = 14)
-            
+            cb.set_label(cb_text, fontsize = 12)
+            ax.set_xlim(-1.2, 0.2)
+            ax.set_ylim(-0.2, 0.2)
+
             # ax.scatter(1,1, c = 'b')
             # ax.scatter(1,-1, c = 'b')
             # ax.scatter(-1,1, c = 'b')
@@ -223,34 +229,6 @@ if __name__ == '__main__':
             
             ax.set_title(f'10$^{m} M_\odot$ - {time*tfb/c.day_to_sec:.0f} days since disruption', #$t_\mathrm{{FB}}$',
                          fontsize = 16)
-            import pandas as pd
-            df = pd.read_csv(f'data/photosphere/richex_photocolor{m}.csv', sep = ',',
-                              comment = '#', header = None)
             
-            # Find snap in photodata
-            idx = np.argmin(np.abs(fix - df.iloc[:,0]))
-            
-            # snap time photo color obs_num
-            # Photosphere data is a 3-tuple for each observer
-            # The equatorial observers are 88:104
-            # def tuple_parse(strings):
-            #     ''' parses "(1,2,3)" '''
-            #     xs = np.zeros(len(strings))
-            #     ys = np.zeros(len(strings))
-            #     for i, string in enumerate(strings):
-            #         values = string.strip("()").split(", ")
-            #         tuple_values = tuple(np.float64(value.split("(")[-1].strip(")")) for value in values)
-            #         xs[i] = tuple_values[0]
-            #         ys[i] = tuple_values[1]
-            #     return xs, ys
-            # good_obs = np.array([89, 90, 91, 92, 102, 103, 104, 89, 94]) + 4
-            # good_obs = np.arange(88, 104+1) + 4 + 192
-            # good_obs = np.arange(88, 104) + 4# + 192
-            # photo_x4, photo_y4 = tuple_parse(df.iloc[idx][good_obs])
-            # ax.plot(photo_x4 * c.Rsol_to_au, photo_y4 * c.Rsol_to_au, 
-            #         '-o', c = 'c', markersize = 3, label = 'Photosphere')
-            # ax.set_title(f'{m} Snap {fix}')
-            # ax.set_ylim(-100,100)
-            # ax.set_xlim(-200, 100)
 
 

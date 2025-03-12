@@ -70,6 +70,30 @@ def local_loader(m, fix, what, substep = 1):
         VZ = np.load(f'{m}/{fix}/Vz_{fix}.npy')[::substep]
         day = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
         return X, Y, Z, Den, T, Rad, Vol, divV, P, VX, VY, VZ, day
+    if what == 'midplane+T':
+        X = np.load(f'{m}/{fix}/CMx_{fix}.npy')
+        Y = np.load(f'{m}/{fix}/CMy_{fix}.npy')
+        Z = np.load(f'{m}/{fix}/CMz_{fix}.npy')
+        T = np.load(f'{m}/{fix}/T_{fix}.npy')
+        Vol = np.load(f'{m}/{fix}/Vol_{fix}.npy')
+        time = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
+        return X, Y, Z, Vol, T, time
+    if what == 'midplane+Den':
+        X = np.load(f'{m}/{fix}/CMx_{fix}.npy')
+        Y = np.load(f'{m}/{fix}/CMy_{fix}.npy')
+        Z = np.load(f'{m}/{fix}/CMz_{fix}.npy')
+        Den = np.load(f'{m}/{fix}/Den_{fix}.npy')
+        Vol = np.load(f'{m}/{fix}/Vol_{fix}.npy')
+        time = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
+        return X, Y, Z, Vol, Den, time
+    if what == 'midplane+Diss':
+        X = np.load(f'{m}/{fix}/CMx_{fix}.npy')
+        Y = np.load(f'{m}/{fix}/CMy_{fix}.npy')
+        Z = np.load(f'{m}/{fix}/CMz_{fix}.npy')
+        Diss = np.load(f'{m}/{fix}/Diss_{fix}.npy')
+        Vol = np.load(f'{m}/{fix}/Vol_{fix}.npy')
+        time = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
+        return X, Y, Z, Vol, Diss, time
     
 def boxer(i, observers_xyz, box):
     ''' Gets you the maximum box size, for a given solid angle, 

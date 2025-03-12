@@ -98,8 +98,8 @@ for fix in tqdm(fixes):
     ecc = e_calc2(position, velocity, Mbh)
     ecc = np.nan_to_num(ecc)
     # Cast down to 100 values
-    radii = np.logspace(np.log10(0.4*Rt), np.log10(apocenter),
-                        num=100)  # simulator units
+    radii = np.logspace(np.log10(0.4*Rt), np.log10(2*apocenter),
+                        num=1000)  # simulator units
 
     if method == 'caster':
         ecc_cast = THE_SMALL_CASTER(radii, R, ecc, weights = Mass)
