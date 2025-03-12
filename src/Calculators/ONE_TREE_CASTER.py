@@ -37,26 +37,31 @@ Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 
 
-def BONSAI(radii, R, fruit):
+def BONSAI(radii, R, fruit, weight = None):
     """ Outputs are in in solar units """
     gridded_fruit =  np.zeros(len(radii))
-    # gridded_mass =  np.zeros(len(radii))
+    gridded_mass =  np.zeros(len(radii))
     R = np.array([R],).T
     tree = KDTree(R)
+    
+    if type(weight) == type(None):
+        lifting = False
+    else:
+        lifting = True
+        
     for i in range(len(radii)):
         last_progress = 1
         _, idx = tree.query(radii[i])
                             
         # Store
-        gridded_fruit[i] = fruit[idx]
-        # gridded_mass[i] = Mass[idx]
+        if lifting:
+            gridded_fruit[i] = fruit[idx] * weight[idx]
+            gridded_mass[i] = weight[idx]
+        else:
+            gridded_fruit[i] = fruit[idx]
         
-        # Progress Check
-        progress = int(100 * i/len(radii))
-        if progress != last_progress:
-            last_progress = progress    
-            print('Progress: {:1.0%}'.format(i/len(radii)))
-        
+    if lifting:
+        gridded_fruit = np.divide(gridded_fruit, gridded_mass)
     return gridded_fruit
 
 

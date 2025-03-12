@@ -19,7 +19,7 @@ def local_loader(m, fix, what, substep = 1):
         VZ = np.load(f'{m}/{fix}/Vz_{fix}.npy')
         time = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
         return X, Y, Z, VX, VY, VZ, time
-    if what == 'orbital+den':
+    if what == 'orbital+den+mass':
         X = np.load(f'{m}/{fix}/CMx_{fix}.npy')
         Y = np.load(f'{m}/{fix}/CMy_{fix}.npy')
         Z = np.load(f'{m}/{fix}/CMz_{fix}.npy')
@@ -27,8 +27,10 @@ def local_loader(m, fix, what, substep = 1):
         VY = np.load(f'{m}/{fix}/Vy_{fix}.npy')
         VZ = np.load(f'{m}/{fix}/Vz_{fix}.npy')
         Den = np.load(f'{m}/{fix}/Den_{fix}.npy')
+        Vol = np.load(f'{m}/{fix}/Vol_{fix}.npy')
+        Mass = Den * Vol
         time = np.loadtxt(f'{m}/{fix}/tbytfb_{fix}.txt')
-        return X, Y, Z, VX, VY, VZ, Den, time
+        return X, Y, Z, VX, VY, VZ, Den, Mass, time
     if what == 'orbital+mass':
         X = np.load(f'{m}/{fix}/CMx_{fix}.npy')
         Y = np.load(f'{m}/{fix}/CMy_{fix}.npy')

@@ -20,11 +20,11 @@ import src.Utilities.prelude as c
 rstar = 0.47
 mstar = 0.5
 Rt4 = rstar * (1e4/mstar)**(1/3)
-amin4 = 0.5 * Rt4 * (1e4/mstar)**(1/3)
+amin4 = Rt4 * (1e4/mstar)**(1/3)
 Rt5 = rstar * (1e5/mstar)**(1/3)
-amin5 =  0.5 * Rt5 * (1e5/mstar)**(1/3)
+amin5 = Rt5 * (1e5/mstar)**(1/3)
 Rt6 = rstar * (1e6/mstar)**(1/3)
-amin6 =  0.5 * Rt6 * (1e6/mstar)**(1/3)
+amin6 =  Rt6 * (1e6/mstar)**(1/3)
 def find_sph_coord(r, theta, phi):
     x = r * np.sin(np.pi-theta) * np.cos(phi) #Elad has just theta
     y = r * np.sin(np.pi-theta) * np.sin(phi)
@@ -45,7 +45,7 @@ def tuple_parse(strings):
 
 pre = 'data/denproj/paper/'
 suf = 'beta1S60n1.5Compton'
-when = 'late' # choices: early mid late test
+when = 'early' # choices: early mid late test
 plane = 'XY'
 photo = False
 if when == 'early':

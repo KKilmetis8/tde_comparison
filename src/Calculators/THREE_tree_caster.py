@@ -35,7 +35,7 @@ Msol_to_g = 1.989e33 # [g]
 Rsol_to_cm = 6.957e10 # [cm]
 den_converter = Msol_to_g / Rsol_to_cm**3
 
-def grid_maker(fix, m, x_num, y_num, z_num = 100, 
+def grid_maker(fix, m, x_num, y_num, z_num = 100, quantity = 'Density',
                picturesetting = 'normal', WOW = 1,
                mass_weight=False,
                parsed = None):
@@ -53,6 +53,8 @@ def grid_maker(fix, m, x_num, y_num, z_num = 100,
         Y = np.load(f'{pre}/CMy_{fix}.npy')
         Z = np.load(f'{pre}/CMz_{fix}.npy')
         Den = np.load(f'{pre}/Den_{fix}.npy')
+        if quantity == 'Density':
+            Q = Den
         Vol = np.load(f'{pre}/Vol_{fix}.npy')
         Mass = Vol * Den
     else:
@@ -61,7 +63,7 @@ def grid_maker(fix, m, x_num, y_num, z_num = 100,
         rstar = parsed.radius
         Mbh = parsed.blackhole
         Rt = rstar * (Mbh/mstar)**(1/3) 
-        apocenter = Rt * (Mbh/mstar)**(1/3)
+        apocenter = 0.5 * Rt * (Mbh/mstar)**(1/3)
         X = np.load(f'{realpre}{sim}/snap_{fix}/CMx_{fix}.npy')
         Y = np.load(f'{realpre}{sim}/snap_{fix}/CMy_{fix}.npy')
         Z = np.load(f'{realpre}{sim}/snap_{fix}/CMz_{fix}.npy')
@@ -127,22 +129,9 @@ def grid_maker(fix, m, x_num, y_num, z_num = 100,
                                     
                 # Store
                 gridded_indexes[i, j, k] = idx
-                gridded_den[i, j, k] = Den[idx]
+                gridded_den[i, j, k] = Q[idx]
                 gridded_mass[i,j, k] = Mass[idx]
-    # den_cast = np.divide(gridded_den, gridded_mass)
-    # den_cast = np.sum(gridded_den, axis=2) / 100
 
-    # # Remove bullshit and fix things
-    # den_cast = np.nan_to_num(den_cast.T)
-    # den_cast = np.log10(den_cast) # we want a log plot
-    # den_cast = np.nan_to_num(den_cast, neginf=0) # fix the fuckery
-        
-    # # Color re-normalization
-    # den_cast[den_cast<0.2] = 0
-    # den_cast[den_cast>5] = 5
-
-    # return xs/apocenter, ys/apocenter, den_cast, apocenter# , days
-    # 
     return gridded_indexes, gridded_den, gridded_mass, xs, ys, zs
 
  
